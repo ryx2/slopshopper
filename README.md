@@ -56,11 +56,9 @@ bun run dev           # http://localhost:4321
 
 The GitHub Actions workflow in `.github/workflows/site.yml` runs the scrape daily, commits the refreshed data, builds the site and deploys it to GitHub Pages. Set the repository variable `SITE_BASE` to `/slopshopper/` for a project page or `/` for a custom domain, and `SITE_URL` to match. A `SCRAPE_TOKEN` secret (a classic PAT with `public_repo`) lets code search run in CI; without it the scheduled job still refreshes known repositories.
 
-### Pointing slopshopper.com at it
+### Hosting
 
-1. At the DNS provider, add `A` records for `slopshopper.com` to GitHub Pages (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`) and a `CNAME` for `www` to `ryx2.github.io`.
-2. In the repository's **Settings → Pages**, set the custom domain to `slopshopper.com` and turn on **Enforce HTTPS** once the certificate is issued.
-3. Set the repository variables `SITE_BASE=/` and `SITE_URL=https://slopshopper.com`, then re-run the workflow.
+slopshopper.com is served by the Vercel project `slopshopper` (static build: `vercel.json` sets `bun run build` and `dist/`), which is git-connected to this repository, so every push to `main`, including the daily data commit, redeploys it. The project's environment sets `SITE_BASE=/` and `SITE_URL=https://www.slopshopper.com` (the apex redirects to www, as it did before). The GitHub Actions workflow also publishes a mirror to GitHub Pages under `/slopshopper/`, whose pages declare slopshopper.com as canonical.
 
 A scrape run on a laptop (`bun run scrape`) can take an hour; `bun run scrape --discover-only` followed by four `--shard k/4 --out .cache/shards/k.json` processes and `bun run scrape --merge` does the same work in parallel. `scripts/publish-data.sh` merges, regenerates previews and builds.
 
