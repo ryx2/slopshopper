@@ -117,12 +117,13 @@ async function main() {
   for (const m of await localMods()) mods.push({ mod: m, files: m.files })
 
   let done = 0
-  for (const { mod, files } of mods) {
-    if (only.size && !only.has(mod.slug)) continue
+  const queue = mods.filter(({ mod }) => !only.size || only.has(mod.slug))
+  const CONCURRENCY = Math.max(1, Number(process.env.PREVIEW_CONCURRENCY ?? 4))
+  const one = async ({ mod, files }: { mod: ModEntry; files: Record<string, string> }) => {
     const outPath = join(PREVIEWS, `${mod.slug}.json`)
     if (!force && existsSync(outPath)) {
       const prev = (await Bun.file(outPath).json()) as Preview & { sourceHash?: string }
-      if (prev.sourceHash === hashFiles(files)) continue
+      if (prev.sourceHash === hashFiles(files)) return
     }
     const dir = await materialize(mod, files)
     const [v, h] = await Promise.all([validate(dir), harness(dir, mod)])
@@ -132,6 +133,16 @@ async function main() {
     const sites = Object.keys(h.sites ?? {})
     console.log(`${mod.slug}: validate ${v.ok ? 'ok' : 'FAIL'} · harness ${h.ok ? 'ok' : 'FAIL'}${h.error ? ` (${h.error.slice(0, 80)})` : ''} · sites ${sites.join(',') || '-'} · toasts ${h.toasts.length} · denies ${h.denies.length}`)
   }
+  await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
+    while (queue.length) {
+      const next = queue.shift()!
+      try {
+        await one(next)
+      } catch (err) {
+        console.warn(`${next.mod.slug}: preview failed: ${String(err).slice(0, 160)}`)
+      }
+    }
+  }))
   console.log(`previews: ${done} generated, ${mods.length} total`)
   const stale = (await readdir(PREVIEWS)).filter(f => f.endsWith('.json') && !mods.some(m => `${m.mod.slug}.json` === f))
   for (const f of stale) await rm(join(PREVIEWS, f))

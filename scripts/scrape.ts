@@ -2,29 +2,41 @@
 // data/mods/<slug>.json per mod (its source files, for the preview harness).
 //
 // A mod is a plugin whose hooks/hooks.json names a `modules` array. That is
-// the ground truth here: every candidate repo's tree is walked and each
+// the ground truth here: every candidate repository's tree is walked and each
 // hooks.json is read before anything is listed.
 //
-//   bun run scrape            full run
-//   bun run scrape --repo o/r only that repository (no discovery)
-//   bun run scrape --fast     skip repos whose pushed_at is unchanged
+//   bun run scrape                      discover, walk every candidate, write the index
+//   bun run scrape --repo o/r           only that repository (merged into the index)
+//   bun run scrape --fast               skip repositories whose pushed_at is unchanged
+//   bun run scrape --discover-only      write .cache/candidates.json and stop
+//   bun run scrape --shard 2/4 --out .cache/shards/2.json
+//                                       walk every fourth candidate (from the saved list)
+//   bun run scrape --merge              merge .cache/shards/*.json into the index
 
-import { mkdir } from 'node:fs/promises'
-import { join, dirname, posix } from 'node:path'
+import { mkdir, readdir } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import { join, posix, resolve } from 'node:path'
 import { lastCommitDate, rawFile, repoMeta, repoTree, searchCode, searchRepos, type RepoMeta, type TreeEntry } from './lib/github'
 import type { Index, ModEntry, ModKind } from './lib/types'
 
-const ROOT = process.cwd()
+const ROOT = resolve(import.meta.dir, '..')
 const DATA = join(ROOT, 'data')
 const MODS_DIR = join(DATA, 'mods')
 const INDEX_PATH = join(DATA, 'mods.json')
-const MAX_FILES = 40
-const MAX_BYTES = 600_000
+const CANDIDATES_PATH = join(ROOT, '.cache', 'candidates.json')
+const SHARDS_DIR = join(ROOT, '.cache', 'shards')
+const MAX_FILES = 90
+const MAX_BYTES = 1_500_000
 const MODULE_EXTS = ['.ts', '.tsx', '.js', '.mjs', '.cjs', '.jsx', '.mts', '.cts']
 
 const args = process.argv.slice(2)
-const only = args.includes('--repo') ? args[args.indexOf('--repo') + 1] : undefined
+const flag = (name: string) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined)
+const only = flag('--repo')
 const fast = args.includes('--fast')
+const discoverOnly = args.includes('--discover-only')
+const shard = flag('--shard')
+const out = flag('--out')
+const merge = args.includes('--merge')
 
 // Repositories never listed: the user's own project, and tooling that vendors mods.
 const EXCLUDE_REPOS = new Set<string>(['ryx2/slopshopper'])
@@ -94,15 +106,20 @@ function relativeImports(src: string): string[] {
 function resolveModulePath(blobs: Set<string>, fromDir: string, spec: string): string | null {
   const base = posix.normalize(posix.join(fromDir, spec))
   const candidates = [base, ...MODULE_EXTS.map(e => base + e), ...MODULE_EXTS.map(e => posix.join(base, 'index' + e))]
-  // a TS import of './x.js' resolves to x.ts
-  if (/\.(js|mjs|cjs|jsx)$/.test(base)) candidates.push(base.replace(/\.(js|mjs|cjs|jsx)$/, (_, e) => ({ js: '.ts', mjs: '.mts', cjs: '.cts', jsx: '.tsx' })[e as string]!))
+  // a TS import of './x.js' resolves to x.ts or x.tsx
+  if (/\.(js|mjs|cjs|jsx)$/.test(base)) {
+    const stem = base.replace(/\.(js|mjs|cjs|jsx)$/, '')
+    candidates.push(stem + '.ts', stem + '.tsx', stem + '.mts', stem + '.cts')
+  }
+  // a query or hash on the specifier is dropped
+  if (/[?#]/.test(base)) candidates.push(base.replace(/[?#].*$/, ''))
   for (const c of candidates) if (blobs.has(c)) return c
   return null
 }
 
 type HooksJson = { modules?: unknown; description?: string }
 
-async function collectMod(meta: RepoMeta, tree: TreeEntry[], hooksJsonPath: string, prior: ModEntry | undefined): Promise<ModEntry | null> {
+async function collectMod(meta: RepoMeta, tree: TreeEntry[], hooksJsonPath: string, wantCommitDate: boolean): Promise<ModEntry | null> {
   const fullName = meta.full_name
   const ref = meta.default_branch
   const blobs = new Set(tree.filter(t => t.type === 'blob').map(t => t.path))
@@ -186,7 +203,8 @@ async function collectMod(meta: RepoMeta, tree: TreeEntry[], hooksJsonPath: stri
     if (j && typeof j.name === 'string') marketplaceName = j.name
   }
 
-  const modUpdatedAt = (await lastCommitDate(fullName, modRoot)) ?? meta.pushed_at
+  // the mod's own last commit matters in a monorepo; a root mod moves with the repo
+  const modUpdatedAt = (wantCommitDate && modRoot ? await lastCommitDate(fullName, modRoot) : null) ?? meta.pushed_at
   const author = manifest.author && typeof manifest.author === 'object' ? (manifest.author as ModEntry['author']) : undefined
   const slugBase = modRoot ? `${meta.owner.login}--${fullName.split('/')[1]}--${name}` : `${meta.owner.login}--${fullName.split('/')[1]}`
   const kind: ModKind = KIND_OVERRIDES[fullName] ?? 'community'
@@ -228,43 +246,38 @@ async function collectMod(meta: RepoMeta, tree: TreeEntry[], hooksJsonPath: stri
     hasMarketplace,
     marketplaceName,
     readme,
-    firstSeen: prior?.firstSeen ?? new Date().toISOString(),
+    firstSeen: new Date().toISOString(),
     modUpdatedAt,
     files,
     fileBytes: bytes,
   }
 }
 
-async function main() {
-  await mkdir(MODS_DIR, { recursive: true })
-  const previous = await loadIndex()
-  const priorBySlug = new Map(previous.mods.map(m => [m.slug, m]))
-  const priorByRepo = new Map<string, ModEntry[]>()
-  for (const m of previous.mods) priorByRepo.set(m.repo.fullName, [...(priorByRepo.get(m.repo.fullName) ?? []), m])
-
-  // 1. discovery
+async function discover(previousRepos: Iterable<string>): Promise<string[]> {
   const candidates = new Set<string>()
-  if (only) {
-    candidates.add(only)
-  } else {
-    console.log('discovery: code search')
-    for (const q of DISCOVERY_QUERIES) {
-      for (const items of [await searchCode(q), await searchCode(q, { sort: 'indexed', order: 'desc' })]) {
-        for (const it of items) if (!it.repository.private) candidates.add(it.repository.full_name)
-      }
+  console.log('discovery: code search')
+  for (const q of DISCOVERY_QUERIES) {
+    for (const items of [await searchCode(q), await searchCode(q, { sort: 'indexed', order: 'desc' })]) {
+      for (const it of items) if (!it.repository.private) candidates.add(it.repository.full_name)
     }
-    console.log('discovery: repo search')
-    for (const q of REPO_QUERIES) for (const r of await searchRepos(q)) candidates.add(r)
-    // keep every repo already in the index so nothing silently drops out
-    for (const r of priorByRepo.keys()) candidates.add(r)
   }
+  console.log('discovery: repo search')
+  for (const q of REPO_QUERIES) for (const r of await searchRepos(q)) candidates.add(r)
+  // keep every repo already in the index so nothing silently drops out
+  for (const r of previousRepos) candidates.add(r)
   for (const r of EXCLUDE_REPOS) candidates.delete(r)
-  console.log(`candidates: ${candidates.size} repositories`)
+  const list = [...candidates].sort()
+  await mkdir(join(ROOT, '.cache'), { recursive: true })
+  await Bun.write(CANDIDATES_PATH, JSON.stringify({ at: new Date().toISOString(), repos: list }, null, 1))
+  console.log(`candidates: ${list.length} repositories → ${CANDIDATES_PATH}`)
+  return list
+}
 
-  // 2. verification + collection
+/** Walks each candidate repository and returns every mod found. */
+async function walk(candidates: string[], priorByRepo: Map<string, ModEntry[]>, label = ''): Promise<ModEntry[]> {
   const mods: ModEntry[] = []
   let i = 0
-  for (const fullName of [...candidates].sort()) {
+  for (const fullName of candidates) {
     i++
     const meta = await repoMeta(fullName)
     if (!meta) continue
@@ -281,42 +294,93 @@ async function main() {
     let found = 0
     for (const hj of hooksJsons.slice(0, 60)) {
       try {
-        const entry = await collectMod(meta, tree, hj, undefined)
+        const entry = await collectMod(meta, tree, hj, hooksJsons.length > 1)
         if (!entry) continue
-        const prior = priorBySlug.get(entry.slug)
-        if (prior) entry.firstSeen = prior.firstSeen
         mods.push(entry)
         found++
       } catch (err) {
         console.warn(`  ${fullName} ${hj}: ${String(err).slice(0, 120)}`)
       }
     }
-    if (found) console.log(`[${i}/${candidates.size}] ${fullName}: ${found} mod${found === 1 ? '' : 's'}`)
+    if (found) console.log(`${label}[${i}/${candidates.length}] ${fullName}: ${found} mod${found === 1 ? '' : 's'}`)
   }
+  return mods
+}
 
-  // --repo keeps every other repository's entries from the previous index
-  if (only) for (const m of previous.mods) if (m.repo.fullName !== only) mods.push(m)
-
-  // 3. de-dupe slugs (two mods with one name inside one repo)
+/** Writes the index: file bodies go to data/mods/<slug>.json, the rest to data/mods.json. */
+async function writeIndex(mods: ModEntry[], previous: Index): Promise<void> {
+  const priorBySlug = new Map(previous.mods.map(m => [m.slug, m]))
+  // de-dupe slugs (two mods with one name inside one repo)
   const seen = new Map<string, number>()
   for (const m of mods) {
     const n = (seen.get(m.slug) ?? 0) + 1
     seen.set(m.slug, n)
     if (n > 1) m.slug = `${m.slug}-${n}`
   }
-  mods.sort((a, b) => b.repo.stars - a.repo.stars || a.slug.localeCompare(b.slug))
-
-  // 4. write: index without file bodies; files per mod
-  const index: Index = {
-    generatedAt: new Date().toISOString(),
-    mods: mods.map(m => ({ ...m, files: {}, readme: m.readme })),
-  }
-  await Bun.write(INDEX_PATH, JSON.stringify(index, null, 1))
   for (const m of mods) {
-    if (Object.keys(m.files).length === 0) continue // carried over from the previous index; its file is already on disk
+    const prior = priorBySlug.get(m.slug)
+    if (prior) m.firstSeen = prior.firstSeen
+  }
+  mods.sort((a, b) => b.repo.stars - a.repo.stars || a.slug.localeCompare(b.slug))
+  await mkdir(MODS_DIR, { recursive: true })
+  const index: Index = { generatedAt: new Date().toISOString(), mods: mods.map(m => ({ ...m, files: {} })) }
+  await Bun.write(INDEX_PATH, JSON.stringify(index, null, 1))
+  const keep = new Set<string>()
+  for (const m of mods) {
+    keep.add(`${m.slug}.json`)
+    if (Object.keys(m.files).length === 0) continue // carried over; its file is already on disk
     await Bun.write(join(MODS_DIR, `${m.slug}.json`), JSON.stringify({ slug: m.slug, files: m.files }, null, 1))
   }
+  for (const f of await readdir(MODS_DIR)) if (f.endsWith('.json') && !keep.has(f)) await Bun.file(join(MODS_DIR, f)).delete()
   console.log(`wrote ${mods.length} mods to ${INDEX_PATH}`)
+}
+
+async function main() {
+  const previous = await loadIndex()
+  const priorByRepo = new Map<string, ModEntry[]>()
+  for (const m of previous.mods) priorByRepo.set(m.repo.fullName, [...(priorByRepo.get(m.repo.fullName) ?? []), m])
+
+  if (merge) {
+    const mods: ModEntry[] = []
+    const covered = new Set<string>()
+    for (const f of (await readdir(SHARDS_DIR)).filter(f => f.endsWith('.json')).sort()) {
+      const j = (await Bun.file(join(SHARDS_DIR, f)).json()) as { candidates: string[]; mods: ModEntry[] }
+      for (const c of j.candidates) covered.add(c)
+      mods.push(...j.mods)
+    }
+    // repositories no shard covered keep their previous entries
+    for (const [repo, list] of priorByRepo) if (!covered.has(repo)) mods.push(...list)
+    await writeIndex(mods, previous)
+    return
+  }
+
+  if (only) {
+    const mods = await walk([only], priorByRepo)
+    for (const m of previous.mods) if (m.repo.fullName !== only) mods.push(m)
+    await writeIndex(mods, previous)
+    return
+  }
+
+  let candidates: string[]
+  if (shard && existsSync(CANDIDATES_PATH)) candidates = ((await Bun.file(CANDIDATES_PATH).json()) as { repos: string[] }).repos
+  else candidates = await discover(priorByRepo.keys())
+  if (discoverOnly) return
+
+  let label = ''
+  if (shard) {
+    const [k, n] = shard.split('/').map(Number)
+    if (!Number.isInteger(k) || !Number.isInteger(n) || n! < 1 || k! < 0 || k! >= n!) throw new Error(`bad --shard ${shard}; use k/n with 0 <= k < n`)
+    candidates = candidates.filter((_, i) => i % n! === k)
+    label = `shard ${k}/${n} `
+  }
+  const mods = await walk(candidates, priorByRepo, label)
+  if (out) {
+    await mkdir(resolve(ROOT, out, '..'), { recursive: true })
+    await Bun.write(resolve(ROOT, out), JSON.stringify({ candidates, mods }, null, 1))
+    console.log(`${label}wrote ${mods.length} mods from ${candidates.length} candidates to ${out}`)
+    return
+  }
+  await writeIndex(mods, previous)
 }
 
 await main()

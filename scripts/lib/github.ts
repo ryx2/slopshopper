@@ -87,14 +87,30 @@ async function ghFetch(url: string, init: RequestInit = {}, attempt = 0): Promis
   return res
 }
 
+const API_CACHE_DIR = join(process.cwd(), '.cache', 'gh-api')
+const API_CACHE_TTL_MS = Number(process.env.GH_CACHE_TTL_MS ?? 6 * 3_600_000)
+
+/** A GET against the REST API, cached on disk for a few hours so a restarted run does not repeat it. */
 export async function api<T>(path: string): Promise<T | null> {
+  await mkdir(API_CACHE_DIR, { recursive: true })
+  const key = join(API_CACHE_DIR, Bun.hash(path).toString(16) + '.json')
+  const cached = Bun.file(key)
+  if (API_CACHE_TTL_MS > 0 && (await cached.exists()) && Date.now() - cached.lastModified < API_CACHE_TTL_MS) {
+    const j = (await cached.json()) as { status: number; body: T | null }
+    return j.body
+  }
   const res = await ghFetch(`${API}${path}`)
-  if (res.status === 404) return null
+  if (res.status === 404) {
+    await Bun.write(key, JSON.stringify({ status: 404, body: null }))
+    return null
+  }
   if (!res.ok) {
     console.warn(`  GET ${path} -> ${res.status}`)
     return null
   }
-  return (await res.json()) as T
+  const body = (await res.json()) as T
+  await Bun.write(key, JSON.stringify({ status: 200, body }))
+  return body
 }
 
 /** Paginated code search. Stops at GitHub's 1000-result cap. */

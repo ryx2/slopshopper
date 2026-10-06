@@ -9,7 +9,7 @@
 // wall-clock timeout.
 
 import vm from 'node:vm'
-import { existsSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, dirname, resolve, extname } from 'node:path'
 
 const [modDir, entryRel, optionsJson = '{}'] = process.argv.slice(2)
@@ -27,6 +27,33 @@ function resolveRelative(fromFile: string, spec: string): string | null {
   if (/\.(js|mjs|cjs|jsx)$/.test(base)) candidates.push(base.replace(/\.(js|mjs|cjs|jsx)$/, (_, e) => ({ js: '.ts', mjs: '.mts', cjs: '.cts', jsx: '.tsx' })[e as string]!))
   for (const c of candidates) if (tryFile(c) && MODULE_EXTS.includes(extname(c))) return c
   return null
+}
+
+/** Encodes importer and specifier into one virtual path, so the stub can export the names the importer asks for. */
+function stubKey(importer: string, spec: string): string {
+  return `${importer}\u0000${spec}`
+}
+
+/** A stand-in module that exports every name the importer destructures, each a no-op that returns itself. */
+function stubModule(key: string): string {
+  const [importer, spec] = key.split('\u0000')
+  const names = new Set<string>()
+  try {
+    const src = readFileSync(importer!, 'utf8')
+    const re = /(?:import|export)\s+(?:type\s+)?([^'"]*?)\s*from\s*['"]([^'"]+)['"]/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(src))) {
+      if (m[2] !== spec) continue
+      const clause = m[1]!.replace(/\btype\s+/g, '')
+      const braces = /\{([^}]*)\}/.exec(clause)
+      if (braces) for (const part of braces[1]!.split(',')) {
+        const name = part.trim().split(/\s+as\s+/).pop()?.trim()
+        if (name && /^[A-Za-z_$][\w$]*$/.test(name) && name !== 'default') names.add(name)
+      }
+    }
+  } catch {}
+  const head = 'const __stub = new Proxy(function () {}, { get: (t, k) => (k === Symbol.toPrimitive ? () => "" : k === "then" ? undefined : __stub), apply: () => __stub, construct: () => __stub });\nexport default __stub;\n'
+  return head + [...names].map(n => `export const ${n} = __stub;`).join('\n')
 }
 
 async function bundle(entry: string): Promise<{ code?: string; error?: string; warnings: string[] }> {
@@ -48,14 +75,14 @@ async function bundle(entry: string): Promise<{ code?: string; error?: string; w
             const p = resolveRelative(args.importer, args.path)
             if (p) return { path: p }
             warnings.push(`unresolved import ${args.path} from ${args.importer.replace(modDir!, '')} (types only?)`)
-            return { path: args.path, namespace: 'slop-empty' }
+            return { path: stubKey(args.importer, args.path), namespace: 'slop-empty' }
           })
           build.onResolve({ filter: /^[^./]/ }, args => {
             if (/^claude-code/.test(args.path)) return { path: args.path, external: true }
             warnings.push(`bare import ${args.path} is not available to a hooks module; stubbed`)
-            return { path: args.path, namespace: 'slop-empty' }
+            return { path: stubKey(args.importer, args.path), namespace: 'slop-empty' }
           })
-          build.onLoad({ filter: /.*/, namespace: 'slop-empty' }, () => ({ contents: 'export default {}', loader: 'js' }))
+          build.onLoad({ filter: /.*/, namespace: 'slop-empty' }, args => ({ contents: stubModule(args.path), loader: 'js' }))
         },
       },
     ],

@@ -168,6 +168,11 @@ export function mockup(p: Preview, modName: string): Mockup {
     lower.push([...cells('  ⚠ ', { color: '#f5c542' }), ...cells(`${modName}: `, { color: '#f5c542' }), ...cells(h.status.slice(0, COLS - 8 - modName.length))])
     summary.push('pins a status line')
   }
+  const modes = siteTree(sites.SessionMode)
+  if (modes) {
+    lower.push(...render(modes, { width: COLS - 2, style: {}, surface: 'terminal' }).map(l => [...cells('  '), ...l.slice(0, COLS - 2)]))
+    summary.push('redraws the mode labels in the footer')
+  }
 
   const all: Block = [...upper, ...lower]
   const html = toHtml(all, COLS)
