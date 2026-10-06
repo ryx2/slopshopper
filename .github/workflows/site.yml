@@ -1,0 +1,85 @@
+name: scrape, preview, build, deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 6 * * *' # daily, 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      scrape:
+        description: 'Run the GitHub scrape before building'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Claude Code (for plugin validate)
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Scrape GitHub for mods
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.scrape)
+        env:
+          # A classic PAT with public_repo scope lets code search run; the
+          # default token works for repository metadata and trees.
+          GITHUB_TOKEN: ${{ secrets.SCRAPE_TOKEN || secrets.GITHUB_TOKEN }}
+        run: bun run scrape
+
+      - name: Generate previews
+        run: bun run previews
+
+      - name: Commit refreshed data
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "slopshopper-bot"
+          git config user.email "bot@slopshopper.com"
+          git add data
+          if git diff --cached --quiet; then echo "no data changes"; else
+            git commit -m "data: refresh mods index and previews ($(date -u +%F))"
+            git push
+          fi
+
+      - name: Build the site
+        env:
+          SITE_BASE: ${{ vars.SITE_BASE || '/' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://slopshopper.com' }}
+        run: bun run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
