@@ -36,7 +36,7 @@ type View = {
 }
 
 const u = (p: string) => BASE + p.replace(/^\//, '')
-const img = (name: string, pos = 'center') => `style="--img:url('${u('img/' + name)}');--pos:${pos}"`
+const img = (name: string, cls = 'bg', alt = '') => `<img class="${cls}" src="${u('img/' + name)}" alt="${esc(alt)}" decoding="async">`
 const fmtDate = (iso: string) => (iso ? new Date(iso).toISOString().slice(0, 10) : '')
 const num = (n: number) => n.toLocaleString('en-US')
 const ago = (iso: string) => {
@@ -251,12 +251,12 @@ function detailPage(v: View): string {
     .join('')
   const repoLink = `<a href="${esc(m.repo.url)}${m.path ? '/tree/' + esc(m.repo.defaultBranch) + '/' + esc(m.path) : ''}" rel="noopener">${esc(m.repo.fullName)}${m.path ? '/' + esc(m.path) : ''}</a>`
   const body = `
-<section class="dhero" ${img('slop-shop.jpg', 'right 22%')}><div class="wrap">
+<section class="dhero"><div class="wrap"><div class="dtext">
   <h1>${esc(title(m))}</h1>
   <p class="one">${esc(oneLine(m.description, 160))}</p>
   ${badges(v, 6)}
   <div class="strip">${v.stars ? `<span><b>★ ${num(v.stars)}</b></span>` : ''}<span>v<b>${esc(m.version ?? '?')}</b></span><span><b>${esc(m.license ?? m.repo.license ?? 'no license')}</b></span><span>updated <b>${esc(fmtDate(v.updated))}</b></span><span>${repoLink}</span></div>
-</div></section>
+</div>${img('slop-shop.jpg', 'side', 'A shopper browsing a rack in a slop shop')}</div></section>
 <div class="wrap">
   ${harnessStatus}
   ${v.mock && v.mock.hasDrawing ? `<div class="lbl">Preview · a replayed session in a sandbox</div><div class="tty-frame"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="title">claude · ~/work/app · ${esc(m.name)}</span></div><div class="tty">${v.mock.html}</div></div>` : ''}
@@ -285,7 +285,7 @@ function indexPage(views: View[], stats: { total: number; fresh: number; authors
   const sorted = [...views].sort((a, b) => b.rank - a.rank)
   const inline = sorted.slice(0, INLINE_CARDS)
   const body = `
-<section class="hero" ${img('cannon-city.jpg', 'center 30%')}><div class="wrap">
+<section class="hero">${img('cannon-city.jpg', 'bg', 'An AI slop cannon firing images over a city')}<div class="wrap">
   <h1 class="wordmark">SLOP<br>SHOPPER</h1>
   <p class="tag"><b>Mods for Claude Code.</b> Scraped daily. Previewed. Installed in two commands.</p>
   <div class="bignums"><span><b>${num(stats.total)}</b> mods</span><span><b>${num(stats.authors)}</b> authors</span><span><b>${num(stats.fresh)}</b> new this week</span><span><b>2.1.287+</b> required</span></div>
@@ -306,7 +306,7 @@ function indexPage(views: View[], stats: { total: number; fresh: number; authors
   ${views.length > inline.length ? `<p class="more-row"><button class="chip big" id="more">Show all ${num(views.length)}</button></p>` : ''}
 </main>
 </div>
-<section class="bandimg" ${img('cannon-manure.jpg', 'center 40%')}><div class="wrap">
+<section class="bandimg">${img('cannon-manure.jpg', 'bg', 'A slop cannon spraying a field')}<div class="wrap">
   <h2>ALL THE SLOP.<br>ONE SHOP.</h2>
   <p><b>Every mod GitHub has,</b> through one marketplace that points at each author's own repo.</p>
   ${cmdBlock([`claude plugin marketplace add ${COMMUNITY_MARKETPLACE_URL}`, 'claude plugin install <name>@slopshopper-community'])}
@@ -317,14 +317,14 @@ function indexPage(views: View[], stats: { total: number; fresh: number; authors
 function newPage(views: View[]): string {
   const sorted = [...views].sort((a, b) => new Date(b.mod.firstSeen).getTime() - new Date(a.mod.firstSeen).getTime()).slice(0, 150)
   const body = `
-<section class="bandimg top" ${img('cannon-dairy.jpg', 'center 35%')}><div class="wrap"><h2>FRESH<br>SLOP.</h2><p><b>Newest mods</b> by the day the scraper first saw them. <a href="${u('feed.xml')}">RSS</a></p></div></section>
+<section class="bandimg top">${img('cannon-dairy.jpg', 'bg', 'A slop cannon at a dairy farm')}<div class="wrap"><h2>FRESH<br>SLOP.</h2><p><b>Newest mods</b> by the day the scraper first saw them. <a href="${u('feed.xml')}">RSS</a></p></div></section>
 <main class="wrap"><div class="list">${sorted.map(v => `<a class="row" href="${u(`mods/${v.mod.slug}/`)}"><span class="d">${esc(fmtDate(v.mod.firstSeen))}</span><span><b>${esc(title(v.mod))}</b> <span class="muted">${esc(oneLine(v.mod.description, 100))}</span></span><span class="d">${esc(v.mod.repo.fullName.split('/')[0]!)}</span></a>`).join('')}</div></main>`
   return layout({ title: 'New Claude Code mods · slopshopper', description: 'The newest Claude Code mods found on GitHub.', body, path: 'new/', nav: 'new', ogImage: 'cannon-dairy.jpg' })
 }
 
 function aboutPage(stats: { total: number }): string {
   const body = `
-<section class="bandimg top" ${img('financial-freedom.jpg', 'center 30%')}><div class="wrap"><h2>HOW IT<br>WORKS.</h2><p><b>A mod</b> is a Claude Code plugin whose <code>hooks/hooks.json</code> names a <code>modules</code> array: TypeScript that hooks engine events. <a href="https://code.claude.com/docs/en/plugins/mods/overview">Docs</a>.</p></div></section>
+<section class="bandimg top">${img('financial-freedom.jpg', 'bg', 'A parody thumbnail promising financial freedom with AI')}<div class="wrap"><h2>HOW IT<br>WORKS.</h2><p><b>A mod</b> is a Claude Code plugin whose <code>hooks/hooks.json</code> names a <code>modules</code> array: TypeScript that hooks engine events. <a href="https://code.claude.com/docs/en/plugins/mods/overview">Docs</a>.</p></div></section>
 <main class="wrap cols">
   <div class="col"><h2>Scrape</h2><ul>
     <li><b>Daily.</b> GitHub code search for mod fingerprints, plus repo topics.</li>
@@ -462,7 +462,7 @@ async function buildInto(DIST: string) {
   )
   await Bun.write(join(DIST, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['', 'new/', 'about/', ...views.map(v => `mods/${v.mod.slug}/`)].map(p => `<url><loc>${SITE_URL}${u(p)}</loc></url>`).join('')}</urlset>`)
   await Bun.write(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}${u('sitemap.xml')}\n`)
-  await Bun.write(join(DIST, '404.html'), layout({ title: 'Not found · slopshopper', description: 'Not found', body: `<section class="bandimg top" ${img('cannon-pigs.jpg', 'center 30%')}><div class="wrap"><h2>404.<br>NO SLOP HERE.</h2><p><a href="${u('')}"><b>Back to the shop →</b></a></p></div></section>`, path: '404.html', ogImage: 'cannon-pigs.jpg' }))
+  await Bun.write(join(DIST, '404.html'), layout({ title: 'Not found · slopshopper', description: 'Not found', body: `<section class="bandimg top">${img('cannon-pigs.jpg', 'bg', 'A slop cannon at a pig farm')}<div class="wrap"><h2>404.<br>NO SLOP HERE.</h2><p><a href="${u('')}"><b>Back to the shop →</b></a></p></div></section>`, path: '404.html', ogImage: 'cannon-pigs.jpg' }))
   await Bun.write(join(DIST, 'favicon.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#e07a4f"/><path d="M14 22h36l-4 24H18z" fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/><path d="M22 22v-4a10 10 0 0 1 20 0v4" fill="none" stroke="#111" stroke-width="5"/></svg>`)
   await cp(join(ROOT, 'site', 'static'), DIST, { recursive: true })
   if (existsSync(join(ROOT, '.claude-plugin', 'marketplace.json'))) await cp(join(ROOT, '.claude-plugin', 'marketplace.json'), join(DIST, 'marketplace.json'))
