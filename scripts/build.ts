@@ -145,7 +145,7 @@ function layout(opts: { title: string; description: string; body: string; path: 
 <meta property="og:description" content="${esc(opts.description)}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="${esc(canonical)}">
-<meta property="og:image" content="${SITE_URL}${u('img/' + (opts.ogImage ?? 'cannon-city.jpg'))}">
+<meta property="og:image" content="${SITE_URL}${u('img/' + (opts.ogImage ?? 'cannon-dairy.jpg'))}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="${u('favicon.svg')}" type="image/svg+xml">
 <link rel="alternate" type="application/rss+xml" title="New Claude Code mods" href="${u('feed.xml')}">
@@ -285,7 +285,7 @@ function indexPage(views: View[], stats: { total: number; fresh: number; authors
   const sorted = [...views].sort((a, b) => b.rank - a.rank)
   const inline = sorted.slice(0, INLINE_CARDS)
   const body = `
-<section class="hero">${img('cannon-city.jpg', 'bg', 'An AI slop cannon firing images over a city')}<div class="wrap">
+<section class="hero">${img('cannon-dairy.jpg', 'bg', 'A woman leaning on a slop cannon at a dairy farm')}<div class="wrap">
   <h1 class="wordmark">SLOP<br>SHOPPER</h1>
   <p class="tag"><b>Mods for Claude Code.</b> Scraped daily. Previewed. Installed in two commands.</p>
   <div class="bignums"><span><b>${num(stats.total)}</b> mods</span><span><b>${num(stats.authors)}</b> authors</span><span><b>${num(stats.fresh)}</b> new this week</span><span><b>2.1.287+</b> required</span></div>
@@ -317,9 +317,9 @@ function indexPage(views: View[], stats: { total: number; fresh: number; authors
 function newPage(views: View[]): string {
   const sorted = [...views].sort((a, b) => new Date(b.mod.firstSeen).getTime() - new Date(a.mod.firstSeen).getTime()).slice(0, 150)
   const body = `
-<section class="bandimg top">${img('cannon-dairy.jpg', 'bg', 'A slop cannon at a dairy farm')}<div class="wrap"><h2>FRESH<br>SLOP.</h2><p><b>Newest mods</b> by the day the scraper first saw them. <a href="${u('feed.xml')}">RSS</a></p></div></section>
+<section class="bandimg top">${img('cannon-city.jpg', 'bg', 'An AI slop cannon firing images over a city')}<div class="wrap"><h2>FRESH<br>SLOP.</h2><p><b>Newest mods</b> by the day the scraper first saw them. <a href="${u('feed.xml')}">RSS</a></p></div></section>
 <main class="wrap"><div class="list">${sorted.map(v => `<a class="row" href="${u(`mods/${v.mod.slug}/`)}"><span class="d">${esc(fmtDate(v.mod.firstSeen))}</span><span><b>${esc(title(v.mod))}</b> <span class="muted">${esc(oneLine(v.mod.description, 100))}</span></span><span class="d">${esc(v.mod.repo.fullName.split('/')[0]!)}</span></a>`).join('')}</div></main>`
-  return layout({ title: 'New Claude Code mods · slopshopper', description: 'The newest Claude Code mods found on GitHub.', body, path: 'new/', nav: 'new', ogImage: 'cannon-dairy.jpg' })
+  return layout({ title: 'New Claude Code mods · slopshopper', description: 'The newest Claude Code mods found on GitHub.', body, path: 'new/', nav: 'new', ogImage: 'cannon-city.jpg' })
 }
 
 function aboutPage(stats: { total: number }): string {
