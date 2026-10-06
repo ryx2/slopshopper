@@ -36,16 +36,23 @@ type View = {
 }
 
 const u = (p: string) => BASE + p.replace(/^\//, '')
+const img = (name: string, pos = 'center') => `style="--img:url('${u('img/' + name)}');--pos:${pos}"`
 const fmtDate = (iso: string) => (iso ? new Date(iso).toISOString().slice(0, 10) : '')
+const num = (n: number) => n.toLocaleString('en-US')
 const ago = (iso: string) => {
   const d = (Date.now() - new Date(iso).getTime()) / 86_400_000
   if (d < 1) return 'today'
-  if (d < 2) return 'yesterday'
-  if (d < 30) return `${Math.floor(d)}d ago`
-  if (d < 365) return `${Math.floor(d / 30)}mo ago`
-  return `${Math.floor(d / 365)}y ago`
+  if (d < 2) return '1d'
+  if (d < 30) return `${Math.floor(d)}d`
+  if (d < 365) return `${Math.floor(d / 30)}mo`
+  return `${Math.floor(d / 365)}y`
 }
 const title = (m: ModEntry) => m.displayName ?? m.name
+const oneLine = (s: string, n = 110) => {
+  const t = s.replace(/\s+/g, ' ').trim()
+  const cut = t.length > n ? t.slice(0, n).replace(/[\s,;:.]+\S*$/, '') + '…' : t
+  return cut || 'No description.'
+}
 
 function tagsOf(m: ModEntry, p: Preview | null): string[] {
   const tags = new Set<string>()
@@ -78,7 +85,7 @@ function tagsOf(m: ModEntry, p: Preview | null): string[] {
   return [...tags]
 }
 
-const TAG_LABELS: Record<string, string> = { pane: 'pane', band: 'band', spinner: 'spinner', transcript: 'transcript', toast: 'toast', status: 'status', guard: 'tool guard', command: 'command', prompt: 'prompt', tool: 'tool', model: 'model', process: 'process', network: 'network', timer: 'timer', turn: 'turn', session: 'session', agents: 'agents', audio: 'audio', original: 'original', builtin: 'built-in', sample: 'sample', new: 'new' }
+const TAG_LABELS: Record<string, string> = { pane: 'pane', band: 'band', spinner: 'spinner', transcript: 'rows', toast: 'toast', status: 'status', guard: 'guard', command: 'command', prompt: 'prompt', tool: 'tool', model: 'model', process: 'process', network: 'network', timer: 'timer', turn: 'turn', session: 'session', agents: 'agents', audio: 'audio', original: 'original', builtin: 'built-in', sample: 'sample', new: 'new' }
 const FILTER_TAGS = ['pane', 'band', 'guard', 'command', 'toast', 'spinner', 'transcript', 'prompt', 'status', 'tool', 'model', 'process', 'original', 'new']
 
 function thumbOf(p: Preview | null, m: ModEntry, tags: string[]): string {
@@ -110,22 +117,21 @@ function installFor(m: ModEntry, entryName: string): View['install'] {
   const repoUrl = `https://github.com/${m.repo.fullName}`
   const dirName = m.repo.fullName.split('/')[1]!
   const pluginDir = m.path ? `./${dirName}/${m.path}` : `./${dirName}`
-  if (m.kind === 'builtin') return [{ label: 'built in', cmds: [], note: 'This mod ships inside Claude Code. Run /plugin and look under Built-in.' }]
+  if (m.kind === 'builtin') return [{ label: 'built in', cmds: [], note: 'Ships inside Claude Code. See /plugin → Built-in.' }]
   if (m.kind === 'slopshopper')
     return [
-      { label: 'marketplace', cmds: [`claude plugin marketplace add ${REPO}`, `claude plugin install ${m.name}@slopshopper`], note: 'Or, in a session: /plugin install ' + m.name + ' --marketplace ' + REPO },
-      { label: 'clone', cmds: [`git clone ${repoUrl}`, `claude --plugin-dir ${pluginDir}`], note: 'Loads the mod for one session.' },
+      { label: 'marketplace', cmds: [`claude plugin marketplace add ${REPO}`, `claude plugin install ${m.name}@slopshopper`] },
+      { label: 'clone', cmds: [`git clone ${repoUrl}`, `claude --plugin-dir ${pluginDir}`], note: 'One session, nothing installed.' },
     ]
   const out: View['install'] = []
-  if (m.hasMarketplace && m.marketplaceName && m.path === '') out.push({ label: "author's marketplace", cmds: [`claude plugin marketplace add ${m.repo.fullName}`, `claude plugin install ${m.name}@${m.marketplaceName}`] })
-  else if (m.hasMarketplace && m.marketplaceName) out.push({ label: "author's marketplace", cmds: [`claude plugin marketplace add ${m.repo.fullName}`, `claude plugin install ${m.name}@${m.marketplaceName}`], note: 'The repository has a marketplace file; check its README for the entry name if this install fails.' })
-  if (m.kind === 'community') out.push({ label: 'slopshopper community', cmds: [`claude plugin marketplace add ${COMMUNITY_MARKETPLACE_URL}`, `claude plugin install ${entryName}@slopshopper-community`], note: 'One marketplace that lists every mod on this site, pointing at each author\'s own repository. Nothing is re-hosted.' })
-  if (m.kind === 'sample') out.push({ label: 'playground marketplace', cmds: [`git clone https://github.com/anthropics/claude-code-playground`, `claude plugin marketplace add ./claude-code-playground/claude-code/mods`, `claude plugin install ${m.name}@claude-code-playground-mods`] })
-  out.push({ label: 'clone', cmds: [`git clone ${repoUrl}`, `claude --plugin-dir ${pluginDir}`], note: 'Loads the mod for one session without installing it.' })
+  if (m.hasMarketplace && m.marketplaceName) out.push({ label: 'author', cmds: [`claude plugin marketplace add ${m.repo.fullName}`, `claude plugin install ${m.name}@${m.marketplaceName}`], note: m.path ? 'Entry name may differ; see the README.' : undefined })
+  if (m.kind === 'community') out.push({ label: 'community', cmds: [`claude plugin marketplace add ${COMMUNITY_MARKETPLACE_URL}`, `claude plugin install ${entryName}@slopshopper-community`], note: "Points at the author's repo. Nothing re-hosted." })
+  if (m.kind === 'sample') out.push({ label: 'playground', cmds: [`git clone https://github.com/anthropics/claude-code-playground`, `claude plugin marketplace add ./claude-code-playground/claude-code/mods`, `claude plugin install ${m.name}@claude-code-playground-mods`] })
+  out.push({ label: 'clone', cmds: [`git clone ${repoUrl}`, `claude --plugin-dir ${pluginDir}`], note: 'One session, nothing installed.' })
   return out
 }
 
-function layout(opts: { title: string; description: string; body: string; path: string; nav?: string; extraHead?: string }): string {
+function layout(opts: { title: string; description: string; body: string; path: string; nav?: string; ogImage?: string }): string {
   const canonical = `${SITE_URL}${u(opts.path)}`
   return `<!doctype html>
 <html lang="en">
@@ -139,52 +145,50 @@ function layout(opts: { title: string; description: string; body: string; path: 
 <meta property="og:description" content="${esc(opts.description)}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="${esc(canonical)}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${SITE_URL}${u('img/' + (opts.ogImage ?? 'cannon-city.jpg'))}">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="${u('favicon.svg')}" type="image/svg+xml">
 <link rel="alternate" type="application/rss+xml" title="New Claude Code mods" href="${u('feed.xml')}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${u('style.css')}">
-${opts.extraHead ?? ''}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="${u('')}"><span class="cart">▤</span>slopshopper</a>
+  <a class="brand" href="${u('')}">SLOP<span>SHOPPER</span></a>
   <nav class="nav">
-    <a href="${u('')}" ${opts.nav === 'mods' ? 'class="on"' : ''}>mods</a>
-    <a href="${u('new/')}" ${opts.nav === 'new' ? 'class="on"' : ''}>new</a>
-    <a href="${u('about/')}" ${opts.nav === 'about' ? 'class="on"' : ''}>how it works</a>
-    <a href="https://github.com/${REPO}" rel="noopener">github</a>
+    <a href="${u('')}" ${opts.nav === 'mods' ? 'class="on"' : ''}>Mods</a>
+    <a href="${u('new/')}" ${opts.nav === 'new' ? 'class="on"' : ''}>New</a>
+    <a href="${u('about/')}" ${opts.nav === 'about' ? 'class="on"' : ''}>How</a>
+    <a href="https://github.com/${REPO}" rel="noopener">GitHub</a>
   </nav>
 </div></header>
 ${opts.body}
 <footer class="footer"><div class="wrap">
-  slopshopper is open source (<a href="https://github.com/${REPO}">${REPO}</a>). Community mods belong to their authors and run with your permissions: read a mod before you install it. Previews come from a sandboxed replay of a scripted session, not from the real engine, so a real session can look different.
-  <br><a href="${u('api/mods.json')}">mods.json</a> · <a href="${u('feed.xml')}">rss</a> · <a href="${u('community/marketplace.json')}">community marketplace</a> · built ${fmtDate(new Date().toISOString())}
+  <b>Open source.</b> MIT. <b>Not vetted.</b> Read a mod before you install it. <b>Previews are sandbox replays,</b> not the real engine.
+  <span class="links"><a href="https://github.com/${REPO}">${REPO}</a> · <a href="${u('api/mods.json')}">api</a> · <a href="${u('feed.xml')}">rss</a> · <a href="${u('community/marketplace.json')}">marketplace.json</a></span>
 </div></footer>
 <script src="${u('app.js')}" defer></script>
 </body>
 </html>`
 }
 
-function badges(v: View): string {
+function badges(v: View, max = 4): string {
   const shown = v.tags.filter(t => t !== 'session' && t !== 'turn')
   const order = ['original', 'builtin', 'sample', 'pane', 'band', 'spinner', 'transcript', 'guard', 'command', 'toast', 'status', 'prompt', 'tool', 'model', 'process', 'network', 'timer', 'agents', 'audio']
   const list = [...(v.isNew ? ['new'] : []), ...order.filter(t => shown.includes(t))]
-  return `<div class="badges">${list.slice(0, 7).map(t => `<span class="badge ${t}">${esc(TAG_LABELS[t] ?? t)}</span>`).join('')}</div>`
+  return `<div class="badges">${list.slice(0, max).map(t => `<span class="badge ${t}">${esc(TAG_LABELS[t] ?? t)}</span>`).join('')}</div>`
 }
 
 function card(v: View): string {
   const m = v.mod
   const hay = [m.name, m.displayName, m.description, m.repo.fullName, m.author?.name, ...m.keywords, ...v.tags, ...(v.preview?.validate.hooks ?? [])].filter(Boolean).join(' ').toLowerCase()
-  const avatar = m.repo.ownerAvatar ? `<img src="${esc(m.repo.ownerAvatar)}&s=32" alt="" loading="lazy">` : ''
   return `<article class="card" data-name="${esc(m.name)}" data-stars="${v.stars}" data-seen="${new Date(m.firstSeen).getTime()}" data-updated="${new Date(v.updated).getTime()}" data-rank="${v.rank.toFixed(2)}" data-tags="${esc([...v.tags, ...(v.isNew ? ['new'] : [])].join(' '))}" data-hay="${esc(hay)}">
   <div class="thumb">${v.thumb}</div>
   <div class="body">
     <div class="name"><a href="${u(`mods/${m.slug}/`)}">${esc(title(m))}</a></div>
-    ${badges(v)}
-    <p class="desc">${esc(m.description || 'No description.')}</p>
-    <div class="meta">${avatar}<span>${esc(m.repo.fullName)}</span>${v.stars ? `<span><span class="star">★</span> ${v.stars}</span>` : ''}<span>${esc(ago(v.updated))}</span></div>
+    <p class="desc">${esc(oneLine(m.description, 96))}</p>
+    <div class="meta">${badges(v, 3)}<span class="who">${esc(m.repo.fullName.split('/')[0]!)}${v.stars ? ` · <b>★${num(v.stars)}</b>` : ''} · ${esc(ago(v.updated))}</span></div>
   </div>
 </article>`
 }
@@ -197,7 +201,7 @@ function installPanel(v: View): string {
   if (!v.install.length) return ''
   if (v.install.length === 1 && !v.install[0]!.cmds.length) return `<div class="panel"><h3>Install</h3><p class="muted">${esc(v.install[0]!.note ?? '')}</p></div>`
   return `<div class="panel tabbed"><h3>Install</h3><div class="tabs">${v.install.map((i, k) => `<button data-tab="t${k}" class="${k === 0 ? 'on' : ''}">${esc(i.label)}</button>`).join('')}</div>${v.install
-    .map((i, k) => `<div class="tab ${k === 0 ? 'on' : ''}" data-tab="t${k}"><div style="display:grid;gap:6px">${cmdBlock(i.cmds)}</div>${i.note ? `<p class="tiny" style="margin:8px 0 0">${esc(i.note)}</p>` : ''}</div>`)
+    .map((i, k) => `<div class="tab ${k === 0 ? 'on' : ''}" data-tab="t${k}"><div class="cmds">${cmdBlock(i.cmds)}</div>${i.note ? `<p class="tiny">${esc(i.note)}</p>` : ''}</div>`)
     .join('')}</div>`
 }
 
@@ -211,77 +215,68 @@ function detailPage(v: View): string {
   const sites = h?.sites ?? {}
   const siteCards: string[] = []
   const add = (label: string, html: string | null, note?: string) => {
-    if (html) siteCards.push(`<div><div class="tiny" style="margin:0 0 6px">${esc(label)}${note ? ` · ${esc(note)}` : ''}</div><div class="site-box"><div class="tty">${html}</div></div></div>`)
+    if (html) siteCards.push(`<div><div class="lbl">${esc(label)}${note ? ` <span class="muted">· ${esc(note)}</span>` : ''}</div><div class="site-box"><div class="tty">${html}</div></div></div>`)
   }
-  add('Band above the prompt', siteHtml(sites.AbovePrompt, 100))
-  for (const [id, r] of Object.entries(sites.Pane ?? {})) add(`Pane · ${esc((r as { title?: string }).title ?? id)}`, siteHtml(r, 60), (r as { transient?: boolean }).transient ? 'captured while the mod was holding a tool call' : undefined)
+  add('Band', siteHtml(sites.AbovePrompt, 100))
+  for (const [id, r] of Object.entries(sites.Pane ?? {})) add(`Pane · ${esc((r as { title?: string }).title ?? id)}`, siteHtml(r, 60), (r as { transient?: boolean }).transient ? 'while holding a tool call' : undefined)
   add('Spinner', siteHtml(sites.Spinner, 100))
   add('Prompt hint', siteHtml(sites.PromptHint, 100))
-  add('Turn summary line', siteHtml(sites.TurnDuration, 100))
+  add('Turn line', siteHtml(sites.TurnDuration, 100))
   add('Your message', siteHtml(sites.UserMessage, 100))
   add("Claude's reply", siteHtml(sites.AssistantMessage, 100))
-  add('Tool call row', siteHtml(sites.ToolUse, 100))
+  add('Tool row', siteHtml(sites.ToolUse, 100))
   add('Command output', siteHtml(sites.CommandOutput, 100))
-  const facts = [
-    ['version', m.version ?? '—'],
-    ['license', m.license ?? m.repo.license ?? 'none stated'],
-    ['stars', String(v.stars)],
-    ['updated', fmtDate(v.updated)],
-    ['first seen', fmtDate(m.firstSeen)],
-    ['entry', m.entry],
-  ]
   const events = p?.validate.hooks.length ? p.validate.hooks : (h?.hooks ?? []).map(x => x.event + (x.matcher ? `{${Object.entries(x.matcher).map(([k, val]) => `${k}=${typeof val === 'string' ? val : JSON.stringify(val)}`).join(', ')}}` : ''))
   const calls = p?.validate.calls ?? Object.keys(h?.apiCalls ?? {})
   const summary = v.mock?.summary ?? []
   const notes: string[] = []
   if (h?.commands.length) notes.push(`adds ${h.commands.map(c => `<code>/${esc(c.name)}</code>`).join(', ')}`)
   if (h?.tools.length) notes.push(`gives Claude ${h.tools.map(t => `<code>${esc(t.name)}</code>`).join(', ')}`)
-  if (h?.rewrites.length) for (const r of h.rewrites.slice(0, 4)) notes.push(`${esc(r.event)}: ${esc(r.summary)}`)
-  if (h?.denies.length) for (const d of h.denies.slice(0, 3)) notes.push(`refused <code>${esc(d.tool)}</code>: ${esc(d.reason.slice(0, 160))}`)
-  if (h?.timers.length) notes.push(`runs on a timer (${h.timers.map(t => `${t.kind} ${t.ms}ms`).join(', ')})`)
-  if (h?.toasts.length) notes.push(`toasts: ${h.toasts.slice(0, 3).map(t => `“${esc(t.slice(0, 80))}”`).join(', ')}`)
-  if (h?.status) notes.push(`status line: “${esc(h.status.slice(0, 100))}”`)
-  const userConfig = m.userConfig && Object.keys(m.userConfig).length ? `<div class="panel"><h3>Options</h3><dl class="kv">${Object.entries(m.userConfig).map(([k, f]) => `<dt>${esc(k)}</dt><dd>${esc(f.title ?? '')}${f.description ? ` <span class="muted">— ${esc(f.description.slice(0, 160))}</span>` : ''}${f.default !== undefined ? ` <span class="tiny">default ${esc(JSON.stringify(f.default))}</span>` : ''}</dd>`).join('')}</dl></div>` : ''
-  const harnessStatus = !p ? '<div class="warn">No preview was generated for this mod yet.</div>' : !h?.ok ? `<div class="warn">The preview harness could not run this mod: ${esc(h?.error ?? 'unknown error')}. The facts below come from static analysis.</div>` : ''
-  const validateStatus = p && !p.validate.ok ? `<div class="err"><b>claude plugin validate</b> reports errors:<br>${p.validate.errors.map(e => esc(e)).join('<br>')}</div>` : p?.validate.warnings.length ? `<details><summary>${p.validate.warnings.length} validation warning${p.validate.warnings.length === 1 ? '' : 's'}</summary><ul>${p.validate.warnings.map(w => `<li class="tiny">${esc(w)}</li>`).join('')}</ul></details>` : ''
+  if (h?.rewrites.length) for (const r of h.rewrites.slice(0, 3)) notes.push(`${esc(r.event)}: ${esc(r.summary.slice(0, 120))}`)
+  if (h?.denies.length) for (const d of h.denies.slice(0, 2)) notes.push(`refused <code>${esc(d.tool)}</code>`)
+  if (h?.timers.length) notes.push(`runs on a timer`)
+  if (h?.toasts.length) notes.push(`toast: “${esc(h.toasts[0]!.slice(0, 70))}”`)
+  if (h?.status) notes.push(`status: “${esc(h.status.slice(0, 70))}”`)
+  const userConfig = m.userConfig && Object.keys(m.userConfig).length ? `<div class="panel"><h3>Options</h3><dl class="kv">${Object.entries(m.userConfig).map(([k, f]) => `<dt>${esc(k)}</dt><dd>${esc(f.title ?? f.description?.slice(0, 80) ?? '')}${f.default !== undefined ? ` <span class="tiny">= ${esc(JSON.stringify(f.default))}</span>` : ''}</dd>`).join('')}</dl></div>` : ''
+  const harnessStatus = !p ? '<div class="warn"><b>No preview yet.</b></div>' : !h?.ok ? `<div class="warn"><b>Preview could not run:</b> ${esc((h?.error ?? 'unknown error').slice(0, 200))}</div>` : ''
+  const validateStatus = p && !p.validate.ok ? `<div class="err"><b>validate: ${p.validate.errors.length} error${p.validate.errors.length === 1 ? '' : 's'}</b><br>${p.validate.errors.slice(0, 3).map(e => esc(e.slice(0, 160))).join('<br>')}</div>` : p ? '<div class="ok"><b>validate: passed</b></div>' : ''
   const source = Object.entries(m.files)
     .filter(([f]) => !f.endsWith('.json'))
     .slice(0, 12)
-    .map(([f, text]) => `<details ${f === m.entry ? 'open' : ''}><summary><code>${esc(f)}</code> <span class="tiny">${text.split('\n').length} lines</span></summary><pre class="source"><code>${text
+    .map(([f, text]) => `<details><summary><code>${esc(f)}</code> <span class="tiny">${text.split('\n').length} lines</span></summary><pre class="source"><code>${text
       .split('\n')
       .slice(0, 1200)
       .map((l, i) => `<span class="ln">${i + 1}</span>${esc(l)}`)
       .join('\n')}</code></pre></details>`)
     .join('')
+  const repoLink = `<a href="${esc(m.repo.url)}${m.path ? '/tree/' + esc(m.repo.defaultBranch) + '/' + esc(m.path) : ''}" rel="noopener">${esc(m.repo.fullName)}${m.path ? '/' + esc(m.path) : ''}</a>`
   const body = `
+<section class="dhero" ${img('slop-shop.jpg', 'right 22%')}><div class="wrap">
+  <h1>${esc(title(m))}</h1>
+  <p class="one">${esc(oneLine(m.description, 160))}</p>
+  ${badges(v, 6)}
+  <div class="strip">${v.stars ? `<span><b>★ ${num(v.stars)}</b></span>` : ''}<span>v<b>${esc(m.version ?? '?')}</b></span><span><b>${esc(m.license ?? m.repo.license ?? 'no license')}</b></span><span>updated <b>${esc(fmtDate(v.updated))}</b></span><span>${repoLink}</span></div>
+</div></section>
 <div class="wrap">
-  <div class="detail-h">
-    <div>
-      <h1>${esc(title(m))} ${badges(v)}</h1>
-      <p class="muted" style="font-size:1.05rem;max-width:760px">${esc(m.description)}</p>
-      <div class="by">${m.repo.ownerAvatar ? `<img src="${esc(m.repo.ownerAvatar)}&s=48" alt="">` : ''}<span>${m.author?.name ? esc(m.author.name) + ' · ' : ''}<a href="${esc(m.repo.url)}${m.path ? '/tree/' + esc(m.repo.defaultBranch) + '/' + esc(m.path) : ''}" rel="noopener">${esc(m.repo.fullName)}${m.path ? '/' + esc(m.path) : ''}</a>${m.homepage && !m.homepage.includes('slopshopper.com') ? ` · <a href="${esc(m.homepage)}" rel="noopener">homepage</a>` : ''}</span></div>
-    </div>
-  </div>
-  <div class="facts">${facts.map(([k, val]) => `<div class="fact"><div class="k">${esc(k!)}</div><div class="v">${esc(val!)}</div></div>`).join('')}</div>
   ${harnessStatus}
-  ${v.mock && v.mock.hasDrawing ? `<h2>Preview</h2><p class="muted">What a terminal session looks like with this mod loaded, replayed from a scripted turn in a sandbox.</p><div class="tty-frame"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="title">claude · ~/work/app · ${esc(m.name)}</span></div><div class="tty">${v.mock.html}</div></div>` : ''}
-  <div class="two" style="margin-top:26px">
+  ${v.mock && v.mock.hasDrawing ? `<div class="lbl">Preview · a replayed session in a sandbox</div><div class="tty-frame"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="title">claude · ~/work/app · ${esc(m.name)}</span></div><div class="tty">${v.mock.html}</div></div>` : ''}
+  <div class="two">
     <div>
-      ${siteCards.length ? `<h2>What it draws</h2><div style="display:grid;gap:16px">${siteCards.join('')}</div>` : ''}
-      ${readme ? `<h2>README</h2><div class="readme">${readme}</div>` : ''}
-      <h2>Source</h2>${source || '<p class="muted">No source captured.</p>'}
+      ${siteCards.length ? `<h2>Draws</h2><div class="sites">${siteCards.join('')}</div>` : ''}
+      ${readme ? `<details class="big" open><summary>README</summary><div class="readme clamp" id="readme">${readme}</div><button class="chip expand" data-expand="readme">More ▾</button></details>` : ''}
+      <details class="big"><summary>Source <span class="tiny">${Object.keys(m.files).filter(f => !f.endsWith('.json')).length} files</span></summary>${source || '<p class="muted">Not captured.</p>'}</details>
     </div>
     <aside>
       ${installPanel(v)}
-      <div class="panel"><h3>In the preview session</h3>${summary.length || notes.length ? `<ul>${[...summary.map(s => esc(s)), ...notes].map(s => `<li>${s}</li>`).join('')}</ul>` : '<p class="muted">Nothing visible: this mod works behind the scenes, or needs something the preview session does not have.</p>'}</div>
-      <div class="panel"><h3>Events it handles</h3>${events.length ? `<div class="events">${events.map(e => `<span>${esc(e)}</span>`).join('')}</div>` : '<p class="muted">none found</p>'}</div>
-      <div class="panel"><h3>What it reaches</h3>${calls.length ? `<div class="events">${calls.map(c => `<span>${esc(c)}</span>`).join('')}</div>` : '<p class="muted">no mods API calls found</p>'}${p?.validate.envReads.length ? `<p class="tiny" style="margin:8px 0 0">env: ${esc(p.validate.envReads.join(', '))}</p>` : ''}${p?.validate.stateWrites.length ? `<p class="tiny" style="margin:4px 0 0">state: ${esc([...new Set([...p.validate.stateReads, ...p.validate.stateWrites])].join(', '))}</p>` : ''}</div>
+      <div class="panel"><h3>In the preview</h3>${summary.length || notes.length ? `<ul>${[...summary.map(s => esc(s)), ...notes].slice(0, 7).map(s => `<li>${s}</li>`).join('')}</ul>` : '<p class="muted">Nothing visible. Works behind the scenes, or needs what the sandbox lacks.</p>'}</div>
+      <div class="panel"><h3>Hooks</h3>${events.length ? `<div class="events">${events.map(e => `<span>${esc(e)}</span>`).join('')}</div>` : '<p class="muted">none</p>'}</div>
+      <div class="panel"><h3>Reaches</h3>${calls.length ? `<div class="events">${calls.map(c => `<span>${esc(c.replace(/ \(via .*\)$/, ''))}</span>`).join('')}</div>` : '<p class="muted">nothing</p>'}${p?.validate.envReads.length ? `<p class="tiny">env: ${esc(p.validate.envReads.join(', '))}</p>` : ''}</div>
       ${userConfig}
-      <div class="panel"><h3>Checks</h3>${p?.validate.ok ? '<div class="ok">claude plugin validate passed</div>' : ''}${validateStatus}<p class="tiny" style="margin:8px 0 0">${m.hasTests ? 'Has tests.' : 'No tests found.'} ${m.hasTypes ? 'Declares a state contract.' : ''}</p></div>
+      <div class="panel"><h3>Checks</h3>${validateStatus}<p class="tiny">${m.hasTests ? '<b>Tests</b> ✓' : 'No tests'} · ${m.hasTypes ? '<b>State contract</b> ✓' : 'no state contract'} · first seen ${esc(fmtDate(m.firstSeen))}</p></div>
     </aside>
   </div>
 </div>`
-  return layout({ title: `${title(m)} · Claude Code mod · slopshopper`, description: m.description.slice(0, 200) || `${m.name}, a Claude Code mod`, body, path: `mods/${m.slug}/`, nav: 'mods' })
+  return layout({ title: `${title(m)} · Claude Code mod · slopshopper`, description: oneLine(m.description, 200), body, path: `mods/${m.slug}/`, nav: 'mods', ogImage: 'slop-shop.jpg' })
 }
 
 const INLINE_CARDS = 120
@@ -290,61 +285,79 @@ function indexPage(views: View[], stats: { total: number; fresh: number; authors
   const sorted = [...views].sort((a, b) => b.rank - a.rank)
   const inline = sorted.slice(0, INLINE_CARDS)
   const body = `
-<section class="hero"><div class="wrap">
-  <h1>The <em>mod shop</em> for Claude Code.</h1>
-  <p class="lead">Every mod on GitHub, scraped daily, rendered into a preview of what it does to your terminal, and installable in two commands. Mods are small TypeScript functions that change how Claude Code works: panes, bands, guards, commands, redrawn rows.</p>
-  <div class="stats"><span><b>${stats.total}</b> mods</span><span><b>${stats.fresh}</b> new this week</span><span><b>${stats.authors}</b> authors</span><span>needs Claude Code <b>2.1.287+</b></span></div>
+<section class="hero" ${img('cannon-city.jpg', 'center 30%')}><div class="wrap">
+  <h1 class="wordmark">SLOP<br>SHOPPER</h1>
+  <p class="tag"><b>Mods for Claude Code.</b> Scraped daily. Previewed. Installed in two commands.</p>
+  <div class="bignums"><span><b>${num(stats.total)}</b> mods</span><span><b>${num(stats.authors)}</b> authors</span><span><b>${num(stats.fresh)}</b> new this week</span><span><b>2.1.287+</b> required</span></div>
   <div class="install-hero">
-    <div class="tiny">Install slopshopper's own mods:</div>
-    ${cmdBlock([`claude plugin marketplace add ${REPO}`])}
-    <div class="tiny">Or every community mod through one marketplace:</div>
-    ${cmdBlock([`claude plugin marketplace add ${COMMUNITY_MARKETPLACE_URL}`])}
+    <div><span class="lbl">Ours</span>${cmdBlock([`claude plugin marketplace add ${REPO}`])}</div>
+    <div><span class="lbl">Everyone's</span>${cmdBlock([`claude plugin marketplace add ${COMMUNITY_MARKETPLACE_URL}`])}</div>
   </div>
 </div></section>
+<div class="shop">
 <div class="toolbar"><div class="wrap">
-  <input id="q" class="search" type="search" placeholder="search mods (name, author, event, keyword)" autocomplete="off">
+  <input id="q" class="search" type="search" placeholder="Search ${num(stats.total)} mods" autocomplete="off">
   <div class="chips">${FILTER_TAGS.map(t => `<button class="chip" data-f="${t}">${esc(TAG_LABELS[t] ?? t)}</button>`).join('')}</div>
-  <select id="sort" class="sort"><option value="rank">sort: featured</option><option value="new">newest</option><option value="updated">recently updated</option><option value="stars">stars</option><option value="name">name</option></select>
+  <select id="sort" class="sort"><option value="rank">Featured</option><option value="new">Newest</option><option value="updated">Updated</option><option value="stars">Stars</option><option value="name">A–Z</option></select>
   <span id="count" class="tiny"></span>
 </div></div>
 <main class="wrap">
-  <div class="section-h"><h2>All mods</h2><span class="tiny">previews are replays of a scripted session in a sandbox</span></div>
   <div class="grid" id="grid" data-total="${views.length}" data-cards="${u('cards.json')}">${inline.map(card).join('\n')}</div>
-  ${views.length > inline.length ? `<p style="text-align:center;margin:26px 0"><button class="chip" id="more" style="font-size:14px;padding:9px 18px">show all ${views.length} mods</button></p>` : ''}
-</main>`
-  return layout({ title: 'slopshopper · the mod shop for Claude Code', description: `${stats.total} Claude Code mods, scraped from GitHub, each with a visual preview and install commands.`, body, path: '', nav: 'mods' })
+  ${views.length > inline.length ? `<p class="more-row"><button class="chip big" id="more">Show all ${num(views.length)}</button></p>` : ''}
+</main>
+</div>
+<section class="bandimg" ${img('cannon-manure.jpg', 'center 40%')}><div class="wrap">
+  <h2>ALL THE SLOP.<br>ONE SHOP.</h2>
+  <p><b>Every mod GitHub has,</b> through one marketplace that points at each author's own repo.</p>
+  ${cmdBlock([`claude plugin marketplace add ${COMMUNITY_MARKETPLACE_URL}`, 'claude plugin install <name>@slopshopper-community'])}
+</div></section>`
+  return layout({ title: 'slopshopper · the mod shop for Claude Code', description: `${num(stats.total)} Claude Code mods, scraped from GitHub, each with a visual preview and install commands.`, body, path: '', nav: 'mods' })
 }
 
 function newPage(views: View[]): string {
-  const sorted = [...views].sort((a, b) => new Date(b.mod.firstSeen).getTime() - new Date(a.mod.firstSeen).getTime()).slice(0, 120)
-  const body = `<main class="wrap"><div class="section-h" style="margin-top:40px"><h2>New mods</h2><span class="tiny">by the date slopshopper first saw them · <a href="${u('feed.xml')}">rss</a></span></div>
-<div class="list">${sorted.map(v => `<div class="row"><span class="d">${esc(fmtDate(v.mod.firstSeen))}</span><span><a href="${u(`mods/${v.mod.slug}/`)}"><b class="mono">${esc(title(v.mod))}</b></a> <span class="muted">— ${esc(v.mod.description.slice(0, 140))}</span></span><span class="d">${esc(v.mod.repo.fullName)}</span></div>`).join('')}</div></main>`
-  return layout({ title: 'New Claude Code mods · slopshopper', description: 'The newest Claude Code mods found on GitHub.', body, path: 'new/', nav: 'new' })
+  const sorted = [...views].sort((a, b) => new Date(b.mod.firstSeen).getTime() - new Date(a.mod.firstSeen).getTime()).slice(0, 150)
+  const body = `
+<section class="bandimg top" ${img('cannon-dairy.jpg', 'center 35%')}><div class="wrap"><h2>FRESH<br>SLOP.</h2><p><b>Newest mods</b> by the day the scraper first saw them. <a href="${u('feed.xml')}">RSS</a></p></div></section>
+<main class="wrap"><div class="list">${sorted.map(v => `<a class="row" href="${u(`mods/${v.mod.slug}/`)}"><span class="d">${esc(fmtDate(v.mod.firstSeen))}</span><span><b>${esc(title(v.mod))}</b> <span class="muted">${esc(oneLine(v.mod.description, 100))}</span></span><span class="d">${esc(v.mod.repo.fullName.split('/')[0]!)}</span></a>`).join('')}</div></main>`
+  return layout({ title: 'New Claude Code mods · slopshopper', description: 'The newest Claude Code mods found on GitHub.', body, path: 'new/', nav: 'new', ogImage: 'cannon-dairy.jpg' })
 }
 
 function aboutPage(stats: { total: number }): string {
-  const body = `<main class="wrap prose" style="padding-top:40px">
-<h1>How slopshopper works</h1>
-<p class="lead muted">A mod is a Claude Code plugin whose <code>hooks/hooks.json</code> names a <code>modules</code> array: a TypeScript or JavaScript file exporting <code>register(on)</code>, where each <code>on('event', hook)</code> can observe, rewrite or answer an engine event. Anthropic documents them at <a href="https://code.claude.com/docs/en/plugins/mods/overview">code.claude.com</a>; the feature shipped on by default in Claude Code 2.1.287.</p>
-<h2>Scraping</h2>
-<p>Once a day a GitHub Actions job runs code search for the fingerprints of a mod (<code>"modules" filename:hooks.json</code>, imports from <code>claude-code</code>, <code>$.ui.resolve</code>, …) plus repository topics. Every candidate repository's tree is walked and every <code>hooks/hooks.json</code> is read: only a file with a non-empty <code>modules</code> array counts. The mod's manifest, hooks module and its relative imports, README and last commit date are recorded. Forks with fewer than five stars are skipped. Nothing is re-hosted: install commands point at each author's repository.</p>
-<h2>Previews</h2>
-<p>Each mod's hooks module is bundled and loaded into a fresh JavaScript realm (<code>node:vm</code>) with a fake mods API. A scripted session plays through it: a session start, a prompt, a turn with a <code>Read</code>, a <code>Grep</code>, an <code>Edit</code>, a <code>Write</code> that contains a TODO, a failing <code>bun test</code>, a risky <code>rm -rf … && git push --force</code>, a <code>cat .env</code> with secrets, then <code>turn.complete</code> and <code>session.measure</code> with real-looking token figures. Every command the mod registers is run once. Then each render site is asked to draw. The trees come back as data and a small text-grid layout engine draws them the way the terminal would. A pane captured while a mod was holding a tool call is marked as such.</p>
-<p>The fake API answers from canned data: <code>$.process.run</code> knows a few git and test commands, <code>$.fs.read</code> a handful of files, <code>$.http.fetch</code> always fails, <code>$.model.complete</code> replies <code>OK</code>, <code>$.ui.ask</code> picks the first option. So a preview shows the shape of a mod, not its behaviour on your machine. The facts panel (events, calls, state, env) comes from <code>claude plugin validate --json</code>, which reads the source without running it.</p>
-<h2>Trust</h2>
-<p>A mod runs inside Claude Code with your permissions: it can read and write files, start processes, make network requests, and approve tool calls. slopshopper lists what the scraper found and does not vet it. Before installing anything, read its source (every page shows it) and run <code>claude plugin validate</code> on a clone; the <code>calls:</code> line is the inventory of what it reaches.</p>
-<h2>Getting listed</h2>
-<p>Push a public repository with a mod in it. The next scrape finds it through code search; if it does not appear within a couple of days, open an issue on <a href="https://github.com/${REPO}">${REPO}</a> with the repository name. A <code>.claude-plugin/plugin.json</code> with <code>name</code>, <code>description</code>, <code>author</code>, <code>license</code> and <code>homepage</code> makes a better listing, and a <code>.claude-plugin/marketplace.json</code> at the repository root gets your own install command shown first.</p>
-<h2>The community marketplace</h2>
-<p><code>${esc(COMMUNITY_MARKETPLACE_URL)}</code> is a generated marketplace file listing the ${stats.total} mods on this site, each with a <code>github</code> or <code>git-subdir</code> source pointing at the author's repository. Add it once with <code>claude plugin marketplace add &lt;url&gt;</code> and install any mod as <code>name@slopshopper-community</code>. Entry names are the mod's own name, suffixed with the author's login when two mods share a name.</p>
-<h2>Running it yourself</h2>
-<pre><code>git clone https://github.com/${REPO}
+  const body = `
+<section class="bandimg top" ${img('financial-freedom.jpg', 'center 30%')}><div class="wrap"><h2>HOW IT<br>WORKS.</h2><p><b>A mod</b> is a Claude Code plugin whose <code>hooks/hooks.json</code> names a <code>modules</code> array: TypeScript that hooks engine events. <a href="https://code.claude.com/docs/en/plugins/mods/overview">Docs</a>.</p></div></section>
+<main class="wrap cols">
+  <div class="col"><h2>Scrape</h2><ul>
+    <li><b>Daily.</b> GitHub code search for mod fingerprints, plus repo topics.</li>
+    <li><b>Verified.</b> Every repo tree walked; only a <code>hooks.json</code> with <code>modules</code> counts.</li>
+    <li><b>Nothing re-hosted.</b> Installs point at the author's repo.</li>
+    <li><b>Skipped.</b> Forks under five stars.</li>
+  </ul></div>
+  <div class="col"><h2>Preview</h2><ul>
+    <li><b>Sandboxed.</b> The mod runs in a fresh JS realm with a fake mods API.</li>
+    <li><b>One scripted turn.</b> Reads, an edit, a TODO, a failing test, a risky <code>rm -rf</code>, a <code>cat .env</code>.</li>
+    <li><b>Then it draws.</b> Every render site is asked; the trees are drawn like the terminal.</li>
+    <li><b>Shape, not behaviour.</b> Canned git, files and model answers. Facts come from <code>claude plugin validate</code>.</li>
+  </ul></div>
+  <div class="col"><h2>Trust</h2><ul>
+    <li><b>Your permissions.</b> A mod can read files, run processes, hit the network, approve tool calls.</li>
+    <li><b>Not vetted.</b> Read the source (every page has it).</li>
+    <li><b>Check it.</b> <code>claude plugin validate</code> on a clone lists every call it makes.</li>
+  </ul></div>
+  <div class="col"><h2>Get listed</h2><ul>
+    <li><b>Push a public repo</b> with a mod. The next scrape finds it.</li>
+    <li><b>Missing?</b> Open an issue on <a href="https://github.com/${REPO}">${REPO}</a>.</li>
+    <li><b>Better listing:</b> <code>plugin.json</code> with name, description, author, license, homepage.</li>
+  </ul></div>
+  <div class="col"><h2>Run it</h2><pre><code>git clone https://github.com/${REPO}
 cd slopshopper && bun install
-bun run scrape      # needs a GitHub token (gh auth token is picked up)
-bun run previews    # needs the claude CLI for validate
-bun run build && bun run dev</code></pre>
+bun run scrape && bun run previews
+bun run build && bun run dev</code></pre></div>
+  <div class="col"><h2>Marketplace</h2><ul>
+    <li><b>${num(stats.total)} mods,</b> one file: <code>${esc(COMMUNITY_MARKETPLACE_URL)}</code></li>
+    <li><b>Names</b> are the mod's own; the author's login is appended on a clash.</li>
+  </ul></div>
 </main>`
-  return layout({ title: 'How slopshopper works', description: 'How slopshopper scrapes GitHub for Claude Code mods and renders previews of them.', body, path: 'about/', nav: 'about' })
+  return layout({ title: 'How slopshopper works', description: 'How slopshopper scrapes GitHub for Claude Code mods and previews them.', body, path: 'about/', nav: 'about', ogImage: 'financial-freedom.jpg' })
 }
 
 function feed(views: View[]): string {
@@ -449,7 +462,7 @@ async function buildInto(DIST: string) {
   )
   await Bun.write(join(DIST, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['', 'new/', 'about/', ...views.map(v => `mods/${v.mod.slug}/`)].map(p => `<url><loc>${SITE_URL}${u(p)}</loc></url>`).join('')}</urlset>`)
   await Bun.write(join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}${u('sitemap.xml')}\n`)
-  await Bun.write(join(DIST, '404.html'), layout({ title: 'Not found · slopshopper', description: 'Not found', body: `<main class="wrap" style="padding-top:60px"><h1>404</h1><p class="muted">No mod here. <a href="${u('')}">Back to the shop.</a></p></main>`, path: '404.html' }))
+  await Bun.write(join(DIST, '404.html'), layout({ title: 'Not found · slopshopper', description: 'Not found', body: `<section class="bandimg top" ${img('cannon-pigs.jpg', 'center 30%')}><div class="wrap"><h2>404.<br>NO SLOP HERE.</h2><p><a href="${u('')}"><b>Back to the shop →</b></a></p></div></section>`, path: '404.html', ogImage: 'cannon-pigs.jpg' }))
   await Bun.write(join(DIST, 'favicon.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#e07a4f"/><path d="M14 22h36l-4 24H18z" fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/><path d="M22 22v-4a10 10 0 0 1 20 0v4" fill="none" stroke="#111" stroke-width="5"/></svg>`)
   await cp(join(ROOT, 'site', 'static'), DIST, { recursive: true })
   if (existsSync(join(ROOT, '.claude-plugin', 'marketplace.json'))) await cp(join(ROOT, '.claude-plugin', 'marketplace.json'), join(DIST, 'marketplace.json'))

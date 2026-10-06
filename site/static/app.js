@@ -116,3 +116,12 @@
     }
   })
 })()
+
+// "More" buttons unclamp a block
+document.addEventListener('click', e => {
+  const b = e.target.closest('button[data-expand]')
+  if (!b) return
+  const el = document.getElementById(b.dataset.expand)
+  if (el) el.classList.remove('clamp')
+  b.classList.add('hidden')
+})
