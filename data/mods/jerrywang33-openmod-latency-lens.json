@@ -1,0 +1,8 @@
+{
+ "slug": "jerrywang33-openmod-latency-lens",
+ "files": {
+  "hooks/register.js": "// OpenMod Latency Lens · MIT\n// Change this threshold, then rerun the replay.\nconst SLOW_MS = 100;\nlet slow = [];\nlet total = 0;\n\nexport function register(on) {\n  on('tool.call', async ($, e, next) => {\n    const start = await $.clock.now();\n    try {\n      return await next(e);\n    } finally {\n      const ms = Math.max(0, (await $.clock.now()) - start);\n      total += 1;\n      if (ms >= SLOW_MS) {\n        slow.push({ tool: e.tool, ms });\n        slow = slow.slice(-20);\n      }\n      $.ui.invalidate('ui.render');\n    }\n  });\n\n  on('ui.render', { component: 'AbovePrompt' }, ($, e, next) => {\n    if (e.props.hasSurvey || !total) return next(e);\n    const { Box, Text } = $.ui.resolve(e);\n    const recent = slow.slice(-3);\n    return Box({ paddingX: 1, children: [\n      Text({ color: 'cyan',\n        children: 'Latency Lens · ' + total + ' calls'\n          + ' · threshold ' + SLOW_MS + 'ms' }),\n      Text({ color: slow.length ? 'yellow' : 'green',\n        children: recent.length\n          ? recent.map(r => r.tool + ' ' + r.ms + 'ms').join(' / ')\n          : 'No calls above the threshold.' })\n    ] });\n  });\n}\n",
+  "hooks/hooks.json": "{\"modules\":[\"./register.js\"]}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"latency-lens\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Spot tool calls above an elapsed-time threshold.\",\n  \"author\": {\n    \"name\": \"Jerry Wang\",\n    \"url\": \"https://github.com/jerrywang33\"\n  },\n  \"homepage\": \"https://openmod.xyz\",\n  \"repository\": \"https://github.com/jerrywang33/openmod\",\n  \"license\": \"MIT\"\n}"
+ }
+}

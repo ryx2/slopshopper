@@ -1,0 +1,8 @@
+{
+ "slug": "ucsandman-agnostic-ai-tunnel-policy",
+ "files": {
+  "hooks/index.ts": "// MIDDLEWARE TUNNEL stage 3/4 — \"policy\". Load all four with --plugin-dir in order; each Bash call containing\n// the word \"tunnel\" walks down observer → cost → policy → telemetry → next() → tool, then back up.\nconst STAGE = \"3/4 policy\";\nexport const register = (on, options) => {\n  on(\"tool.call\", { tool: \"Bash\", command: /tunnel/i }, async ($, e, next) => {\n    const t0 = Date.now();\n    $.ui.log(`⟦tunnel ${STAGE}⟧ ↓ enter  ${e.tool} ${String(e.command).slice(0, 60)}`);\n    if (/format c:/i.test(String(e.command))) { $.ui.log(`⟦tunnel ${STAGE}⟧   ✖ DENY`); return { deny: \"tunnel policy: no\" }; }\n    $.ui.log(`⟦tunnel ${STAGE}⟧   ↓ verdict: allow (no rule matched)`);\n    const r = await next(e);\n    $.ui.log(`⟦tunnel ${STAGE}⟧ ↑ leave  after ${Date.now() - t0}ms`);\n    return r;\n  });\n};\n",
+  "hooks/hooks.json": "{\"modules\": [\"./index.ts\"]}",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"tunnel-policy\",\n  \"version\": \"0.1.0\",\n  \"description\": \"MIDDLEWARE TUNNEL stage 3: Policy: allows everything harmless; denies a matching rule\"\n}"
+ }
+}

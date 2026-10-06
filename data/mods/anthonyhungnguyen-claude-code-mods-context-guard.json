@@ -1,0 +1,9 @@
+{
+ "slug": "anthonyhungnguyen-claude-code-mods-context-guard",
+ "files": {
+  "hooks/register.ts": "import { atom, read, update } from 'claude-code'\nimport type { EngineInterface, Register } from 'claude-code'\n\nconst WARN_AT = 80\nconst warnedA = atom({ plugin: 'context-guard', key: 'warned' } as const, false)\n\n// warn once per climb past WARN_AT; dropping back under (a compact, a /clear) re-arms it\nexport const nextWarned = (percent: number, warned: boolean) =>\n  percent >= WARN_AT ? { warned: true, toast: !warned } : { warned: false, toast: false }\n\nasync function check($: EngineInterface) {\n  const percent = Math.round((await $.session.usage()).context.percent ?? 0)\n  $.ui.status(`🧠 ${percent}% context`)\n  const { warned, toast } = nextWarned(percent, await read($, warnedA))\n  await update($, warnedA, () => warned)\n  if (toast) $.ui.toast(`Context at ${percent}%. Consider /compact before it auto-compacts.`)\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const done = await next(e)\n    await check($)\n    return done\n  })\n\n  on('turn.complete', async ($, e, next) => {\n    const done = await next(e)\n    if (!e.agentId) await check($)\n    return done\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"context-guard\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Context window fill in the status line, with a heads-up before it runs out\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "export type Percent = number\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'context-guard': { warned: boolean }\n  }\n}\n"
+ }
+}

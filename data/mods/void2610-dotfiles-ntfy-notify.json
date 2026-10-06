@@ -1,0 +1,8 @@
+{
+ "slug": "void2610-dotfiles-ntfy-notify",
+ "files": {
+  "hooks/index.ts": "import type { Register } from \"claude-code\";\n\nexport const register: Register = (on) => {\n  on(\"turn.complete\", async ($, e, next) => {\n    // サブエージェントと中断は通知しない (旧 Stop hook 相当はメインループの完了のみ)\n    if (!e.agentId && !e.isAborted) {\n      const home = await $.env.get(\"HOME\");\n      if (home) {\n        await $.process.run([\n          \"bash\",\n          `${home}/.claude/notify.sh`,\n          \"Stop\",\n          \"success\",\n        ]);\n      }\n    }\n    return next(e);\n  });\n};\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./index.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"ntfy-notify\",\n  \"author\": {\n    \"name\": \"void2610\"\n  },\n  \"description\": \"メインループのターン完了を notify.sh 経由で ntfy.sh へプッシュ通知する\",\n  \"version\": \"0.1.0\"\n}"
+ }
+}

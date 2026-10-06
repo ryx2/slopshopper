@@ -1,0 +1,8 @@
+{
+ "slug": "void2610-dotfiles-artifact-archive",
+ "files": {
+  "hooks/index.ts": "import type { Register } from \"claude-code\";\n\nconst ARCHIVE_DIR = \"~/Documents/claude-artifacts\";\n\n// scratchpad (/private)/tmp 配下は セッション終了で消えるため配信元にさせない\nconst EPHEMERAL = /^\\/(private\\/)?(tmp|var\\/folders)\\//;\n\ntype ArtifactArgs = { action?: string; file_path?: string; asset?: boolean };\n\nexport const register: Register = (on) => {\n  // 生成型の tool union に Artifact が無いため RegExp matcher で束縛する\n  on(\"tool.call\", { tool: /^Artifact$/ }, (_$, e, next) => {\n    const args = e as unknown as ArtifactArgs;\n    const isPublish = (args.action ?? \"publish\") === \"publish\" && !args.asset;\n    if (isPublish && args.file_path && EPHEMERAL.test(args.file_path)) {\n      return {\n        deny: `一時ディレクトリからの publish は禁止。ファイルを ${ARCHIVE_DIR}/ へ内容が分かる kebab-case 名で保存し直し、そこから publish し直すこと (セッション終了後もソースを残すため)。`,\n      };\n    }\n    return next(e);\n  });\n};\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./index.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"artifact-archive\",\n  \"author\": {\n    \"name\": \"void2610\"\n  },\n  \"description\": \"一時ディレクトリ (tmp/scratchpad) からの Artifact publish を拒否し ~/Documents/claude-artifacts への保存へ誘導する\",\n  \"version\": \"0.1.0\"\n}"
+ }
+}

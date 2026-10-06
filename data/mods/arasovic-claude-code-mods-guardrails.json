@@ -1,0 +1,8 @@
+{
+ "slug": "arasovic-claude-code-mods-guardrails",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Commands refused on their text. Credential reads are secret-guard's.\nconst FORBIDDEN = [\n  { re: /\\bcf\\s+(deploy|migrate|init)\\b/, why: 'cf write commands are never run by Claude; deploys stay on the Wrangler flow.' },\n  { re: /\\b(git\\s+commit|gh\\s+(pr|issue))\\b[\\s\\S]*(Co-Authored-By|Generated with \\[?Claude)/i, why: 'Remove the Co-Authored-By / tool-attribution line and retry.' },\n  { re: /\\bgit\\s+(checkout\\s+-b|switch\\s+-c|branch|push)\\b[^|;&]*(?:[\\s:+]|refs\\/heads\\/)claude\\//, why: 'Branches never use the claude/ prefix; use fix/, style/, chore/ etc.' },\n]\n// ponytail: matches command text only; `git commit -F file`, aliases and scripts slip through. Permission deny rules for hard guarantees.\n\nexport const forbiddenReason = (command: string) => FORBIDDEN.find(f => f.re.test(command))?.why\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    const reason = forbiddenReason(e.command)\n    return reason ? { deny: `${$.plugin.name}: ${reason}` } : next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"guardrails\",\n  \"version\": \"0.3.1\",\n  \"description\": \"Blocks Cloudflare write commands, attribution lines in commits and PRs, and claude/ branch names\",\n  \"author\": {\n    \"name\": \"Mehmet Aras\",\n    \"url\": \"https://github.com/arasovic\"\n  },\n  \"repository\": \"https://github.com/arasovic/claude-code-mods\",\n  \"license\": \"MIT\"\n}"
+ }
+}

@@ -1,0 +1,397 @@
+{
+ "slug": "gabedeluna-claude-mods-ledger",
+ "generatedAt": "2026-10-06T05:29:12.604Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Agent"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "SendMessage"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__ledger__ledger"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ledger"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "ledger"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "ledger",
+    "description": "Open the session ledger (close · catch-up)",
+    "argumentHint": "[close|catch-up]"
+   }
+  ],
+  "tools": [
+   {
+    "name": "ledger",
+    "description": "The session ledger: the running record of this conversation, shown in the user's Ledger pane and attached to the conversation when it matters.\nUpdate it (several ops in one call) as things happen, not at the end:\n- a topic opens or its status changes: op topic (status now|exploring|shaped|chosen|hold|rejected|review|done; only one topic is \"now\").\n- the user rules on something: op decide, with quote = the user's exact words copied from their message (use ... to skip words). It is rejected unless the quote is in a user message. Never record your own recommendation as decided.\n- you ask the user something, or recommend something they have not confirmed: op ask, owner you, rec = your recommended answer written as the user would say it ('Yes, build it next.'), detail = why.\n- the user answers a question: op answer, item = its id, text = the decision, quote = the user's exact words. It moves to Decided. A question that stops mattering is answered too, never closed: text says what was decided (for example \"not doing this\"), quote = the user's words that settled it. Dropping a question is a decision.\n- either of you commits to doing something: op todo, owner you|claude.\n- you start building something: before writing code, add each major step of the build as a to-do (owner claude), in the order you will do it, worded as the action in plain words so the user can tell what is happening: \"Build the panel the side chat lives in\", \"Build the file and board lookups\", \"Write the tests for asking a question\", \"Run the tests\", \"Install it for every session\". Not a feature label like \"Lookups, read-only\". Close each with evidence the moment it is done; add new steps the same way as they come up.\n- you dispatch an agent to do work: first give it steps. For an OpenSpec change: op tasks (topic, change=<change name>, agent=<agent name>, tasks=\"3.1,3.2\" to pick some) loads the unticked tasks of openspec/changes/<change>/tasks.md as numbered to-dos. For any other work: op todo with agent=<agent name> per step, in order; the tool numbers them 1, 2, 3. Dispatching a working agent by name with no open steps under that name is refused; when steps exist, the agent's prompt and every follow-up message to it carry its step ids and the close instruction automatically. Reassign with op assign (agent, and item or topic+tasks).\n- a fact changes the options: op learn.\n- something is finished: op close with item id (or topic + task number); Claude's to-dos need evidence (what ran and what it showed). A step whose agent has finished while it is still open is flagged FINISHED; close it with evidence you verified or reopen it as work still owed.\nLink a topic to its board card with op topic card=<card-id>, or set exempt=true when the board rules exempt the work (Claude meta-tooling). The ledger only reads the board: you write it with the board tool, logging each decision with the user's exact words in quotes; the ledger sees the quote on the card and marks it logged by itself. Use op logged item=<id> only when the card log cannot carry the quote.\nOther ops: edit (item, text, detail, owner), reopen, remove, hold (text, or empty to clear), title (text). An empty ops list returns the current ledger."
+   }
+  ],
+  "panes": [
+   {
+    "id": "ledger",
+    "title": "Ledger"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.id": 1,
+   "$.store.get": 2,
+   "$.state.get": 15,
+   "$.state.set": 5,
+   "$.tool.register": 1,
+   "$.command.register": 1,
+   "$.session.root": 1,
+   "$.fs.exists": 5,
+   "$.clock.every": 1,
+   "$.store.set": 1,
+   "$.session.turns": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 20000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "ledger": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "width": 54
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "#e0905f",
+           "bold": true
+          },
+          "children": [
+           "LEDGER  "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "This session"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexGrow": 1
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "this conversation · 1 turn"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "    "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "──────────────────────────────────────────────────────"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "f-all",
+           "variant": "primary",
+           "label": "All topics",
+           "hotkey": "1",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "f-you",
+           "plain": true,
+           "dimColor": true,
+           "label": "For you 0",
+           "hotkey": "2",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "f-claude",
+           "plain": true,
+           "dimColor": true,
+           "label": "Claude 0",
+           "hotkey": "3",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "f-board",
+           "plain": true,
+           "dimColor": true,
+           "label": "Board ✓",
+           "hotkey": "4",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Nothing recorded yet. Topics, decisions and to-dos land here as they come up."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "──────────────────────────────────────────────────────"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "press a line to open it · 1-4 filters · esc back to prompt"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Ledger"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(ledger)",
+   "/ledger → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=Agent}",
+   "tool.call{tool=SendMessage}",
+   "tool.call{tool=mcp__ledger__ledger}",
+   "tool.call",
+   "prompt.submit",
+   "session.compact",
+   "turn.complete",
+   "command.run{command=ledger}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=ledger}"
+  ],
+  "calls": [
+   "$.agent.list (via refreshAgents)",
+   "$.clock.every",
+   "$.clock.now (via refreshBoard)",
+   "$.command.register",
+   "$.fs.exists (via findBoard",
+   "readTasks)",
+   "$.fs.read (via readTasks",
+   "refreshBoard)",
+   "$.fs.stat",
+   "$.model.fork",
+   "$.prompt.fill (via fillPrompt)",
+   "$.prompt.read (via fillPrompt)",
+   "$.session.id",
+   "$.session.messages (via ownBoardCards",
+   "userTexts)",
+   "$.session.root (via findBoard",
+   "readTasks)",
+   "$.session.turns",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via save)",
+   "$.store.get",
+   "$.store.set (via rememberSaid",
+   "save)",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.open",
+   "$.ui.resolve"
+  ],
+  "stateReads": [
+   "ledger.board",
+   "ledger.doc",
+   "ledger.filter",
+   "ledger.finished",
+   "ledger.open",
+   "ledger.turns"
+  ],
+  "stateWrites": [
+   "ledger.board",
+   "ledger.doc",
+   "ledger.filter",
+   "ledger.finished",
+   "ledger.open",
+   "ledger.turns"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/gabedeluna-claude-mods-ledger/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/gabedeluna-claude-mods-ledger/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: ledger.doc, ledger.board, ledger.open, ledger.filter, ledger.turns, ledger.finished"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/gabedeluna-claude-mods-ledger/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=Agent}, tool.call{tool=SendMessage}, tool.call{tool=mcp__ledger__ledger}, tool.call, prompt.submit, session.compact, turn.complete, command.run{command=ledger}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=ledger}",
+      "./register.tsx calls: $.agent.list (via refreshAgents), $.clock.every, $.clock.now (via refreshBoard), $.command.register, $.fs.exists (via findBoard, readTasks), $.fs.read (via readTasks, refreshBoard), $.fs.stat, $.model.fork, $.prompt.fill (via fillPrompt), $.prompt.read (via fillPrompt), $.session.id, $.session.messages (via ownBoardCards, userTexts), $.session.root (via findBoard, readTasks), $.session.turns, $.state.get, $.state.set, $.store.delete (via save), $.store.get, $.store.set (via rememberSaid, save), $.tool.register, $.ui.close, $.ui.open, $.ui.resolve",
+      "./register.tsx state writes: ledger.board, ledger.doc, ledger.filter, ledger.finished, ledger.open, ledger.turns",
+      "./register.tsx state reads: ledger.board, ledger.doc, ledger.filter, ledger.finished, ledger.open, ledger.turns"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "bb902d27da3c4da3"
+}

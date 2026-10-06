@@ -1,0 +1,8 @@
+{
+ "slug": "turgid-tributary-claude-plugins-review-queue",
+ "files": {
+  "hooks/register.ts": "import type { Register, EngineInterface } from 'claude-code'\n\nconst REFRESH_MS = 5 * 60 * 1000\nexport const PREFIX = \"You're a slacker, McFly:\"\nconst QUERY = 'is:pr is:open review-requested:@me archived:false'\n\nexport async function refresh($: EngineInterface): Promise<void> {\n  try {\n    const { exitCode, stdout } = await $.process.run(\n      ['gh', 'api', '-X', 'GET', 'search/issues', '-f', `q=${QUERY}`, '-f', 'per_page=1', '--jq', '.total_count'],\n      { timeoutMs: 15_000 },\n    )\n    const count = Number.parseInt(stdout.trim(), 10)\n    if (exitCode !== 0 || Number.isNaN(count)) {\n      $.ui.status(`${PREFIX} reviews: ?`)\n      return\n    }\n    $.ui.status(`${PREFIX} ${count} review${count === 1 ? '' : 's'}`)\n  } catch {\n    $.ui.status(`${PREFIX} reviews: ?`)\n  }\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const started = await next(e)\n    void refresh($)\n    $.clock.every(REFRESH_MS, () => void refresh($))\n    return started\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"review-queue\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Shows how many open GitHub pull requests are waiting on your review in the status line.\",\n  \"author\": {\n    \"name\": \"Joe\"\n  },\n  \"keywords\": [\n    \"status-line\",\n    \"code-review\",\n    \"github\",\n    \"mod\"\n  ]\n}"
+ }
+}

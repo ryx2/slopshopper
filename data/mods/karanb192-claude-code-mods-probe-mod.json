@@ -1,0 +1,9 @@
+{
+ "slug": "karanb192-claude-code-mods-probe-mod",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code';\n\nconst RUNS = { plugin: 'probe-mod', key: 'runs' } as const;\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const started = await next(e);\n    const { value = 0 } = await $.state.get(RUNS);\n    const runs = value + 1;\n    await $.state.set(RUNS, runs);\n    const tag = await $.env.get('MOD_BUILDER_PROBE');\n    $.ui.log(`probe-mod: start ${runs}${tag ? ` (${tag})` : ''}`, { to: 'debug' });\n    await $.command.register({ name: 'probe-mod', description: 'Print how many sessions probe-mod has seen (probe-mod)', immediate: true });\n    return started;\n  });\n\n  on('command.run', { command: 'probe-mod' }, async ($) => {\n    const { value = 0 } = await $.state.get(RUNS);\n    return { text: `probe-mod: ${value} start(s) seen` };\n  });\n};\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"probe-mod\",\n  \"version\": \"1.0.0\",\n  \"description\": \"[probe] Loaded headlessly by mod-builder so the engine writes the running build's types. Not a mod to install.\",\n  \"author\": {\n    \"name\": \"mod-builder\"\n  },\n  \"license\": \"MIT\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "declare module 'claude-code' {\n  interface PluginState {\n    'probe-mod': { runs: number };\n  }\n}\n"
+ }
+}

@@ -1,0 +1,9 @@
+{
+ "slug": "agihunt-cc-mods-starter-mod",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\n// 改名时，把这里、plugin.json 的 name、types/index.d.ts 里的键一起改掉\nconst PANE = 'starter-mod'\nconst CLICKS = { plugin: 'starter-mod', key: 'clicks' } as const\n\nexport const register: Register = on => {\n  // 会话开始：注册命令。immediate 让 Claude 干活时输入命令也能马上执行\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'starter', description: '打开起步模板的面板', immediate: true })\n    return next(e)\n  })\n\n  // 命令：打开面板。不回文字，免得在对话里留一行\n  on('command.run', { command: 'starter' }, async $ => {\n    await $.ui.open({ id: PANE, title: 'Starter', focus: true })\n    return {}\n  })\n\n  // 面板：读 $.state 画界面；按钮里改 $.state，读到它的界面会自动重画\n  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {\n    const { Box, Text, Button } = $.ui.resolve(e)\n    const { value: clicks = 0 } = await $.state.get(CLICKS)\n    return (\n      <Box flexDirection=\"column\" gap={1}>\n        <Text bold>Hello from a mod</Text>\n        <Text dimColor>{`clicked ${clicks} times`}</Text>\n        <Button key=\"click\" label=\"Click\" onPress={() => void $.state.set(CLICKS, clicks + 1)} />\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"starter-mod\",\n  \"version\": \"0.1.0\",\n  \"description\": \"新 Mod 的起步模板：一个面板 + 一个命令 + 输入框上方的提示 / Starter: one pane, one command, one hint above the prompt\",\n  \"author\": {\n    \"name\": \"Your Name\"\n  },\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "// $.state 里存的值要在这里声明类型（插件名 → 键 → 类型），validate 会逐个核对\nexport type Clicks = number\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'starter-mod': {\n      clicks: Clicks\n    }\n  }\n}\n"
+ }
+}

@@ -1,0 +1,366 @@
+{
+ "slug": "anshc022-laya-claude-code-laya",
+ "generatedAt": "2026-10-06T05:28:35.174Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__laya__decide"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "laya"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "laya"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "laya",
+    "description": "Laya: open the decisions pane; \"/laya hide\" or \"/laya show\" toggles the band",
+    "argumentHint": "[hide|show]",
+    "output": "Opened the Laya decisions pane."
+   }
+  ],
+  "tools": [
+   {
+    "name": "decide",
+    "description": "Fast typed decisions from Laya, a ~421M-parameter decision model running locally on this machine (about 30-150 ms per call, no text generation, calibrated probabilities). Use it to classify, route, triage or score many items quickly: support tickets, log lines, commits, files, requests. Each question is {type, instructions, criteria}: type \"choice\" picks one key of criteria (an object of option -> description, at most ~20 options); \"noul\" gives P(yes) for a yes/no question (criteria optional, {\"true\": ..., \"false\": ...}); \"score\" picks a level from criteria (an array of level descriptions, low to high). Refer to the state in instructions with backticks, e.g. \"Which team should handle `message`?\". One call answers every question about one state; call once per item. Accuracy is that of a small untuned model: treat low-probability answers as uncertain and verify anything important yourself."
+   }
+  ],
+  "panes": [
+   {
+    "id": "laya",
+    "title": "Laya decisions"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.store.get": 1,
+   "$.http.fetch": 2,
+   "$.clock.every": 1,
+   "$.env.get": 1,
+   "$.process.run": 1,
+   "$.state.get": 12,
+   "$.state.set": 2,
+   "$.process.spawn": 1,
+   "$.ui.status": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 20000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row",
+      "gap": 1
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "bold": true,
+        "color": "cyan"
+       },
+       "children": [
+        "◆ Laya"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "bold": true,
+        "color": "red"
+       },
+       "children": [
+        "✕ offline"
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexGrow": 1,
+        "flexShrink": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true,
+          "wrap": "truncate-end"
+         },
+         "children": [
+          "the Laya server stopped"
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "0 checked · 0 flagged · 0 calls"
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "laya-details",
+        "label": "details",
+        "plain": true,
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "laya-hide",
+        "label": "hide",
+        "plain": true,
+        "onPress": "[fn]"
+       },
+       "children": []
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "laya": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "color": "red",
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "offline · the Laya server stopped"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "0 prompts checked · 0 flagged · 0 Claude tool calls · safety: show at 0.60 · hints: on at 0.70"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "No decisions yet. Send a prompt, or ask Claude to use the laya decide tool."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 2,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "laya-band",
+           "label": "hide band",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "laya-clear",
+           "label": "clear",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "laya-close",
+           "label": "close",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Laya decisions"
+    }
+   }
+  },
+  "script": [
+   "$.http.fetch(http://127.0.0.1:8741/health) → blocked in preview",
+   "$.process.run(uvx --version) → exit 0",
+   "session.start",
+   "$.process.spawn(uvx --python 3.12 --from laya[serve]==0.3.20 python /plugins/laya/server/serve.p…)",
+   "$.http.fetch(http://127.0.0.1:8741/health) → blocked in preview",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(laya)",
+   "/laya → Opened the Laya decisions pane."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "prompt.submit",
+   "tool.call{tool=mcp__laya__decide}",
+   "command.run{command=laya}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=laya}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.clock.sleep (via predict)",
+   "$.command.register",
+   "$.env.get (via findUvx)",
+   "$.fs.list (via childNames",
+   "projectAreas",
+   "subfolders)",
+   "$.http.fetch (via health",
+   "predict)",
+   "$.process.run (via findUvx)",
+   "$.process.spawn (via runServer)",
+   "$.session.cwd (via projectAreas)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via setHidden)",
+   "$.tool.register",
+   "$.ui.close (via closePane)",
+   "$.ui.log",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.status (via refreshStatus)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "laya.bandHidden",
+   "laya.recent",
+   "laya.server",
+   "laya.stats"
+  ],
+  "stateWrites": [
+   "laya.bandHidden",
+   "laya.recent",
+   "laya.server",
+   "laya.stats"
+  ],
+  "envReads": [
+   "HOME",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/anshc022-laya-claude-code-laya/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/anshc022-laya-claude-code-laya/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: laya.server, laya.recent, laya.stats, laya.bandHidden"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/anshc022-laya-claude-code-laya/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, prompt.submit, tool.call{tool=mcp__laya__decide}, command.run{command=laya}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=laya}",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.clock.sleep (via predict), $.command.register, $.env.get (via findUvx), $.fs.list (via childNames, projectAreas, subfolders), $.http.fetch (via health, predict), $.process.run (via findUvx), $.process.spawn (via runServer), $.session.cwd (via projectAreas), $.state.get, $.state.set, $.store.get, $.store.set (via setHidden), $.tool.register, $.ui.close (via closePane), $.ui.log, $.ui.open (via openPane), $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, USERPROFILE",
+      "./register.tsx state writes: laya.bandHidden, laya.recent, laya.server, laya.stats",
+      "./register.tsx state reads: laya.bandHidden, laya.recent, laya.server, laya.stats"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "6ec14e09a41bca31"
+}

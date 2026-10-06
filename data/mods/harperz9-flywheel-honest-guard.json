@@ -1,0 +1,8 @@
+{
+ "slug": "harperz9-flywheel-honest-guard",
+ "files": {
+  "hooks/register.js": "// Audit fixture (never loaded): only denies. The word allow appears in a\n// comment and a string, which must not count as an approval.\nexport function register(on) {\n  on(\"tool.call\", { tool: \"Bash\" }, async ($, e, next) => {\n    // We never allow force pushes.\n    if (/--force/.test(e.command)) return { deny: \"Force pushes are not allowed here.\" };\n    return next(e);\n  });\n  on(\"tool.check\", { tool: \"Bash\" }, async ($, e, next) => {\n    const decided = await next(e);\n    if (e.input.command.includes(\"git push\")) return { decision: \"deny\", reason: \"no pushes\" };\n    return decided;\n  });\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.js\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"honest-guard\",\n  \"version\": \"0.0.1\"\n}"
+ }
+}

@@ -1,0 +1,1222 @@
+{
+ "slug": "oshnilia-claude-plugins-session-board",
+ "generatedAt": "2026-10-06T05:30:02.795Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "board"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "board-update"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "board-ask"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "board-report"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.append"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-board__ledger_read"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-board__note"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-board__show"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-board__task"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-board__submit"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "board"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "board-explain"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "board",
+    "description": "Open the session board",
+    "output": "Session board opened."
+   },
+   {
+    "name": "board-update",
+    "description": "Rebuild the session map now (one model call over the session)",
+    "output": "Session board: map update started."
+   },
+   {
+    "name": "board-ask",
+    "description": "Ask a question about this session without adding to it",
+    "argumentHint": "<question>",
+    "output": "Usage: /board-ask <question>"
+   },
+   {
+    "name": "board-report",
+    "description": "Build the HTML report of the task and open it",
+    "output": "Session board: the task has no folder yet, so there is no report."
+   }
+  ],
+  "tools": [
+   {
+    "name": "ledger_read",
+    "description": "Read the session ledger: the structured history of THIS task (brief, goals, criteria, user constraints, decisions, findings, dead ends, open questions). Call it after compaction, before you repeat an approach, or when the user asks what was decided. With no input it returns the brief; give an id (like D2) for one node with its children, or a section."
+   },
+   {
+    "name": "note",
+    "description": "Record one item in the session ledger at once: a decision you took yourself (it goes to the acceptance list), an assumption, a finding with evidence, an open question for the user, a constraint the user stated, or a dead end. Give an existing id to update that item instead (for example mark a step done or a criterion proven with evidence). In free mode, kind idea keeps an idea thread: status open, trying, kept or dropped (a dropped idea says why in statement). With the lean rules, tag what you did not build (decision, tag skipped), a `lean:` shortcut (decision, tag shortcut) and an over-engineering finding (finding, tag cut): the person sees them under «Не построено»."
+   },
+   {
+    "name": "show",
+    "description": "Show a visual explanation to the user in the session board side pane: a short markdown takeaway and an optional SVG diagram (static or with CSS :hover, SMIL and <title> tooltips; no scripts; max 131072 chars). Use it instead of a long text answer when structure, flow or comparison is easier to see than to read."
+   },
+   {
+    "name": "task",
+    "description": "Write the task brief to the session board: the contract between the person and you. Use it when the person gives a new task, or asks to write up the current work as a task. Before the call, ask ALL missing questions at once in ONE AskUserQuestion call; do not drip questions later. Fill title (10 words or fewer), goal (what must change and why), result (what to hand in), done_when (2 to 5 checkable criteria: a command, a test, a screenshot), rules, out_of_scope, authority, materials. Give every text in plain English plus a Russian version for the board (title_ru, goal_ru, result_ru; {en, ru} items in done_when and rules; out_of_scope and materials in Russian). After the call, end your turn: the person reviews the brief and presses Start. Call it again to amend the brief."
+   },
+   {
+    "name": "submit",
+    "description": "Hand in the work for acceptance. Call it only when the work is done: first check EVERY criterion of the brief (K1, K2...) yourself and collect evidence (test, command and its output, file:line, URL). Give summary and summary_ru (what the person gets now, 2 or 3 short sentences, the result first), criteria [{id, status: proven|failed, result_ru, evidence[]}], for_you (what only the person can do now), verify (how to check it yourself), not_done and next. The person runs many sessions and reads this screen in 30 seconds, without having watched the session. So every Russian field (summary_ru, result_ru, for_you, verify, not_done, next) is plain everyday Russian: the result first, one thought per sentence, up to 15 words, verbs instead of nouns, no ledger ids (K1, D20, F27), no file paths, no run ids, no tool names, no English terms where a Russian word exists. Good result_ru: \"Да: проверки на GitHub проходят, оба плагина устанавливаются.\" Bad: \"CI run 37117211238: success on bb241e7\". Put ids, commands, paths, run ids and numbers into evidence: the board hides evidence under a toggle. If the session has the lean rules (\"lean is on\"), first check your own work: review the task's diff for over-engineering as lean-review does and record each finding with the note tool (kind finding, tag cut: what to remove, what replaces it, file and line; also for parts the person asked for by name, saying so); make sure each new `lean:` comment in the diff has a note with tag shortcut. Only record: do not change the code for them, the person picks what to cut. Put the result in lean_check, one plain Russian line («Лишнего не нашёл», «Нашёл два места, они в списке»). The board builds an HTML report and shows the person the Acceptance screen. After the call, end your turn and wait for one verdict. In free mode («Свободный режим») submit is the summary: give every idea its final status first, then summary_ru, next, for_you and an empty criteria list; there is no verdict."
+   }
+  ],
+  "panes": [
+   {
+    "id": "board",
+    "title": "Доска сессии"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"This session uses the session-board two-touch flow. The person runs many sessions at once: they give all input at the start and all feedba…"
+   }
+  ],
+  "apiCalls": {
+   "$.session.id": 1,
+   "$.state.get": 58,
+   "$.process.run": 1,
+   "$.state.set": 27,
+   "$.fs.exists": 5,
+   "$.session.messages": 2,
+   "$.command.register": 4,
+   "$.tool.register": 5,
+   "$.ui.open": 3,
+   "$.clock.now": 10,
+   "$.clock.after": 2,
+   "$.ui.resolve": 3
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 30
+   },
+   {
+    "kind": "after",
+    "ms": 30
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "key": "band-row",
+      "flexDirection": "row",
+      "justifyContent": "space-between",
+      "columnGap": 2,
+      "paddingRight": 4
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "columnGap": 1,
+        "flexShrink": 1,
+        "minWidth": 0
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "flexShrink": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "#9aa0a6"
+           },
+           "children": [
+            "○"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexShrink": 1,
+          "minWidth": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "wrap": "truncate-end",
+            "bold": true,
+            "dimColor": false
+           },
+           "children": [
+            "задания нет"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "columnGap": 2,
+        "flexShrink": 0,
+        "alignItems": "center"
+       },
+       "children": [
+        {
+         "type": "Button",
+         "props": {
+          "key": "band-main",
+          "label": "Поставить задачу",
+          "variant": "primary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "band-open",
+          "plain": true,
+          "label": "доска",
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "paddingRight": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "columnGap": 2,
+           "rowGap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "view-task",
+             "plain": true,
+             "label": "Задание",
+             "hotkey": "1",
+             "dimColor": false,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "view-work",
+             "plain": true,
+             "label": "Ход",
+             "hotkey": "2",
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "view-review",
+             "plain": true,
+             "label": "Приёмка",
+             "hotkey": "3",
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "view-log",
+             "plain": true,
+             "label": "Журнал",
+             "hotkey": "4",
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "view-ask",
+             "plain": true,
+             "label": "Спросить",
+             "hotkey": "5",
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "status",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "flex-start",
+             "columnGap": 2
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "задания нет · ход 1"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "refresh",
+                 "plain": true,
+                 "label": "↻ обновить",
+                 "dimColor": true,
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "r-task",
+           "marginTop": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "Задания нет"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "nt-1",
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap",
+             "dimColor": false
+            },
+            "children": [
+             "Опиши задачу как есть. Claude разложит её по шаблону, задаст все вопросы одним окном и будет ждать «Старт»."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "nt-a",
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "columnGap": 2,
+           "rowGap": 1,
+           "paddingLeft": 0,
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "task-new",
+             "label": "Поставить задачу",
+             "variant": "primary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "task-formal",
+             "label": "Оформить текущую работу",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "task-free",
+             "label": "Свободный режим",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "nt-free",
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap",
+             "dimColor": true
+            },
+            "children": [
+             "Свободный режим — без задания и приёмки: обсуждаем, пробуем, переделываем; в конце Claude подводит итог по идеям."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "r-tpl",
+           "marginTop": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "Шаблон задания"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "tpl-Цель",
+             "flexDirection": "row",
+             "alignItems": "flex-start",
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 16,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "Цель"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "что должно измениться и зачем"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tpl-Результат",
+             "flexDirection": "row",
+             "alignItems": "flex-start",
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 16,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "Результат"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "что сдать: файлы, PR, отчёт, демо"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tpl-Готово, когда",
+             "flexDirection": "row",
+             "alignItems": "flex-start",
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 16,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "Готово, когда"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "2–5 проверяемых критериев: команда, тест, скриншот"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tpl-Рамки",
+             "flexDirection": "row",
+             "alignItems": "flex-start",
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 16,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "Рамки"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "правила, запреты, что вне задачи"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tpl-Полномочия",
+             "flexDirection": "row",
+             "alignItems": "flex-start",
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 16,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "Полномочия"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "что Claude решает сам, что только с тобой"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tpl-Материалы",
+             "flexDirection": "row",
+             "alignItems": "flex-start",
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 16,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "Материалы"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "файлы, ссылки, примеры"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "r-policy",
+           "marginTop": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "Полномочия по умолчанию в проекте"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "policy",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "policy-b",
+             "flexDirection": "row",
+             "flexWrap": "wrap",
+             "columnGap": 2,
+             "rowGap": 1,
+             "paddingLeft": 0,
+             "marginTop": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "auth-careful",
+               "label": "осторожно",
+               "variant": "secondary",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "auth-normal",
+               "label": "обычно",
+               "variant": "primary",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "auth-bold",
+               "label": "смело",
+               "variant": "secondary",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column",
+             "marginTop": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "policy-alone",
+               "flexDirection": "row",
+               "alignItems": "flex-start",
+               "paddingLeft": 0
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "сам"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexGrow": 1,
+                 "flexShrink": 1,
+                 "minWidth": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "wrap"
+                  },
+                  "children": [
+                   "всё из «осторожно»; dev-зависимости; коммиты в рабочую ветку"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "policy-you",
+               "flexDirection": "row",
+               "alignItems": "flex-start",
+               "paddingLeft": 0
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "с тобой"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexGrow": 1,
+                 "flexShrink": 1,
+                 "minWidth": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "wrap"
+                  },
+                  "children": [
+                   "push; публикация; удаление чужого; деньги; смена цели или результата"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Доска сессии"
+    },
+    "board-explain": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No explanation yet."
+      ]
+     },
+     "title": "board-explain"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.ui.open(board)",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(board)",
+   "/board → Session board opened.",
+   "$.ui.open(board)",
+   "/board-update → Session board: map update started.",
+   "/board-ask → Usage: /board-ask <question>",
+   "/board-report → Session board: the task has no folder yet, so there is no report."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=board}",
+   "command.run{command=board-update}",
+   "command.run{command=board-ask}",
+   "command.run{command=board-report}",
+   "prompt.submit",
+   "tool.call",
+   "turn.complete",
+   "session.append",
+   "session.compact",
+   "tool.call{tool=mcp__session-board__ledger_read}",
+   "tool.call{tool=mcp__session-board__note}",
+   "tool.call{tool=mcp__session-board__show}",
+   "tool.call{tool=mcp__session-board__task}",
+   "tool.call{tool=mcp__session-board__submit}",
+   "ui.render{component=Pane, requestId=board}",
+   "ui.render{component=Pane, requestId=board-explain}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.exists",
+   "$.fs.list (via refreshOpenTasks)",
+   "$.fs.read",
+   "$.fs.write",
+   "$.model.fork (via runAsk",
+   "work)",
+   "$.process.run",
+   "$.prompt.submit (via say)",
+   "$.session.cwd (via countDebt",
+   "toggleDiff)",
+   "$.session.id",
+   "$.session.messages (via findLean)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.call (via push)",
+   "$.tool.register",
+   "$.ui.ask (via askNext)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via work)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "session-board.answering",
+   "session-board.debt",
+   "session-board.diff",
+   "session-board.editing",
+   "session-board.expanded",
+   "session-board.explain",
+   "session-board.greeted",
+   "session-board.home",
+   "session-board.ladder",
+   "session-board.lean",
+   "session-board.ledger",
+   "session-board.live",
+   "session-board.notes",
+   "session-board.openTasks",
+   "session-board.policy",
+   "session-board.qa",
+   "session-board.sent",
+   "session-board.status",
+   "session-board.verdict",
+   "session-board.view"
+  ],
+  "stateWrites": [
+   "session-board.answering",
+   "session-board.debt",
+   "session-board.diff",
+   "session-board.editing",
+   "session-board.expanded",
+   "session-board.explain",
+   "session-board.greeted",
+   "session-board.home",
+   "session-board.ladder",
+   "session-board.lean",
+   "session-board.ledger",
+   "session-board.live",
+   "session-board.notes",
+   "session-board.openTasks",
+   "session-board.policy",
+   "session-board.qa",
+   "session-board.sent",
+   "session-board.status",
+   "session-board.verdict",
+   "session-board.view"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/oshnilia-claude-plugins-session-board/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/oshnilia-claude-plugins-session-board/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: session-board.ledger, session-board.view, session-board.expanded, session-board.selectedTurn, session-board.status, session-board.live, session-board.qa, session-board.answering, session-board.explain, session-board.diff, session-board.verdict, session-board.notes, session-board.editing, session-board.greeted, session-board.openTasks, session-board.policy, session-board.sent, session-board.home, session-board.ladder, session-board.lean, session-board.debt"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/oshnilia-claude-plugins-session-board/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=board}, command.run{command=board-update}, command.run{command=board-ask}, command.run{command=board-report}, prompt.submit, tool.call, turn.complete, session.append, session.compact, tool.call{tool=mcp__session-board__ledger_read}, tool.call{tool=mcp__session-board__note}, tool.call{tool=mcp__session-board__show}, tool.call{tool=mcp__session-board__task}, tool.call{tool=mcp__session-board__submit}, ui.render{component=Pane, requestId=board}, ui.render{component=Pane, requestId=board-explain}, ui.render{component=AbovePrompt}",
+      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.fs.exists, $.fs.list (via refreshOpenTasks), $.fs.read, $.fs.write, $.model.fork (via runAsk, work), $.process.run, $.prompt.submit (via say), $.session.cwd (via countDebt, toggleDiff), $.session.id, $.session.messages (via findLean), $.state.get, $.state.set, $.tool.call (via push), $.tool.register, $.ui.ask (via askNext), $.ui.open, $.ui.resolve, $.ui.status (via work), $.ui.toast",
+      "./register.tsx state writes: session-board.answering, session-board.debt, session-board.diff, session-board.editing, session-board.expanded, session-board.explain, session-board.greeted, session-board.home, session-board.ladder, session-board.lean, session-board.ledger, session-board.live, session-board.notes, session-board.openTasks, session-board.policy, session-board.qa, session-board.sent, session-board.status, session-board.verdict, session-board.view",
+      "./register.tsx state reads: session-board.answering, session-board.debt, session-board.diff, session-board.editing, session-board.expanded, session-board.explain, session-board.greeted, session-board.home, session-board.ladder, session-board.lean, session-board.ledger, session-board.live, session-board.notes, session-board.openTasks, session-board.policy, session-board.qa, session-board.sent, session-board.status, session-board.verdict, session-board.view"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "4865c7259d7c63b5"
+}

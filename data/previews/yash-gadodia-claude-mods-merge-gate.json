@@ -1,0 +1,125 @@
+{
+ "slug": "yash-gadodia-claude-mods-merge-gate",
+ "generatedAt": "2026-10-06T05:28:23.444Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "merge-gate"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "merge-gate",
+    "description": "Deny Bash merges unless the latest message says merge (merge-gate)",
+    "argumentHint": "[on | off | status]",
+    "immediate": true,
+    "output": "merge-gate is on; latest message does not say merge"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "merge-gate: Yash has not said merge in his latest message. Ask him, or he says 'merge' and this passes.\n\"ship\", \"push\", \"deploy\" and \"land\" do not count: stop at the push, report the PR state, and let him merge."
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 1,
+   "$.store.get": 1,
+   "$.command.register": 1,
+   "$.process.run": 2
+  },
+  "timers": [],
+  "sites": {},
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git remote get-url origin) → exit 0",
+   "tool.call Bash denied: merge-gate: Yash has not said merge in his latest message. Ask him, or he says 'merge' and this pass…",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/merge-gate → merge-gate is on; latest message does not say merge"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=merge-gate}",
+   "prompt.submit",
+   "tool.call{tool=Bash}"
+  ],
+  "calls": [
+   "$.command.register",
+   "$.env.get (via readDisabled)",
+   "$.process.run (via git)",
+   "$.session.messages (via latestHuman)",
+   "$.store.get",
+   "$.store.set",
+   "$.ui.log"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "CLAUDE_MODS_DISABLE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/yash-gadodia-claude-mods-merge-gate/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/yash-gadodia-claude-mods-merge-gate/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/yash-gadodia-claude-mods-merge-gate/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, command.run{command=merge-gate}, prompt.submit, tool.call{tool=Bash}",
+      "./register.ts calls: $.command.register, $.env.get (via readDisabled), $.process.run (via git), $.session.messages (via latestHuman), $.store.get, $.store.set, $.ui.log",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: CLAUDE_MODS_DISABLE"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "3b61e8cfd4885654"
+}

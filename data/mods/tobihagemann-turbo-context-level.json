@@ -1,0 +1,8 @@
+{
+ "slug": "tobihagemann-turbo-context-level",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.tool.register({\n      name: 'read',\n      description: \"Reads how much of this session's context window remains.\",\n    })\n\n    return next(e)\n  })\n\n  on('tool.call', { tool: 'mcp__context-level__read' }, async ($, e) => {\n    if (e.agentId !== undefined) {\n      return {\n        result: \"No reading for a subagent: this tool reads the main session's context window.\",\n      }\n    }\n\n    const { context } = await $.session.usage()\n\n    if (context.percent === undefined) {\n      return { result: 'No reading yet for the current context window.' }\n    }\n\n    return { result: `${100 - context.percent}% of the context window remains.` }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"context-level\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Gives Claude a tool that reads how much of the context window remains.\",\n  \"author\": {\n    \"name\": \"Tobias Hagemann\"\n  }\n}"
+ }
+}

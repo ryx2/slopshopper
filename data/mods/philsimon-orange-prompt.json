@@ -1,0 +1,9 @@
+{
+ "slug": "philsimon-orange-prompt",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nimport { paintDraft } from './decorate'\n\nexport const register: Register = on => {\n  // The Orange Dark theme (~/.claude/themes/orange-dark.json) colors every sent message. This hook colors the draft while you type.\n  // The prompt API paints text runs only, so the empty box and its border stay as they are.\n  on('prompt.edit', async ($, e, next) => paintDraft(await next(e)))\n}\n",
+  "hooks/decorate.ts": "export const ORANGE = '#C2410C'\n\ntype Box = { text: string; cursor: number; decorations?: Array<Record<string, unknown>> }\n\n// Paints the whole draft white on orange. An empty draft gets no run, so the box stays plain until you type.\nexport const paintDraft = <T extends Box>(box: T): T => {\n  if (box.text === '') return box\n  const run = { start: 0, end: box.text.length, backgroundColor: ORANGE, color: 'white' }\n  return { ...box, decorations: [...(box.decorations ?? []), run] }\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"orange-prompt\",\n  \"version\": \"0.3.0\",\n  \"description\": \"Paints the draft you are typing white on orange. Pair it with the Orange Dark theme to color your sent messages.\",\n  \"author\": {\n    \"name\": \"Phil Simon\"\n  },\n  \"license\": \"MIT\"\n}"
+ }
+}

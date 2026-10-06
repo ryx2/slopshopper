@@ -1,0 +1,1064 @@
+{
+ "slug": "mishgoldenberg-claude-mods-guardrails",
+ "generatedAt": "2026-10-06T05:32:43.902Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "guard"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "guard-preset"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "guardrails"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "guard",
+    "description": "Open guardrails: toggle safety rules and presets",
+    "output": "Guardrails panel opened."
+   },
+   {
+    "name": "guard-preset",
+    "description": "Apply a guardrail preset",
+    "argumentHint": "safe | locked | review | off",
+    "output": "Unknown preset. Use one of: safe, locked, review, off"
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "guardrails",
+    "title": "Guardrails"
+   }
+  ],
+  "toasts": [
+   "Blocked Bash: Block recursive force-delete",
+   "Blocked Bash: Protect secrets"
+  ],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "Blocked by the user's guardrails (rule: \"Block recursive force-delete\", matched: rm -rf build && git push --force origin main). Do not try to work around this rule with a different command; ask the user if you believe this action is needed."
+   },
+   {
+    "tool": "Bash: cat .env",
+    "reason": "Blocked by the user's guardrails (rule: \"Protect secrets\", matched: cat .env). Do not try to work around this rule with a different command; ask the user if you believe this action is needed."
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.store.get": 1,
+   "$.state.get": 14,
+   "$.state.set": 3,
+   "$.store.set": 1,
+   "$.ui.status": 1,
+   "$.session.root": 9,
+   "$.session.cwd": 9,
+   "$.clock.now": 2,
+   "$.ui.toast": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "guardrails": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "claude"
+          },
+          "children": [
+           "●"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "guardrails"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Safe defaults · 6 rules on · 2 blocked"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Presets"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1,
+           "flexWrap": "wrap"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "preset-safe",
+             "hotkey": "1",
+             "variant": "primary",
+             "label": "Safe defaults",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "preset-locked",
+             "hotkey": "2",
+             "variant": "secondary",
+             "label": "Locked to project",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "preset-review",
+             "hotkey": "3",
+             "variant": "secondary",
+             "label": "Read-only review",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "preset-off",
+             "hotkey": "4",
+             "variant": "secondary",
+             "label": "All off",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Rules"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude"
+              },
+              "children": [
+               "●"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-no-rm-rf",
+               "plain": true,
+               "label": "Block recursive force-delete",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "rm -rf, rm -fr, Remove-Item -Recurse -Force, rmdir /s, del /s"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude"
+              },
+              "children": [
+               "●"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-no-mass-delete",
+               "plain": true,
+               "label": "Block mass deletes in clusters & infra",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "kubectl/oc delete --all or -A, delete namespace/project, helm uninstall, terraform destroy"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude"
+              },
+              "children": [
+               "●"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-no-force-push",
+               "plain": true,
+               "label": "Block force-push",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "git push --force / -f (--force-with-lease still allowed)"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude"
+              },
+              "children": [
+               "●"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-no-history-rewrite",
+               "plain": true,
+               "label": "Block destructive git",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "git reset --hard, git clean -f, git checkout -- ., git restore ., git branch -D, git stash drop/clear"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude"
+              },
+              "children": [
+               "●"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-protect-secrets",
+               "plain": true,
+               "label": "Protect secrets",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "no reading/writing .env*, *.pem, *.key, id_rsa, credentials files"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude"
+              },
+              "children": [
+               "●"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-no-sudo",
+               "plain": true,
+               "label": "No sudo / admin",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "sudo, su -, runas, Start-Process -Verb RunAs"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "○"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-no-installs",
+               "plain": true,
+               "label": "No package installs",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "npm/pnpm/yarn/bun add|install, pip install, cargo install, brew/apt/winget/choco install"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "○"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-no-network",
+               "plain": true,
+               "label": "No network",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "WebFetch, WebSearch, curl, wget, Invoke-WebRequest"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "○"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-jail-writes",
+               "plain": true,
+               "label": "Writes only inside project",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "Write/Edit outside the project folder are blocked"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "○"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-jail-all",
+               "plain": true,
+               "label": "Stay inside project (read + write)",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "file tools may not touch anything outside the project folder; shell may not cd out of it"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "○"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "rule-read-only",
+               "plain": true,
+               "label": "Read-only mode",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "no file edits; shell limited to look-only commands (ls, cat, grep, git status/log/diff…)"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Your own block patterns (regex on shell commands)"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "None yet. Example: terraform\\s+destroy  or  kubectl\\s+delete"
+            ]
+           },
+           {
+            "type": "Input",
+            "props": {
+             "key": "add",
+             "placeholder": "regex, e.g. docker\\s+system\\s+prune",
+             "submitLabel": "Add",
+             "onSubmit": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Blocked this session (2)"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "error"
+              },
+              "children": [
+               "✗"
+              ]
+             },
+             " ",
+             "Bash",
+             " ",
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Protect secrets",
+               ": ",
+               "cat .env"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "error"
+              },
+              "children": [
+               "✗"
+              ]
+             },
+             " ",
+             "Bash",
+             " ",
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Block recursive force-delete",
+               ": ",
+               "rm -rf build && git push --force origin main"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Rules are best-effort pattern checks, a seatbelt, not a sandbox. Saved for all your sessions."
+        ]
+       }
+      ]
+     },
+     "title": "Guardrails"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash denied: Blocked by the user's guardrails (rule: \"Block recursive force-delete\", matched: rm -rf build && git…",
+   "tool.call Bash denied: Blocked by the user's guardrails (rule: \"Protect secrets\", matched: cat .env). Do not try to work ar…",
+   "turn.complete",
+   "$.ui.open(guardrails)",
+   "/guard → Guardrails panel opened.",
+   "/guard-preset → Unknown preset. Use one of: safe, locked, review, off"
+  ],
+  "console": [],
+  "status": "guard 6 rules",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=guard}",
+   "command.run{command=guard-preset}",
+   "tool.call",
+   "ui.render{component=Pane, requestId=guardrails}"
+  ],
+  "calls": [
+   "$.clock.now",
+   "$.command.register",
+   "$.session.cwd",
+   "$.session.root",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via save)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via save)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "guardrails.blocks",
+   "guardrails.config"
+  ],
+  "stateWrites": [
+   "guardrails.blocks",
+   "guardrails.config"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/mishgoldenberg-claude-mods-guardrails/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mishgoldenberg-claude-mods-guardrails/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: guardrails.config, guardrails.blocks"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mishgoldenberg-claude-mods-guardrails/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=guard}, command.run{command=guard-preset}, tool.call, ui.render{component=Pane, requestId=guardrails}",
+      "./register.tsx calls: $.clock.now, $.command.register, $.session.cwd, $.session.root, $.state.get, $.state.set, $.store.get, $.store.set (via save), $.ui.open, $.ui.resolve, $.ui.status (via save), $.ui.toast",
+      "./register.tsx state writes: guardrails.blocks, guardrails.config",
+      "./register.tsx state reads: guardrails.blocks, guardrails.config"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "2f00b9f46ae0ebbd"
+}

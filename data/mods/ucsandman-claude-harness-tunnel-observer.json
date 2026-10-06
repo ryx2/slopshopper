@@ -1,0 +1,8 @@
+{
+ "slug": "ucsandman-claude-harness-tunnel-observer",
+ "files": {
+  "hooks/index.ts": "// MIDDLEWARE TUNNEL stage 1/4 — \"observer\". Load all four with --plugin-dir in order; each Bash call containing\n// the word \"tunnel\" walks down observer → cost → policy → telemetry → next() → tool, then back up.\nconst STAGE = \"1/4 observer\";\nexport const register = (on, options) => {\n  on(\"tool.call\", { tool: \"Bash\", command: /tunnel/i }, async ($, e, next) => {\n    const t0 = Date.now();\n    $.ui.log(`⟦tunnel ${STAGE}⟧ ↓ enter  ${e.tool} ${String(e.command).slice(0, 60)}`);\n    const r = await next(e);\n    const links = (next.trace || []).map(t => `${t.plugin}${t.tier === \"core\" ? \"\" : \"/\" + t.tier} ${Math.round(t.ms)}ms`).join(\" → \");\n    $.ui.log(`⟦tunnel ${STAGE}⟧   ↑ pipeline beneath me: ${links}`);\n    $.ui.log(`⟦tunnel ${STAGE}⟧ ↑ leave  after ${Date.now() - t0}ms`);\n    return r;\n  });\n};\n",
+  "hooks/hooks.json": "{\"modules\": [\"./index.ts\"]}",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"tunnel-observer\",\n  \"version\": \"0.1.0\",\n  \"description\": \"MIDDLEWARE TUNNEL stage 1: Observer: sees the call first, stamps t0, prints what enters\"\n}"
+ }
+}

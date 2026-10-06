@@ -1,0 +1,8 @@
+{
+ "slug": "irfanfaraaz-claude-kit-hybrid-agents",
+ "files": {
+  "hooks/register.tsx": "// hybrid-agents: Irfan's standing \"hybrid approach\", so he stops typing it.\n// A subagent spawned with no model runs on Sonnet (forks keep the parent's).\n// A prompt that points at a plan file gets the hybrid rule as context.\n\nimport type { Register } from 'claude-code'\n\nconst PLAN = /docs\\/superpowers\\/plans\\/|\\bplan[\\w-]*\\.md\\b/i\nconst RULE =\n  'Hybrid approach (standing preference): do small tasks inline yourself; hand large or ' +\n  'parallel tasks to subagents running the sonnet model, in the background where possible.'\n\nexport const register: Register = on => {\n  on('agent.spawn', async ($, e, next) => {\n    if (e.fork || e.model !== undefined) return next(e)\n    $.ui.toast(`subagent ${e.subagentType || 'general'} → sonnet`)\n    return next({ ...e, model: 'sonnet' })\n  })\n\n  on('prompt.submit', async ($, e, next) => {\n    if (e.origin.kind !== 'composer' || !PLAN.test(e.text)) return next(e)\n    return next({ ...e, context: [...(e.context ?? []), RULE] })\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"hybrid-agents\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Subagents default to Sonnet; pasting a plan path adds the hybrid rule (inline small tasks, Sonnet subagents for big ones)\"\n}"
+ }
+}

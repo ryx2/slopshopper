@@ -1,0 +1,8 @@
+{
+ "slug": "vatroslav-cc-mod-suggestion-sentence-case-cc-mod-suggestion-sentence-case",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// The prompt suggestion (the dim text in an empty prompt box that Tab accepts) as a sentence:\n// a capital first letter and a full stop at the end.\nconst ENDS_SENTENCE = /[.?!…:]$/\n\nconst toSentence = (text: string): string => {\n  const trimmed = text.trim()\n  // A slash command stays as it is.\n  if (trimmed === '' || trimmed.startsWith('/')) return text\n  const first = trimmed[0]\n  // Only a letter is capitalized; code, a quote or a digit at the start stays as it is.\n  const isLetter = first.toLowerCase() !== first.toUpperCase()\n  const capped = isLetter ? first.toUpperCase() + trimmed.slice(1) : trimmed\n  return ENDS_SENTENCE.test(capped) ? capped : `${capped}.`\n}\n\n// Every suggestion, not only Claude's own (origin kind 'suggestion'): a suggestion another\n// plugin proposes should read the same way, and a test can only raise one without an origin.\nexport const register: Register = on => {\n  on('prompt.suggest', ($, e, next) => next({ ...e, text: toSentence(e.text) }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"cc-mod-suggestion-sentence-case\",\n  \"version\": \"0.1.0\",\n  \"description\": \"The dim prompt suggestion that Tab accepts starts with a capital letter and ends with a full stop, unless it is a slash command or already ends a sentence\",\n  \"author\": {\n    \"name\": \"Vatroslav Mileusnić\"\n  }\n}"
+ }
+}

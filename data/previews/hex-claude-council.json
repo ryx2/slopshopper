@@ -1,0 +1,1002 @@
+{
+ "slug": "hex-claude-council",
+ "generatedAt": "2026-10-06T05:26:41.714Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "config.describe"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__claude-council__ask$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__claude-council__specialist$/"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "council-pane"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "claude-council.specialists"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "specialists"
+    }
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "specialist-setup"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "specialist"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "council-pane",
+    "description": "Reopen the council pane, or forget where it was told to open",
+    "argumentHint": "[ask]",
+    "immediate": true,
+    "output": "No council run in this session yet. Start one with /claude-council:ask."
+   },
+   {
+    "name": "specialists",
+    "description": "Add, edit or remove specialists",
+    "immediate": true,
+    "output": "Specialists: esc closes the screen."
+   }
+  ],
+  "tools": [
+   {
+    "name": "ask",
+    "description": "Ask the council of external AI models one question and get each answer back. Call this when the user asks for the council, or when a decision would benefit from outside perspectives. The user is asked to confirm before anything is sent; a refusal comes back as the result; do not retry unless the reply asks for a change."
+   },
+   {
+    "name": "specialist",
+    "description": "Set up a specialist: a coding agent that works in its own git worktree with its own model. None are set up yet. When the user asks for one, call {setup: {name, model, effort, when, skills}} with what they described; it opens a screen with those fields filled in and nothing is saved until the user presses Save. skills is optional: comma-separated names of installed skills the specialist follows on each new task; leave it out unless the user named some."
+   }
+  ],
+  "panes": [
+   {
+    "id": "specialist-setup",
+    "title": "Specialists"
+   }
+  ],
+  "toasts": [],
+  "logs": [
+   "New: /specialists hands a coding task to a Codex agent on its own git branch, with six templates to start from. This note shows once."
+  ],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.tool.register": 2,
+   "$.clock.now": 1,
+   "$.store.set": 5,
+   "$.session.id": 1,
+   "$.store.get": 4,
+   "$.ui.invalidate": 4,
+   "$.process.run": 2,
+   "$.ui.log": 1,
+   "$.ui.open": 1,
+   "$.env.get": 1,
+   "$.fs.exists": 4,
+   "$.ui.resolve": 2
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "specialist-setup": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "key": "setup",
+       "flexDirection": "column",
+       "width": 56
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "key": "roster-chip",
+         "bold": true,
+         "color": "white",
+         "backgroundColor": "rgb(180,85,50)"
+        },
+        "children": [
+         " SPECIALISTS (0) "
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "roster",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "claude",
+         "paddingX": 1,
+         "width": 54
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "key": "empty",
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "No specialists yet. A specialist is a Codex agent that works on its own branch. Pick a template, add your own, or describe one to Claude."
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "add-row",
+           "flexDirection": "row",
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "add",
+             "label": "+ Add specialist",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "templates",
+           "flexDirection": "column",
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "head",
+             "flexDirection": "row",
+             "backgroundColor": "rgb(88,88,88)"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "swatch",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "name",
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "bold": true,
+                 "color": "white"
+                },
+                "children": [
+                 "TEMPLATE"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "gap",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "when",
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "bold": true,
+                 "color": "white",
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "USE WHEN"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "template:bug-fixer",
+             "flexDirection": "row",
+             "hover": {
+              "backgroundColor": "selectionBg"
+             }
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "swatch",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "name",
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "use",
+                 "plain": true,
+                 "label": "bug-fixer",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "gap",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "when",
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "A bug reproduces, the expected behaviour is clear, and the fix stands apart from the current work."
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "template:ci-fixer",
+             "flexDirection": "row",
+             "hover": {
+              "backgroundColor": "selectionBg"
+             },
+             "backgroundColor": "userMessageBackground"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "swatch",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "name",
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "use",
+                 "plain": true,
+                 "label": "ci-fixer",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "gap",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "when",
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "A CI job fails on a named revision and the fix belongs in code, config or tests, not in the CI provider."
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "template:refactorer",
+             "flexDirection": "row",
+             "hover": {
+              "backgroundColor": "selectionBg"
+             }
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "swatch",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "name",
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "use",
+                 "plain": true,
+                 "label": "refactorer",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "gap",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "when",
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "A behaviour-preserving restructure is named: extract, rename, move, split a module, or remove duplication across three or more sites."
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "template:test-writer",
+             "flexDirection": "row",
+             "hover": {
+              "backgroundColor": "selectionBg"
+             },
+             "backgroundColor": "userMessageBackground"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "swatch",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "name",
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "use",
+                 "plain": true,
+                 "label": "test-writer",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "gap",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "when",
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "The task is to add or extend tests for existing behaviour that has a spec, a documented contract, or a confirmed expected output."
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "template:test-pruner",
+             "flexDirection": "row",
+             "hover": {
+              "backgroundColor": "selectionBg"
+             }
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "swatch",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "name",
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "use",
+                 "plain": true,
+                 "label": "test-pruner",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "gap",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "when",
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "Tests in a named area duplicate stronger tests, re-assert the implementation, or keep test-only seams alive, and need pruning."
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "template:docs-updater",
+             "flexDirection": "row",
+             "hover": {
+              "backgroundColor": "selectionBg"
+             },
+             "backgroundColor": "userMessageBackground"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "swatch",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "name",
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "use",
+                 "plain": true,
+                 "label": "docs-updater",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "gap",
+               "width": 2,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "when",
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "key": "text",
+                 "dimColor": true,
+                 "wrap": "wrap"
+                },
+                "children": [
+                 "Docs must be updated or restructured to match code that already changed: README, reference pages, CLI help or config docs."
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "keys",
+         "dimColor": true,
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "Tab next · Shift+Tab back · ↓ opens a list, Enter picks · Esc closes, draft kept"
+        ]
+       }
+      ]
+     },
+     "title": "Specialists"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(codex login status) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/council-pane → No council run in this session yet. Start one with /claude-council:ask.",
+   "$.ui.open(specialist-setup)",
+   "$.process.run(codex debug models) → exit 0",
+   "/specialists → Specialists: esc closes the screen."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": false,
+  "errors": [
+   "Plugin name \"claude-council\" is reserved: it passes as one of Anthropic's own. A third party's plugin name cannot start with \"claude-\", \"anthropic-\", \"anthropics-\", or \"cc-plugin-\", be \"claude\", \"anthropic\", \"anthropics\", \"claude-code\", or \"claude-mods\", or put \"official\" beside \"claude\" or \"anthropic\". Name it for what it does. If this is one of Anthropic's own plugins, validate the marketplace that lists it."
+  ],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.complete",
+   "tool.call{tool=Bash}",
+   "config.describe",
+   "tool.call{tool=/\"^mcp__claude-council__ask$\"/}",
+   "tool.call{tool=/\"^mcp__claude-council__specialist$\"/}",
+   "command.run{command=council-pane}",
+   "ui.render{component=AbovePrompt}",
+   "config.set{key=?}",
+   "command.run{command=specialists}",
+   "session.end",
+   "ui.close{id=specialist-setup}",
+   "ui.render{component=Pane}",
+   "ui.scroll{requestId=specialist}",
+   "ui.render{component=Pane}",
+   "ui.render{component=Pane}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.config.set (via writeEntries)",
+   "$.env.get (via findSkills",
+   "paneHost",
+   "startWatching)",
+   "$.env.set (via aimRun)",
+   "$.fs.exists",
+   "$.fs.list (via files",
+   "findSkills",
+   "poll)",
+   "$.fs.read",
+   "$.fs.write (via poll",
+   "retryPresses",
+   "startWatching)",
+   "$.process.run",
+   "$.prompt.submit (via finishRound",
+   "wakeWhenFetchable)",
+   "$.session.cwd",
+   "$.session.id",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.ask",
+   "$.ui.focus (via submitField)",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.scroll"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "HOME",
+   "TMPDIR",
+   "TMUX"
+  ],
+  "raw": {
+   "success": false,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/hex-claude-council/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/hex-claude-council/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [
+     {
+      "path": "name",
+      "message": "Plugin name \"claude-council\" is reserved: it passes as one of Anthropic's own. A third party's plugin name cannot start with \"claude-\", \"anthropic-\", \"anthropics-\", or \"cc-plugin-\", be \"claude\", \"anthropic\", \"anthropics\", \"claude-code\", or \"claude-mods\", or put \"official\" beside \"claude\" or \"anthropic\". Name it for what it does. If this is one of Anthropic's own plugins, validate the marketplace that lists it.",
+      "code": null
+     }
+    ],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/hex-claude-council/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "../mods/council-pane/hooks/pane.tsx hooks: session.start, turn.complete, tool.call{tool=Bash}, config.describe, tool.call{tool=/\"^mcp__claude-council__ask$\"/}, tool.call{tool=/\"^mcp__claude-council__specialist$\"/}, command.run{command=council-pane}, ui.render{component=AbovePrompt}, config.set{key=?}, command.run{command=specialists}, session.end, ui.close{id=specialist-setup}, ui.render{component=Pane}, ui.scroll{requestId=specialist}, ui.render{component=Pane}, ui.render{component=Pane}",
+      "../mods/council-pane/hooks/pane.tsx calls: $.clock.every, $.clock.now, $.command.register, $.config.set (via writeEntries), $.env.get (via findSkills, paneHost, startWatching), $.env.set (via aimRun), $.fs.exists, $.fs.list (via files, findSkills, poll), $.fs.read, $.fs.write (via poll, retryPresses, startWatching), $.process.run, $.prompt.submit (via finishRound, wakeWhenFetchable), $.session.cwd, $.session.id, $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.ask, $.ui.focus (via submitField), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.scroll",
+      "../mods/council-pane/hooks/pane.tsx env writes: COUNCIL_MOD_PANE_DIR",
+      "../mods/council-pane/hooks/pane.tsx env reads: HOME, TMPDIR, TMUX"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "d50d11d04f724fc9"
+}

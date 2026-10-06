@@ -1,0 +1,165 @@
+{
+ "slug": "koslowskyj-tdd-mod",
+ "generatedAt": "2026-10-06T05:33:01.448Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tdd-eval"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "NotebookEdit"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "tdd-eval",
+    "description": "Replays the tdd-mod regression cases through the configured models.",
+    "argumentHint": "[runs per case]"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [
+   "tdd-mod: task coding: fix the failing auth test and add an audit log call",
+   "tdd-mod: violation (first opinion) /work/app/src/auth.ts — could not parse verdict from validator output: OK",
+   "tdd-mod: violation (second opinion) /work/app/src/auth.ts — could not parse verdict from validator output: OK",
+   "tdd-mod: blocked prompt /work/app/src/auth.ts part 1/2:\n## Role\n\nYou are a TDD validator. Judge whether the pending write follows\ntest-driven development.\n\n## Inputs\n\nYou will see three inputs:\n\n1. \"Recent session\" — a chronological log of the agent's recent prompts\n   and tool actions. Each entry shows what the agent did and what it\n   observed back. Use this to find evidence of a failing test that the\n   pending write would address.\n2. \"Current file content\" — what's on disk right now at the file the\n   agent is about to write. May be a parenthesized marker (e.g.\n   `(file does not exist)`) when content cannot be shown.\n3. \"Pending action\" — what the agent is about to write. Content may be\n   raw file text or a patch/diff in any common format.\n\n## What you judge\n\nJudge the change this write makes (the difference between the current\nfile content and the pending action), not the resulting file as a\nwhole.\n\nA transient file state is never itself a violation, however broken the\nfile looks: an unresolved symbol, a dead or unused definition, a\nduplicated declaration, a reference to a removed name, a half-finished\nmulti-step change. Whether the file is internally consistent or runs\nafter the write is checked when the agent next runs the tests, not by\nyou. This allowance is about structure; it does not excuse skipping a\nfailing test or over-implementing, which the rules below still catch.\n\nA block or denial message recorded earlier in the session is a past\nverdict, not a rule. Re-derive your judgment from the rules below as\nif it had not been issued; never block only because a previous attempt\nwas blocked.\n\nYour judgment is not the final word. When the user tells you in the\nsession to let this change through, treat it as authoritative and pass,\neven on a change you would otherwise block.\n\n## Multi-step changes\n\nA phase may span multiple writes, each fine on its own. For example:\n\n  - Add an import in one write, then change the calling code in the\n    next.\n  - Move a function in two writes (remove from one location, add at\n    another).\n  - Add a function signature in one write, then its body in the next.\n  - Remove a function in one write, then its call sites in the next.\n\n## TDD rules\n\nThe TDD cycle is Red -> Green -> Refactor. Each phase has its own rules.\n\n### Across all phases\n\nDeleting code, tests, or helpers never requires a failing test to drive\nit, even when the removed code was used or test-covered.\n\n### Red phase: write a failing test first\n\nIn red you add one test that drives new behavior and expect it to\nfail when the suite runs.\n\nA single write should add at most one new test. Compare current file\ncontent with pending action to count newly added tests; existing\ntests do not count. Restructuring existing tests is not \"adding\".\n\n  - Adding a test is the red step itself; it is allowed and does not\n    require observing it fail first, unless the prior green left a\n    refactor unmade (see \"Enforcing the refactor phase\").\n  - A test added to drive new behavior must be observed failing for\n    the right reason (an assertion, not a syntax or import error) in\n    a prior test run before production code may be written to satisfy\n    it.\n  - A test added to capture existing behavior is allowed to pass\n    immediately and must not be blocked for not failing first.\n    Examples: characterization tests pinning current implementation,\n    tests at a new layer (e.g. an e2e covering code already exercised\n    by units), pinning tests added before a refactor pulls a seam out\n    from under them.\n  - Test-file scaffolding edits (imports, helpers, fixtures) need no\n    failing test on their own.\n\n#### Reaching a clean red\n\nA test can fail before reaching an assertion (import unresolved,\nsignature mismatch). The agent may resolve these without violating TDD:\n\n  - Import or symbol unresolved -> cre",
+   "tdd-mod: blocked prompt /work/app/src/auth.ts part 2/2:\nate a placeholder stub: a body\n    that makes the symbol exist but does not implement the behavior the\n    test asserts. Returning a literal that contradicts the assertion\n    (e.g. `=> 0` when the test expects `1`) or throwing\n    `not implemented` are both valid stubs; they exist solely to\n    surface a real assertion failure on the next test run.\n  - Signature mismatch -> adjust signature; keep the body as a\n    placeholder stub per the rule above.\n  - Assertion failure -> implement minimal logic to pass.\n\nA stub-resolution step must not implement the test's asserted behavior.\nReturning a literal that the assertion will reject IS a stub.\n\n### Green phase: minimum to pass\n\nThe implementation must not exceed the minimum needed to make the\nobserved failing test pass. Functions, classes, or branches not\nrequired by the currently failing test are over-implementation. An\nimport or other scaffolding awaiting a later write in the same change\nis a transient state, not over-implementation.\n\n### Refactor phase: improve structure under green\n\nRefactoring does not require a failing test to drive it. Production\nand test edits that preserve observable behavior are allowed when\nthe relevant tests were passing before the refactor began. Examples:\n\n  - Extracting helpers whose behavior already lives elsewhere (covered\n    by existing tests). Extracting a helper whose behavior appears\n    nowhere else is net new and requires a failing test first.\n  - Lifting test setup (fixtures, builders, factories) into a\n    dedicated or reusable helper. The helper is exercised by the tests\n    that call it; no separate test for the helper is required.\n  - Adding type declarations, interfaces, or constant literals\n    (no runtime behavior by construction).\n  - Renaming, restructuring control flow, removing dead code.\n  - Reorganizing or deleting redundant tests, or splitting/combining\n    existing tests. The one-new-test rule is about intent to add\n    behavior, not surface diff count.\n\n#### Enforcing the refactor phase\n\nWriting the next test crosses the green->red boundary, so judge a new\nred here too, not only production writes. Refactor is part of the cycle:\nwhen the prior green left one that is unmistakable and clearly without\ndownside, block and name it. The bar is high because forcing a refactor\nrisks needless abstraction, indirection, or breaking conventions the\nagent can see and you cannot, so when the win is not clear-cut, let green\nstand.\n\n## Validator behavior\n\n### Block messages\n\nName the violation and say why it breaks TDD. Do not dictate edit\norder, require the file to be complete or runnable, or demand other\nsteps be bundled into this write.\n\n## Recent session\n\nUser: fix the failing auth test\n\n## Current file content\n\nimport { verify } from './jwt'\n\nexport async function refresh(token: string) {\n  const claims = await verify(token)\n  if (!claims) throw new Error('invalid token')\n  return issue(claims.sub)\n}\n\n\n## Pending action\n\nFile: /work/app/src/auth.ts\n\nimport { verify } from './jwt'\n\nexport async function refresh(token: string) {\n  const claims = await verify(token)\n  if (!claims || claims.exp < Date.now() / 1000) throw new Error('invalid token')\n  await audit('refresh', claims.sub)\n  return issue(claims.sub)\n}\n\n\n## Response format\n\nRespond with a single JSON object of exactly this shape:\n{\"kind\":\"pass\"|\"violation\",\"reason\":\"<short explanation>\"}\nAlways give a one-sentence reason, on \"pass\" too: which TDD step this write is and why it is allowed.\nReturn JSON only. No prose, no code fences.",
+   "tdd-mod: violation (first opinion) /work/app/src/audit.ts — could not parse verdict from validator output: OK",
+   "tdd-mod: violation (second opinion) /work/app/src/audit.ts — could not parse verdict from validator output: OK",
+   "tdd-mod: blocked prompt /work/app/src/audit.ts part 1/2:\n## Role\n\nYou are a TDD validator. Judge whether the pending write follows\ntest-driven development.\n\n## Inputs\n\nYou will see three inputs:\n\n1. \"Recent session\" — a chronological log of the agent's recent prompts\n   and tool actions. Each entry shows what the agent did and what it\n   observed back. Use this to find evidence of a failing test that the\n   pending write would address.\n2. \"Current file content\" — what's on disk right now at the file the\n   agent is about to write. May be a parenthesized marker (e.g.\n   `(file does not exist)`) when content cannot be shown.\n3. \"Pending action\" — what the agent is about to write. Content may be\n   raw file text or a patch/diff in any common format.\n\n## What you judge\n\nJudge the change this write makes (the difference between the current\nfile content and the pending action), not the resulting file as a\nwhole.\n\nA transient file state is never itself a violation, however broken the\nfile looks: an unresolved symbol, a dead or unused definition, a\nduplicated declaration, a reference to a removed name, a half-finished\nmulti-step change. Whether the file is internally consistent or runs\nafter the write is checked when the agent next runs the tests, not by\nyou. This allowance is about structure; it does not excuse skipping a\nfailing test or over-implementing, which the rules below still catch.\n\nA block or denial message recorded earlier in the session is a past\nverdict, not a rule. Re-derive your judgment from the rules below as\nif it had not been issued; never block only because a previous attempt\nwas blocked.\n\nYour judgment is not the final word. When the user tells you in the\nsession to let this change through, treat it as authoritative and pass,\neven on a change you would otherwise block.\n\n## Multi-step changes\n\nA phase may span multiple writes, each fine on its own. For example:\n\n  - Add an import in one write, then change the calling code in the\n    next.\n  - Move a function in two writes (remove from one location, add at\n    another).\n  - Add a function signature in one write, then its body in the next.\n  - Remove a function in one write, then its call sites in the next.\n\n## TDD rules\n\nThe TDD cycle is Red -> Green -> Refactor. Each phase has its own rules.\n\n### Across all phases\n\nDeleting code, tests, or helpers never requires a failing test to drive\nit, even when the removed code was used or test-covered.\n\n### Red phase: write a failing test first\n\nIn red you add one test that drives new behavior and expect it to\nfail when the suite runs.\n\nA single write should add at most one new test. Compare current file\ncontent with pending action to count newly added tests; existing\ntests do not count. Restructuring existing tests is not \"adding\".\n\n  - Adding a test is the red step itself; it is allowed and does not\n    require observing it fail first, unless the prior green left a\n    refactor unmade (see \"Enforcing the refactor phase\").\n  - A test added to drive new behavior must be observed failing for\n    the right reason (an assertion, not a syntax or import error) in\n    a prior test run before production code may be written to satisfy\n    it.\n  - A test added to capture existing behavior is allowed to pass\n    immediately and must not be blocked for not failing first.\n    Examples: characterization tests pinning current implementation,\n    tests at a new layer (e.g. an e2e covering code already exercised\n    by units), pinning tests added before a refactor pulls a seam out\n    from under them.\n  - Test-file scaffolding edits (imports, helpers, fixtures) need no\n    failing test on their own.\n\n#### Reaching a clean red\n\nA test can fail before reaching an assertion (import unresolved,\nsignature mismatch). The agent may resolve these without violating TDD:\n\n  - Import or symbol unresolved -> cre",
+   "tdd-mod: blocked prompt /work/app/src/audit.ts part 2/2:\nate a placeholder stub: a body\n    that makes the symbol exist but does not implement the behavior the\n    test asserts. Returning a literal that contradicts the assertion\n    (e.g. `=> 0` when the test expects `1`) or throwing\n    `not implemented` are both valid stubs; they exist solely to\n    surface a real assertion failure on the next test run.\n  - Signature mismatch -> adjust signature; keep the body as a\n    placeholder stub per the rule above.\n  - Assertion failure -> implement minimal logic to pass.\n\nA stub-resolution step must not implement the test's asserted behavior.\nReturning a literal that the assertion will reject IS a stub.\n\n### Green phase: minimum to pass\n\nThe implementation must not exceed the minimum needed to make the\nobserved failing test pass. Functions, classes, or branches not\nrequired by the currently failing test are over-implementation. An\nimport or other scaffolding awaiting a later write in the same change\nis a transient state, not over-implementation.\n\n### Refactor phase: improve structure under green\n\nRefactoring does not require a failing test to drive it. Production\nand test edits that preserve observable behavior are allowed when\nthe relevant tests were passing before the refactor began. Examples:\n\n  - Extracting helpers whose behavior already lives elsewhere (covered\n    by existing tests). Extracting a helper whose behavior appears\n    nowhere else is net new and requires a failing test first.\n  - Lifting test setup (fixtures, builders, factories) into a\n    dedicated or reusable helper. The helper is exercised by the tests\n    that call it; no separate test for the helper is required.\n  - Adding type declarations, interfaces, or constant literals\n    (no runtime behavior by construction).\n  - Renaming, restructuring control flow, removing dead code.\n  - Reorganizing or deleting redundant tests, or splitting/combining\n    existing tests. The one-new-test rule is about intent to add\n    behavior, not surface diff count.\n\n#### Enforcing the refactor phase\n\nWriting the next test crosses the green->red boundary, so judge a new\nred here too, not only production writes. Refactor is part of the cycle:\nwhen the prior green left one that is unmistakable and clearly without\ndownside, block and name it. The bar is high because forcing a refactor\nrisks needless abstraction, indirection, or breaking conventions the\nagent can see and you cannot, so when the win is not clear-cut, let green\nstand.\n\n## Validator behavior\n\n### Block messages\n\nName the violation and say why it breaks TDD. Do not dictate edit\norder, require the file to be complete or runnable, or demand other\nsteps be bundled into this write.\n\n## Recent session\n\nUser: fix the failing auth test\n\n## Current file content\n\n(file does not exist)\n\n## Pending action\n\nFile: /work/app/src/audit.ts\n\n// TODO: implement persistence\nexport async function audit(event: string, subject: string) {\n  console.log('audit', event, subject)\n  // ... rest of the implementation\n}\n\n\n## Response format\n\nRespond with a single JSON object of exactly this shape:\n{\"kind\":\"pass\"|\"violation\",\"reason\":\"<short explanation>\"}\nAlways give a one-sentence reason, on \"pass\" too: which TDD step this write is and why it is allowed.\nReturn JSON only. No prose, no code fences.",
+   "tdd-mod: violation (first opinion) /work/app/src/cache.ts — could not parse verdict from validator output: OK",
+   "tdd-mod: violation (second opinion) /work/app/src/cache.ts — could not parse verdict from validator output: OK",
+   "tdd-mod: blocked prompt /work/app/src/cache.ts part 1/2:\n## Role\n\nYou are a TDD validator. Judge whether the pending write follows\ntest-driven development.\n\n## Inputs\n\nYou will see three inputs:\n\n1. \"Recent session\" — a chronological log of the agent's recent prompts\n   and tool actions. Each entry shows what the agent did and what it\n   observed back. Use this to find evidence of a failing test that the\n   pending write would address.\n2. \"Current file content\" — what's on disk right now at the file the\n   agent is about to write. May be a parenthesized marker (e.g.\n   `(file does not exist)`) when content cannot be shown.\n3. \"Pending action\" — what the agent is about to write. Content may be\n   raw file text or a patch/diff in any common format.\n\n## What you judge\n\nJudge the change this write makes (the difference between the current\nfile content and the pending action), not the resulting file as a\nwhole.\n\nA transient file state is never itself a violation, however broken the\nfile looks: an unresolved symbol, a dead or unused definition, a\nduplicated declaration, a reference to a removed name, a half-finished\nmulti-step change. Whether the file is internally consistent or runs\nafter the write is checked when the agent next runs the tests, not by\nyou. This allowance is about structure; it does not excuse skipping a\nfailing test or over-implementing, which the rules below still catch.\n\nA block or denial message recorded earlier in the session is a past\nverdict, not a rule. Re-derive your judgment from the rules below as\nif it had not been issued; never block only because a previous attempt\nwas blocked.\n\nYour judgment is not the final word. When the user tells you in the\nsession to let this change through, treat it as authoritative and pass,\neven on a change you would otherwise block.\n\n## Multi-step changes\n\nA phase may span multiple writes, each fine on its own. For example:\n\n  - Add an import in one write, then change the calling code in the\n    next.\n  - Move a function in two writes (remove from one location, add at\n    another).\n  - Add a function signature in one write, then its body in the next.\n  - Remove a function in one write, then its call sites in the next.\n\n## TDD rules\n\nThe TDD cycle is Red -> Green -> Refactor. Each phase has its own rules.\n\n### Across all phases\n\nDeleting code, tests, or helpers never requires a failing test to drive\nit, even when the removed code was used or test-covered.\n\n### Red phase: write a failing test first\n\nIn red you add one test that drives new behavior and expect it to\nfail when the suite runs.\n\nA single write should add at most one new test. Compare current file\ncontent with pending action to count newly added tests; existing\ntests do not count. Restructuring existing tests is not \"adding\".\n\n  - Adding a test is the red step itself; it is allowed and does not\n    require observing it fail first, unless the prior green left a\n    refactor unmade (see \"Enforcing the refactor phase\").\n  - A test added to drive new behavior must be observed failing for\n    the right reason (an assertion, not a syntax or import error) in\n    a prior test run before production code may be written to satisfy\n    it.\n  - A test added to capture existing behavior is allowed to pass\n    immediately and must not be blocked for not failing first.\n    Examples: characterization tests pinning current implementation,\n    tests at a new layer (e.g. an e2e covering code already exercised\n    by units), pinning tests added before a refactor pulls a seam out\n    from under them.\n  - Test-file scaffolding edits (imports, helpers, fixtures) need no\n    failing test on their own.\n\n#### Reaching a clean red\n\nA test can fail before reaching an assertion (import unresolved,\nsignature mismatch). The agent may resolve these without violating TDD:\n\n  - Import or symbol unresolved -> cre",
+   "tdd-mod: blocked prompt /work/app/src/cache.ts part 2/2:\nate a placeholder stub: a body\n    that makes the symbol exist but does not implement the behavior the\n    test asserts. Returning a literal that contradicts the assertion\n    (e.g. `=> 0` when the test expects `1`) or throwing\n    `not implemented` are both valid stubs; they exist solely to\n    surface a real assertion failure on the next test run.\n  - Signature mismatch -> adjust signature; keep the body as a\n    placeholder stub per the rule above.\n  - Assertion failure -> implement minimal logic to pass.\n\nA stub-resolution step must not implement the test's asserted behavior.\nReturning a literal that the assertion will reject IS a stub.\n\n### Green phase: minimum to pass\n\nThe implementation must not exceed the minimum needed to make the\nobserved failing test pass. Functions, classes, or branches not\nrequired by the currently failing test are over-implementation. An\nimport or other scaffolding awaiting a later write in the same change\nis a transient state, not over-implementation.\n\n### Refactor phase: improve structure under green\n\nRefactoring does not require a failing test to drive it. Production\nand test edits that preserve observable behavior are allowed when\nthe relevant tests were passing before the refactor began. Examples:\n\n  - Extracting helpers whose behavior already lives elsewhere (covered\n    by existing tests). Extracting a helper whose behavior appears\n    nowhere else is net new and requires a failing test first.\n  - Lifting test setup (fixtures, builders, factories) into a\n    dedicated or reusable helper. The helper is exercised by the tests\n    that call it; no separate test for the helper is required.\n  - Adding type declarations, interfaces, or constant literals\n    (no runtime behavior by construction).\n  - Renaming, restructuring control flow, removing dead code.\n  - Reorganizing or deleting redundant tests, or splitting/combining\n    existing tests. The one-new-test rule is about intent to add\n    behavior, not surface diff count.\n\n#### Enforcing the refactor phase\n\nWriting the next test crosses the green->red boundary, so judge a new\nred here too, not only production writes. Refactor is part of the cycle:\nwhen the prior green left one that is unmistakable and clearly without\ndownside, block and name it. The bar is high because forcing a refactor\nrisks needless abstraction, indirection, or breaking conventions the\nagent can see and you cannot, so when the win is not clear-cut, let green\nstand.\n\n## Validator behavior\n\n### Block messages\n\nName the violation and say why it breaks TDD. Do not dictate edit\norder, require the file to be complete or runnable, or demand other\nsteps be bundled into this write.\n\n## Recent session\n\nUser: fix the failing auth test\n\n## Current file content\n\n(file does not exist)\n\n## Pending action\n\nFile: /work/app/src/cache.ts\n\n// TODO: implement eviction later\nconst store = new Map<string, unknown>()\n\nexport function remember(key: string, value: unknown) {\n  console.log('here')\n  store.set(key, value)\n}\n\n\n## Response format\n\nRespond with a single JSON object of exactly this shape:\n{\"kind\":\"pass\"|\"violation\",\"reason\":\"<short explanation>\"}\nAlways give a one-sentence reason, on \"pass\" too: which TDD step this write is and why it is allowed.\nReturn JSON only. No prose, no code fences."
+  ],
+  "denies": [
+   {
+    "tool": "Edit: /work/app/src/auth.ts",
+    "reason": "tdd-mod: could not parse verdict from validator output: OK"
+   },
+   {
+    "tool": "Write: /work/app/src/audit.ts",
+    "reason": "tdd-mod: could not parse verdict from validator output: OK"
+   },
+   {
+    "tool": "Write: /work/app/src/cache.ts",
+    "reason": "tdd-mod: could not parse verdict from validator output: OK"
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.model.complete": 7,
+   "$.ui.status": 1,
+   "$.ui.log": 13,
+   "$.fs.exists": 3,
+   "$.fs.read": 2,
+   "$.session.messages": 3
+  },
+  "timers": [],
+  "sites": {},
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit denied: tdd-mod: could not parse verdict from validator output: OK",
+   "tool.call Write denied: tdd-mod: could not parse verdict from validator output: OK",
+   "tool.call Write denied: tdd-mod: could not parse verdict from validator output: OK",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "command.run: hook threw ENOENT: no such file /plugins/tdd-mod/eval/verdicts.json",
+   "/tdd-eval → "
+  ],
+  "console": [],
+  "status": "TDD on",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=tdd-eval}",
+   "prompt.submit",
+   "tool.call{tool=Write}",
+   "tool.call{tool=Edit}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=NotebookEdit}"
+  ],
+  "calls": [
+   "$.command.register",
+   "$.fs.exists (via readBefore)",
+   "$.fs.read",
+   "$.model.complete",
+   "$.session.messages (via recentHistory)",
+   "$.ui.log",
+   "$.ui.status"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/koslowskyj-tdd-mod/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/koslowskyj-tdd-mod/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/koslowskyj-tdd-mod/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "../src/register.ts hooks: session.start, command.run{command=tdd-eval}, prompt.submit, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=Bash}, tool.call{tool=NotebookEdit}",
+      "../src/register.ts calls: $.command.register, $.fs.exists (via readBefore), $.fs.read, $.model.complete, $.session.messages (via recentHistory), $.ui.log, $.ui.status"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "48d501b272e38c42"
+}

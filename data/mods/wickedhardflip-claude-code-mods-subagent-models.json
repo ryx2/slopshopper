@@ -1,0 +1,8 @@
+{
+ "slug": "wickedhardflip-claude-code-mods-subagent-models",
+ "files": {
+  "hooks/register.ts": "import type { EngineInterface, Register } from 'claude-code'\n\n// Models of the subagents started since the last prompt, by agent id.\nconst models = new Map<string, string>()\n\nconst short = (model: string) => model.replace(/^claude-/, '')\n\nasync function refresh($: EngineInterface) {\n  if (models.size === 0) {\n    $.ui.status(undefined)\n    return\n  }\n\n  const running = new Set(\n    (await $.agent.list()).filter(a => a.status === 'running').map(a => a.id),\n  )\n  const label = [...models].map(\n    ([id, model]) => `${short(model)}${running.has(id) ? '' : ' ✓'}`,\n  )\n\n  $.ui.status(`agents: ${label.join(', ')}`)\n}\n\nexport const register: Register = on => {\n  on('prompt.submit', async ($, e, next) => {\n    models.clear()\n    await refresh($)\n    return next(e)\n  })\n\n  on('agent.spawn', async ($, e, next) => {\n    const started = await next(e)\n\n    if (!started.deny && started.agentId) {\n      models.set(started.agentId, started.model)\n      await refresh($)\n    }\n\n    return started\n  })\n\n  // Subagents finish with a turn.complete; tool calls catch the rest.\n  on('turn.complete', async ($, e, next) => {\n    const done = await next(e)\n    await refresh($)\n    return done\n  })\n\n  on('tool.call', async ($, e, next) => {\n    const ran = await next(e)\n    await refresh($)\n    return ran\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"subagent-models\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Status line shows which model each running subagent is using\",\n  \"author\": {\n    \"name\": \"wickedhardflip\"\n  }\n}"
+ }
+}

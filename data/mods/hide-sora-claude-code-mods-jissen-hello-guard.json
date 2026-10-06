@@ -1,0 +1,8 @@
+{
+ "slug": "hide-sora-claude-code-mods-jissen-hello-guard",
+ "files": {
+  "hooks/register.ts": "export function register(on) {\n  // 起動を証拠として残す。-p 実行では画面に何も出ないので、ファイルに書く\n  on(\"session.start\", async ($, e, next) => {\n    const r = await next(e)\n    const line =\n      `session.start at ${new Date().toISOString()} ` +\n      `cwd=${e.cwd} surface=${e.surface} interactive=${e.isInteractive} ` +\n      `plugin=${$.plugin.name}\\n`\n    await $.fs.write(`${$.plugin.root}/PROOF.txt`, line)\n    return r\n  })\n\n  // 危険なコマンドを拒否する。next を呼ばずに返すと、ツールは実行されない\n  on(\"tool.call\", { tool: \"Bash\" }, async ($, e, next) => {\n    if (typeof e.command === \"string\" && e.command.includes(\"rm -rf /\")) {\n      await $.fs.write(`${$.plugin.root}/DENY.txt`, `denied: ${e.command}\\n`)\n      return { deny: \"hello-guard: blocked a destructive command\" }\n    }\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"hello-guard: session.start と tool.call{Bash} をフック。CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 が必要\",\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"hello-guard\",\n  \"version\": \"0.1.0\",\n  \"description\": \"起動を記録し、rm -rf / を含む Bash を拒否する。関数フック（early access）が必要\",\n  \"author\": {\n    \"name\": \"hide-sora\"\n  },\n  \"license\": \"MIT\"\n}"
+ }
+}

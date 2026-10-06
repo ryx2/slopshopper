@@ -17,6 +17,7 @@ import { mkdir, readdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, posix, resolve } from 'node:path'
 import { lastCommitDate, rawFile, repoMeta, repoTree, searchCode, searchRepos, type RepoMeta, type TreeEntry } from './lib/github'
+import { redactFiles, redactText } from './lib/redact'
 import type { Index, ModEntry, ModKind } from './lib/types'
 
 const ROOT = resolve(import.meta.dir, '..')
@@ -100,6 +101,9 @@ function relativeImports(src: string): string[] {
   while ((m = re.exec(src))) out.add(m[1]!)
   const re2 = /\bimport\s*\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g
   while ((m = re2.exec(src))) out.add(m[1]!)
+  // a Client element names a surface module by path: module="./meter.tsx"
+  const re3 = /\bmodule\s*[:=]\s*\{?\s*['"](\.{1,2}\/[^'"]+)['"]/g
+  while ((m = re3.exec(src))) out.add(m[1]!)
   return [...out]
 }
 
@@ -158,7 +162,7 @@ async function collectMod(meta: RepoMeta, tree: TreeEntry[], hooksJsonPath: stri
     const p = queue.shift()!
     if (seen.has(p)) continue
     seen.add(p)
-    const text = await rawFile(fullName, ref, p, 200_000)
+    const text = await rawFile(fullName, ref, p, 600_000)
     if (text === null) continue
     files[modRoot ? posix.relative(modRoot, p) : p] = text
     bytes += text.length
@@ -205,6 +209,10 @@ async function collectMod(meta: RepoMeta, tree: TreeEntry[], hooksJsonPath: stri
 
   // the mod's own last commit matters in a monorepo; a root mod moves with the repo
   const modUpdatedAt = (wantCommitDate && modRoot ? await lastCommitDate(fullName, modRoot) : null) ?? meta.pushed_at
+  // secret-shaped strings never reach the stored data or the site
+  const scrubbed = redactFiles(files)
+  for (const k of Object.keys(files)) files[k] = scrubbed.files[k]!
+  if (readme) readme = redactText(readme).text
   const author = manifest.author && typeof manifest.author === 'object' ? (manifest.author as ModEntry['author']) : undefined
   const slugBase = modRoot ? `${meta.owner.login}--${fullName.split('/')[1]}--${name}` : `${meta.owner.login}--${fullName.split('/')[1]}`
   const kind: ModKind = KIND_OVERRIDES[fullName] ?? 'community'

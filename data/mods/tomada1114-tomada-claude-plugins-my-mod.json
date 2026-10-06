@@ -1,0 +1,8 @@
+{
+ "slug": "tomada1114-tomada-claude-plugins-my-mod",
+ "files": {
+  "hooks/register.tsx": "/* @jsx h */\n/* @jsxFrag Fragment */\n\n// Never name a local variable `h` in a file that uses JSX. `h` and `Fragment`\n// are ambient globals the engine injects; every JSX tag compiles to a call of\n// `h`, so a local `h` silently breaks every tag in the file.\n\nimport type { On } from 'claude-code'\n\nexport function register(on: On) {\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {\n    // Other surfaces draw their own band, and a survey owns the band when one\n    // is up. `isWorking` is recomputed by the engine, so this single guard is\n    // the whole show-while-working / hide-when-done behaviour — there is no\n    // hide-on-complete code to write.\n    if (e.surface !== 'terminal' || e.props.hasSurvey || !e.props.isWorking) {\n      return next(e)\n    }\n\n    // Elements are never globals — they come from the surface's table.\n    // `$.ui.resolve` is synchronous despite living on `$.ui`.\n    const { Box, Text } = $.ui.resolve(e)\n\n    const rows = Math.min(3, e.props.maxRows)\n\n    return (\n      <Box flexDirection=\"column\" height={rows}>\n        <Text color=\"magenta\" bold>\n          {'✦ '}\n        </Text>\n        <Text color=\"cyan\">hello from above the prompt</Text>\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"Draws a band above the prompt while Claude is working\",\n  \"modules\": [\"./register.tsx\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"my-mod\",\n  \"version\": \"0.1.0\",\n  \"description\": \"A band above the prompt. Replace with what your mod actually does.\",\n  \"author\": {\n    \"name\": \"your name\"\n  }\n}"
+ }
+}

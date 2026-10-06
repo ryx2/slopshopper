@@ -1,0 +1,311 @@
+{
+ "slug": "oakoss-claude-plugins-review-cycle",
+ "generatedAt": "2026-10-06T05:33:49.743Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "review-cycle.enabled"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "review-cycle.stopBefore"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "review-cycle.nudge"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-cycle__ledger"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-cycle__ledger_record"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-cycle__scratch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-cycle__sweep"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Skill"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__.+__(create_pull_request|create_pull_request_with_copilot|merge_pull_request|pull_request_review_write|update_pull_request_branch|update_pull_request|add_comment_to_pending_review|add_reply_to_pull_request_comment|add_issue_comment|update_issue_comment|push_files|create_or_update_file|delete_file|create_branch)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "NotebookEdit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Monitor"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-cycle__status"
+    }
+   }
+  ],
+  "commands": [],
+  "tools": [
+   {
+    "name": "ledger",
+    "description": "Findings earlier review cycles in this repository settled without fixing: deferred, rebutted, left alone on purpose, or raised as questions. Each entry has an id, path, line, kind, finding, reason, source, `date` (when a cycle last settled it), `blob` (the file as the last cycle to carry it reviewed it), `current` (the file now), `changed` (whether the two differ; null when the working tree could not be read), and `stale` (settled more than 90 days ago). `unreadable` counts stored entries this version cannot read; the next record drops them. Pass `paths` to get only the entries for those repository-relative paths. Read-only."
+   },
+   {
+    "name": "ledger_record",
+    "description": "Records what a review cycle settled without fixing into this repository's findings ledger. `entries` adds findings, each stamped with its file's blob in the working tree and today's date, so every path must be a file there; text is collapsed to one line and clipped at 400 characters, and the same finding at the same path replaces its entry. `keep` carries entries by id: each gets its file's current blob and keeps its date, and one whose file is gone is dropped. `resolve` removes entries by id. The ledger keeps the newest entries that fit in 384 KiB per repository, and ledgers for the 10 most recently recorded repositories."
+   },
+   {
+    "name": "scratch",
+    "description": "Makes this review cycle's scratch directory and returns its path. Every reviewer leg makes its private directory inside it with mktemp -d <path>/leg.XXXXXX, so mcp__review-cycle__sweep can end what the legs left running there and remove it, including what a stalled or dropped leg never cleaned up."
+   },
+   {
+    "name": "sweep",
+    "description": "Ends every process still running in, or naming a path inside, a scratch directory mcp__review-cycle__scratch made this session, then removes the directory. Call it once the cycle ends, after every leg reported, was dropped, or was stopped. Reports per directory how many processes it ended, whether it removed the directory, and any errors; a directory it could not remove stays listed for the next sweep."
+   },
+   {
+    "name": "status",
+    "description": "review-cycle's view of the working tree: which changed paths a reviewer has seen, which were edited after the last review or never reviewed, and whether a push or a pull request may run now: asked for in the user's latest message, or below their stop-before setting. Read-only."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "review-cycle: `rm` alongside a commit or push. Run the commit as its own command, optionally after `git add …` and read-only git commands, joined with && (for example `git add -A && git commit -m …`)."
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 5,
+   "$.session.cwd": 6,
+   "$.process.run": 10,
+   "$.env.get": 15,
+   "$.fs.exists": 4,
+   "$.fs.stat": 1,
+   "$.fs.read": 1,
+   "$.fs.list": 4
+  },
+  "timers": [],
+  "sites": {},
+  "script": [
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
+   "$.process.run(/bin/zsh -c -l trap - DEBUG 2>/dev/null; builtin echo; builtin echo 'review-cycl…) → exit 0",
+   "session.start",
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
+   "tool.call Edit",
+   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
+   "tool.call Write",
+   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
+   "tool.call Write",
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
+   "tool.call: hook threw git rev-parse failed: exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
+   "tool.call Bash bun test",
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
+   "tool.call: hook threw git rev-parse failed: exit 0",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash denied: review-cycle: `rm` alongside a commit or push. Run the commit as its own command, optionally after `…",
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
+   "tool.call: hook threw git rev-parse failed: exit 0",
+   "tool.call Bash cat .env",
+   "turn.complete"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "config.set{key=\"review-cycle.enabled\"}",
+   "config.set{key=\"review-cycle.stopBefore\"}",
+   "config.set{key=\"review-cycle.nudge\"}",
+   "tool.call{tool=Edit}",
+   "tool.call{tool=Write}",
+   "session.start",
+   "tool.call{tool=mcp__review-cycle__ledger}",
+   "tool.call{tool=mcp__review-cycle__ledger_record}",
+   "tool.call{tool=mcp__review-cycle__scratch}",
+   "tool.call{tool=mcp__review-cycle__sweep}",
+   "tool.call{tool=mcp__review-cycle__status}",
+   "prompt.submit",
+   "agent.spawn",
+   "turn.complete",
+   "tool.call{tool=Skill}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=?}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=Edit}",
+   "tool.call{tool=Write}",
+   "tool.call{tool=Edit}",
+   "tool.call{tool=Write}",
+   "tool.call{tool=NotebookEdit}",
+   "tool.call{tool=Monitor}",
+   "tool.call{tool=mcp__review-cycle__status}"
+  ],
+  "calls": [
+   "$.agent.list (via nudgeReview)",
+   "$.clock.after",
+   "$.clock.now",
+   "$.clock.sleep",
+   "$.env.get",
+   "$.fs.exists (via currentText",
+   "readOwnAliases",
+   "slopNote)",
+   "$.fs.list (via loadShellAliases)",
+   "$.fs.read (via currentText",
+   "loadShellAliases",
+   "slopNote)",
+   "$.fs.stat (via slopNote)",
+   "$.process.run (via ghRead",
+   "readOwnAliases",
+   "run)",
+   "$.prompt.submit (via nudgeReview",
+   "overBudget)",
+   "$.session.cwd (via ensureRoot)",
+   "$.settings.read (via ladderOf",
+   "nudgeWanted)",
+   "$.store.delete (via storeOf)",
+   "$.store.get (via storeOf)",
+   "$.store.keys (via storeOf)",
+   "$.store.set (via storeOf)",
+   "$.tool.register",
+   "$.ui.log (via ranUnasked)"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "CLAUDE_CODE_SHELL",
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "SHELL",
+   "TMPDIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/oakoss-claude-plugins-review-cycle/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/oakoss-claude-plugins-review-cycle/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/oakoss-claude-plugins-review-cycle/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: config.set{key=\"review-cycle.enabled\"}, config.set{key=\"review-cycle.stopBefore\"}, config.set{key=\"review-cycle.nudge\"}, tool.call{tool=Edit}, tool.call{tool=Write}, session.start, tool.call{tool=mcp__review-cycle__ledger}, tool.call{tool=mcp__review-cycle__ledger_record}, tool.call{tool=mcp__review-cycle__scratch}, tool.call{tool=mcp__review-cycle__sweep}, tool.call{tool=mcp__review-cycle__status}, prompt.submit, agent.spawn, turn.complete, tool.call{tool=Skill}, tool.call{tool=Bash}, tool.call{tool=?}, tool.call{tool=Bash}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=NotebookEdit}, tool.call{tool=Monitor}, tool.call{tool=mcp__review-cycle__status}",
+      "./register.ts calls: $.agent.list (via nudgeReview), $.clock.after, $.clock.now, $.clock.sleep, $.env.get, $.fs.exists (via currentText, readOwnAliases, slopNote), $.fs.list (via loadShellAliases), $.fs.read (via currentText, loadShellAliases, slopNote), $.fs.stat (via slopNote), $.process.run (via ghRead, readOwnAliases, run), $.prompt.submit (via nudgeReview, overBudget), $.session.cwd (via ensureRoot), $.settings.read (via ladderOf, nudgeWanted), $.store.delete (via storeOf), $.store.get (via storeOf), $.store.keys (via storeOf), $.store.set (via storeOf), $.tool.register, $.ui.log (via ranUnasked)",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: CLAUDE_CODE_SHELL, CLAUDE_CONFIG_DIR, HOME, SHELL, TMPDIR"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "541005de0444f6c6"
+}

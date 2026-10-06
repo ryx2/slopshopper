@@ -1,0 +1,8 @@
+{
+ "slug": "ray-manaloto-dotfiles-claude-fnhook-fixture-reserved",
+ "files": {
+  "hooks/register.ts": "import type { Register } from \"claude-code\";\n\n// Every module registering classic.PreToolUse must permit these, consulted —\n// asserted by `assert_escape_hatch_permitted`. This fixture denies nothing, and\n// carries the set anyway: the invariant is deliberately exception-free.\nconst ESCAPE_HATCH_TOOLS = new Set([\"AskUserQuestion\", \"SendUserMessage\"]);\n\nexport const register: Register = (on) => {\n  on(\"classic.PreToolUse\", { tool: \"Read\" }, async (_$, e, next) => {\n    const result = await next(e);\n    if (ESCAPE_HATCH_TOOLS.has(e.tool)) {\n      return result;\n    }\n    return { ...result, additionalContext: [\"fixture-valid\"] };\n  });\n};\n",
+  "hooks/hooks.json": "{\n  \"description\": \"Valid typed function-hook module\",\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"claude-fnhook-fixture-reserved\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Reserved-prefix plugin name: validate must reject it (#1496)\",\n  \"author\": {\n    \"name\": \"dotfiles test suite\"\n  }\n}"
+ }
+}

@@ -1,0 +1,1919 @@
+{
+ "slug": "ei-sugimoto-ei-claude-code-plugins-diff-review",
+ "generatedAt": "2026-10-06T05:32:59.922Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "diff-review"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "diff-review"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "diff-review",
+    "description": "git の差分をペインで開き、行コメントを Claude に渡す",
+    "argumentHint": "[branch|uncommitted|base <branch>|split|unified|wrap|generated|close]",
+    "output": "diff-review を開きました (branch)"
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "diff-review",
+    "title": "diff review"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.store.get": 2,
+   "$.ui.invalidate": 1,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.state.get": 17,
+   "$.process.run": 8,
+   "$.fs.stat": 2,
+   "$.fs.read": 2,
+   "$.state.set": 2,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "diff-review": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "mode-branch",
+           "label": "branch",
+           "hotkey": "b",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "mode-uncommitted",
+           "label": "uncommitted",
+           "hotkey": "u",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "更新",
+           "hotkey": "r",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "|"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "view-split",
+           "label": "split",
+           "hotkey": "p",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "view-unified",
+           "label": "unified",
+           "hotkey": "n",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "wrap",
+           "label": "折り返し",
+           "hotkey": "w",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Select",
+        "props": {
+         "key": "base",
+         "label": "比較元",
+         "value": ":default",
+         "options": [
+          {
+           "value": ":default",
+           "label": "既定ブランチ (origin/HEAD)"
+          }
+         ],
+         "onSelect": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "base: ",
+         "feat/auth-refresh (merge-base )"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Select",
+          "props": {
+           "key": "file",
+           "label": "file",
+           "value": "src/auth.ts",
+           "options": [
+            {
+             "value": "src/auth.ts",
+             "label": "src/auth.ts  +2 -1"
+            }
+           ],
+           "onSelect": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "width": 56
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "src/auth.ts"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "行番号を2回押すとコメントできます (同じ行を2回で1行、別の行で範囲)"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 27
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "変更前"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "│"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 27
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "変更後"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "hunk-0",
+               "backgroundColor": "#121d2f"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "backgroundColor": "#0c2d6b"
+                },
+                "children": [
+                 "     "
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "backgroundColor": "#121d2f"
+                },
+                "children": [
+                 " "
+                ]
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "expand-0-all",
+                 "label": "2行を展開",
+                 "plain": true,
+                 "onPress": "[fn]"
+                },
+                "children": []
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#9198a1",
+                 "backgroundColor": "#121d2f"
+                },
+                "children": [
+                 " @@ -3,4 +3,5 @@                         "
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "row-0-0"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#0d1117"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-L-3",
+                       "label": "   3",
+                       "plain": true,
+                       "dimColor": true,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " export async function"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "  refresh(token: strin"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " g) {                 "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "column"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#0d1117"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-R-3",
+                       "label": "   3",
+                       "plain": true,
+                       "dimColor": true,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " export async function"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "  refresh(token: strin"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " g) {                 "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "row-0-1"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#0d1117"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-L-4",
+                       "label": "   4",
+                       "plain": true,
+                       "dimColor": true,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "   const claims = awai"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " t verify(token)      "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "column"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#0d1117"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-R-4",
+                       "label": "   4",
+                       "plain": true,
+                       "dimColor": true,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "   const claims = awai"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " t verify(token)      "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "row-0-2"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#25171c"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#25171c"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#542426"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-L-5",
+                       "label": "   5",
+                       "plain": true,
+                       "dimColor": false,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#542426",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#25171c",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "-  if (!claims) throw "
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#25171c"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#542426"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#542426",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#25171c",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " new Error('invalid to"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#25171c"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#542426"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#542426",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#25171c",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " ken')                "
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#25171c"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#542426"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#542426",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#25171c",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "                      "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "column"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#12261e"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#12261e"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#1c4428"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-R-5",
+                       "label": "   5",
+                       "plain": true,
+                       "dimColor": false,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#1c4428",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#12261e",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "+  if (!claims || clai"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#12261e"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#1c4428"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#1c4428",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#12261e",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " ms.exp < Date.now() /"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#12261e"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#1c4428"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#1c4428",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#12261e",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "  1000) throw new Erro"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#12261e"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#1c4428"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#1c4428",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#12261e",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " r('invalid token')   "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "row-0-3"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#151b23"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "backgroundColor": "#151b23"
+                  },
+                  "children": [
+                   "                           "
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "backgroundColor": "#151b23"
+                  },
+                  "children": [
+                   "                           "
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "column"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#12261e"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#12261e"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#1c4428"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-R-6",
+                       "label": "   6",
+                       "plain": true,
+                       "dimColor": false,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#1c4428",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#12261e",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "+  await audit('refres"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#12261e"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#1c4428"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#1c4428",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#12261e",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " h', claims.sub)      "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "row-0-4"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#0d1117"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-L-6",
+                       "label": "   6",
+                       "plain": true,
+                       "dimColor": true,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "   return issue(claims"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " .sub)                "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "column"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "#9198a1",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   "│"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 27,
+                 "flexDirection": "column",
+                 "backgroundColor": "#0d1117"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Box",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     {
+                      "type": "Button",
+                      "props": {
+                       "key": "ln-R-7",
+                       "label": "   7",
+                       "plain": true,
+                       "dimColor": true,
+                       "onPress": "[fn]"
+                      },
+                      "children": []
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "   return issue(claims"
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexDirection": "row",
+                   "backgroundColor": "#0d1117"
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "backgroundColor": "#0d1117"
+                    },
+                    "children": [
+                     "    "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "yellow",
+                     "backgroundColor": "#0d1117",
+                     "bold": false
+                    },
+                    "children": [
+                     " "
+                    ]
+                   },
+                   {
+                    "type": "Text",
+                    "props": {
+                     "color": "#f0f6fc",
+                     "backgroundColor": "#0d1117",
+                     "bold": false,
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     " .sub)                "
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1,
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Input",
+          "props": {
+           "key": "comment",
+           "label": "行指定",
+           "placeholder": "R12 本文 / L3-5 本文 (L=変更前の行, R=変更後の行, 省略時 R)",
+           "submitLabel": "追加",
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "send",
+             "label": "Claude に渡す (0)",
+             "hotkey": "s",
+             "variant": "primary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "clear",
+             "label": "コメントを消す",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "diff review"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(diff-review)",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git symbolic-ref --quiet --short refs/remotes/origin/HEAD) → exit 0",
+   "$.process.run(git rev-parse --verify --quiet feat/auth-refresh) → exit 0",
+   "$.process.run(git merge-base HEAD feat/auth-refresh) → exit 0",
+   "$.process.run(git for-each-ref --sort=-committerdate --format=%(refname) refs/heads refs/remot…) → exit 0",
+   "$.process.run(git diff --no-color --no-ext-diff --find-renames -U3 ) → exit 0",
+   "$.process.run(git ls-files --others --exclude-standard --full-name -z) → exit 0",
+   "$.process.run(git check-attr -z linguist-generated -- src/auth.ts) → exit 0",
+   "/diff-review → diff-review を開きました (branch)"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=diff-review}",
+   "turn.complete",
+   "ui.render{component=Pane, requestId=diff-review}"
+  ],
+  "calls": [
+   "$.command.register",
+   "$.fs.read (via loadSources",
+   "loadUntracked",
+   "readHeader)",
+   "$.fs.stat (via loadSources",
+   "loadUntracked",
+   "readHeader)",
+   "$.process.run (via git",
+   "markGenerated",
+   "takeSnapshot)",
+   "$.prompt.fill",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via setView",
+   "toggleWrap)",
+   "$.ui.close",
+   "$.ui.focus",
+   "$.ui.invalidate",
+   "$.ui.open",
+   "$.ui.panes (via isPaneOpen)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "diff-review.baseBranch",
+   "diff-review.collapsed",
+   "diff-review.comments",
+   "diff-review.expanded",
+   "diff-review.isWrapped",
+   "diff-review.mode",
+   "diff-review.selected",
+   "diff-review.showGenerated",
+   "diff-review.snapshot",
+   "diff-review.target",
+   "diff-review.view"
+  ],
+  "stateWrites": [
+   "diff-review.baseBranch",
+   "diff-review.collapsed",
+   "diff-review.comments",
+   "diff-review.expanded",
+   "diff-review.isWrapped",
+   "diff-review.mode",
+   "diff-review.selected",
+   "diff-review.showGenerated",
+   "diff-review.snapshot",
+   "diff-review.target",
+   "diff-review.view"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ei-sugimoto-ei-claude-code-plugins-diff-review/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ei-sugimoto-ei-claude-code-plugins-diff-review/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: diff-review.mode, diff-review.snapshot, diff-review.selected, diff-review.comments, diff-review.target, diff-review.collapsed, diff-review.view, diff-review.isWrapped, diff-review.showGenerated, diff-review.expanded, diff-review.baseBranch"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ei-sugimoto-ei-claude-code-plugins-diff-review/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=diff-review}, turn.complete, ui.render{component=Pane, requestId=diff-review}",
+      "./register.tsx calls: $.command.register, $.fs.read (via loadSources, loadUntracked, readHeader), $.fs.stat (via loadSources, loadUntracked, readHeader), $.process.run (via git, markGenerated, takeSnapshot), $.prompt.fill, $.state.get, $.state.set, $.store.get, $.store.set (via setView, toggleWrap), $.ui.close, $.ui.focus, $.ui.invalidate, $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: diff-review.baseBranch, diff-review.collapsed, diff-review.comments, diff-review.expanded, diff-review.isWrapped, diff-review.mode, diff-review.selected, diff-review.showGenerated, diff-review.snapshot, diff-review.target, diff-review.view",
+      "./register.tsx state reads: diff-review.baseBranch, diff-review.collapsed, diff-review.comments, diff-review.expanded, diff-review.isWrapped, diff-review.mode, diff-review.selected, diff-review.showGenerated, diff-review.snapshot, diff-review.target, diff-review.view"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "3bc7375fc5480df5"
+}

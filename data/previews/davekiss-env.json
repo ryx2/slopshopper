@@ -1,0 +1,317 @@
+{
+ "slug": "davekiss-env",
+ "generatedAt": "2026-10-06T05:27:21.757Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "env"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "session.append"
+   },
+   {
+    "event": "session.send"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__env__list"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__env__request"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__env__generate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__env__copy"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__env__remove"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__env__push"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__env__pull"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "env"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "env",
+    "description": "Edit .env files without showing values to Claude",
+    "immediate": true,
+    "output": "Opened the env pane."
+   }
+  ],
+  "tools": [
+   {
+    "name": "list",
+    "description": "Lists the project's .env files and their keys, with what each value looks like (set or empty, kind, length, a known prefix such as sk_live_) but never the value itself, plus keys missing compared with .env.example. Use this instead of reading .env files, which is blocked."
+   },
+   {
+    "name": "request",
+    "description": "Asks the user to paste the value of one env variable into a card in the /env pane. You never see the value. The user may be moving fast, so make the card easy to act on: give the exact steps to find the value (where to click, what the field is labelled), the URL of the page it lives on, and what a valid value looks like. After calling this, stop and wait: you get a message once the value is saved, skipped, or the pane is closed."
+   },
+   {
+    "name": "generate",
+    "description": "Sets an env variable to a new random secret (session secrets, signing keys, webhook secrets you control). The value is written to the file and never returned. Refuses to replace an existing value unless overwrite is true."
+   },
+   {
+    "name": "copy",
+    "description": "Copies env values without reading them: one key (optionally renamed with as), or with no key the whole file. from and to are env file names in this project's root (.env.local), or paths to an env file at the root of another of this repo's git worktrees (../app-feature/.env.local), e.g. to set up a new worktree. A whole-file copy into a file that does not exist yet copies it as-is, comments included; into an existing file, keys the target already has with a different value are kept unless overwrite is true."
+   },
+   {
+    "name": "remove",
+    "description": "Removes a key from an env file by commenting it out, so the user can restore it. Ask the user before removing keys."
+   },
+   {
+    "name": "push",
+    "description": "Sends env values to a hosting service by running that service's own CLI, with {{KEY}} in argv or stdin replaced by the value from the env file. You never see the value, and the user approves the command (shown with placeholders) before it runs. Prefer stdin, since arguments show in the process list. Only these CLIs run: aws, az, doppler, firebase, fly, flyctl, gcloud, gh, heroku, netlify, op, railway, render, supabase, vercel, wrangler. Examples: {argv: [\"vercel\", \"env\", \"add\", \"STRIPE_KEY\", \"production\"], stdin: \"{{STRIPE_KEY}}\"}; {argv: [\"gh\", \"secret\", \"set\", \"STRIPE_KEY\"], stdin: \"{{STRIPE_KEY}}\"}; {argv: [\"wrangler\", \"secret\", \"put\", \"STRIPE_KEY\"], stdin: \"{{STRIPE_KEY}}\"}; {argv: [\"fly\", \"secrets\", \"import\"], stdin: \"STRIPE_KEY={{STRIPE_KEY}}\"}. Run one command per call. Commands that need no env value belong in Bash."
+   },
+   {
+    "name": "pull",
+    "description": "Fetches env values from a hosting or secrets service by running that service's own CLI, and writes them into an env file. You never see the values; you get back which keys were set. Three shapes: the CLI prints KEY=value lines; the CLI writes a dotenv file, where {{@file}} in argv stands for a temp file env reads back; or the CLI prints one value, named by key. A key the file already has with a different value is kept unless overwrite is true, and then the user is asked first. Only these CLIs run: aws, az, doppler, firebase, fly, flyctl, gcloud, gh, heroku, netlify, op, railway, render, supabase, vercel, wrangler. Examples: {argv: [\"vercel\", \"env\", \"pull\", \"{{@file}}\", \"--environment=development\", \"--yes\"]}; {argv: [\"doppler\", \"secrets\", \"download\", \"--no-file\", \"--format\", \"env\"]}; {argv: [\"heroku\", \"config\", \"--shell\", \"-a\", \"my-app\"]}; {argv: [\"op\", \"read\", \"op://Dev/Stripe/secret key\"], key: \"STRIPE_SECRET_KEY\"}. GitHub, Cloudflare and Fly secrets are write-only and cannot be pulled."
+   }
+  ],
+  "panes": [
+   {
+    "id": "env",
+    "title": "env"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Bash: cat .env",
+    "reason": "env: .env files are edited by the user in the /env pane, and their values never enter this conversation. Use mcp__env__list to see keys and what each value looks like, mcp__env__request to ask the user for a value, mcp__env__generate for a random secret, and mcp__env__push and mcp__env__pull to send"
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.fs.list": 2,
+   "$.state.get": 16,
+   "$.state.set": 7,
+   "$.command.register": 1,
+   "$.tool.register": 7,
+   "$.clock.every": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 2000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "env": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1,
+         "flexWrap": "wrap",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "create",
+           "label": "+ .env.local",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No .env files in the project root yet."
+        ]
+       }
+      ]
+     },
+     "title": "env"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash denied: env: .env files are edited by the user in the /env pane, and their values never enter this conversat…",
+   "turn.complete",
+   "$.ui.open(env)",
+   "/env → Opened the env pane."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=env}",
+   "ui.close",
+   "tool.call",
+   "session.append",
+   "session.send",
+   "tool.call{tool=mcp__env__list}",
+   "tool.call{tool=mcp__env__request}",
+   "tool.call{tool=mcp__env__generate}",
+   "tool.call{tool=mcp__env__copy}",
+   "tool.call{tool=mcp__env__remove}",
+   "tool.call{tool=mcp__env__push}",
+   "tool.call{tool=mcp__env__pull}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=env}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.command.register",
+   "$.fs.exists",
+   "$.fs.list",
+   "$.fs.read",
+   "$.fs.write (via save)",
+   "$.process.run",
+   "$.prompt.submit (via abandon",
+   "store)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.ask",
+   "$.ui.copy",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "env.active",
+   "env.confirm",
+   "env.editing",
+   "env.files",
+   "env.fit",
+   "env.flash",
+   "env.isWaiting",
+   "env.request",
+   "env.rev",
+   "env.revealed"
+  ],
+  "stateWrites": [
+   "env.active",
+   "env.confirm",
+   "env.editing",
+   "env.files",
+   "env.fit",
+   "env.flash",
+   "env.isWaiting",
+   "env.request",
+   "env.rev",
+   "env.revealed"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/davekiss-env/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/davekiss-env/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: env.files, env.active, env.editing, env.revealed, env.confirm, env.request, env.fit, env.rev, env.flash, env.isWaiting"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/davekiss-env/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=env}, ui.close, tool.call, session.append, session.send, tool.call{tool=mcp__env__list}, tool.call{tool=mcp__env__request}, tool.call{tool=mcp__env__generate}, tool.call{tool=mcp__env__copy}, tool.call{tool=mcp__env__remove}, tool.call{tool=mcp__env__push}, tool.call{tool=mcp__env__pull}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=env}",
+      "./register.tsx calls: $.clock.every, $.command.register, $.fs.exists, $.fs.list, $.fs.read, $.fs.write (via save), $.process.run, $.prompt.submit (via abandon, store), $.state.get, $.state.set, $.tool.register, $.ui.ask, $.ui.copy, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: env.active, env.confirm, env.editing, env.files, env.fit, env.flash, env.isWaiting, env.request, env.rev, env.revealed",
+      "./register.tsx state reads: env.active, env.confirm, env.editing, env.files, env.fit, env.flash, env.isWaiting, env.request, env.rev, env.revealed"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "8847369d98192ed"
+}

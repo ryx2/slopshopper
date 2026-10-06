@@ -1,0 +1,527 @@
+{
+ "slug": "yocloud-code-claude-vault",
+ "generatedAt": "2026-10-06T05:47:32.664Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vault__vault_list"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vault__vault_exec"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "session.append"
+   },
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "vault"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "vault:vault"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "vault"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "vault",
+    "description": "凭证保险库：管理数据库/服务器/集群凭证与目录授权",
+    "argumentHint": "[grant <p> [read|write]|revoke <p>|list|export|import]",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "vault_list",
+    "description": "List the credential profiles the vault mod manages (databases, servers, clusters) and which of them are granted to the current directory. For each profile: name, type, host, port, user, database, description, SSH auth method, grant ({mode: \"read\" | \"write\", directory} or false), its own variable names and its client variable names. Secret values are never returned. Call it to choose a profile and the exact variable names before vault_exec or a Bash command that needs credentials. Grants are given and revoked by the user in the /vault pane; no tool can change them."
+   },
+   {
+    "name": "vault_exec",
+    "description": "Run a bash command with one credential profile injected as environment variables, so it can reach a database, server or cluster without the secret entering the conversation. Use it instead of asking the user for a password or key. The profile must be granted to the current directory (vault_list shows grants); otherwise the call is refused and the user grants it in the /vault pane. Injected: the profile's own variables, named after it (profile prod-db: $PROD_DB_HOST, $PROD_DB_USER, $PROD_DB_PASSWORD; a file secret such as an SSH key or kubeconfig as $<NAME>_<SECRET>_FILE, a 0600 temp file removed when the command ends), plus the client's standard variables (PGPASSWORD, KUBECONFIG, SSH askpass, ...) so psql, kubectl or ssh need no flags. Variables exist only for this command and its child processes. Returns \"exit code: N\" followed by stdout and stderr, each capped at 4 MiB. A secret value in the output is replaced by «vault:<profile>.<field>»; that marker is expected, not an error. Refused: commands that read the Keychain or the vault directory, or dump the environment (env, printenv, set); and, under a read grant, commands that look like writes to a database, Redis or kubectl. A read grant does not restrict commands run over SSH. The Bash tool gets the same injection: referencing $<NAME>_* injects that profile's own variables, and a first line \"#vault:<profile>\" also injects its client variables (two profiles of one client cannot share a #vault: line). Bash commands with run_in_background cannot be injected."
+   }
+  ],
+  "panes": [
+   {
+    "id": "vault",
+    "title": "🔐 Vault"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.env.get": 18,
+   "$.fs.read": 9,
+   "$.state.get": 34,
+   "$.state.set": 7,
+   "$.session.cwd": 7,
+   "$.fs.stat": 7,
+   "$.ui.status": 1,
+   "$.tool.register": 2,
+   "$.clock.every": 2,
+   "$.ui.panes": 1,
+   "$.fs.list": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 3000
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "vault": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "hdr",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "cyan",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "justifyContent": "space-between",
+           "flexWrap": "wrap"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true,
+               "color": "cyan"
+              },
+              "children": [
+               "🔐 Vault"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "›"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "凭证"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 2,
+           "flexWrap": "wrap"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "gray",
+             "bold": true
+            },
+            "children": [
+             "● 当前目录已授权 0/0"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "授权对目录及子目录长期有效 · 共 0 个目录有授权"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "c-empty",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "gray",
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "cyan"
+          },
+          "children": [
+           "还没有凭证"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "cyan",
+             "bold": true
+            },
+            "children": [
+             "1 "
+            ]
+           },
+           "点「新建」，选类型模板，填主机和用户"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "cyan",
+             "bold": true
+            },
+            "children": [
+             "2 "
+            ]
+           },
+           "在编辑页点「设置」，用系统掩码框把密文写进钥匙串"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "cyan",
+             "bold": true
+            },
+            "children": [
+             "3 "
+            ]
+           },
+           "在卡片上点「只读」或「读写」授权给当前目录，Claude 就能通过 vault_exec 使用"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "已有备份？点「导入」选择 .cvault 或模板 .json"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1,
+         "flexWrap": "wrap",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "new",
+           "label": "＋ 新建",
+           "hotkey": "n",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "import",
+           "label": "导入",
+           "hotkey": "i",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "export",
+           "label": "导出",
+           "hotkey": "x",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "grants",
+           "label": "授权管理",
+           "hotkey": "g",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "audit",
+           "label": "审计日志",
+           "hotkey": "l",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "cleanup",
+           "label": "🧹 一键清理",
+           "hotkey": "c",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "关闭",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "🔐 Vault"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(vault)",
+   "/vault → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "tool.call{tool=mcp__vault__vault_list}",
+   "tool.call{tool=mcp__vault__vault_exec}",
+   "tool.call{tool=Bash}",
+   "tool.call",
+   "session.append",
+   "session.start",
+   "command.run{command=vault}",
+   "command.run{command=vault:vault}",
+   "ui.render{component=Pane, requestId=vault}"
+  ],
+  "calls": [
+   "$.clock.after (via notice)",
+   "$.clock.every",
+   "$.command.register",
+   "$.env.get (via paths)",
+   "$.fs.exists (via askpassPath)",
+   "$.fs.list (via strayRunFiles",
+   "sweepRun)",
+   "$.fs.read",
+   "$.fs.stat",
+   "$.fs.write (via bumpRevision)",
+   "$.process.run (via askpassPath",
+   "audit",
+   "deleteSecret",
+   "hasSecret",
+   "open",
+   "osa",
+   "readSecret",
+   "removeFiles",
+   "runWithProfile",
+   "seal",
+   "setSecret",
+   "supabaseToken",
+   "vaultAccounts",
+   "writePrivate)",
+   "$.session.cwd (via activeGrants",
+   "currentDir",
+   "refreshGrants)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via migrateLegacyAllowlist)",
+   "$.store.set (via migrateLegacyAllowlist)",
+   "$.tool.register (via registerTools)",
+   "$.ui.close (via actions)",
+   "$.ui.copy (via actions)",
+   "$.ui.invalidate",
+   "$.ui.open (via vaultCommand)",
+   "$.ui.panes (via paneIsOpen)",
+   "$.ui.resolve",
+   "$.ui.status (via syncStatus)"
+  ],
+  "stateReads": [
+   "vault.allGrants",
+   "vault.audit",
+   "vault.confirmDelete",
+   "vault.dir",
+   "vault.exportSel",
+   "vault.form",
+   "vault.grants",
+   "vault.importPreview",
+   "vault.notice",
+   "vault.probes",
+   "vault.probing",
+   "vault.profiles",
+   "vault.selected",
+   "vault.stored",
+   "vault.usage",
+   "vault.view"
+  ],
+  "stateWrites": [
+   "vault.allGrants",
+   "vault.audit",
+   "vault.confirmDelete",
+   "vault.dir",
+   "vault.exportSel",
+   "vault.form",
+   "vault.grants",
+   "vault.importPreview",
+   "vault.notice",
+   "vault.probes",
+   "vault.probing",
+   "vault.profiles",
+   "vault.selected",
+   "vault.stored",
+   "vault.usage",
+   "vault.view"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/yocloud-code-claude-vault/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/yocloud-code-claude-vault/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: vault.profiles, vault.stored, vault.grants, vault.dir, vault.allGrants, vault.view, vault.selected, vault.form, vault.exportSel, vault.importPreview, vault.confirmDelete, vault.notice, vault.audit, vault.probes, vault.probing, vault.usage"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/yocloud-code-claude-vault/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: tool.call{tool=mcp__vault__vault_list}, tool.call{tool=mcp__vault__vault_exec}, tool.call{tool=Bash}, tool.call, session.append, session.start, command.run{command=vault}, command.run{command=vault:vault}, ui.render{component=Pane, requestId=vault}",
+      "./register.tsx calls: $.clock.after (via notice), $.clock.every, $.command.register, $.env.get (via paths), $.fs.exists (via askpassPath), $.fs.list (via strayRunFiles, sweepRun), $.fs.read, $.fs.stat, $.fs.write (via bumpRevision), $.process.run (via askpassPath, audit, deleteSecret, hasSecret, open, osa, readSecret, removeFiles, runWithProfile, seal, setSecret, supabaseToken, vaultAccounts, writePrivate), $.session.cwd (via activeGrants, currentDir, refreshGrants), $.state.get, $.state.set, $.store.get (via migrateLegacyAllowlist), $.store.set (via migrateLegacyAllowlist), $.tool.register (via registerTools), $.ui.close (via actions), $.ui.copy (via actions), $.ui.invalidate, $.ui.open (via vaultCommand), $.ui.panes (via paneIsOpen), $.ui.resolve, $.ui.status (via syncStatus)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: vault.allGrants, vault.audit, vault.confirmDelete, vault.dir, vault.exportSel, vault.form, vault.grants, vault.importPreview, vault.notice, vault.probes, vault.probing, vault.profiles, vault.selected, vault.stored, vault.usage, vault.view",
+      "./register.tsx state reads: vault.allGrants, vault.audit, vault.confirmDelete, vault.dir, vault.exportSel, vault.form, vault.grants, vault.importPreview, vault.notice, vault.probes, vault.probing, vault.profiles, vault.selected, vault.stored, vault.usage, vault.view"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "368b26df5d545f57"
+}

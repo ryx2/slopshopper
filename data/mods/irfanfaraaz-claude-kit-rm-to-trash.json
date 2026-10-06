@@ -1,0 +1,8 @@
+{
+ "slug": "irfanfaraaz-claude-kit-rm-to-trash",
+ "files": {
+  "hooks/register.tsx": "// rm-to-trash: Claude's `rm` keeps hitting the Bash(rm *) deny rule. Rewrite\n// it to macOS /usr/bin/trash so the delete goes through and can be undone from\n// the Trash. `git rm` and words like \"form\" are left alone.\n\nimport type { Register } from 'claude-code'\n\n// rm at the start of a command or after ; && || | ( or a newline, with its flags\nconst RM = /(^|[;&|(\\n]\\s*)(?:sudo\\s+)?rm((?:\\s+-[a-zA-Z]+)*)\\s+/g\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    if (!RM.test(e.command)) return next(e)\n    RM.lastIndex = 0\n    const command = e.command.replace(RM, '$1trash ')\n    $.ui.toast('rm → trash (recoverable from the Trash)')\n    return next({ ...e, command })\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"rm-to-trash\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Rewrites rm into macOS trash so deletes are recoverable and stop hitting the rm deny rule\"\n}"
+ }
+}

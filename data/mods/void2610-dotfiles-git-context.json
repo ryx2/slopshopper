@@ -1,0 +1,8 @@
+{
+ "slug": "void2610-dotfiles-git-context",
+ "files": {
+  "hooks/index.ts": "import type { Register } from \"claude-code\";\n\nexport const register: Register = (on) => {\n  on(\"prompt.context\", async ($, e, next) => {\n    const run = async (argv: readonly string[]) => {\n      const r = await $.process.run(argv);\n      return r.exitCode === 0 ? r.stdout.replace(/\\n$/, \"\") : undefined;\n    };\n\n    const inRepo = await run([\"git\", \"rev-parse\", \"--is-inside-work-tree\"]);\n    if (inRepo === undefined) return next(e);\n\n    const branch =\n      (await run([\"git\", \"rev-parse\", \"--abbrev-ref\", \"HEAD\"])) ?? \"?\";\n    const status = (await run([\"git\", \"status\", \"--short\"])) || \"(クリーン)\";\n    let text = `現在のブランチ: ${branch}\\n\\n## git status --short\\n${status}`;\n    if (branch !== \"main\") {\n      const log = await run([\"git\", \"log\", \"--oneline\", \"main..HEAD\"]);\n      text += `\\n\\n## main からの差分コミット\\n${log || \"(なし)\"}`;\n    }\n\n    return next({ ...e, blocks: [...e.blocks, { name: \"gitStatus\", text }] });\n  });\n};\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./index.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"git-context\",\n  \"author\": {\n    \"name\": \"void2610\"\n  },\n  \"description\": \"会話の最初のメッセージに現在ブランチ・git status・main からの差分コミットを注入する\",\n  \"version\": \"0.1.0\"\n}"
+ }
+}

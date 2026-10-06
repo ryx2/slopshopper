@@ -1,0 +1,337 @@
+{
+ "slug": "potterdigital-plan-usage-mod",
+ "generatedAt": "2026-10-06T05:30:07.223Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart",
+    "matcher": {
+     "source": [
+      "clear",
+      "resume",
+      "fork"
+     ]
+    }
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": "/^(composer|bridge|slack-ping)$/"
+     }
+    }
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "plan-usage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "plan-usage",
+    "description": "Show plan usage limits and reset times",
+    "immediate": true,
+    "output": "{\n  \"limits\": [\n    {\n      \"kind\": \"five_hour\",\n      \"percentUsed\": 31,\n      \"resetsAt\": 1760003600000,\n      \"label\": \"Session\",\n      \"level\": \"ok\"\n    }\n  ],\n  \"readAtLocal\": \"1:23 AM PT\",\n  \"timeZone\": \"America/Los_Angeles\",\n  \"autoPause\": {\n    \"isOn\": false,\n    \"threshold\": 95,\n    \"pause\": null\n  }\n}"
+   }
+  ],
+  "tools": [
+   {
+    "name": "plan_usage",
+    "description": "The Claude plan's usage limits right now, answered locally without a model call: one entry per window, with kind (five_hour is the session limit, seven_day the weekly one), percentUsed from 0 to 100, resetsAt as ISO 8601 and resetsAtLocal in the user's time zone. Check it before starting long or unattended work."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.state.get": 7,
+   "$.store.get": 3,
+   "$.state.set": 2,
+   "$.env.get": 2,
+   "$.session.usage": 1,
+   "$.clock.now": 4,
+   "$.clock.every": 2,
+   "$.tool.register": 1,
+   "$.command.register": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 30000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "columnGap": 2
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          "Plan usage: show your limits above the prompt"
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "show-always",
+          "label": "Always",
+          "hotkey": "1",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "show-50",
+          "label": "From 50%",
+          "hotkey": "2",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "show-80",
+          "label": "From 80%",
+          "hotkey": "3",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "show-other",
+          "label": "Other",
+          "hotkey": "4",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "columnGap": 3
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "key": "five_hour",
+          "flexDirection": "row",
+          "columnGap": 1
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "#4ea1ff",
+            "bold": true
+           },
+           "children": [
+            "●",
+            " ",
+            "OK"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "wrap": "truncate-end"
+           },
+           "children": [
+            "Session",
+            " ",
+            "31",
+            "%",
+            ""
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "wrap": "truncate-end"
+         },
+         "children": [
+          "as of ",
+          "1:23 AM PT"
+         ]
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/plan-usage → {\n  \"limits\": [\n    {\n      \"kind\": \"five_hour\",\n      \"percentUsed\": 31,\n      …"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "classic.SessionStart{source=clear|resume|fork}",
+   "prompt.submit{origin has {kind=/\"^(composer|bridge|slack-ping)$\"/}}",
+   "session.measure",
+   "turn.start",
+   "turn.complete",
+   "tool.call",
+   "command.run{command=plan-usage}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.after (via armResume)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.config.set (via saveShowAt)",
+   "$.env.get (via sharedKey)",
+   "$.prompt.submit (via resume)",
+   "$.session.usage (via fromLastReply)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via fromReply",
+   "saveShowAt)",
+   "$.tool.register",
+   "$.turn.abort (via stopTurn)",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "plan-usage.onboarding",
+   "plan-usage.overrideUntil",
+   "plan-usage.pause",
+   "plan-usage.reading"
+  ],
+  "stateWrites": [
+   "plan-usage.onboarding",
+   "plan-usage.overrideUntil",
+   "plan-usage.pause",
+   "plan-usage.reading"
+  ],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/potterdigital-plan-usage-mod/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/potterdigital-plan-usage-mod/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: plan-usage.reading, plan-usage.pause, plan-usage.overrideUntil, plan-usage.onboarding"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/potterdigital-plan-usage-mod/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, prompt.submit{origin has {kind=/\"^(composer|bridge|slack-ping)$\"/}}, session.measure, turn.start, turn.complete, tool.call, command.run{command=plan-usage}, ui.render{component=AbovePrompt}",
+      "./register.tsx calls: $.clock.after (via armResume), $.clock.every, $.clock.now, $.command.register, $.config.set (via saveShowAt), $.env.get (via sharedKey), $.prompt.submit (via resume), $.session.usage (via fromLastReply), $.state.get, $.state.set, $.store.get, $.store.set (via fromReply, saveShowAt), $.tool.register, $.turn.abort (via stopTurn), $.ui.invalidate, $.ui.log, $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR",
+      "./register.tsx state writes: plan-usage.onboarding, plan-usage.overrideUntil, plan-usage.pause, plan-usage.reading",
+      "./register.tsx state reads: plan-usage.onboarding, plan-usage.overrideUntil, plan-usage.pause, plan-usage.reading"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "28baf94a3b96d6f5"
+}

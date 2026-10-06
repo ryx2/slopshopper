@@ -3,7 +3,7 @@
 //   bun run build
 //   SITE_BASE=/slopshopper/ bun run build     (GitHub Pages project path)
 
-import { mkdir, rm, cp } from 'node:fs/promises'
+import { mkdir, rm, cp, rename } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { Index, ModEntry, Preview } from './lib/types'
@@ -284,8 +284,11 @@ function detailPage(v: View): string {
   return layout({ title: `${title(m)} · Claude Code mod · slopshopper`, description: m.description.slice(0, 200) || `${m.name}, a Claude Code mod`, body, path: `mods/${m.slug}/`, nav: 'mods' })
 }
 
+const INLINE_CARDS = 120
+
 function indexPage(views: View[], stats: { total: number; fresh: number; authors: number }): string {
   const sorted = [...views].sort((a, b) => b.rank - a.rank)
+  const inline = sorted.slice(0, INLINE_CARDS)
   const body = `
 <section class="hero"><div class="wrap">
   <h1>The <em>mod shop</em> for Claude Code.</h1>
@@ -306,7 +309,8 @@ function indexPage(views: View[], stats: { total: number; fresh: number; authors
 </div></div>
 <main class="wrap">
   <div class="section-h"><h2>All mods</h2><span class="tiny">previews are replays of a scripted session in a sandbox</span></div>
-  <div class="grid" id="grid">${sorted.map(card).join('\n')}</div>
+  <div class="grid" id="grid" data-total="${views.length}" data-cards="${u('cards.json')}">${inline.map(card).join('\n')}</div>
+  ${views.length > inline.length ? `<p style="text-align:center;margin:26px 0"><button class="chip" id="more" style="font-size:14px;padding:9px 18px">show all ${views.length} mods</button></p>` : ''}
 </main>`
   return layout({ title: 'slopshopper · the mod shop for Claude Code', description: `${stats.total} Claude Code mods, scraped from GitHub, each with a visual preview and install commands.`, body, path: '', nav: 'mods' })
 }
@@ -375,8 +379,18 @@ function communityMarketplace(views: View[]) {
 }
 
 async function main() {
-  await rm(DIST, { recursive: true, force: true })
-  await mkdir(DIST, { recursive: true })
+  // build into a scratch directory and swap it in at the end, so a server
+  // reading dist/ never sees it half written
+  const FINAL = DIST
+  const DIST_TMP = DIST + '.tmp'
+  await rm(DIST_TMP, { recursive: true, force: true })
+  await mkdir(DIST_TMP, { recursive: true })
+  await buildInto(DIST_TMP)
+  await rm(FINAL, { recursive: true, force: true })
+  await rename(DIST_TMP, FINAL)
+}
+
+async function buildInto(DIST: string) {
   const index = existsSync(join(DATA, 'mods.json')) ? ((await Bun.file(join(DATA, 'mods.json')).json()) as Index) : { generatedAt: '', mods: [] }
   const mods: ModEntry[] = [...(await localMods()), ...index.mods]
   for (const m of mods) {
@@ -384,9 +398,21 @@ async function main() {
     const f = Bun.file(join(DATA, 'mods', `${m.slug}.json`))
     if (await f.exists()) m.files = ((await f.json()) as { files: Record<string, string> }).files
   }
-  // community entry names: a mod's name, suffixed by owner on a clash
-  const nameCount = new Map<string, number>()
-  for (const m of mods) if (m.kind === 'community') nameCount.set(m.name.toLowerCase(), (nameCount.get(m.name.toLowerCase()) ?? 0) + 1)
+  // community entry names: a mod's own name; on a clash the owner, then the
+  // repository, then the path are appended until the name is unique
+  const cleanName = (s: string) => s.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[^A-Za-z0-9]+/, '').replace(/-+/g, '-').replace(/-$/, '')
+  const takenNames = new Set<string>()
+  const entryNames = new Map<string, string>()
+  for (const m of [...mods].sort((a, b) => b.repo.stars - a.repo.stars || a.slug.localeCompare(b.slug))) {
+    if (m.kind !== 'community') continue
+    const [owner, repoName] = m.repo.fullName.split('/') as [string, string]
+    const base = cleanName(m.name) || cleanName(repoName) || 'mod'
+    const candidates = [base, `${base}-${cleanName(owner)}`, `${base}-${cleanName(owner)}-${cleanName(repoName)}`, `${base}-${cleanName(owner)}-${cleanName(repoName)}-${cleanName(m.path.replace(/\//g, '-')) || 'root'}`]
+    let chosen = candidates.find(c => !takenNames.has(c.toLowerCase()))
+    for (let n = 2; !chosen; n++) if (!takenNames.has(`${candidates[2]}-${n}`.toLowerCase())) chosen = `${candidates[2]}-${n}`
+    takenNames.add(chosen.toLowerCase())
+    entryNames.set(m.slug, chosen)
+  }
   const views: View[] = []
   for (const m of mods) {
     const pf = Bun.file(join(DATA, 'previews', `${m.slug}.json`))
@@ -396,12 +422,22 @@ async function main() {
     const isNew = Date.now() - new Date(m.firstSeen).getTime() < NEW_DAYS * 86_400_000 && m.kind !== 'builtin'
     const mock = preview?.harness.ok ? mockup(preview, m.name) : null
     const days = (Date.now() - new Date(updated).getTime()) / 86_400_000
-    const rank = (m.kind === 'slopshopper' ? 30 : 0) + (m.kind === 'sample' ? 6 : 0) + Math.log2(m.repo.stars + 1) * 4 + (days < 14 ? 6 : days < 60 ? 3 : 0) + (mock?.hasDrawing ? 5 : 0) + (preview && !preview.validate.ok ? -25 : 2) + (m.readme ? 1 : 0)
-    const entryName = (nameCount.get(m.name.toLowerCase()) ?? 0) > 1 ? `${m.name}-${m.repo.fullName.split('/')[0]!.toLowerCase()}` : m.name
+    const isSampleCopy = m.kind === 'community' && /^(blast-radius|replay-theater|token-weather|first-mod|hello-tabs|gallery)$/.test(m.name)
+    const rank = (m.kind === 'slopshopper' ? 30 : 0) + (m.kind === 'sample' ? 6 : 0) + Math.min(28, Math.log2(m.repo.stars + 1) * 4) + (days < 14 ? 6 : days < 60 ? 3 : 0) + (mock?.hasDrawing ? 5 : 0) + (preview && !preview.validate.ok ? -25 : 2) + (m.readme ? 1 : 0) + (isSampleCopy ? -12 : 0)
+    const entryName = entryNames.get(m.slug) ?? m.name
     views.push({ mod: m, preview, tags, isNew, rank, thumb: thumbOf(preview, m, tags), mock, install: installFor(m, entryName), entryName, stars: m.repo.stars, updated })
+  }
+  // one repository cannot fill the first screen: each further mod from the
+  // same repository ranks a little lower than the one before it
+  const perRepo = new Map<string, number>()
+  for (const v of [...views].sort((a, b) => b.rank - a.rank)) {
+    const n = perRepo.get(v.mod.repo.fullName) ?? 0
+    perRepo.set(v.mod.repo.fullName, n + 1)
+    if (v.mod.kind !== 'slopshopper') v.rank -= Math.min(24, n * 2.5)
   }
   const stats = { total: views.length, fresh: views.filter(v => v.isNew).length, authors: new Set(views.map(v => v.mod.repo.fullName.split('/')[0])).size }
   await Bun.write(join(DIST, 'index.html'), indexPage(views, stats))
+  await Bun.write(join(DIST, 'cards.json'), JSON.stringify([...views].sort((a, b) => b.rank - a.rank).map(v => ({ slug: v.mod.slug, html: card(v) }))))
   await Bun.write(join(DIST, 'new', 'index.html'), newPage(views))
   await Bun.write(join(DIST, 'about', 'index.html'), aboutPage(stats))
   for (const v of views) await Bun.write(join(DIST, 'mods', v.mod.slug, 'index.html'), detailPage(v))

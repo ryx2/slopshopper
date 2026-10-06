@@ -1,0 +1,8 @@
+{
+ "slug": "m-mahiro-claude-code-mods-btw-fix",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// The built-in /btw opens a blocking side panel: the main transcript can't be\n// scrolled while it's pending, and closing the panel cancels the answer.\n// Answering `command.run` here ourselves (without calling `next`) shadows\n// that built-in behavior entirely — our `{ text }` prints as a normal\n// transcript row instead, so there's nothing to lock the screen or to close.\nexport const register: Register = on => {\n  on('command.run', { command: 'btw' }, async ($, e) => {\n    const question = e.args.trim()\n\n    if (question === '') {\n      return {\n        text: 'Usage: /btw <question> — answers a quick side question from the current conversation, without opening a side panel.',\n      }\n    }\n\n    $.ui.toast('💭 /btw: answering…')\n\n    const result = await $.model.fork({ prompt: question })\n\n    if (result.isAnswered) return { text: result.text }\n\n    switch (result.reason) {\n      case 'nothing-to-fork':\n        return { text: '/btw has nothing to go on yet — send a message first.' }\n      case 'empty-reply':\n        return { text: '/btw got no answer back.' }\n      case 'aborted':\n        return { text: '/btw was interrupted.' }\n      case 'api-error':\n        return { text: `/btw failed to reach the model (${result.error}).` }\n    }\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"btw-fix\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Replaces /btw's blocking side panel with a plain, scrollable transcript answer.\",\n  \"author\": {\n    \"name\": \"m-mahiro\"\n  }\n}"
+ }
+}

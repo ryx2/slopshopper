@@ -1,0 +1,8 @@
+{
+ "slug": "jaydoubleu-aside-witness",
+ "files": {
+  "hooks/register.ts": "import type { On } from 'claude-code'\nexport function register(on: On) {\n  const stamp = () => new Date().toISOString().slice(11, 23)\n  on('prompt.submit', ($, e, next) => { $.ui.log(`[witness ${stamp()}] prompt.submit origin=${JSON.stringify(e.origin)} text=${JSON.stringify(e.text?.slice(0, 100))}`); return next(e) })\n  on('turn.complete', async ($, e, next) => {\n    const msgs = await $.session.messages()\n    $.ui.log(`[witness ${stamp()}] turn.complete messages n=${msgs.length} ${JSON.stringify(msgs.map(m => [m.role, m.text.slice(0, 70)]))}`)\n    return next(e)\n  })\n  on('plugin.register', ($, e, next) => { $.ui.log(`[witness ${stamp()}] plugin.register name=${e.name} tier=${e.tier} provenance=${e.provenance} uses=${JSON.stringify(e.uses)}`); return next(e) })\n  on('ui.render', { component: 'Pane' }, ($, e, next) => { $.ui.log(`[witness ${stamp()}] Pane render id=${e.requestId} focused=${e.props.isFocused} placement=${e.props.placement}`); return next(e) })\n}\n",
+  "hooks/hooks.json": "{ \"description\": \"witness\", \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"witness\",\n  \"version\": \"0.0.1\",\n  \"description\": \"test witness: logs the transcript at every turn end and every prompt submit\"\n}"
+ }
+}

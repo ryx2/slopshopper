@@ -1,0 +1,206 @@
+{
+ "slug": "bengous-claude-code-plugins-vellum",
+ "generatedAt": "2026-10-06T05:32:39.656Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "skill.prompt",
+    "matcher": {
+     "skill": "vellum:start"
+    }
+   },
+   {
+    "event": "skill.prompt",
+    "matcher": {
+     "skill": "vellum:stop"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": [
+      "clear",
+      "resume"
+     ]
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "tool.check"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vellum__submit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vellum__state"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "mcp__vellum__grill_ask",
+      "mcp__vellum__propose",
+      "AskUserQuestion"
+     ]
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "prompt"
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   }
+  ],
+  "commands": [],
+  "tools": [
+   {
+    "name": "submit",
+    "description": "Submit plan.md from the vellum working directory for review in the browser, before the turn ends. The turn's end submits it anyway, but only when its text changed; once the reviewer sent a batch on the version under review, this tool also records an unchanged plan.md as the next version. Answers with the version under review. Refused, with the reason, outside a vellum planning session (entered by /vellum:start), when plan.md is missing, when the plan is approved, and while the review is held (a grill, a plan review): plan.md then waits, a prompt tells you once the hold ends, and the end of that turn records it."
+   },
+   {
+    "name": "state",
+    "description": "Where the vellum planning session stands, read on demand: the plan's stage and whether plan.md holds a text no version has, each part of the review (grill, proposal, plan review) and what holds it, then each event refused now with its reason. No input. Refused outside a vellum planning session."
+   },
+   {
+    "name": "grill_ask",
+    "description": "Ask one round of the open grill of a vellum planning session, and wait: the reviewer answers in the review page, and their reply is this call's result. q: one [title, question, recommendation] per question; title is one line of plain text, question and recommendation are Markdown; the page numbers them across the whole grill. Refused outside vellum planning, and when no grill is open: only the reviewer opens one, from the next step you propose or on their own. While a grill is open you may still write plan.md: it waits, and a prompt tells you once the grill ends."
+   },
+   {
+    "name": "propose",
+    "description": "Propose the next step to the reviewer of a vellum planning session, and wait: the reviewer picks one in the review page, and their pick is this call's result: \"Accepted: <move>.\" for the one you recommended, \"Chose: <move>.\" for another, \"Own: <text>.\" for their own words, \"Declined.\" or \"Declined: <note>.\" for none of the moves. reason: one sentence, why a step is needed now. moves: {kind: \"grill\", subject, choices} (choices: the titles of the open choices it settles), {kind: \"mockup\", screen}, {kind: \"prototype\", question} or {kind: \"plan\"}; subject, screen and question on one line. recommended: the index of the move you would take. Refused outside vellum planning, while the review is held (a grill, a plan review), and when a move is the plan once plan.md exists: the plan step is done."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 4,
+   "$.session.id": 1,
+   "$.store.get": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "skill.prompt{skill=vellum:start}",
+   "skill.prompt{skill=vellum:stop}",
+   "command.run{command=clear|resume}",
+   "ui.render{component=AbovePrompt}",
+   "tool.check",
+   "tool.call{tool=mcp__vellum__submit}",
+   "tool.call{tool=mcp__vellum__state}",
+   "tool.call{tool=mcp__vellum__grill_ask|mcp__vellum__propose|AskUserQuestion}",
+   "prompt.submit",
+   "session.append{door=prompt}",
+   "turn.start",
+   "turn.complete"
+  ],
+  "calls": [
+   "$.agent.list (via hostOf)",
+   "$.agent.spawn (via hostOf)",
+   "$.clock.after (via hostOf)",
+   "$.clock.every (via hostOf)",
+   "$.clock.now (via hostOf)",
+   "$.env.get (via hostOf)",
+   "$.env.set (via hostOf)",
+   "$.fs.stat (via hostOf)",
+   "$.http.fetch (via hostOf)",
+   "$.process.spawn (via hostOf)",
+   "$.prompt.submit (via hostOf)",
+   "$.session.cwd (via hostOf)",
+   "$.session.id (via hostOf)",
+   "$.session.root (via hostOf)",
+   "$.store.delete (via hostOf)",
+   "$.store.get (via hostOf)",
+   "$.store.set (via hostOf)",
+   "$.tool.call (via hostOf)",
+   "$.tool.register",
+   "$.ui.invalidate (via hostOf)",
+   "$.ui.log (via hostOf)",
+   "$.ui.resolve",
+   "$.ui.status (via hostOf)"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/bengous-claude-code-plugins-vellum/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/bengous-claude-code-plugins-vellum/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/bengous-claude-code-plugins-vellum/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "../src/runtime/hooks/register.ts hooks: session.start, skill.prompt{skill=vellum:start}, skill.prompt{skill=vellum:stop}, command.run{command=clear|resume}, ui.render{component=AbovePrompt}, tool.check, tool.call{tool=mcp__vellum__submit}, tool.call{tool=mcp__vellum__state}, tool.call{tool=mcp__vellum__grill_ask|mcp__vellum__propose|AskUserQuestion}, prompt.submit, session.append{door=prompt}, turn.start, turn.complete",
+      "../src/runtime/hooks/register.ts calls: $.agent.list (via hostOf), $.agent.spawn (via hostOf), $.clock.after (via hostOf), $.clock.every (via hostOf), $.clock.now (via hostOf), $.env.get (via hostOf), $.env.set (via hostOf), $.fs.stat (via hostOf), $.http.fetch (via hostOf), $.process.spawn (via hostOf), $.prompt.submit (via hostOf), $.session.cwd (via hostOf), $.session.id (via hostOf), $.session.root (via hostOf), $.store.delete (via hostOf), $.store.get (via hostOf), $.store.set (via hostOf), $.tool.call (via hostOf), $.tool.register, $.ui.invalidate (via hostOf), $.ui.log (via hostOf), $.ui.resolve, $.ui.status (via hostOf)",
+      "../src/runtime/hooks/register.ts env writes: CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR",
+      "../src/runtime/hooks/register.ts env reads: CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "d00b4e37b04394fd"
+}

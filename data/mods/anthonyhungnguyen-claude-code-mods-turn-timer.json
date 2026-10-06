@@ -1,0 +1,8 @@
+{
+ "slug": "anthonyhungnguyen-claude-code-mods-turn-timer",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst LONG_MS = 120_000\n\nexport const register: Register = on => {\n  on('turn.complete', async ($, e, next) => {\n    const done = await next(e)\n    if (e.agentId || e.isAborted || e.durationMs < LONG_MS) return done\n\n    const min = Math.round(e.durationMs / 60_000)\n    const ok = e.reason === 'answer'\n    $.ui.toast(`${ok ? 'Done' : 'Stopped'} after ${min} min`)\n    // no synthesizer (Linux, a remote surface): the toast still shows\n    void $.audio.speak(ok ? `Claude finished, ${min} minutes` : 'Claude stopped with an error').catch(() => {})\n    return done\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"turn-timer\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Speaks and toasts when a long turn finishes\"\n}"
+ }
+}

@@ -1,0 +1,8 @@
+{
+ "slug": "martineserios-thebrana-bad-calls-model",
+ "files": {
+  "hooks/register.ts": "import type { EngineInterface, Register } from 'claude-code'\n\nimport { DEFAULT_TIMEOUT_MS, guard } from './_shared/run'\nimport { failureLine } from './_shared/probe'\n\n// hooks/_shared/ is vendored from mods/_shared/hooks by system/scripts/mods-sync-shared.sh\n// (the test and mods-check.sh --engine assemble it; nothing under _shared is committed here).\nconst run = ($: EngineInterface, argv: readonly string[]) => guard(argv, () => $.process.run(argv, { timeoutMs: DEFAULT_TIMEOUT_MS }))\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const r = await run($, ['brana', 'backlog', 'next'])\n    $.ui.status(failureLine(r) ?? 'ok')\n    return next(e)\n  })\n  on('turn.complete', async ($, e, next) => { await $.model.complete({ prompt: 'x' }); return next(e) })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"bad-calls-model\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Fixture: must fail Check 77a rule 'model'.\",\n  \"author\": {\n    \"name\": \"brana\"\n  }\n}"
+ }
+}

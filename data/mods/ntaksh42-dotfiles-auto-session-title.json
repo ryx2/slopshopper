@@ -1,0 +1,8 @@
+{
+ "slug": "ntaksh42-dotfiles-auto-session-title",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst MAX_LEN = 40\nconst MAX_PROMPT_CHARS = 500\n\nexport const register: Register = on => {\n  let isNamed = false\n\n  on('classic.UserPromptSubmit', async ($, e, next) => {\n    const ran = await next(e)\n    if (isNamed || e.session_title || (e.source ?? 'user') !== 'user') return ran\n\n    const prompt = e.prompt.trim()\n    if (!prompt || prompt.startsWith('/')) return ran\n    isNamed = true\n\n    const r = await $.model.complete({\n      model: 'haiku',\n      effort: 'low',\n      maxTokens: 60,\n      timeoutMs: 8000,\n      system: 'Reply with only a short title (at most 30 characters) summarizing the user request below, in the same language as the request. No quotes, no trailing punctuation.',\n      prompt: prompt.slice(0, MAX_PROMPT_CHARS),\n    })\n    const summary = r.isAnswered ? r.text.trim().split('\\n')[0] : ''\n    const title = (summary || prompt.split('\\n')[0]).slice(0, MAX_LEN)\n\n    return { ...ran, sessionTitle: title }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"auto-session-title\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Names the session with a short model-written summary of the first prompt.\"\n}"
+ }
+}

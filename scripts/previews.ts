@@ -47,7 +47,27 @@ type ValidateJson = {
   contents?: { type: string; errors: { message: string }[]; warnings: { message: string }[]; notes: string[] }[]
 }
 
-async function validate(dir: string): Promise<Preview['validate']> {
+async function validate(dir: string, retry = true): Promise<Preview['validate']> {
+  const first = await validateOnce(dir)
+  // the capture holds the mod's files only; a plugin that also ships skills,
+  // commands or an MCP file fails on those paths, so stand them in and retry
+  const missing = first.errors.map(e => /Path not found: (\.\/\S+)/.exec(e)?.[1]?.replace(/[.,;:]+$/, '')).filter((p): p is string => !!p)
+  if (!retry || missing.length === 0) return first
+  for (const rel of missing) {
+    const p = join(dir, rel)
+    if (p.includes('..')) continue
+    if (rel.endsWith('/') || !rel.includes('.')) await mkdir(p, { recursive: true })
+    else {
+      await mkdir(dirname(p), { recursive: true })
+      await Bun.write(p, rel.endsWith('.json') ? '{}' : '')
+    }
+  }
+  const second = await validateOnce(dir)
+  second.warnings.push(`stood in for ${missing.join(', ')}: the capture holds the mod's own files, not the rest of its plugin`)
+  return second
+}
+
+async function validateOnce(dir: string): Promise<Preview['validate']> {
   const empty: Preview['validate'] = { ok: false, errors: [], warnings: [], hooks: [], calls: [], stateReads: [], stateWrites: [], envReads: [] }
   const p = Bun.spawn(['claude', 'plugin', 'validate', '--json', dir], { stdout: 'pipe', stderr: 'pipe' })
   const timer = setTimeout(() => p.kill(), 30_000)
@@ -126,7 +146,13 @@ async function main() {
       if (prev.sourceHash === hashFiles(files)) return
     }
     const dir = await materialize(mod, files)
-    const [v, h] = await Promise.all([validate(dir), harness(dir, mod)])
+    const entryMissing = !(mod.entry in files)
+    const [v, h] = await Promise.all([
+      validate(dir),
+      entryMissing
+        ? Promise.resolve<Preview['harness']>({ ok: false, error: `hooks.json names ${mod.modules[0]} as the hooks module, but the repository has no such file`, hooks: [], commands: [], tools: [], panes: [], toasts: [], logs: [], denies: [], rewrites: [], apiCalls: {}, timers: [], sites: {}, script: [], console: [] })
+        : harness(dir, mod),
+    ])
     const preview: Preview & { sourceHash: string } = { slug: mod.slug, generatedAt: new Date().toISOString(), harness: h, validate: v, sourceHash: hashFiles(files) }
     await Bun.write(outPath, JSON.stringify(preview, null, 1))
     done++

@@ -1,0 +1,724 @@
+{
+ "slug": "az9713-claude-mod-pack-mod-pack",
+ "generatedAt": "2026-10-06T05:28:40.350Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "mods"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "q"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "snake"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "snake"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "snake"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "PowerShell"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "mods",
+    "description": "List the mod-pack features and turn them on or off.",
+    "argumentHint": "[on|off|toggle <id> | sound on|off | reset]",
+    "output": "mod-pack features (sound: OFF):\n  ON   token-weather  Token Weather: context-window forecast above the prompt: band, percent, tokens, 12-turn chart [plays sound]\n  ON   cache-keeper  Cache Keeper: countdown of how long the prompt cache stays warm, with a compact button; costs no model tokens; lifetime 60 min by default (a subscription), set cacheTtlMinutes to 5 on an API key\n  ON   prompt-queue  Prompt Queue: type /q <text> while Claude works to queue follow-up prompts; they send one at a time when a turn ends; costs no model tokens itself; queued prompts run with your permissions\n  OFF  wait-what  Wait What: plain-words retell of each long answer in the band; SPENDS model tokens: one short reply from the cheapest model per answer, at most maxModelCallsPerHour an hour (default 30); OFF by default [uses model tokens]\n  ON   blast-radius  Blast Radius: asks Proceed or Cancel before a risky shell command (rm -rf, git reset --hard, git push --force, ...); costs no model tokens\n  ON   ship-gate  Ship Gate: asks Proceed or Cancel, with a check for personal info, before git push, gh repo create and Pages; denies git commit of code when no test passed since the last edit; costs no model tokens\n  ON   snake  Snake: type /snake to play Snake in a pane; it pauses when Claude finishes and goes on when you send the next prompt; keys w a s d p r work while the pane has the keyboard; costs no model tokens\n\nType /mods help for the commands."
+   },
+   {
+    "name": "q",
+    "description": "Queue follow-up prompts. They send one at a time when a turn ends.",
+    "argumentHint": "<text> | rm <n> | clear | pause | resume",
+    "immediate": true,
+    "output": "The prompt queue is empty. Type /q <text> to add a prompt."
+   },
+   {
+    "name": "snake",
+    "description": "Play Snake in a pane. It pauses when Claude finishes and goes on at your next prompt.",
+    "immediate": true,
+    "output": "Snake opened. Press p to play. The keys w a s d p r work while the pane has the keyboard (click it, or ctrl+x then Tab). Esc or /snake closes it."
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "snake",
+    "title": "Snake"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "Blast Radius: the person cancelled this command (rm-recursive, git-push-force). It did not run. Do not retry the same command unprompted; ask the person what they want instead."
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 3,
+   "$.store.get": 21,
+   "$.clock.now": 9,
+   "$.state.get": 34,
+   "$.clock.every": 1,
+   "$.state.set": 10,
+   "$.session.cwd": 4,
+   "$.fs.stat": 1,
+   "$.process.run": 4,
+   "$.ui.ask": 1,
+   "$.session.usage": 1,
+   "$.session.surfaces": 2,
+   "$.ui.invalidate": 1,
+   "$.ui.resolve": 3,
+   "$.ui.panes": 1,
+   "$.ui.open": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "row-token-weather",
+        "height": 1,
+        "overflow": "hidden"
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {},
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "cyan",
+            "bold": true
+           },
+           "children": [
+            "☁",
+            " ",
+            "Cloudy"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {},
+           "children": [
+            " ",
+            "49",
+            "% ",
+            "97.4k",
+            " / ",
+            "200k",
+            " "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "cyan"
+           },
+           "children": [
+            "▄"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true
+           },
+           "children": [
+            " ",
+            "▲ +97.4k last turn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "row-cache-keeper",
+        "height": 1,
+        "overflow": "hidden"
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {},
+         "children": [
+          {
+           "type": "Text",
+           "props": {},
+           "children": [
+            "⏱ cache warm ",
+            "59m",
+            " left",
+            " · 97.4k tokens",
+            " "
+           ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "compact",
+            "label": "compact",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "snake": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "engine",
+        "ref": 1,
+        "props": {
+         "title": "Snake",
+         "isFocused": false,
+         "bodyColumns": 56,
+         "placement": "dock",
+         "scroll": {
+          "offset": 0,
+          "bodyRows": 30
+         },
+         "view": {}
+        }
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Snake  score 0  best 0"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "yellow",
+           "bold": true
+          },
+          "children": [
+           "PAUSED – press p to play"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-0",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-1",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-2",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-3",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-1",
+             "color": "red"
+            },
+            "children": [
+             "● "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-2",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-4",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-1",
+             "color": "green"
+            },
+            "children": [
+             "████"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-2",
+             "color": "yellow",
+             "bold": true
+            },
+            "children": [
+             "██"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-3",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-5",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-6",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-7",
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "run-0",
+             "dimColor": true
+            },
+            "children": [
+             "· · · · · · · · · · · · · · · · "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "up",
+             "label": "up",
+             "hotkey": "w",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "left",
+             "label": "left",
+             "hotkey": "a",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "down",
+             "label": "down",
+             "hotkey": "s",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "right",
+             "label": "right",
+             "hotkey": "d",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "toggle",
+             "label": "play",
+             "hotkey": "p",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "restart",
+             "label": "restart",
+             "hotkey": "r",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Keys need the pane focused: click it, or ctrl+x then Tab."
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Snake"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "$.process.run(git --no-optional-locks -c core.fsmonitor=false rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git --no-optional-locks -c core.fsmonitor=false rev-parse --abbrev-ref @{u}) → exit 0",
+   "$.process.run(git --no-optional-locks -c core.fsmonitor=false rev-list --count main..origin/ma…) → exit 0",
+   "$.process.run(git --no-optional-locks -c core.fsmonitor=false log --oneline -n 10 main..origin…) → exit 0",
+   "$.ui.ask(Blast Radius holds this command: recursive delete (rm -r); git push --force (rew…) → \"Cancel\"",
+   "tool.call Bash denied: Blast Radius: the person cancelled this command (rm-recursive, git-push-force). It did not run. Do n…",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/mods → mod-pack features (sound: OFF):\n  ON   token-weather  Token Weather: context-win…",
+   "/q → The prompt queue is empty. Type /q <text> to add a prompt.",
+   "$.ui.open(snake)",
+   "/snake → Snake opened. Press p to play. The keys w a s d p r work while the pane has the …"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "session.compact",
+   "turn.start",
+   "turn.complete",
+   "command.run{command=mods}",
+   "command.run{command=q}",
+   "command.run{command=snake}",
+   "ui.close{id=snake}",
+   "ui.render{component=Pane, requestId=snake}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=PowerShell}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.audio.play (via dispatchOne)",
+   "$.clock.after (via queueCommand",
+   "runSubmit)",
+   "$.clock.every (via armSnake",
+   "armTicker)",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.list (via countEntries)",
+   "$.fs.stat (via describePath)",
+   "$.model.complete (via runAsk)",
+   "$.process.run (via git",
+   "publishFacts)",
+   "$.prompt.submit (via runSubmit)",
+   "$.session.compact (via compactNow)",
+   "$.session.cwd (via guardShell",
+   "guardShip)",
+   "$.session.surfaces",
+   "$.session.usage",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set",
+   "$.ui.ask (via askPerson)",
+   "$.ui.close",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.open (via snakeCommand)",
+   "$.ui.panes (via snakeCommand)",
+   "$.ui.resolve",
+   "$.ui.toast (via compactNow",
+   "dispatchOne)"
+  ],
+  "stateReads": [
+   "mod-pack.features",
+   "mod-pack.snake"
+  ],
+  "stateWrites": [
+   "mod-pack.features",
+   "mod-pack.snake"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/az9713-claude-mod-pack-mod-pack/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/az9713-claude-mod-pack-mod-pack/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: mod-pack.features, mod-pack.snake"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/az9713-claude-mod-pack-mod-pack/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, session.compact, turn.start, turn.complete, command.run{command=mods}, command.run{command=q}, command.run{command=snake}, ui.close{id=snake}, ui.render{component=Pane, requestId=snake}, tool.call{tool=Bash}, tool.call{tool=PowerShell}, ui.render{component=AbovePrompt}",
+      "./register.tsx calls: $.audio.play (via dispatchOne), $.clock.after (via queueCommand, runSubmit), $.clock.every (via armSnake, armTicker), $.clock.now, $.command.register, $.fs.list (via countEntries), $.fs.stat (via describePath), $.model.complete (via runAsk), $.process.run (via git, publishFacts), $.prompt.submit (via runSubmit), $.session.compact (via compactNow), $.session.cwd (via guardShell, guardShip), $.session.surfaces, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.ask (via askPerson), $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open (via snakeCommand), $.ui.panes (via snakeCommand), $.ui.resolve, $.ui.toast (via compactNow, dispatchOne)",
+      "./register.tsx state writes: mod-pack.features, mod-pack.snake",
+      "./register.tsx state reads: mod-pack.features, mod-pack.snake"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "92b14c4bec08cb81"
+}

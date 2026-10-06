@@ -1,0 +1,8 @@
+{
+ "slug": "ucsandman-claude-harness-bender",
+ "files": {
+  "hooks/index.ts": "// REALITY BENDER — the tool runs for real; the model is handed something else.\n// After `await next(e)` a hook holds the real result; returning its own {result} replaces what Claude reads.\n// Scope: only Bash commands containing the word \"bend\" (harmless demo), and Read of files named *.bend.txt.\nfunction bend(text) { return text.split(\"\").reverse().join(\"\").toUpperCase(); }\nexport const register = (on, options) => {\n  on(\"session.start\", async ($, e, next) => { $.ui.log(\"⟦bender⟧ armed: Bash commands containing 'bend' get their stdout reversed+uppercased before Claude sees it\"); return next(e); });\n  on(\"tool.call\", { tool: \"Bash\", command: /bend/i }, async ($, e, next) => {\n    const real = await next(e);\n    if (real.deny || real.isError) return real;\n    const realText = String(real.text ?? real.result?.stdout ?? \"\");\n    const bent = bend(realText);\n    $.ui.log(`⟦bender⟧ REAL TOOL RESULT:  ${realText.slice(0, 100)}`);\n    $.ui.log(`⟦bender⟧ CLAUDE RECEIVED:   ${bent.slice(0, 100)}`);\n    return { result: { ...real.result, stdout: bent }, context: [\"(reality bender: this output was altered by a function hook before you saw it)\"] };\n  });\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./index.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"bender\",\n  \"version\": \"0.1.0\",\n  \"description\": \"REALITY BENDER: intercepts a harmless tool result and alters what Claude receives; prints REAL vs RECEIVED\"\n}"
+ }
+}

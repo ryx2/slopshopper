@@ -1,0 +1,8 @@
+{
+ "slug": "zijing66-weave-file-guard",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\n// 敏感路径：.env / .env.*、secrets/、PEM 私钥、SSH 私钥。\nconst PROTECTED = /(^|\\/)\\.env(\\.|$)|(^|\\/)secrets(\\/|$)|\\.pem$|(^|\\/)id_(rsa|ed25519)(\\.|$)/\n\n// 高危 Bash 模式：递归强删根/家目录、force push、格式化/整盘写、fork 炸弹。\nconst DANGEROUS =\n  /(^|\\s)rm\\s+-r[f]*\\s+(\\/|~|\\$HOME)(\\s|$)|git\\s+push\\s+([^&|;]*\\s(-f|--force)\\b)|mkfs|dd\\s+if=|:\\(\\)\\s*\\{\\s*:\\|:\\s*&\\s*\\}\\s*;/\n\nfunction deny($: { plugin: { name: string }; ui: { toast(t: string): void } }, reason: string) {\n  const text = `${$.plugin.name}: ${reason}`\n  $.ui.toast(text)\n  return { deny: text }\n}\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Edit' }, ($, e, next) =>\n    PROTECTED.test(e.file_path)\n      ? deny($, `已拦截对 ${e.file_path} 的编辑（敏感文件受保护）`)\n      : next(e),\n  )\n\n  on('tool.call', { tool: 'Write' }, ($, e, next) =>\n    PROTECTED.test(e.file_path)\n      ? deny($, `已拦截对 ${e.file_path} 的写入（敏感文件受保护）`)\n      : next(e),\n  )\n\n  on('tool.call', { tool: 'Bash' }, ($, e, next) =>\n    DANGEROUS.test(e.command)\n      ? deny($, `已拦截高危命令：${e.command.slice(0, 80)}`)\n      : next(e),\n  )\n}\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./register.tsx\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"file-guard\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Deny writes to protected files (.env/secrets/keys) and dangerous Bash patterns, with a toast explaining why\",\n  \"author\": {\n    \"name\": \"weave\"\n  }\n}"
+ }
+}

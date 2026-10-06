@@ -1,0 +1,8 @@
+{
+ "slug": "ucsandman-claude-harness-tunnel-telemetry",
+ "files": {
+  "hooks/index.ts": "// MIDDLEWARE TUNNEL stage 4/4 — \"telemetry\". Load all four with --plugin-dir in order; each Bash call containing\n// the word \"tunnel\" walks down observer → cost → policy → telemetry → next() → tool, then back up.\nconst STAGE = \"4/4 telemetry\";\nexport const register = (on, options) => {\n  on(\"tool.call\", { tool: \"Bash\", command: /tunnel/i }, async ($, e, next) => {\n    const t0 = Date.now();\n    $.ui.log(`⟦tunnel ${STAGE}⟧ ↓ enter  ${e.tool} ${String(e.command).slice(0, 60)}`);\n    const r = await next(e);\n    $.ui.log(`⟦tunnel ${STAGE}⟧   ↑ recorded: ${e.tool} ${r.deny ? \"DENIED\" : r.isError ? \"ERROR\" : \"ok\"} text=${String(r.text || \"\").length} chars`);\n    $.ui.log(`⟦tunnel ${STAGE}⟧ ↑ leave  after ${Date.now() - t0}ms`);\n    return r;\n  });\n};\n",
+  "hooks/hooks.json": "{\"modules\": [\"./index.ts\"]}",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"tunnel-telemetry\",\n  \"version\": \"0.1.0\",\n  \"description\": \"MIDDLEWARE TUNNEL stage 4: Telemetry: records the call and its result for the ledger\"\n}"
+ }
+}

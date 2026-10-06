@@ -1,0 +1,262 @@
+{
+ "slug": "octalide-sift",
+ "generatedAt": "2026-10-06T05:33:49.848Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "engine.create"
+   },
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionEnd"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__sift__grade"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__sift__post"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__sift__judge"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__sift__rank"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "model.classify"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__sift__watch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__sift__prune"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__sift__status"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "sift"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "sift",
+    "description": "sift status, log, prune and watch control",
+    "argumentHint": "[status|log|clear|prune off [n]|prune on|watch status|list|poll|pause|resume|reset|deferred [repo]|start [repo] [for <pr|branch>]|subscribe <repo> [scope]|unsubscribe <id>]",
+    "output": "sift: judge model:haiku, repo none\njudge: model:haiku\nenabled: prune, watchIgnoreSelf, watchIgnoreBots, watchTriage, grade; outbound advise\nwatch: off\nthis session: 0 decisions, 0 failures\nall sessions (ring of 500): 0 decisions, 0 failures\ncost this session: judge in 0, out 0, context removed 0; ring: judge in 0, out 0, context removed 0 (tokens, estimated unless the backend reports them)\n  no decisions yet\ncommands: /sift log [n], /sift clear, /sift prune off [n]|on, /sift watch status|list|poll|pause|resume|reset|deferred [repo], /sift watch start [repo] [for <pr|branch>], /sift watch subscribe <repo> [scope], /sift watch unsubscribe <id>"
+   }
+  ],
+  "tools": [
+   {
+    "name": "grade",
+    "description": "Grade a repository subject with a sift pack and get mechanical findings plus calibrated judgements. Packs and what each expects as subject: issue (an issue number as N or #N, or an issue URL, which may name another repo), pr (a PR number as N or #N, a PR URL, or a range like dev..HEAD graded from the checkout before the PR exists; mechanical checks only: link, target, branch, CI, template, commit format, drift), commit (a ref such as a sha, branch or tag, or a range like main..HEAD; the commit format check only), release (\"release\" for the required bump alone, or a proposed version like v1.4.0; ref: the branch it is cut from, repo: any repo, no checkout needed), rules (an issue number or URL, or free text in text; a PR or commit is refused), locate (an issue number or URL, or free text in text, lists the files of the checkout to read or change for it), plan (an issue number, text: the plan, judges whether the plan covers the issue, adds nothing beyond it, and decides nothing it leaves open), triage (free text in text or the subject, a repository event: does it need the session to act on it now; the watch runs it on each event). top sets how many items every top list shows, over each pack step's own setting: locate's paths per level, and any repo-defined pack's top steps. Never paste a title or body as the subject: it is a reference, the text goes in text. A missing or malformed subject is refused with the expected form named. The grade reads one checkout: cwd when given (pass it from a worktree or another repository), else the directory the calling subagent was spawned in, else the session's repository; that checkout's .sift/config.json conventions and .sift/packs apply, and repo-defined packs are available by name."
+   },
+   {
+    "name": "judge",
+    "description": "Ask calibrated typed questions about any state without generating text. questions is an object of id -> {type: \"noul\"|\"choice\"|\"score\", instructions, criteria}. noul answers a probability, choice picks one key of criteria (an object of key -> description), score picks a position in criteria (an ordered array of level descriptions). Use it for classification, routing, and yes/no checks where a probability is more useful than prose."
+   },
+   {
+    "name": "rank",
+    "description": "Score many items with the same typed questions and get them back in input order with their answers, plus a view sorted by one question. questions has the judge shape; {k} in a question stands for the item index and {field} for a field of an object item ({text} for a string item). mode \"batched\" fills each request with as many items as fit, so items can see each other and it is cheapest; \"isolated\" sends one request per item so no item colours another. Use it for \"which of these N\" problems: relevance, triage, dedup, picking a best candidate."
+   },
+   {
+    "name": "status",
+    "description": "sift status: judge backend, enabled modules, the watch subscriptions and their pollers, and decision counts. Call it at session start to learn whether repository events will be delivered to you as prompts."
+   },
+   {
+    "name": "watch",
+    "description": "Control the sift watch, a set of subscriptions polled one repository at a time. subscribe (repo, default the one checked out where the calling subagent was spawned, else the session's; scope: repo, pr <n>, branch <name>, run <id> or tag <glob>; items, ci, stall filter what reaches you; until: settled, merged, closed or an iso time; returns the id), unsubscribe (id), list (every subscription with its scope, filter and owner), start (subscribe to that repository with the configured filter, or to one pull request or branch when for names it, until settled from a subagent), status, poll (one poll now), pause, resume, reset (forget the cursor and reseed), deferred (events held back). poll, pause, resume, reset and deferred act on every polled repository, or on repo alone. A subscription made from a subagent belongs to it and outlives its turn: subscribe, end your turn, and the delivery resumes you. It arrives with your next tool call, or as a message after 60 s without one or once you have ended your turn. Do not wait or poll for it. It is removed by until, unsubscribe, or once no message can reach you."
+   },
+   {
+    "name": "prune",
+    "description": "Turn sift's pruning of long Bash and Read output off or on for the calling loop alone (this subagent, or the main loop). off lasts until the loop's next task (a subagent's whole run), or for the next calls outputs prune would otherwise judge; on turns it back on. Call off before reading a document in full when every line matters. For one Bash command, end it with # sift: full instead. A Read with offset or limit, a repeat of a Read or command that was pruned, and a Read of a path your task names are never pruned. A Read is only ever cut at its tail, so its line numbers stay true."
+   },
+   {
+    "name": "post",
+    "description": "Write an issue, pull request, comment, review, merge or release on GitHub to the repository named in repo, never the one the working directory implies. What happens to its text follows the outbound mode. Under advise, the default, the text is judged against that repository's rule documents and its outbound channels, the write is made whatever the verdict, and the url is returned with the verdict. Under enforce a broken rule or a channel's length limit refuses the write, naming the rule and quoting the lines that break it, and nothing is written, unless override gives the reason it goes through as written. Under off the write is made unjudged. While the rules of the repository are still being found, or the rules the text may break are checked, advise writes at once and the advice follows, and enforce answers held and writes or refuses the post once that is done, the url or the refusal following; what follows arrives with a later tool call or as a message, so never make the same post again. Every kind takes repo and kind. issue-create: title, body. pr-create: title, body, base, head (a branch, or owner:branch from a fork), draft. issue-comment, pr-comment: number, body. issue-edit, pr-edit: number, title or body or both. pr-review: number, verdict, body (required unless approving). pr-merge: number, method, title and body for the merge commit. release-create: tag, body (the notes), title, target, draft, prerelease. release-edit: tag, title or body. Writing these through gh in Bash is refused under enforce; labels, assignees, closing and the like stay with gh."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [
+   "sift: judge model:haiku, repo none, packs issue pr commit release rules locate plan triage",
+   "sift rules /work/app: 0 candidates, kept none; 0 rules"
+  ],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.id": 1,
+   "$.store.set": 5,
+   "$.store.get": 8,
+   "$.store.keys": 1,
+   "$.clock.every": 1,
+   "$.settings.read": 1,
+   "$.env.get": 3,
+   "$.session.repo": 12,
+   "$.fs.exists": 36,
+   "$.process.run": 13,
+   "$.ui.log": 2,
+   "$.tool.register": 7,
+   "$.command.register": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 3600000
+   }
+  ],
+  "sites": {},
+  "script": [
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(gh repo view --json nameWithOwner,defaultBranchRef --jq {nameWithOwner, defaultB…) → exit 0",
+   "$.process.run(git ls-files -z) → exit 0",
+   "session.start",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Read",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Grep",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Edit",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Write",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Write",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Bash bun test",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Bash git status --porcelain",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "/sift → sift: judge model:haiku, repo none\njudge: model:haiku\nenabled: prune, watchIgnor…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "engine.create",
+   "session.start",
+   "classic.SessionEnd",
+   "tool.call",
+   "tool.call{tool=mcp__sift__grade}",
+   "tool.call{tool=?}",
+   "agent.spawn",
+   "tool.call{tool=mcp__sift__judge}",
+   "tool.call{tool=mcp__sift__rank}",
+   "prompt.submit",
+   "model.classify",
+   "tool.call{tool=mcp__sift__watch}",
+   "tool.call{tool=?}",
+   "tool.call{tool=mcp__sift__status}",
+   "command.run{command=sift}"
+  ],
+  "calls": [
+   "$.agent.list",
+   "$.clock.after",
+   "$.clock.every",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.exists",
+   "$.fs.list",
+   "$.fs.read",
+   "$.fs.stat",
+   "$.http.fetch",
+   "$.model.complete",
+   "$.process.run",
+   "$.prompt.submit",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.repo",
+   "$.settings.read (via apiKeyOf)",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.keys",
+   "$.store.set",
+   "$.tool.call",
+   "$.tool.register",
+   "$.ui.log",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "TYPESAFE_API_KEY",
+   "XDG_CONFIG_HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/octalide-sift/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/octalide-sift/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/sift.d.ts declares on $: $.sift"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/octalide-sift/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./sift.ts hooks: engine.create, session.start, classic.SessionEnd, tool.call, tool.call{tool=mcp__sift__grade}, tool.call{tool=?}, agent.spawn, tool.call{tool=mcp__sift__judge}, tool.call{tool=mcp__sift__rank}, prompt.submit, model.classify, tool.call{tool=mcp__sift__watch}, tool.call{tool=?}, tool.call{tool=mcp__sift__status}, command.run{command=sift}",
+      "./sift.ts calls: $.agent.list, $.clock.after, $.clock.every, $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.fs.stat, $.http.fetch, $.model.complete, $.process.run, $.prompt.submit, $.session.cwd, $.session.id, $.session.repo, $.settings.read (via apiKeyOf), $.store.delete, $.store.get, $.store.keys, $.store.set, $.tool.call, $.tool.register, $.ui.log, $.ui.status, $.ui.toast",
+      "./sift.ts env writes: nothing",
+      "./sift.ts env reads: CLAUDE_CONFIG_DIR, HOME, TYPESAFE_API_KEY, XDG_CONFIG_HOME"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "70715af429c35fde"
+}

@@ -1,0 +1,754 @@
+{
+ "slug": "jkf87-ide-mod",
+ "generatedAt": "2026-10-06T05:29:29.531Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ide"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "open"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "lecture"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "style-gate"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "ide-mod"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "ide-mod"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "ide",
+    "description": "IDE 창: 에이전트 보드 + 파일 트리 + 탭 에디터",
+    "argumentHint": "[경로]",
+    "output": "IDE를 열었어요: /work/app"
+   },
+   {
+    "name": "open",
+    "description": "IDE 창에서 폴더나 파일을 엽니다",
+    "argumentHint": "[경로]",
+    "output": "IDE를 열었어요: /work/app"
+   },
+   {
+    "name": "lecture",
+    "description": "강의 모드: Claude가 하는 일을 입력창 위에 쉬운 한국어 자막으로",
+    "argumentHint": "[on|off]",
+    "output": "강의 모드를 켰어요. 입력창 위에 자막이 떠요 (/lecture off로 끄기)."
+   },
+   {
+    "name": "style-gate",
+    "description": "한국어 문체 게이트: 원고의 AI티 지표를 검사 (자동 검사 on/off)",
+    "argumentHint": "[파일|on|off]",
+    "output": "자동 검사 켜짐. 아직 검사한 원고가 없어요. 사용법: /style-gate <파일> 또는 on/off"
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "ide-mod",
+    "title": "IDE"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 4,
+   "$.clock.every": 2,
+   "$.session.id": 2,
+   "$.state.get": 69,
+   "$.store.get": 1,
+   "$.store.keys": 1,
+   "$.state.set": 17,
+   "$.store.set": 1,
+   "$.fs.stat": 4,
+   "$.ui.open": 2,
+   "$.session.cwd": 3,
+   "$.ui.resolve": 4,
+   "$.fs.list": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 20000
+   },
+   {
+    "kind": "every",
+    "ms": 5000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column",
+      "width": 100
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "lecture",
+        "flexDirection": "column",
+        "borderStyle": "round",
+        "borderColor": "claude",
+        "paddingX": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "bold": true,
+          "color": "claude",
+          "wrap": "truncate-end"
+         },
+         "children": [
+          "▶ ",
+          "강의 모드를 켰어요. Claude가 하는 일을 여기 보여 드려요"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true,
+          "wrap": "truncate-end"
+         },
+         "children": [
+          "",
+          "0",
+          "단계",
+          " · 0s",
+          ""
+         ]
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "ide-mod": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "width": 56
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "board-header",
+         "flexDirection": "row",
+         "columnGap": 2,
+         "height": 1,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "에이전트 ○ … · 서브 0개 작업 중 / 0개 끝남"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "board-fold",
+           "plain": true,
+           "hotkey": "a",
+           "label": "보드 접기",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "board-hide",
+           "plain": true,
+           "hotkey": "h",
+           "label": "끝난 것 숨기기",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "board-recap",
+           "plain": true,
+           "hotkey": "s",
+           "label": "요약 끄기(haiku)",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "board-clear",
+           "plain": true,
+           "hotkey": "x",
+           "label": "끝난 것 지우기",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "agent:main",
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "",
+           ""
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "subtle"
+          },
+          "children": [
+           "○",
+           " "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "메인"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "  ",
+           "모델 확인 중"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "  ",
+           "대기",
+           " ",
+           "0s",
+           "",
+           " · 도구 9"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "agent-doing:main",
+         "wrap": "truncate-end",
+         "dimColor": true
+        },
+        "children": [
+         "  ",
+         "결과 Done. I made `refresh` reject expired claims, added …"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "board-rule",
+         "dimColor": true
+        },
+        "children": [
+         "────────────────────────────────────────────────────────"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "ide-explorer",
+         "flexDirection": "column",
+         "width": 56,
+         "height": 26,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "ide-toolbar",
+           "flexDirection": "row",
+           "columnGap": 2,
+           "height": 1,
+           "overflow": "hidden"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "tree",
+             "plain": true,
+             "hotkey": "t",
+             "label": "트리",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "left-mode",
+             "plain": true,
+             "hotkey": "q",
+             "label": "요청 기록 1",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "up",
+             "plain": true,
+             "hotkey": "u",
+             "label": "상위 폴더",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "reload",
+             "plain": true,
+             "hotkey": "r",
+             "label": "새로고침",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "columnGap": 1,
+           "height": 25,
+           "overflow": "hidden"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "ide-tree",
+             "flexDirection": "column",
+             "width": 56,
+             "height": 25,
+             "overflow": "hidden"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "height": 1,
+               "overflow": "hidden"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "app"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "",
+                 " "
+                ]
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "tree-up",
+                 "plain": true,
+                 "hotkey": "k",
+                 "label": "▲",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "tree-down",
+                 "plain": true,
+                 "hotkey": "j",
+                 "label": "▼",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "row:/work/app/package.json",
+               "flexDirection": "row",
+               "height": 1,
+               "overflow": "hidden"
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "tree:/work/app/package.json",
+                 "plain": true,
+                 "dimColor": false,
+                 "label": "  package.json",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "row:/work/app/README.md",
+               "flexDirection": "row",
+               "height": 1,
+               "overflow": "hidden"
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "tree:/work/app/README.md",
+                 "plain": true,
+                 "dimColor": false,
+                 "label": "  README.md",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "row:/work/app/src",
+               "flexDirection": "row",
+               "height": 1,
+               "overflow": "hidden"
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "tree:/work/app/src",
+                 "plain": true,
+                 "dimColor": false,
+                 "label": "  src",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "IDE"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "turn.start: hook threw undefined is not an object (evaluating 'e.text.trim')",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(ide-mod)",
+   "/ide → IDE를 열었어요: /work/app",
+   "$.ui.open(ide-mod)",
+   "/open → IDE를 열었어요: /work/app",
+   "/lecture → 강의 모드를 켰어요. 입력창 위에 자막이 떠요 (/lecture off로 끄기).",
+   "/style-gate → 자동 검사 켜짐. 아직 검사한 원고가 없어요. 사용법: /style-gate <파일> 또는 on/off"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=ide}",
+   "command.run{command=open}",
+   "command.run{command=lecture}",
+   "command.run{command=style-gate}",
+   "prompt.submit",
+   "session.end",
+   "turn.start",
+   "turn.step",
+   "agent.spawn",
+   "turn.complete",
+   "ui.scroll{component=Pane, requestId=ide-mod}",
+   "tool.call",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=ide-mod}"
+  ],
+  "calls": [
+   "$.agent.list (via reconcile)",
+   "$.clock.after (via loadHwp)",
+   "$.clock.every (via startAgents)",
+   "$.command.register",
+   "$.env.get (via resolvePath)",
+   "$.fs.list (via buildTree)",
+   "$.fs.read (via pngData",
+   "readLines",
+   "runGate)",
+   "$.fs.stat",
+   "$.model.complete (via recapStale)",
+   "$.process.run (via openHwpPreview",
+   "runRhwp)",
+   "$.prompt.fill (via drawExplorer)",
+   "$.session.cwd (via drawExplorer",
+   "openFile",
+   "openIde)",
+   "$.session.id (via loadRequests",
+   "saveRequests)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via loadRequests)",
+   "$.store.get (via loadRequests)",
+   "$.store.keys (via loadRequests)",
+   "$.store.set (via saveRequests)",
+   "$.ui.copy (via drawExplorer)",
+   "$.ui.open (via openIde)",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast (via openHwpPreview",
+   "recapStale)"
+  ],
+  "stateReads": [
+   "ide-mod.active",
+   "ide-mod.agents",
+   "ide-mod.caption",
+   "ide-mod.expanded",
+   "ide-mod.gate",
+   "ide-mod.hideDone",
+   "ide-mod.hwpPages",
+   "ide-mod.hwpView",
+   "ide-mod.isBoardFolded",
+   "ide-mod.isGateOn",
+   "ide-mod.isGateOpen",
+   "ide-mod.isLecture",
+   "ide-mod.isRecapOn",
+   "ide-mod.isTreeHidden",
+   "ide-mod.leftMode",
+   "ide-mod.mode",
+   "ide-mod.offsets",
+   "ide-mod.requestOffset",
+   "ide-mod.requests",
+   "ide-mod.rev",
+   "ide-mod.root",
+   "ide-mod.selectedRequest",
+   "ide-mod.tabs",
+   "ide-mod.tick",
+   "ide-mod.touched",
+   "ide-mod.treeOffset"
+  ],
+  "stateWrites": [
+   "ide-mod.active",
+   "ide-mod.agents",
+   "ide-mod.caption",
+   "ide-mod.expanded",
+   "ide-mod.gate",
+   "ide-mod.hideDone",
+   "ide-mod.hwpPages",
+   "ide-mod.hwpView",
+   "ide-mod.isBoardFolded",
+   "ide-mod.isGateOn",
+   "ide-mod.isGateOpen",
+   "ide-mod.isLecture",
+   "ide-mod.isRecapOn",
+   "ide-mod.isTreeHidden",
+   "ide-mod.leftMode",
+   "ide-mod.mode",
+   "ide-mod.offsets",
+   "ide-mod.requestOffset",
+   "ide-mod.requests",
+   "ide-mod.rev",
+   "ide-mod.root",
+   "ide-mod.selectedRequest",
+   "ide-mod.tabs",
+   "ide-mod.tick",
+   "ide-mod.touched",
+   "ide-mod.treeOffset"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/jkf87-ide-mod/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/jkf87-ide-mod/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: ide-mod.root, ide-mod.expanded, ide-mod.tabs, ide-mod.active, ide-mod.treeOffset, ide-mod.offsets, ide-mod.mode, ide-mod.rev, ide-mod.touched, ide-mod.isTreeHidden, ide-mod.agents, ide-mod.tick, ide-mod.isBoardFolded, ide-mod.hideDone, ide-mod.isRecapOn, ide-mod.leftMode, ide-mod.requests, ide-mod.selectedRequest, ide-mod.requestOffset, ide-mod.hwpView, ide-mod.hwpPages, ide-mod.isLecture, ide-mod.caption, ide-mod.gate, ide-mod.isGateOn, ide-mod.isGateOpen"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/jkf87-ide-mod/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=ide}, command.run{command=open}, command.run{command=lecture}, command.run{command=style-gate}, prompt.submit, session.end, turn.start, turn.step, agent.spawn, turn.complete, ui.scroll{component=Pane, requestId=ide-mod}, tool.call, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=ide-mod}",
+      "./register.tsx calls: $.agent.list (via reconcile), $.clock.after (via loadHwp), $.clock.every (via startAgents), $.command.register, $.env.get (via resolvePath), $.fs.list (via buildTree), $.fs.read (via pngData, readLines, runGate), $.fs.stat, $.model.complete (via recapStale), $.process.run (via openHwpPreview, runRhwp), $.prompt.fill (via drawExplorer), $.session.cwd (via drawExplorer, openFile, openIde), $.session.id (via loadRequests, saveRequests), $.state.get, $.state.set, $.store.delete (via loadRequests), $.store.get (via loadRequests), $.store.keys (via loadRequests), $.store.set (via saveRequests), $.ui.copy (via drawExplorer), $.ui.open (via openIde), $.ui.resolve, $.ui.status, $.ui.toast (via openHwpPreview, recapStale)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: ide-mod.active, ide-mod.agents, ide-mod.caption, ide-mod.expanded, ide-mod.gate, ide-mod.hideDone, ide-mod.hwpPages, ide-mod.hwpView, ide-mod.isBoardFolded, ide-mod.isGateOn, ide-mod.isGateOpen, ide-mod.isLecture, ide-mod.isRecapOn, ide-mod.isTreeHidden, ide-mod.leftMode, ide-mod.mode, ide-mod.offsets, ide-mod.requestOffset, ide-mod.requests, ide-mod.rev, ide-mod.root, ide-mod.selectedRequest, ide-mod.tabs, ide-mod.tick, ide-mod.touched, ide-mod.treeOffset",
+      "./register.tsx state reads: ide-mod.active, ide-mod.agents, ide-mod.caption, ide-mod.expanded, ide-mod.gate, ide-mod.hideDone, ide-mod.hwpPages, ide-mod.hwpView, ide-mod.isBoardFolded, ide-mod.isGateOn, ide-mod.isGateOpen, ide-mod.isLecture, ide-mod.isRecapOn, ide-mod.isTreeHidden, ide-mod.leftMode, ide-mod.mode, ide-mod.offsets, ide-mod.requestOffset, ide-mod.requests, ide-mod.rev, ide-mod.root, ide-mod.selectedRequest, ide-mod.tabs, ide-mod.tick, ide-mod.touched, ide-mod.treeOffset"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "e70b8edf4afcee7e"
+}

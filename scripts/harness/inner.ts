@@ -107,6 +107,94 @@ globalThis.TextDecoder = class {
     }
   }
 }
+// crypto: random values and a UUID; subtle.digest answers a fixed-length fake digest
+const randomBytes = (n: number) => {
+  const u8 = new Uint8Array(n)
+  for (let i = 0; i < n; i++) u8[i] = Math.floor(Math.random() * 256)
+  return u8
+}
+globalThis.crypto = {
+  getRandomValues: (arr: Uint8Array) => {
+    for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256)
+    return arr
+  },
+  randomUUID: () => {
+    const b = randomBytes(16)
+    b[6] = (b[6]! & 0x0f) | 0x40
+    b[8] = (b[8]! & 0x3f) | 0x80
+    const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('')
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
+  },
+  subtle: { digest: async (algo: string) => randomBytes(/512/.test(String(algo)) ? 64 : /384/.test(String(algo)) ? 48 : 32).buffer },
+}
+// URL and URLSearchParams: the common subset
+class URLSearchParamsShim {
+  private pairs: [string, string][] = []
+  constructor(init?: string | Record<string, string> | [string, string][]) {
+    if (typeof init === 'string') for (const part of init.replace(/^\?/, '').split('&')) {
+      if (!part) continue
+      const [k, v = ''] = part.split('=')
+      this.pairs.push([decodeURIComponent(k!.replace(/\+/g, ' ')), decodeURIComponent(v.replace(/\+/g, ' '))])
+    } else if (Array.isArray(init)) this.pairs = init.map(([k, v]) => [String(k), String(v)])
+    else if (init && typeof init === 'object') this.pairs = Object.entries(init).map(([k, v]) => [k, String(v)])
+  }
+  get(k: string) { return this.pairs.find(p => p[0] === k)?.[1] ?? null }
+  getAll(k: string) { return this.pairs.filter(p => p[0] === k).map(p => p[1]) }
+  has(k: string) { return this.pairs.some(p => p[0] === k) }
+  set(k: string, v: string) { this.delete(k); this.pairs.push([k, String(v)]) }
+  append(k: string, v: string) { this.pairs.push([k, String(v)]) }
+  delete(k: string) { this.pairs = this.pairs.filter(p => p[0] !== k) }
+  entries() { return this.pairs[Symbol.iterator]() }
+  keys() { return this.pairs.map(p => p[0])[Symbol.iterator]() }
+  values() { return this.pairs.map(p => p[1])[Symbol.iterator]() }
+  forEach(fn: AnyFn) { for (const [k, v] of this.pairs) fn(v, k, this) }
+  toString() { return this.pairs.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&') }
+  [Symbol.iterator]() { return this.pairs[Symbol.iterator]() }
+  get size() { return this.pairs.length }
+}
+class URLShim {
+  href = ''
+  protocol = ''
+  username = ''
+  password = ''
+  host = ''
+  hostname = ''
+  port = ''
+  pathname = '/'
+  search = ''
+  hash = ''
+  origin = ''
+  searchParams: URLSearchParamsShim
+  constructor(input: string, base?: string) {
+    let s = String(input)
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) {
+      if (!base) throw new TypeError(`Invalid URL: ${s}`)
+      const b = new URLShim(base)
+      s = s.startsWith('/') ? `${b.origin}${s}` : `${b.origin}${b.pathname.replace(/[^/]*$/, '')}${s}`
+    }
+    const m = /^([a-z][a-z0-9+.-]*:)(?:\/\/(?:([^:@/?#]*)(?::([^@/?#]*))?@)?([^/?#:]*)(?::(\d+))?)?([^?#]*)(\?[^#]*)?(#.*)?$/i.exec(s)
+    if (!m) throw new TypeError(`Invalid URL: ${s}`)
+    this.protocol = m[1]!.toLowerCase()
+    this.username = m[2] ?? ''
+    this.password = m[3] ?? ''
+    this.hostname = (m[4] ?? '').toLowerCase()
+    this.port = m[5] ?? ''
+    this.host = this.port ? `${this.hostname}:${this.port}` : this.hostname
+    this.pathname = m[6] || (this.hostname ? '/' : '')
+    this.search = m[7] && m[7] !== '?' ? m[7] : ''
+    this.hash = m[8] ?? ''
+    this.origin = this.hostname ? `${this.protocol}//${this.host}` : 'null'
+    this.searchParams = new URLSearchParamsShim(this.search)
+    this.href = `${this.protocol}${this.hostname ? '//' + (this.username ? this.username + (this.password ? ':' + this.password : '') + '@' : '') + this.host : ''}${this.pathname}${this.search}${this.hash}`
+  }
+  toString() { return this.href }
+  toJSON() { return this.href }
+  static canParse(input: string, base?: string) {
+    try { new URLShim(input, base); return true } catch { return false }
+  }
+}
+globalThis.URL = URLShim
+globalThis.URLSearchParams = URLSearchParamsShim
 globalThis.btoa = (s: string) => Uint8Array.from([...s].map(c => c.charCodeAt(0) & 255)).toBase64()
 globalThis.atob = (s: string) => {
   const u8 = (Uint8Array as any).fromBase64(s) as Uint8Array

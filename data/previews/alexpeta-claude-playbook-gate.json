@@ -1,0 +1,159 @@
+{
+ "slug": "alexpeta-claude-playbook-gate",
+ "generatedAt": "2026-10-06T05:32:50.323Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__gate__run$/"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "gate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Edit",
+      "Write",
+      "NotebookEdit"
+     ]
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "gate",
+    "description": "Run the CI gate in this checkout (or the path given) with no Claude turn; the verdict lands in the status line and the conversation.",
+    "output": "/work/app is not a git checkout."
+   }
+  ],
+  "tools": [
+   {
+    "name": "run",
+    "description": "Runs the CI gate (`pnpm gate`) in one checkout and returns its verdict, read from the gate's exit code and the exit file it writes (GATE_EXIT_FILE), never from the prose it prints. Use it instead of running the gate through Bash. It blocks until the gate ends, which takes minutes. It returns exit=<code>, the stages and their times, and for a red gate the failing stage's last 60 lines; the whole log stays on disk at the path it names. Edits to the checkout are refused while it runs."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 10,
+   "$.tool.register": 1,
+   "$.command.register": 1,
+   "$.process.run": 3,
+   "$.clock.every": 1,
+   "$.session.cwd": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 250
+   }
+  ],
+  "sites": {},
+  "script": [
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "/gate → /work/app is not a git checkout."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=/\"^mcp__gate__run$\"/}",
+   "command.run{command=gate}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=Edit|Write|NotebookEdit}"
+  ],
+  "calls": [
+   "$.agent.list (via agentLabel)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via configOf",
+   "ledger)",
+   "$.fs.read",
+   "$.fs.write (via runGate)",
+   "$.process.run (via git",
+   "ledger)",
+   "$.process.spawn (via runGate)",
+   "$.session.append",
+   "$.session.cwd",
+   "$.store.get",
+   "$.store.set (via finish)",
+   "$.tool.register",
+   "$.ui.log",
+   "$.ui.status (via showStatus)",
+   "$.ui.toast (via finish)"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "CLAUDE_GATE_COMMAND",
+   "CLAUDE_GATE_EXIT_VAR",
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/alexpeta-claude-playbook-gate/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/alexpeta-claude-playbook-gate/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/alexpeta-claude-playbook-gate/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, tool.call{tool=/\"^mcp__gate__run$\"/}, command.run{command=gate}, tool.call{tool=Bash}, tool.call{tool=Edit|Write|NotebookEdit}",
+      "./register.ts calls: $.agent.list (via agentLabel), $.clock.every, $.clock.now, $.command.register, $.env.get (via configOf, ledger), $.fs.read, $.fs.write (via runGate), $.process.run (via git, ledger), $.process.spawn (via runGate), $.session.append, $.session.cwd, $.store.get, $.store.set (via finish), $.tool.register, $.ui.log, $.ui.status (via showStatus), $.ui.toast (via finish)",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: CLAUDE_GATE_COMMAND, CLAUDE_GATE_EXIT_VAR, HOME"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "b4d5e8361ed514e2"
+}

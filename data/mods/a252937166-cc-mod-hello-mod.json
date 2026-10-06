@@ -1,0 +1,8 @@
+{
+ "slug": "a252937166-cc-mod-hello-mod",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// 最小的 mod：数工具调用、拦一条危险命令、干完活弹个提示。\nexport const register: Register = on => {\n  let startedAt = 0\n  let tools = 0\n\n  // 一轮对话开始\n  on('turn.start', async ($, e, next) => {\n    startedAt = await $.clock.now()\n    tools = 0\n    return next(e)\n  })\n\n  // 每次工具调用。不调 next 直接返回 { deny }，这次调用就被拦下了\n  on('tool.call', ($, e, next) => {\n    if (e.tool === 'Bash' && /\\brm\\s+-rf\\s+~/.test(e.command)) {\n      return { deny: `${$.plugin.name}：这条命令太危险，先别跑` }\n    }\n    tools += 1\n    $.ui.status(`本轮已调用 ${tools} 次工具`)\n    return next(e)\n  })\n\n  // 一轮结束（子代理结束也会触发，这里只管主对话）\n  on('turn.complete', async ($, e, next) => {\n    if (e.agentId === undefined) {\n      const seconds = Math.round(((await $.clock.now()) - startedAt) / 1000)\n      $.ui.status(undefined)\n      $.ui.toast(`搞定：${seconds} 秒，${tools} 次工具`)\n    }\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"hello-mod\",\n  \"version\": \"0.1.0\",\n  \"description\": \"A minimal Claude Code mod: counts tool calls, blocks a dangerous command, toasts when a turn ends\"\n}"
+ }
+}

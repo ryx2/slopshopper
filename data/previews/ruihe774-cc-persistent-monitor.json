@@ -1,0 +1,126 @@
+{
+ "slug": "ruihe774-cc-persistent-monitor",
+ "generatedAt": "2026-10-06T05:33:04.220Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__persistent-monitor__monitor"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__persistent-monitor__waitpid"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__persistent-monitor__waitfile"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__persistent-monitor__monitor_stop"
+    }
+   }
+  ],
+  "commands": [],
+  "tools": [
+   {
+    "name": "monitor",
+    "description": "Start a background monitor that streams events from a long-running shell command. Each stdout line is an event: you keep working and notifications arrive as messages from this plugin. Events arrive between turns as new messages from this plugin, never as tool results. After starting a watch, continue with other work or end your turn. Do not poll for events (ReadNotifications, sleep, tail or wait loops) and do not wait inside the turn: waiting does not speed delivery up and only delays it. Unlike the built-in Monitor, a watch with `persistent: true` has no deadline and runs until `monitor_stop` or the session ends, so you never need to re-arm it.\n\nPick by how many notifications you need:\n- One (\"tell me when the build finishes\") -> use Bash with run_in_background and a command that exits when the condition is true.\n- One per occurrence -> this tool, with an unbounded command (`tail -f`, `inotifywait -m`, `while true`).\n\nScript quality: every pipe stage must flush per line (`grep --line-buffered`, awk `fflush()`); handle transient failures in poll loops (`curl ... || true`); poll 30s+ for remote APIs. Only stdout is the event stream; merge stderr with `2>&1` if failures should reach you. Silence is not success: the filter must match failure/terminal states too. Keep output selective, since every line is a message; a monitor that floods is stopped automatically. Write a specific `description`: it appears in every notification. The command runs via `bash -c` in the session working directory."
+   },
+   {
+    "name": "monitor_stop",
+    "description": "Stop a monitor started with the monitor tool, by its id. With no id, lists the running monitors."
+   },
+   {
+    "name": "waitpid",
+    "description": "Wait for a process to exit. Returns immediately; you get one message when process `pid` ends (no deadline). Use this instead of polling `ps`. Cancel with monitor_stop. Events arrive between turns as new messages from this plugin, never as tool results. After starting a watch, continue with other work or end your turn. Do not poll for events (ReadNotifications, sleep, tail or wait loops) and do not wait inside the turn: waiting does not speed delivery up and only delays it."
+   },
+   {
+    "name": "waitfile",
+    "description": "Follow a file (`tail -F`) and get a message for each line appended to it, optionally only lines matching a regex. The file may not exist yet. Set `once` to stop after the first (matching) line. Runs with no deadline by default; cancel with monitor_stop. Events arrive between turns as new messages from this plugin, never as tool results. After starting a watch, continue with other work or end your turn. Do not poll for events (ReadNotifications, sleep, tail or wait loops) and do not wait inside the turn: waiting does not speed delivery up and only delays it."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 4
+  },
+  "timers": [],
+  "sites": {},
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__persistent-monitor__monitor}",
+   "tool.call{tool=mcp__persistent-monitor__waitpid}",
+   "tool.call{tool=mcp__persistent-monitor__waitfile}",
+   "tool.call{tool=mcp__persistent-monitor__monitor_stop}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.process.spawn",
+   "$.prompt.submit",
+   "$.tool.register"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ruihe774-cc-persistent-monitor/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ruihe774-cc-persistent-monitor/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ruihe774-cc-persistent-monitor/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, tool.call{tool=mcp__persistent-monitor__monitor}, tool.call{tool=mcp__persistent-monitor__waitpid}, tool.call{tool=mcp__persistent-monitor__waitfile}, tool.call{tool=mcp__persistent-monitor__monitor_stop}",
+      "./register.ts calls: $.clock.after, $.process.spawn, $.prompt.submit, $.tool.register"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "162b496ecfa59da5"
+}

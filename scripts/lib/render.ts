@@ -501,7 +501,7 @@ function renderRaster(props: Record<string, unknown>, ctx: Ctx): Block {
 
 // ---- serialization --------------------------------------------------------
 
-export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+export const esc = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 function styleAttr(st: Style): string {
   const parts: string[] = []

@@ -1,0 +1,460 @@
+{
+ "slug": "dead-money-claude-plugins-avatars",
+ "generatedAt": "2026-10-06T05:32:59.219Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "avatars"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "avatar"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__avatars__search_voices"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__avatars__my_voices"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__avatars__audition"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__avatars__paths"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__avatars__check_mode"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "avatar",
+    "description": "Spoken replies with an avatar: opens the menu, or mode, on, off, test, stop, doctor and more",
+    "argumentHint": "[mode <name>|on|off|test|replay|stop|voice <id>|model <id>|scenario|default|doctor|modes|reload|help]",
+    "immediate": true,
+    "output": "Opened the avatars menu."
+   }
+  ],
+  "tools": [
+   {
+    "name": "search_voices",
+    "description": "Searches the ElevenLabs shared voice library with the user's own API key, for picking voices for an avatars mode. Returns names, voice ids and traits."
+   },
+   {
+    "name": "my_voices",
+    "description": "Lists the voices in the user's own ElevenLabs library (ones they made or added), with ids."
+   },
+   {
+    "name": "audition",
+    "description": "Speaks a line aloud in an ElevenLabs voice so the user can judge it, optionally through an avatars mode's audio effects. Use it to audition voices and tags while designing a mode. Returns when playback ends."
+   },
+   {
+    "name": "paths",
+    "description": "Where the avatars plugin keeps things: the user's modes folder (where new modes go), the built-in example modes, the format reference, and the portrait bake script."
+   },
+   {
+    "name": "check_mode",
+    "description": "Checks an avatars mode folder (mode.json, portraits.json, ring sound) and whether the user's key can use every voice in it, then reloads the modes so a good one can be switched to with /avatar mode <name>."
+   }
+  ],
+  "panes": [
+   {
+    "id": "avatars",
+    "title": "Avatars"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 4,
+   "$.fs.exists": 5,
+   "$.state.get": 13,
+   "$.state.set": 2,
+   "$.command.register": 1,
+   "$.tool.register": 5,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "avatars": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "Spoken replies: ",
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "on"
+            ]
+           },
+           "   ",
+           "API key: ",
+           {
+            "type": "Text",
+            "props": {
+             "color": "red"
+            },
+            "children": [
+             "missing"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Set it with /plugin (Avatars, configure), or export ELEVENLABS_API_KEY and restart."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Select",
+          "props": {
+           "key": "mode",
+           "label": "Mode  ",
+           "autoFocus": true,
+           "value": "off",
+           "options": [
+            {
+             "value": "off",
+             "label": "Off"
+            }
+           ],
+           "onSelect": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Select",
+        "props": {
+         "key": "model",
+         "label": "Model ",
+         "value": "eleven_v4_turbo",
+         "options": [
+          {
+           "value": "eleven_v4_turbo",
+           "label": "eleven_v4_turbo (audio tags)"
+          },
+          {
+           "value": "eleven_v4",
+           "label": "eleven_v4 (audio tags)"
+          },
+          {
+           "value": "eleven_v3",
+           "label": "eleven_v3 (audio tags)"
+          },
+          {
+           "value": "eleven_flash_v2_5",
+           "label": "eleven_flash_v2_5"
+          },
+          {
+           "value": "eleven_multilingual_v2",
+           "label": "eleven_multilingual_v2"
+          }
+         ],
+         "onSelect": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "test",
+           "hotkey": "t",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Test"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "replay",
+           "hotkey": "r",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Replay"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "stop",
+           "hotkey": "s",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Stop"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "toggle",
+           "hotkey": "o",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Turn off"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "default",
+           "hotkey": "d",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Save as default"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "doctor",
+           "hotkey": "c",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Check setup"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Close"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "New modes: ask Claude to create one (the create-mode skill), or see ",
+         "/Users/dev/.claude/avatars/modes",
+         "."
+        ]
+       }
+      ]
+     },
+     "title": "Avatars"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(avatars)",
+   "/avatar → Opened the avatars menu."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.complete",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=avatars}",
+   "command.run{command=avatar}",
+   "tool.call{tool=mcp__avatars__search_voices}",
+   "tool.call{tool=mcp__avatars__my_voices}",
+   "tool.call{tool=mcp__avatars__audition}",
+   "tool.call{tool=mcp__avatars__paths}",
+   "tool.call{tool=mcp__avatars__check_mode}"
+  ],
+  "calls": [
+   "$.clock.every (via showBand)",
+   "$.clock.now (via faceSpeaks",
+   "nextFrame)",
+   "$.clock.sleep (via perform)",
+   "$.command.register",
+   "$.config.set (via saveDefaults)",
+   "$.env.get (via apiKey",
+   "packDirs",
+   "reloadModes)",
+   "$.fs.exists",
+   "$.fs.list (via reloadModes)",
+   "$.fs.read (via readJson",
+   "readMode)",
+   "$.fs.write (via recast)",
+   "$.http.fetch",
+   "$.model.complete (via speakReply)",
+   "$.process.run (via doctor)",
+   "$.process.spawn (via playLine)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.blit (via tickBand)",
+   "$.ui.close",
+   "$.ui.invalidate (via tickBand)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.toast (via background",
+   "perform",
+   "speakReply)"
+  ],
+  "stateReads": [
+   "avatars.bandMode",
+   "avatars.enabled",
+   "avatars.last",
+   "avatars.mode",
+   "avatars.model",
+   "avatars.note",
+   "avatars.voice",
+   "avatars.voices"
+  ],
+  "stateWrites": [
+   "avatars.bandMode",
+   "avatars.enabled",
+   "avatars.last",
+   "avatars.mode",
+   "avatars.model",
+   "avatars.note",
+   "avatars.voice",
+   "avatars.voices"
+  ],
+  "envReads": [
+   "CLAUDE_CODE_PLUGIN_DIRS",
+   "CLAUDE_CONFIG_DIR",
+   "ELEVENLABS_API_KEY",
+   "HOME",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/dead-money-claude-plugins-avatars/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/dead-money-claude-plugins-avatars/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: avatars.bandMode, avatars.enabled, avatars.mode, avatars.voice, avatars.model, avatars.last, avatars.voices, avatars.note"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/dead-money-claude-plugins-avatars/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=avatars}, command.run{command=avatar}, tool.call{tool=mcp__avatars__search_voices}, tool.call{tool=mcp__avatars__my_voices}, tool.call{tool=mcp__avatars__audition}, tool.call{tool=mcp__avatars__paths}, tool.call{tool=mcp__avatars__check_mode}",
+      "./register.tsx calls: $.clock.every (via showBand), $.clock.now (via faceSpeaks, nextFrame), $.clock.sleep (via perform), $.command.register, $.config.set (via saveDefaults), $.env.get (via apiKey, packDirs, reloadModes), $.fs.exists, $.fs.list (via reloadModes), $.fs.read (via readJson, readMode), $.fs.write (via recast), $.http.fetch, $.model.complete (via speakReply), $.process.run (via doctor), $.process.spawn (via playLine), $.state.get, $.state.set, $.tool.register, $.ui.blit (via tickBand), $.ui.close, $.ui.invalidate (via tickBand), $.ui.open, $.ui.resolve, $.ui.toast (via background, perform, speakReply)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CODE_PLUGIN_DIRS, CLAUDE_CONFIG_DIR, ELEVENLABS_API_KEY, HOME, USERPROFILE",
+      "./register.tsx state writes: avatars.bandMode, avatars.enabled, avatars.last, avatars.mode, avatars.model, avatars.note, avatars.voice, avatars.voices",
+      "./register.tsx state reads: avatars.bandMode, avatars.enabled, avatars.last, avatars.mode, avatars.model, avatars.note, avatars.voice, avatars.voices"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "2dcefae09aa2151d"
+}

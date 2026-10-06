@@ -1,0 +1,8 @@
+{
+ "slug": "adriancoman-claude-code-mods-usage-status",
+ "files": {
+  "hooks/index.ts": "import type { EngineInterface, Register, SessionRateLimit } from 'claude-code'\n\nconst LABELS: Record<string, string> = { five_hour: '5h', seven_day: 'week' }\nconst DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']\n\nconst pad = (n: number) => String(n).padStart(2, '0')\n\nconst formatReset = (iso: string, kind: string) => {\n  const at = new Date(iso)\n  const time = `${pad(at.getHours())}:${pad(at.getMinutes())}`\n\n  return kind === 'seven_day' ? `${DAYS[at.getDay()]} ${time}` : time\n}\n\nconst formatLimit = ({ kind, percentUsed, resetsAt }: SessionRateLimit) => {\n  const label = LABELS[kind] ?? kind\n  const reset = resetsAt ? ` (resets ${formatReset(resetsAt, kind)})` : ''\n\n  return `${label} ${Math.round(percentUsed)}%${reset}`\n}\n\nconst show = ($: EngineInterface, limits: readonly SessionRateLimit[]) => {\n  const known = limits.filter(limit => limit.kind in LABELS)\n  $.ui.status(known.length > 0 ? known.map(formatLimit).join(' · ') : undefined)\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    show($, (await $.session.usage()).rateLimits)\n\n    return next(e)\n  })\n\n  on('session.measure', ($, e, next) => {\n    show($, e.rateLimits)\n\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./index.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"usage-status\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Shows the 5-hour and weekly usage limits in the status line.\",\n  \"author\": {\n    \"name\": \"Adrian Coman\"\n  },\n  \"license\": \"MIT\"\n}"
+ }
+}

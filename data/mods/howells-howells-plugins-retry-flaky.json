@@ -1,0 +1,8 @@
+{
+ "slug": "howells-howells-plugins-retry-flaky",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst RETRIES = 2\nconst PAUSE_MS = 1500\n\nconst FLAKY = /^mcp__(claude-in-chrome|Claude_Browser|claude_ai_Linear|plugin_linear_linear)__/\n\n// Only errors that mean the call never reached the tool: a retry cannot repeat a write.\nconst DROPPED =\n  /not connected|ECONNREFUSED|socket hang up|connection (closed|refused)|extension (is not|not|was) (connected|running|available)|no (browser|extension) (connected|available)|MCP error -32000/i\n\nexport const register: Register = on => {\n  on('tool.call', async ($, e, next) => {\n    const tool = String(e.tool)\n    let ran = await next(e)\n\n    if (!FLAKY.test(tool)) {\n      return ran\n    }\n\n    for (let attempt = 1; attempt <= RETRIES; attempt += 1) {\n      const hasDropped = ran.deny === undefined && ran.isError === true && DROPPED.test(ran.text ?? '')\n\n      if (!hasDropped || next.signal.aborted) {\n        return ran\n      }\n\n      await $.clock.sleep(PAUSE_MS)\n      ran = await next(e)\n\n      if (ran.deny === undefined && ran.isError !== true) {\n        $.ui.toast(`retry-flaky: ${tool.split('__')[1]} recovered on retry ${attempt}`)\n      }\n    }\n\n    return ran\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"retry-flaky\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Retries browser and Linear MCP tool calls twice when the connection dropped before the call ran.\"\n}"
+ }
+}

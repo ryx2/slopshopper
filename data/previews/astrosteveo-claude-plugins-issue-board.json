@@ -1,0 +1,445 @@
+{
+ "slug": "astrosteveo-claude-plugins-issue-board",
+ "generatedAt": "2026-10-06T05:35:41.364Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": [
+      "clear",
+      "resume"
+     ]
+    }
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "issues"
+    }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "issue-board"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "issue-board"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "EnterWorktree",
+      "ExitWorktree"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskUpdate"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "session.receive"
+   },
+   {
+    "event": "prompt.suggest"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__issues"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__tick"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__issue_update"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__issue_create"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__project_status"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__project_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__project_archive"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__project_archive"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__milestone"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__issue_update"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__issues"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "issue-board"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "issues",
+    "description": "Show open issues and pull requests in a pane",
+    "argumentHint": "[refresh | new | new epic | setup | check | help]",
+    "output": "Issues pane opened. Filters: 1 Active, 2 Future, 3 Bugs, 4 Mine, 5 All, 7 Closed. Enter opens an issue: Start hands it to Claude, Change edits it, and Esc folds it. r refreshes. Also: /issues new [epic] drafts an issue, /issues setup links a project, /issues check says what is missing. /issues help lists everything."
+   }
+  ],
+  "tools": [
+   {
+    "name": "issues",
+    "description": "Lists this repository's open GitHub issues and pull requests from the issue board's copy, which refreshes every few minutes and after gh changes. Without `number`, one line each: number, title, labels and how many task-list boxes are ticked; pull requests also give their branch, CI and review. With `number`, that issue in full as the board has it: labels, assignees and its task-list boxes, numbered as the tick tool counts them; a closed issue is read from GitHub, with how it closed. With `state` closed or all, or `search`, it searches every issue with GitHub's own search instead, one line each with how it stands. Read an issue's whole text with `gh issue view`."
+   },
+   {
+    "name": "tick",
+    "description": "Ticks task-list boxes (`- [ ]` lines) in a GitHub issue's body, so the issue board shows the progress. Tick a box only once its work is done and checked. Boxes are counted from 1 in the order the body lists them, as the issues tool shows them with `number`. Set `done` to false to untick."
+   },
+   {
+    "name": "issue_update",
+    "description": "Changes a GitHub issue of this repository and updates the issue board at once: its title and body, its acceptance boxes, its Status and Priority in the repo's GitHub Project, labels, assignees, parent (the epic it is a sub-issue of), milestone, a comment, closing it as completed or not planned, or reopening it. Give only what changes. Moving the Status of the issue the person started needs no permission; any other change asks. When you start work on an issue or pull request in this conversation, without the board's Start, call this with start: true, so the board shows it under way. To work one in the background, dispatch the issue-board:worker agent with a description that starts with the issue's #number: the board follows it on its own."
+   },
+   {
+    "name": "milestone",
+    "description": "Makes or changes a milestone of this repository, by its title: one the repo hasn't got is made, with an optional due date and description; one it has is renamed, given a new due date or description, closed or reopened. The issue board shows open milestones with their progress. List them with the issues tool and `milestones`. Changing a milestone asks for permission."
+   },
+   {
+    "name": "project_status",
+    "description": "Reads or posts the status update of the repo's GitHub Project, which shows at the top of the project and in the issue board's pane. Without status, it answers the latest update. With status (On track, At risk, Off track, Complete or Inactive), it posts one, with a note and optional start and target dates. Reading needs no permission; posting asks."
+   },
+   {
+    "name": "project_archive",
+    "description": "Archives items in the repo's GitHub Project, which takes them out of its views and leaves the issues as they are: one issue's item, by number, or every item at Done whose issue closed before a date. The first call says how many and which, and changes nothing; call again with confirm: true to archive."
+   },
+   {
+    "name": "issue_create",
+    "description": "Files a new GitHub issue in this repository and puts it on the issue board at once: its title and body, labels, assignees, milestone, the epic it is a sub-issue of, and its Status and Priority in the repo's GitHub Project. Without a Status it goes to the project's Inbox. Write the body in Markdown, with an Acceptance list of `- [ ]` boxes. For an epic, give its sub-issues too: each is filed under it, in order, with the same fields. Filing asks for permission. If a step after filing fails, the answer says which, and gives the new issue's number."
+   }
+  ],
+  "panes": [
+   {
+    "id": "issue-board",
+    "title": "Issues"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 7,
+   "$.agent.register": 1,
+   "$.state.get": 72,
+   "$.state.set": 14,
+   "$.ui.status": 1,
+   "$.session.repo": 5,
+   "$.store.get": 1,
+   "$.clock.now": 6,
+   "$.process.run": 11,
+   "$.clock.after": 3,
+   "$.clock.sleep": 6,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 300000
+   },
+   {
+    "kind": "after",
+    "ms": 300000
+   },
+   {
+    "kind": "after",
+    "ms": 300000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "issue-board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "claude"
+            },
+            "children": [
+             "◆ "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "GitHub"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             ""
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "refresh",
+             "hotkey": "r",
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Refresh"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "error",
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "error",
+           "bold": true
+          },
+          "children": [
+           "✗ Couldn't reach GitHub"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "JSON Parse error: Unexpected EOF"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Press r to try again, or run /issues check."
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Issues"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(gh auth status --active --json hosts) → exit 0",
+   "$.process.run(gh repo view --json nameWithOwner,hasIssuesEnabled,viewerPermission,isArchived,v…) → exit 0",
+   "session.start",
+   "$.process.run(gh repo view --json nameWithOwner,hasIssuesEnabled) → exit 0",
+   "$.process.run(gh auth status --active --json hosts) → exit 0",
+   "$.process.run(gh repo view --json nameWithOwner,hasIssuesEnabled,viewerPermission,isArchived,v…) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "$.process.run(gh repo view --json nameWithOwner,hasIssuesEnabled) → exit 0",
+   "tool.call Bash cat .env",
+   "$.process.run(gh auth status --active --json hosts) → exit 0",
+   "$.process.run(gh repo view --json nameWithOwner,hasIssuesEnabled,viewerPermission,isArchived,v…) → exit 0",
+   "turn.complete",
+   "$.ui.open(issue-board)",
+   "/issues → Issues pane opened. Filters: 1 Active, 2 Future, 3 Bugs, 4 Mine, 5 All, 7 Closed…",
+   "$.process.run(gh repo view --json nameWithOwner,hasIssuesEnabled) → exit 0",
+   "$.process.run(gh auth status --active --json hosts) → exit 0",
+   "$.process.run(gh repo view --json nameWithOwner,hasIssuesEnabled,viewerPermission,isArchived,v…) → exit 0"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": false,
+  "errors": [
+   "astrosteveo-claude-plugins-issue-board: /Users/raymondxu/slopshopper-mods/.cache/src/astrosteveo-claude-plugins-issue-board/hooks/register.tsx, compiled line 3528 `onPress: () => void (option.name === value ? undefined : pick($, issue, field, o...`: the function handed $ \"pick\" is declared more than once in this file; $ is always spelled $.noun.event(...) at the call site, on is always on(\"<event>… [+49 chars]"
+  ],
+  "warnings": [],
+  "hooks": [],
+  "calls": [],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [],
+  "raw": {
+   "success": false,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/astrosteveo-claude-plugins-issue-board/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/astrosteveo-claude-plugins-issue-board/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: issue-board.board, issue-board.error, issue-board.loading, issue-board.filter, issue-board.expanded, issue-board.working, issue-board.dismissed, issue-board.confirming, issue-board.query, issue-board.viewer, issue-board.branch, issue-board.greened, issue-board.draft, issue-board.drafting, issue-board.revising, issue-board.ring, issue-board.creating, issue-board.editing, issue-board.palette, issue-board.closing, issue-board.typing, issue-board.talk, issue-board.access, issue-board.openPr, issue-board.groupBy, issue-board.unfolded, issue-board.setup, issue-board.tasks, issue-board.triage, issue-board.runs, issue-board.workers, issue-board.launching, issue-board.recent, issue-board.values, issue-board.Record, issue-board.typedFields, issue-board.sections, issue-board.editorMore"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/astrosteveo-claude-plugins-issue-board/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [
+      {
+       "path": "modules../register.tsx",
+       "message": "astrosteveo-claude-plugins-issue-board: /Users/raymondxu/slopshopper-mods/.cache/src/astrosteveo-claude-plugins-issue-board/hooks/register.tsx, compiled line 3528 `onPress: () => void (option.name === value ? undefined : pick($, issue, field, o...`: the function handed $ \"pick\" is declared more than once in this file; $ is always spelled $.noun.event(...) at the call site, on is always on(\"<event>… [+49 chars]",
+       "code": null
+      }
+     ],
+     "warnings": [],
+     "notes": []
+    }
+   ]
+  }
+ },
+ "sourceHash": "3d950a8ef628ae51"
+}

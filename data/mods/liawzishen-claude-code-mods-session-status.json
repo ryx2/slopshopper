@@ -1,0 +1,8 @@
+{
+ "slug": "liawzishen-claude-code-mods-session-status",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\nconst REFRESH_MS = 30_000\n\nconst elapsed = (since: number) => {\n  const minutes = Math.floor((Date.now() - since) / 60_000)\n  return minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, '0')}m`\n}\n\nexport const register: Register = on => {\n  let startedAt = Date.now()\n  let prompts = 0\n  let tools = 0\n  let failed = 0\n\n  const line = () =>\n    `⏱ ${elapsed(startedAt)} · ${prompts} prompts · ${tools} tools${failed > 0 ? ` (${failed} failed)` : ''}`\n\n  on('session.start', ($, e, next) => {\n    startedAt = Date.now()\n    $.ui.status(line())\n    $.clock.every(REFRESH_MS, () => $.ui.status(line()))\n    return next(e)\n  })\n\n  on('prompt.submit', ($, e, next) => {\n    prompts += 1\n    $.ui.status(line())\n    return next(e)\n  })\n\n  on('tool.call', async ($, e, next) => {\n    tools += 1\n    const ran = await next(e)\n    if (ran.deny === undefined && ran.isError === true) failed += 1\n    $.ui.status(line())\n    return ran\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"session-status\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Status line showing session time, prompts, and tool calls.\"\n}"
+ }
+}

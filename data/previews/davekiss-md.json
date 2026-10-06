@@ -1,0 +1,389 @@
+{
+ "slug": "davekiss-md",
+ "generatedAt": "2026-10-06T05:33:24.773Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "md"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__view"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__reply"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__open"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__close"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__comment"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__suggest"
+    }
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__draft"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__md__save"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "md"
+    }
+   },
+   {
+    "event": "ui.message",
+    "matcher": {
+     "requestId": "md"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "md"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "md",
+    "description": "Open a markdown file in the review pane, or save the draft there with /md save <path>",
+    "argumentHint": "[path | new [name] | save <path>]",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "view",
+    "description": "What the person has open in the md markdown pane: the file, the caret (line and column), the exact text they selected, and every open review comment with its line range and quoted text."
+   },
+   {
+    "name": "reply",
+    "description": "Reply to a review comment in the md pane after working on it. Use resolve: true when the comment is fully addressed."
+   },
+   {
+    "name": "open",
+    "description": "Open a markdown file in the person's md pane at a line or range (selected for them), to show them something or to start reviewing together. Give quote to select exact text instead, as the person would by dragging; line then picks among repeats. Leave out path to move within the file already open."
+   },
+   {
+    "name": "comment",
+    "description": "Leave a review comment on the file open in the md pane, as the person can. Use it to flag something for them, propose a change before making it, or ask them a question about specific lines. Prefer quote (a few words copied from the file) over line numbers: it lands on the right lines even after edits. With both, line picks among repeated quotes. The pane moves to the range."
+   },
+   {
+    "name": "edit",
+    "description": "Edit the file open in the md pane the way the person types in it: replaces the exact text find with replace, saves the file, moves the caret there and marks the lines changed. The person can undo it with u. find must appear once, or give line to pick the nearest. Prefer this over Edit for the open file."
+   },
+   {
+    "name": "suggest",
+    "description": "Propose a change to the text open in the md pane without making it: find is struck through in place and replace shows beneath with accept and reject buttons. Prefer this over edit for the person's own prose; use edit when they asked for the change. find must appear once, or give line to pick the nearest. mcp__md__view lists what is still pending."
+   },
+   {
+    "name": "draft",
+    "description": "Write markdown into the md pane as an unsaved draft, streamed onto the person's screen as you write it. Use it for first drafts instead of answering in chat or writing a file: the person reads, selects and comments on it in the pane. Replaces the draft, or with append: true adds after it (put append before text). Revise parts with mcp__md__edit; mcp__md__save writes it to a file."
+   },
+   {
+    "name": "save",
+    "description": "Save what the md pane shows (a draft, or the open file under a new name) to path. Refuses to overwrite another file."
+   },
+   {
+    "name": "close",
+    "description": "Close the md pane on the person's screen."
+   }
+  ],
+  "panes": [
+   {
+    "id": "md",
+    "title": "Open markdown"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.clock.every": 1,
+   "$.tool.register": 9,
+   "$.command.register": 1,
+   "$.state.get": 19,
+   "$.store.get": 3,
+   "$.session.cwd": 2,
+   "$.fs.list": 1,
+   "$.state.set": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1500
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "md": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Input",
+        "props": {
+         "key": "pick-filter",
+         "label": "Open",
+         "value": "",
+         "placeholder": "type to filter, or a path",
+         "submitLabel": "open",
+         "autoFocus": true,
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "pick-new",
+         "label": "+ New file",
+         "plain": true,
+         "onPress": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "pick-0",
+         "label": "README.md",
+         "plain": true,
+         "onPress": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "pick-cancel",
+         "label": "cancel",
+         "plain": true,
+         "dimColor": true,
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "Open markdown"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(md)",
+   "/md → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=md}",
+   "tool.call{tool=mcp__md__view}",
+   "tool.call{tool=mcp__md__reply}",
+   "tool.call{tool=mcp__md__open}",
+   "tool.call{tool=mcp__md__close}",
+   "tool.call{tool=mcp__md__comment}",
+   "tool.call{tool=mcp__md__edit}",
+   "tool.call{tool=mcp__md__suggest}",
+   "turn.step",
+   "tool.call{tool=mcp__md__draft}",
+   "tool.call{tool=mcp__md__save}",
+   "tool.call",
+   "ui.scroll{requestId=md}",
+   "ui.message{requestId=md}",
+   "ui.render{component=Pane, requestId=md}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.command.register",
+   "$.env.get (via absolute",
+   "pixelsAvailable)",
+   "$.fs.exists (via newFile",
+   "paste",
+   "saveAs",
+   "showPicker)",
+   "$.fs.list (via markdownUnder)",
+   "$.fs.read (via makePreview",
+   "openDoc",
+   "refresh)",
+   "$.fs.stat (via openDoc",
+   "previewOf",
+   "refresh",
+   "saveAs",
+   "writeLines)",
+   "$.fs.write (via newFile",
+   "saveAs",
+   "writeLines)",
+   "$.process.run (via makePreview",
+   "pasteImage)",
+   "$.prompt.submit",
+   "$.session.cwd",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via saveAs)",
+   "$.store.get (via openDoc",
+   "remember",
+   "showPicker",
+   "storedDraft)",
+   "$.store.set (via persist",
+   "remember)",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.copy (via copyOut)",
+   "$.ui.focus (via editorKey)",
+   "$.ui.log (via previewOf)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "md.changed",
+   "md.col",
+   "md.comments",
+   "md.cursor",
+   "md.doc",
+   "md.draft",
+   "md.focus",
+   "md.mark",
+   "md.mode",
+   "md.picker",
+   "md.readTop",
+   "md.reader",
+   "md.suggestions",
+   "md.toc",
+   "md.viewTop",
+   "md.writing"
+  ],
+  "stateWrites": [
+   "md.changed",
+   "md.col",
+   "md.comments",
+   "md.cursor",
+   "md.doc",
+   "md.draft",
+   "md.focus",
+   "md.mark",
+   "md.mode",
+   "md.picker",
+   "md.readTop",
+   "md.reader",
+   "md.suggestions",
+   "md.toc",
+   "md.viewTop",
+   "md.writing"
+  ],
+  "envReads": [
+   "HOME",
+   "TERM",
+   "TERM_PROGRAM"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/davekiss-md/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/davekiss-md/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: md.doc, md.comments, md.suggestions, md.cursor, md.col, md.mark, md.viewTop, md.mode, md.draft, md.writing, md.picker, md.changed, md.reader, md.readTop, md.toc, md.focus"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/davekiss-md/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=md}, tool.call{tool=mcp__md__view}, tool.call{tool=mcp__md__reply}, tool.call{tool=mcp__md__open}, tool.call{tool=mcp__md__close}, tool.call{tool=mcp__md__comment}, tool.call{tool=mcp__md__edit}, tool.call{tool=mcp__md__suggest}, turn.step, tool.call{tool=mcp__md__draft}, tool.call{tool=mcp__md__save}, tool.call, ui.scroll{requestId=md}, ui.message{requestId=md}, ui.render{component=Pane, requestId=md}",
+      "./register.tsx calls: $.clock.every, $.command.register, $.env.get (via absolute, pixelsAvailable), $.fs.exists (via newFile, paste, saveAs, showPicker), $.fs.list (via markdownUnder), $.fs.read (via makePreview, openDoc, refresh), $.fs.stat (via openDoc, previewOf, refresh, saveAs, writeLines), $.fs.write (via newFile, saveAs, writeLines), $.process.run (via makePreview, pasteImage), $.prompt.submit, $.session.cwd, $.state.get, $.state.set, $.store.delete (via saveAs), $.store.get (via openDoc, remember, showPicker, storedDraft), $.store.set (via persist, remember), $.tool.register, $.ui.close, $.ui.copy (via copyOut), $.ui.focus (via editorKey), $.ui.log (via previewOf), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, TERM, TERM_PROGRAM",
+      "./register.tsx state writes: md.changed, md.col, md.comments, md.cursor, md.doc, md.draft, md.focus, md.mark, md.mode, md.picker, md.readTop, md.reader, md.suggestions, md.toc, md.viewTop, md.writing",
+      "./register.tsx state reads: md.changed, md.col, md.comments, md.cursor, md.doc, md.draft, md.focus, md.mark, md.mode, md.picker, md.readTop, md.reader, md.suggestions, md.toc, md.viewTop, md.writing",
+      "./register.tsx surface modules: hooks/editor.tsx"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "9cfb6118836e25be"
+}

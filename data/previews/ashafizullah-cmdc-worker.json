@@ -1,0 +1,232 @@
+{
+ "slug": "ashafizullah-cmdc-worker",
+ "generatedAt": "2026-10-06T05:33:19.012Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cmdc"
+    }
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__cmdc-worker__implement"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "cmdc-worker"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "cmdc",
+    "description": "Open the cmdc worker pane",
+    "output": "cmdc worker pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "implement",
+    "description": "Hand an implementation task to Command Code (cmdc), a separate coding agent, and get back what it changed and whether it passes.\n\nYou are the planner and reviewer; cmdc is the implementer. The point is to spend as few of your own requests as possible, so:\n1. Do not explore the code first: cmdc reads the codebase itself. Write ONE task per call from what you already know: the goal, the expected behaviour, the constraints (what not to touch, patterns to follow), and any files or functions you already know matter.\n2. Make each call count: every call costs you at least two requests whatever its size, so hand over a whole feature, or several related changes, in one task rather than one small step at a time.\n3. Call this tool with `verify` set to the command that proves the change (tests, typecheck, lint). cmdc runs headless with all permissions (--yolo) in `cwd`; the person watches it live in the \"cmdc worker\" pane. After cmdc finishes the plugin runs `verify`; when it fails, the plugin sends the failure back to cmdc and retries on its own a few times before reporting to you.\n4. Review the report in one go: the diff (only what this call changed, new files in full; shortened per file when verify passed and the diff is large) and the `verify` result. Check that automatic fix rounds did not weaken or delete tests. Do not rerun the tests or reread the files unless the report leaves a real doubt. Do not trust cmdc's own summary.\n5. If anything is wrong or missing, call again with `resume: true` and a precise list of fixes (file, line, what is wrong, what you expect). Once the change is right, report to the person, including the time and token figures from the report.\n\nFor a small edit you can make in one or two steps yourself, make it yourself instead. Do not make cmdc's edits yourself unless cmdc fails repeatedly on the same point. One run at a time."
+   }
+  ],
+  "panes": [
+   {
+    "id": "cmdc-worker",
+    "title": "cmdc worker"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.state.get": 5,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "cmdc-worker": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "idle"
+          ]
+         }
+        ]
+       },
+       "",
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "No runs yet. Claude hands tasks to cmdc here."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "clear",
+           "hotkey": "c",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Clear log"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "cmdc worker"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(cmdc-worker)",
+   "/cmdc → cmdc worker pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=cmdc}",
+   "turn.step",
+   "turn.complete",
+   "tool.call{tool=mcp__cmdc-worker__implement}",
+   "ui.render{component=Pane, requestId=cmdc-worker}"
+  ],
+  "calls": [
+   "$.clock.every (via runCmdc)",
+   "$.command.register",
+   "$.process.run (via git",
+   "verify)",
+   "$.process.spawn (via runCmdc)",
+   "$.session.cwd",
+   "$.session.usage (via sessionUsd)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via runCmdc",
+   "runVerify)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "cmdc-worker.frame",
+   "cmdc-worker.job",
+   "cmdc-worker.log",
+   "cmdc-worker.run"
+  ],
+  "stateWrites": [
+   "cmdc-worker.frame",
+   "cmdc-worker.job",
+   "cmdc-worker.log",
+   "cmdc-worker.run"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ashafizullah-cmdc-worker/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ashafizullah-cmdc-worker/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: cmdc-worker.run, cmdc-worker.log, cmdc-worker.job, cmdc-worker.frame"
+    ]
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ashafizullah-cmdc-worker/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=cmdc}, turn.step, turn.complete, tool.call{tool=mcp__cmdc-worker__implement}, ui.render{component=Pane, requestId=cmdc-worker}",
+      "./register.tsx calls: $.clock.every (via runCmdc), $.command.register, $.process.run (via git, verify), $.process.spawn (via runCmdc), $.session.cwd, $.session.usage (via sessionUsd), $.state.get, $.state.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.status (via runCmdc, runVerify), $.ui.toast",
+      "./register.tsx state writes: cmdc-worker.frame, cmdc-worker.job, cmdc-worker.log, cmdc-worker.run",
+      "./register.tsx state reads: cmdc-worker.frame, cmdc-worker.job, cmdc-worker.log, cmdc-worker.run"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "d68b425092d205ab"
+}

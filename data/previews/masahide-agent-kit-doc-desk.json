@@ -1,0 +1,258 @@
+{
+ "slug": "masahide-agent-kit-doc-desk",
+ "generatedAt": "2026-10-06T05:29:44.024Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__doc-desk__open_form"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__doc-desk__open_review"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__doc-desk__open_live"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "doc-desk-resume"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "UserMessage",
+     "props": {
+      "origin": {
+       "kind": "plugin"
+      }
+     }
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "NotebookEdit"
+    }
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "doc-desk"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "doc-desk-resume",
+    "description": "待機中の質問票か指摘の画面、またはライブ表示を開き直す。前回の回答が未送なら Claude に送る",
+    "output": "待機中の質問票も指摘の画面も、開いているライブ表示もありません"
+   }
+  ],
+  "tools": [
+   {
+    "name": "open_form",
+    "description": "文書を書く前に、決定してほしい論点を質問票 JSON (schemaVersion 1) として渡すと、ブラウザに一枚のフォームを出して人に答えてもらいます。問いは 2〜5 問、各問に cite (根拠) と 2 つ以上の選択肢 (pros と cons 付き) が必要です。結果は JSON 文字列で、status で分岐します。\"answered\": waitSeconds (既定 300 秒) のうちに回答が届きました。reply が回答固定形です。それを読んで文書を書いてください。\"pending\": まだ回答がありません (上限到達、中断、waitSeconds が 0)。回答は後で【doc-desk 回答】で始まる user turn として届くので、文書を書かずにターンを終えてください。\"cancelled\": 人が取り消しました。何も届きません。\"invalid\": errors を直して再送してください。\"failed\": reason の代替導線を人に案内してください。"
+   },
+   {
+    "name": "open_review",
+    "description": "書き上げた文書を人に見せ、段落や文字列への指摘を返してもらいます (指摘モード)。先に文書を HTML (h2〜h4、p、ul、ol、li、table などの許可リストの要素だけ、属性は th と td の colspan と rowspan だけ、10 万文字まで) にして doc-desk/<label>.doc.html に書き出し、review に schemaVersion 1、documentId、revision、label、title を渡します。結果の status は open_form と同じです。\"answered\" なら reply の ## 指摘 を反映して文書を直してください。\"pending\" なら指摘は後で【doc-desk 回答】で始まる user turn として届くので、文書を直さずにターンを終えてください。"
+   },
+   {
+    "name": "open_live",
+    "description": "文書を書き始める前に呼ぶと、これから source に Write と Edit で書く文をブラウザに流して、人が書いている途中から読めるようにします (ライブ表示)。live に documentId、label (質問票や指摘の画面と別の名前)、source (質問票の source と同じパス)、title を渡します。文書は Bash ではなく Write と Edit で書いてください。書き終えたら、閉じずにそのまま open_review を同じ documentId で呼ぶと、同じタブが指摘の画面へ移ります。人が読みながら付けた指摘 (【doc-desk ライブ指摘】) は、Write の結果に添えて届くか、ターンを止めて user turn として届きます。届いたら反映してから先へ進んでください。結果の status: \"opened\" = 開きました。\"invalid\" = errors を直して再送。\"disabled\" = 設定で切られているので、呼ばずに書いてください。\"failed\" = reason を人に伝え、そのまま書いてください。"
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 3,
+   "$.command.register": 1,
+   "$.process.run": 3,
+   "$.session.id": 1,
+   "$.clock.every": 1,
+   "$.store.keys": 1,
+   "$.clock.now": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   }
+  ],
+  "sites": {
+   "UserMessage": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "doc-desk-resume": {
+     "ok": "engine",
+     "title": "doc-desk-resume"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(python3 --version) → exit 0",
+   "$.process.run(python --version) → exit 0",
+   "$.process.run(py -3 --version) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/doc-desk-resume → 待機中の質問票も指摘の画面も、開いているライブ表示もありません"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__doc-desk__open_form}",
+   "tool.call{tool=mcp__doc-desk__open_review}",
+   "tool.call{tool=mcp__doc-desk__open_live}",
+   "command.run{command=?}",
+   "ui.render{component=Pane}",
+   "ui.render{component=UserMessage",
+   "props.origin has {kind=plugin}}",
+   "turn.start",
+   "turn.step",
+   "turn.complete",
+   "tool.call{tool=Write}",
+   "tool.call{tool=Edit}",
+   "tool.check{tool=Write}",
+   "tool.check{tool=Edit}",
+   "tool.check{tool=NotebookEdit}",
+   "session.compact",
+   "session.end",
+   "ui.close{id=doc-desk}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.exists",
+   "$.fs.read",
+   "$.fs.stat",
+   "$.fs.write",
+   "$.http.fetch",
+   "$.model.fork",
+   "$.process.run",
+   "$.prompt.submit",
+   "$.prompt.suggest",
+   "$.session.id",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.keys",
+   "$.store.set",
+   "$.tool.register",
+   "$.turn.abort",
+   "$.ui.close",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/masahide-agent-kit-doc-desk/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/masahide-agent-kit-doc-desk/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": []
+   },
+   "contents": [
+    {
+     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/masahide-agent-kit-doc-desk/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, tool.call{tool=mcp__doc-desk__open_form}, tool.call{tool=mcp__doc-desk__open_review}, tool.call{tool=mcp__doc-desk__open_live}, command.run{command=?}, ui.render{component=Pane}, ui.render{component=UserMessage, props.origin has {kind=plugin}}, turn.start, turn.step, turn.complete, tool.call{tool=Write}, tool.call{tool=Edit}, tool.check{tool=Write}, tool.check{tool=Edit}, tool.check{tool=NotebookEdit}, session.compact, session.end, ui.close{id=doc-desk}",
+      "./register.ts calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.fs.exists, $.fs.read, $.fs.stat, $.fs.write, $.http.fetch, $.model.fork, $.process.run, $.prompt.submit, $.prompt.suggest, $.session.id, $.store.delete, $.store.get, $.store.keys, $.store.set, $.tool.register, $.turn.abort, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast"
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "1268c10dfb8c166d"
+}

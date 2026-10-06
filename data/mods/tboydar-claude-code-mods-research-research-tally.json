@@ -1,0 +1,8 @@
+{
+ "slug": "tboydar-claude-code-mods-research-research-tally",
+ "files": {
+  "hooks/register.js": "// Only tool names and counts are retained, never arguments or results.\nconst counts = new Map()\n\nexport function register(on) {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({\n      name: 'research-tally',\n      description: 'Show observed tool-call attempts; use reset to clear the counter',\n    })\n    return next(e)\n  })\n\n  on('tool.call', async ($, e, next) => {\n    counts.set(e.tool, (counts.get(e.tool) ?? 0) + 1)\n    return next(e)\n  })\n\n  on('command.run', { command: 'research-tally' }, async ($, e) => {\n    const action = e.args.trim()\n    if (action === 'reset') {\n      counts.clear()\n      return { text: 'Counter reset. Observed tool-call attempts: 0' }\n    }\n    if (action !== '') {\n      return { text: 'Usage: /research-tally [reset]' }\n    }\n\n    const total = [...counts.values()].reduce((sum, count) => sum + count, 0)\n    const lines = [...counts.entries()]\n      .sort(([left], [right]) => left.localeCompare(right))\n      .map(([tool, count]) => tool + ': ' + count)\n    return { text: ['Observed tool-call attempts: ' + total, ...lines].join('\\n') }\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"In-memory research counter; no file, process, network, or model calls\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"research-tally\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Counts observed tool-call attempts without storing arguments or calling a model\",\n  \"author\": {\n    \"name\": \"tboydar\"\n  }\n}"
+ }
+}
