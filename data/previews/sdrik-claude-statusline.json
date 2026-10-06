@@ -1,9 +1,29 @@
 {
  "slug": "sdrik-claude-statusline",
- "generatedAt": "2026-10-06T05:33:56.144Z",
+ "generatedAt": "2026-10-06T14:51:59.535Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ctx"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "plugin": "statusline",
+     "element": "press:ctx"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "context"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -31,6 +51,12 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "PromptHint"
     }
    },
@@ -47,28 +73,44 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "ctx",
+    "description": "Ouvre ou ferme le pane du contexte (grille de /context)",
+    "immediate": true
+   }
+  ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "context",
+    "title": "Contexte"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.usage": 3,
+   "$.session.usage": 4,
    "$.session.id": 1,
    "$.store.get": 1,
    "$.settings.read": 1,
    "$.session.model": 2,
    "$.clock.every": 1,
-   "$.ui.invalidate": 4,
+   "$.ui.invalidate": 5,
    "$.clock.now": 3,
    "$.store.keys": 1,
    "$.fs.exists": 1,
    "$.env.get": 1,
    "$.fs.read": 1,
+   "$.command.register": 1,
+   "$.ui.panes": 2,
+   "$.state.get": 3,
+   "$.state.set": 1,
+   "$.ui.open": 1,
    "$.store.set": 1,
-   "$.ui.resolve": 2
+   "$.ui.resolve": 3
   },
   "timers": [
    {
@@ -77,6 +119,9 @@
    }
   ],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "Spinner": {
     "ok": "engine"
    },
@@ -241,6 +286,24 @@
       },
       {
        "type": "Text",
+       "props": {},
+       "children": [
+        " "
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "press:ctx",
+        "plain": true,
+        "label": "⊞",
+        "dimColor": true,
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Text",
        "props": {
         "dimColor": true
        },
@@ -289,6 +352,47 @@
       }
      ]
     }
+   },
+   "Pane": {
+    "context": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "rowGap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Pas encore de mesure : elle vient avec la première réponse."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "ctx-view",
+           "label": "Détail",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Contexte"
+    }
    }
   },
   "script": [
@@ -302,7 +406,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.ui.open(context)",
+   "/ctx → "
   ],
   "console": [],
   "warnings": []
@@ -312,6 +418,9 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "command.run{command=ctx}",
+   "ui.press{plugin=statusline, element=press:ctx}",
+   "ui.render{component=Pane, requestId=context}",
    "session.start",
    "session.end",
    "session.measure",
@@ -319,6 +428,7 @@
    "turn.step",
    "turn.complete",
    "ui.render{component=SessionMode}",
+   "ui.render{component=AbovePrompt}",
    "ui.render{component=PromptHint}",
    "ui.render{component=Spinner}",
    "ui.render{component=TurnDuration}"
@@ -327,6 +437,8 @@
    "$.clock.after",
    "$.clock.every",
    "$.clock.now",
+   "$.command.register",
+   "$.command.run (via run)",
    "$.env.get (via home)",
    "$.fs.exists (via migrate)",
    "$.fs.read (via migrate",
@@ -334,21 +446,33 @@
    "$.fs.write (via migrate)",
    "$.process.run (via readGit)",
    "$.session.id (via loadSummaries)",
-   "$.session.model",
+   "$.session.model (via figures",
+   "readEffort)",
    "$.session.usage",
    "$.settings.read (via readEffort)",
+   "$.state.get",
+   "$.state.set",
    "$.store.delete (via pruneSummaries)",
    "$.store.get (via loadSummaries",
    "migrate",
    "pruneSummaries)",
    "$.store.keys (via pruneSummaries)",
    "$.store.set",
+   "$.ui.close (via toggle)",
    "$.ui.invalidate",
+   "$.ui.open (via toggle)",
+   "$.ui.panes",
    "$.ui.resolve",
    "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "statusline.ctxPane",
+   "statusline.ctxUnfolded"
+  ],
+  "stateWrites": [
+   "statusline.ctxPane",
+   "statusline.ctxUnfolded"
+  ],
   "envReads": [
    "HOME",
    "USERPROFILE"
@@ -356,29 +480,36 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/sdrik-claude-statusline/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/sdrik-claude-statusline/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/sdrik-claude-statusline/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/sdrik-claude-statusline/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: statusline.ctxPane, statusline.ctxUnfolded"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/sdrik-claude-statusline/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/sdrik-claude-statusline/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.end, session.measure, turn.start, turn.step, turn.complete, ui.render{component=SessionMode}, ui.render{component=PromptHint}, ui.render{component=Spinner}, ui.render{component=TurnDuration}",
-      "./register.ts calls: $.clock.after, $.clock.every, $.clock.now, $.env.get (via home), $.fs.exists (via migrate), $.fs.read (via migrate, readEmail), $.fs.write (via migrate), $.process.run (via readGit), $.session.id (via loadSummaries), $.session.model, $.session.usage, $.settings.read (via readEffort), $.store.delete (via pruneSummaries), $.store.get (via loadSummaries, migrate, pruneSummaries), $.store.keys (via pruneSummaries), $.store.set, $.ui.invalidate, $.ui.resolve, $.ui.toast",
+      "./register.ts hooks: command.run{command=ctx}, ui.press{plugin=statusline, element=press:ctx}, ui.render{component=Pane, requestId=context}, session.start, session.end, session.measure, turn.start, turn.step, turn.complete, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, ui.render{component=PromptHint}, ui.render{component=Spinner}, ui.render{component=TurnDuration}",
+      "./register.ts calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via run), $.env.get (via home), $.fs.exists (via migrate), $.fs.read (via migrate, readEmail), $.fs.write (via migrate), $.process.run (via readGit), $.session.id (via loadSummaries), $.session.model (via figures, readEffort), $.session.usage, $.settings.read (via readEffort), $.state.get, $.state.set, $.store.delete (via pruneSummaries), $.store.get (via loadSummaries, migrate, pruneSummaries), $.store.keys (via pruneSummaries), $.store.set, $.ui.close (via toggle), $.ui.invalidate, $.ui.open (via toggle), $.ui.panes, $.ui.resolve, $.ui.toast",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME, USERPROFILE"
-     ]
+      "./register.ts env reads: HOME, USERPROFILE",
+      "./register.ts state writes: statusline.ctxPane, statusline.ctxUnfolded",
+      "./register.ts state reads: statusline.ctxPane, statusline.ctxUnfolded"
+     ],
+     "gatingHooks": []
     }
    ]
   }
  },
- "sourceHash": "62c2653451adc251"
+ "sourceHash": "3512529ef4a3adc0"
 }

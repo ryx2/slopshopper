@@ -1,6 +1,6 @@
 {
  "slug": "aromarious-claude-code-plugins-todo-pane",
- "generatedAt": "2026-10-06T05:28:38.294Z",
+ "generatedAt": "2026-10-06T14:51:18.962Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -50,7 +50,7 @@
    {
     "name": "todo",
     "description": "Show the todo list in a side pane",
-    "output": "Opened."
+    "output": "Created .claude/todo/preview-.md and opened."
    },
    {
     "name": "pin",
@@ -66,7 +66,7 @@
    },
    {
     "id": "pin-board",
-    "title": "ピン留め"
+    "title": "Pins"
    }
   ],
   "toasts": [],
@@ -75,19 +75,21 @@
   "rewrites": [
    {
     "event": "prompt.submit",
-    "summary": "context added: [\"この作業ディレクトリには .claude/todo/preview-.md（右のペインに出る TODO リスト）が無い。このターンの最初に、ほかの作業より先に AskUserQuestion で「TODO リストを作るか」をユーザーに聞く。\\n- 作る → .claude/t…"
+    "summary": "context added: [\"The TODO file .claude/todo/preview-.md (the TODO list shown in the right-hand pane) does not exist. At the very start of this turn, before…"
    }
   ],
   "apiCalls": {
+   "$.settings.read": 1,
    "$.session.id": 1,
-   "$.process.run": 3,
+   "$.process.run": 5,
    "$.command.register": 2,
+   "$.fs.exists": 6,
    "$.fs.read": 3,
-   "$.state.get": 4,
-   "$.state.set": 2,
+   "$.state.get": 5,
+   "$.state.set": 3,
    "$.clock.every": 1,
    "$.ui.open": 3,
-   "$.fs.exists": 2,
+   "$.fs.write": 1,
    "$.ui.resolve": 2
   },
   "timers": [
@@ -109,7 +111,7 @@
        {
         "type": "Markdown",
         "props": {
-         "text": "（TODO はまだありません）"
+         "text": "## Now\n\n## Done (2026-10-06)\n"
         },
         "children": []
        }
@@ -128,13 +130,13 @@
        {
         "type": "Markdown",
         "props": {
-         "text": "（ピン留めはまだありません）"
+         "text": "(Nothing pinned yet)"
         },
         "children": []
        }
       ]
      },
-     "title": "ピン留め"
+     "title": "Pins"
     }
    }
   },
@@ -154,8 +156,11 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.process.run(sh -c f=$(ls \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/projects/*/\"$1\".jsonl 2>/dev/…) → exit 0",
+   "$.process.run(mkdir -p .claude/todo) → exit 0",
+   "$.fs.write(.claude/todo/preview-.md)",
    "$.ui.open(todo-pane)",
-   "/todo → Opened.",
+   "/todo → Created .claude/todo/preview-.md and opened.",
    "$.ui.open(pin-board)",
    "/pin → Opened."
   ],
@@ -181,11 +186,12 @@
    "$.clock.every",
    "$.command.register",
    "$.fs.exists",
+   "$.fs.list (via prevDay)",
    "$.fs.read",
-   "$.fs.write (via sync)",
-   "$.process.run (via sync",
-   "titleOf)",
+   "$.fs.write",
+   "$.process.run",
    "$.session.id (via sync)",
+   "$.settings.read (via sync)",
    "$.state.get",
    "$.state.set",
    "$.ui.open",
@@ -205,32 +211,49 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/aromarious-claude-code-plugins-todo-pane/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/aromarious-claude-code-plugins-todo-pane/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/aromarious-claude-code-plugins-todo-pane/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/aromarious-claude-code-plugins-todo-pane/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
      "types ./types/index.d.ts declares state: todo-pane.text, todo-pane.pin"
-    ]
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/aromarious-claude-code-plugins-todo-pane/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/aromarious-claude-code-plugins-todo-pane/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, prompt.submit, turn.start, tool.call, turn.complete, command.run{command=todo}, command.run{command=pin}, ui.render{component=Pane, requestId=todo-pane}, ui.render{component=Pane, requestId=pin-board}",
-      "./register.tsx calls: $.clock.every, $.command.register, $.fs.exists, $.fs.read, $.fs.write (via sync), $.process.run (via sync, titleOf), $.session.id (via sync), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.clock.every, $.command.register, $.fs.exists, $.fs.list (via prevDay), $.fs.read, $.fs.write, $.process.run, $.session.id (via sync), $.settings.read (via sync), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
       "./register.tsx state writes: todo-pane.pin, todo-pane.text",
       "./register.tsx state reads: todo-pane.pin, todo-pane.text"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "a5172609c1ac0b4e"
+ "sourceHash": "a73ff132445a6ff1"
 }

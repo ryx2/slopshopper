@@ -1,6 +1,6 @@
 {
  "slug": "vampik33-claude-plugins-fleet",
- "generatedAt": "2026-10-06T05:37:30.823Z",
+ "generatedAt": "2026-10-06T14:52:08.252Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -29,6 +29,9 @@
     "event": "session.append"
    },
    {
+    "event": "classic.Stop"
+   },
+   {
     "event": "turn.complete"
    },
    {
@@ -36,6 +39,12 @@
     "matcher": {
      "component": "Pane",
      "requestId": "fleet"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
     }
    },
    {
@@ -48,7 +57,7 @@
   "commands": [
    {
     "name": "fleet",
-    "description": "Show this session's agents, background shells and worktrees",
+    "description": "Show or hide the pane with this session's agents, background shells and worktrees",
     "output": "Fleet pane opened."
    }
   ],
@@ -67,13 +76,12 @@
    "$.command.register": 1,
    "$.process.run": 2,
    "$.session.cwd": 1,
-   "$.clock.every": 1,
-   "$.state.get": 4,
-   "$.ui.open": 1,
    "$.ui.panes": 1,
-   "$.state.set": 1,
-   "$.ui.status": 1,
-   "$.ui.resolve": 1
+   "$.state.get": 8,
+   "$.state.set": 3,
+   "$.clock.every": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -82,6 +90,63 @@
    }
   ],
   "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "columnGap": 2,
+        "marginTop": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "fleet"
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "fleet-toggle",
+          "hotkey": "f",
+          "dimColor": true,
+          "onPress": "[fn]"
+         },
+         "children": [
+          "hide"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
    "Pane": {
     "fleet": {
      "ok": true,
@@ -136,8 +201,10 @@
    "agent.spawn",
    "tool.call",
    "session.append",
+   "classic.Stop",
    "turn.complete",
    "ui.render{component=Pane, requestId=fleet}",
+   "ui.render{component=AbovePrompt}",
    "ui.close{id=fleet}"
   ],
   "calls": [
@@ -151,19 +218,21 @@
    "$.session.cwd",
    "$.state.get",
    "$.state.set",
+   "$.ui.close (via togglePane)",
    "$.ui.log (via sendTelegram)",
    "$.ui.open (via openPane)",
-   "$.ui.panes (via isPaneShown)",
+   "$.ui.panes (via isPaneDrawn)",
    "$.ui.resolve",
-   "$.ui.status",
    "$.ui.toast (via announce",
    "settle)"
   ],
   "stateReads": [
-   "fleet.fleet"
+   "fleet.fleet",
+   "fleet.pane"
   ],
   "stateWrites": [
-   "fleet.fleet"
+   "fleet.fleet",
+   "fleet.pane"
   ],
   "envReads": [
    "TELEGRAM_BOT_TOKEN",
@@ -172,35 +241,80 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/vampik33-claude-plugins-fleet/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/vampik33-claude-plugins-fleet/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vampik33-claude-plugins-fleet/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vampik33-claude-plugins-fleet/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: fleet.fleet"
-    ]
+     "types ./types/index.d.ts declares state: fleet.fleet, fleet.pane"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vampik33-claude-plugins-fleet/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vampik33-claude-plugins-fleet/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, command.run{command=fleet}, prompt.submit, agent.spawn, tool.call, session.append, turn.complete, ui.render{component=Pane, requestId=fleet}, ui.close{id=fleet}",
-      "./register.tsx calls: $.agent.list (via tick), $.clock.after (via settle), $.clock.every, $.command.register, $.env.get (via sendTelegram), $.http.fetch (via sendTelegram), $.process.run, $.session.cwd, $.state.get, $.state.set, $.ui.log (via sendTelegram), $.ui.open (via openPane), $.ui.panes (via isPaneShown), $.ui.resolve, $.ui.status, $.ui.toast (via announce, settle)",
+      "./register.tsx hooks: session.start, session.end, command.run{command=fleet}, prompt.submit, agent.spawn, tool.call, session.append, classic.Stop, turn.complete, ui.render{component=Pane, requestId=fleet}, ui.render{component=AbovePrompt}, ui.close{id=fleet}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: session.append",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: ui.close{id=fleet}",
+      "./register.tsx calls: $.agent.list (via tick), $.clock.after (via settle), $.clock.every, $.command.register, $.env.get (via sendTelegram), $.http.fetch (via sendTelegram), $.process.run, $.session.cwd, $.state.get, $.state.set, $.ui.close (via togglePane), $.ui.log (via sendTelegram), $.ui.open (via openPane), $.ui.panes (via isPaneDrawn), $.ui.resolve, $.ui.toast (via announce, settle)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID",
-      "./register.tsx state writes: fleet.fleet",
-      "./register.tsx state reads: fleet.fleet",
+      "./register.tsx state writes: fleet.fleet, fleet.pane",
+      "./register.tsx state reads: fleet.fleet, fleet.pane",
       "./register.tsx surface modules: hooks/pane.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=fleet}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "c6cbc4d465a6e2cf"
+ "sourceHash": "7708bf25e21e7795"
 }

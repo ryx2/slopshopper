@@ -1,0 +1,8 @@
+{
+ "slug": "danielriddell21-skills-stop-you-violated-the-law",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst MAX_TOOLS = 2\nconst MAX_OUTPUT = 400\nconst COOLDOWN = 5\n\nexport const register: Register = on => {\n  let tools = 0\n  let quiet = 0\n\n  on('prompt.submit', ($, e, next) => {\n    tools = 0\n    return next(e)\n  })\n\n  on('tool.call', ($, e, next) => {\n    tools += 1\n    return next(e)\n  })\n\n  on('turn.complete', ($, e, next) => {\n    if (quiet > 0) quiet -= 1\n\n    const u = e.usage\n    const isLight = u !== undefined && tools <= MAX_TOOLS && u.output_tokens <= MAX_OUTPUT\n\n    if (isLight && /opus/i.test(u.model) && quiet === 0) {\n      quiet = COOLDOWN\n      $.ui.toast('STOP! You violated the law! Opus on a light turn. Pay the fine: sonnet/haiku would do (/model or /who-does-this)')\n    }\n\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"stop-you-violated-the-law\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Mod: STOP! You violated the law! toast when opus is used for a light turn\",\n  \"author\": {\n    \"name\": \"Daniel Riddell\"\n  },\n  \"homepage\": \"https://github.com/danielriddell21/skills\",\n  \"repository\": \"https://github.com/danielriddell21/skills\",\n  \"keywords\": [\n    \"models\",\n    \"mod\"\n  ],\n  \"license\": \"MIT\"\n}"
+ }
+}

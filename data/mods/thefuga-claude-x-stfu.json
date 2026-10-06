@@ -1,0 +1,8 @@
+{
+ "slug": "thefuga-claude-x-stfu",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// What stands in for the word. The engine draws its own word again for an empty one, so the running\n// line takes a space; the closing line reads `<word> for 3s`, so it takes a plain verb.\nconst BLANK = ' '\nconst CLOSED = 'Worked'\n\nexport const register: Register = on => {\n  // The line that runs while a turn does (`Sauteing… (12s · ↓ 300 tokens)`): the word and its\n  // ellipsis go, and the engine still draws the time, tokens and thinking after them. A message that\n  // stands in for the word (a task's own `Running tests`) says what the turn is doing, so it stays.\n  on('ui.render', { component: 'Spinner' }, ($, e, next) =>\n    e.props.message === null ? next({ ...e, props: { ...e.props, word: BLANK, suffix: '' } }) : next(e),\n  )\n\n  // The line that closes a turn (`Baked for 3s`).\n  on('ui.render', { component: 'TurnDuration' }, ($, e, next) => next({ ...e, props: { ...e.props, word: CLOSED } }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"stfu\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Drops the whimsical word from the line that runs while Claude works and from the one that closes a turn, leaving the elapsed time, tokens and duration where Claude Code draws them.\",\n  \"author\": {\n    \"name\": \"Erick Fuga\",\n    \"url\": \"https://thefuga.dev\"\n  },\n  \"homepage\": \"https://github.com/thefuga/claude-x/tree/main/mods/stfu\",\n  \"repository\": \"https://github.com/thefuga/claude-x\"\n}"
+ }
+}

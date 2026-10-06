@@ -1,6 +1,6 @@
 {
  "slug": "iosifnicolae2-better-tasks",
- "generatedAt": "2026-10-06T05:37:24.490Z",
+ "generatedAt": "2026-10-06T14:51:09.564Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,6 +8,13 @@
     "event": "command.run",
     "matcher": {
      "command": "better-tasks"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "plugin": "better-tasks",
+     "requestId": "better-tasks-sprint"
     }
    },
    {
@@ -200,7 +207,7 @@
    {
     "name": "away",
     "description": "Turn the screens off while the Mac stays awake",
-    "output": "Could not black out the screens, so they went to sleep instead. The Mac may lock."
+    "output": "Could not turn the screens off, so they went to sleep instead. The Mac may lock."
    }
   ],
   "tools": [
@@ -210,7 +217,7 @@
    },
    {
     "name": "task_update",
-    "description": "Change a task: status, when (moves it between sprints), owner (teammate name), title, goal, a dated note. Only the lead closes a task (status done or cancelled), once the user resolves it. status \"done\" also logs it in docs/tasks.md (pass a summary as note, and the commits)."
+    "description": "Change a task: status, when (moves it between sprints), owner (teammate name), title, goal, a dated note. Only the lead closes a task (status done or cancelled), once the user resolves it. status \"done\" also logs it in the finished-task log (the logFile setting; pass a summary as note, and the commits)."
    },
    {
     "name": "task_note",
@@ -226,11 +233,11 @@
    },
    {
     "name": "sprint_goal",
-    "description": "Set the current sprint's one-line goal."
+    "description": "Set the current sprint's one-line goal, replacing the one it has; it shows in your context line (goal: …). Use it when the user says what this sprint is for. Other sprints are not changed."
    },
    {
     "name": "project_init",
-    "description": "Write starter override files for this project in .claude/tasks/ (config.json, coordinator.md, teammate.md, task-template.md, tips.md). Existing files are kept. Use when the user wants to customize better-tasks here."
+    "description": "Write starter override files for this project: .claude/tasks/config.json, task-template.md and tips.md, and .claude/better-tasks/lead.md and teammate.md. Existing files are kept. Use when the user wants to customize better-tasks here."
    },
    {
     "name": "team_status",
@@ -238,7 +245,7 @@
    },
    {
     "name": "screen_off",
-    "description": "Blacks out the physical screens while the Mac stays awake, until the user moves the mouse or presses a key; virtual displays stay on. Call it when the user says they are leaving and wants the screen off."
+    "description": "Turns the physical screens off while the Mac stays awake, until the user moves the mouse or presses a key; virtual displays stay on. Call it when the user says they are leaving and wants the screen off."
    },
    {
     "name": "upstream_pr",
@@ -252,7 +259,7 @@
    }
   ],
   "toasts": [
-   "Could not black out the screens, so they went to sleep instead. The Mac may lock."
+   "Could not turn the screens off, so they went to sleep instead. The Mac may lock."
   ],
   "logs": [
    "better-tasks: IntelliJ now skips .claude/worktrees/ (teammate worktrees), so they are not indexed"
@@ -265,10 +272,13 @@
    }
   ],
   "apiCalls": {
-   "$.session.root": 15,
-   "$.fs.read": 10,
+   "$.state.get": 22,
+   "$.session.root": 16,
+   "$.fs.read": 13,
    "$.tool.register": 10,
    "$.command.register": 2,
+   "$.state.set": 9,
+   "$.process.run": 3,
    "$.settings.read": 3,
    "$.env.get": 4,
    "$.env.set": 2,
@@ -279,13 +289,10 @@
    "$.prompt.submit": 1,
    "$.store.get": 3,
    "$.clock.now": 4,
-   "$.state.get": 16,
-   "$.state.set": 7,
    "$.clock.every": 1,
    "$.store.set": 1,
    "$.ui.open": 1,
    "$.clock.after": 1,
-   "$.process.run": 2,
    "$.ui.toast": 1,
    "$.ui.resolve": 1
   },
@@ -784,6 +791,7 @@
    }
   },
   "script": [
+   "$.process.run(git remote -v) → exit 0",
    "$.fs.write(/work/app/.idea/app.iml)",
    "$.fs.write(/work/app/.idea/modules.xml)",
    "session.start",
@@ -801,7 +809,7 @@
    "/better-tasks → Sprint board opened. If its keys do nothing, ctrl+x tab gives it the keyboard.",
    "$.process.run(/bin/sh /plugins/better-tasks/bin/away.sh) → exit 0",
    "$.process.run(pmset displaysleepnow) → exit 0",
-   "/away → Could not black out the screens, so they went to sleep instead. The Mac may lock…"
+   "/away → Could not turn the screens off, so they went to sleep instead. The Mac may lock."
   ],
   "console": [],
   "status": "better-tasks: agent teams are off",
@@ -815,6 +823,7 @@
   ],
   "hooks": [
    "command.run{command=better-tasks}",
+   "ui.press{plugin=better-tasks, requestId=better-tasks-sprint}",
    "config.describe{key=/\"^better-tasks\\\\.\"/}",
    "tool.call{tool=mcp__better-tasks__task_create}",
    "tool.call{tool=AskUserQuestion}",
@@ -841,8 +850,7 @@
    "turn.step",
    "tool.call{tool=mcp__better-tasks__task_create}",
    "tool.call{tool=mcp__better-tasks__task_update}",
-   "tool.call{tool=mcp__better-tasks__task_list}",
-   "tool.call{tool=mcp__better-tasks__… [+251 chars]"
+   "tool.call{tool=mcp… [+313 chars]"
   ],
   "calls": [
    "$.agent.list (via ioOf)",
@@ -853,30 +861,33 @@
    "$.clock.sleep (via untilNotTyping)",
    "$.command.register (via declareCommands)",
    "$.command.run",
-   "$.config.set (via setConfig)",
+   "$.config.set",
    "$.env.get",
    "$.env.set (via useLongCache)",
    "$.fs.list (via filesOf",
    "ideaFilesOf",
-   "instructionsNow",
    "ioOf",
    "probeOf",
    "transcriptOf",
    "videoOf)",
    "$.fs.read (via filesOf",
    "ignoreWorktrees",
-   "instructionsNow",
    "ioOf",
+   "isDeclaredByUser",
    "isVoiceReady",
    "pointUserRules",
    "probeOf",
-   "readShared)",
+   "readShared",
+   "sourcesOf",
+   "updateTo)",
    "$.fs.write (via filesOf",
    "ignoreWorktrees",
    "ioOf",
    "pinShared",
+   "pinSharedTo",
    "playVideo",
-   "shareWithTeam)",
+   "shareWithTeam",
+   "updateTo)",
    "$.process.run (via checkGh",
    "commitShared",
    "connectedScreens",
@@ -894,7 +905,8 @@
    "screenOff",
    "selfCommit",
    "updateTo",
-   "useDevBranch)",
+   "useDevBranch",
+   "versionNow)",
    "$.process.spawn",
    "$.prompt.read (via checkStatus",
    "untilNotTyping)",
@@ -902,8 +914,7 @@
    "$.session.id (via filesOf",
    "ioOf",
    "transcriptOf)",
-   "$.session.root",
-   "$.session.u… [+453 chars]"
+   "$.s… [+477 chars]"
   ],
   "stateReads": [
    "better-tasks.acting",
@@ -912,9 +923,11 @@
    "better-tasks.footer",
    "better-tasks.listScroll",
    "better-tasks.moving",
+   "better-tasks.noGitHub",
    "better-tasks.notice",
    "better-tasks.page",
    "better-tasks.resolved",
+   "better-tasks.rulesSent",
    "better-tasks.search",
    "better-tasks.selected",
    "better-tasks.statusCheck",
@@ -932,9 +945,11 @@
    "better-tasks.footer",
    "better-tasks.listScroll",
    "better-tasks.moving",
+   "better-tasks.noGitHub",
    "better-tasks.notice",
    "better-tasks.page",
    "better-tasks.resolved",
+   "better-tasks.rulesSent",
    "better-tasks.search",
    "better-tasks.selected",
    "better-tasks.statusCheck",
@@ -964,9 +979,9 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/iosifnicolae2-better-tasks/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/iosifnicolae2-better-tasks/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/iosifnicolae2-better-tasks/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/iosifnicolae2-better-tasks/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [
@@ -978,27 +993,184 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: better-tasks.tasks, better-tasks.team, better-tasks.tokens, better-tasks.activity, better-tasks.cacheSteps, better-tasks.notice, better-tasks.resolved, better-tasks.turn, better-tasks.teammateTypes, better-tasks.listScroll, better-tasks.search, better-tasks.statusCheck, better-tasks.footer, better-tasks.selected, better-tasks.acting, better-tasks.moving, better-tasks.page, better-tasks.turnedOn"
-    ]
+     "types ./types/index.d.ts declares state: better-tasks.tasks, better-tasks.team, better-tasks.tokens, better-tasks.activity, better-tasks.cacheSteps, better-tasks.notice, better-tasks.resolved, better-tasks.turn, better-tasks.teammateTypes, better-tasks.rulesSent, better-tasks.listScroll, better-tasks.search, better-tasks.statusCheck, better-tasks.footer, better-tasks.selected, better-tasks.acting, better-tasks.moving, better-tasks.page, better-tasks.turnedOn, better-tasks.noGitHub"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/iosifnicolae2-better-tasks/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/iosifnicolae2-better-tasks/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: command.run{command=better-tasks}, config.describe{key=/\"^better-tasks\\\\.\"/}, tool.call{tool=mcp__better-tasks__task_create}, tool.call{tool=AskUserQuestion}, session.start{isInteractive=true, surface=terminal}, ui.close{id=better-tasks-sprint}, ui.focus{requestId=better-tasks-sprint}, ui.scroll{component=Pane, requestId=better-tasks-sprint}, ui.render{component=Pane, requestId=better-tasks-sprint}, command.run{command=away}, tool.call{tool=mcp__better-tasks__screen_off}, state.set{plugin=better-tasks, key=team}, session.start, ui.render{component=SessionMode}, prompt.compose, skill.prompt, config.set{key=/\"^better-tasks\\\\.\"/}, state.set{plugin=better-tasks, key=turnedOn}, prompt.submit, tool.call{tool=AskUserQuestion}, tool.call{tool=Agent}, tool.call, turn.start, turn.complete, turn.step, tool.call{tool=mcp__better-tasks__task_create}, tool.call{tool=mcp__better-tasks__task_update}, tool.call{tool=mcp__better-tasks__task_list}, tool.call{tool=mcp__better-tasks__… [+251 chars]",
-      "./register.tsx calls: $.agent.list (via ioOf), $.agent.register (via syncTeammateTypes), $.clock.after (via openPane), $.clock.every, $.clock.now, $.clock.sleep (via untilNotTyping), $.command.register (via declareCommands), $.command.run, $.config.set (via setConfig), $.env.get, $.env.set (via useLongCache), $.fs.list (via filesOf, ideaFilesOf, instructionsNow, ioOf, probeOf, transcriptOf, videoOf), $.fs.read (via filesOf, ignoreWorktrees, instructionsNow, ioOf, isVoiceReady, pointUserRules, probeOf, readShared), $.fs.write (via filesOf, ignoreWorktrees, ioOf, pinShared, playVideo, shareWithTeam), $.process.run (via checkGh, commitShared, connectedScreens, hasGitHubRemote, hasSharedEdits, hostOf, ignoreWorktrees, installOf, ioOf, isGitRepo, openFile, playVideo, probeOf, releasesOf, screenOff, selfCommit, updateTo, useDevBranch), $.process.spawn, $.prompt.read (via checkStatus, untilNotTyping), $.prompt.submit, $.session.id (via filesOf, ioOf, transcriptOf), $.session.root, $.session.u… [+453 chars]",
+      "./register.tsx hooks: command.run{command=better-tasks}, ui.press{plugin=better-tasks, requestId=better-tasks-sprint}, config.describe{key=/\"^better-tasks\\\\.\"/}, tool.call{tool=mcp__better-tasks__task_create}, tool.call{tool=AskUserQuestion}, session.start{isInteractive=true, surface=terminal}, ui.close{id=better-tasks-sprint}, ui.focus{requestId=better-tasks-sprint}, ui.scroll{component=Pane, requestId=better-tasks-sprint}, ui.render{component=Pane, requestId=better-tasks-sprint}, command.run{command=away}, tool.call{tool=mcp__better-tasks__screen_off}, state.set{plugin=better-tasks, key=team}, session.start, ui.render{component=SessionMode}, prompt.compose, skill.prompt, config.set{key=/\"^better-tasks\\\\.\"/}, state.set{plugin=better-tasks, key=turnedOn}, prompt.submit, tool.call{tool=AskUserQuestion}, tool.call{tool=Agent}, tool.call, turn.start, turn.complete, turn.step, tool.call{tool=mcp__better-tasks__task_create}, tool.call{tool=mcp__better-tasks__task_update}, tool.call{tool=mcp… [+313 chars]",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__task_create}",
+      "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
+      "./register.tsx gating hook without .catch: ui.close{id=better-tasks-sprint}",
+      "./register.tsx gating hook without .catch: ui.focus{requestId=better-tasks-sprint}",
+      "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=better-tasks-sprint}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__screen_off}",
+      "./register.tsx gating hook without .catch: state.set{plugin=better-tasks, key=team}",
+      "./register.tsx gating hook without .catch: config.set{key=/\"^better-tasks\\\\.\"/}",
+      "./register.tsx gating hook without .catch: state.set{plugin=better-tasks, key=turnedOn}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__task_create}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__task_update}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__task_list}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__sprint_goal}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__team_status}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__project_init}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__task_note}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__task_search}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__better-tasks__upstream_pr}",
+      "./register.tsx calls: $.agent.list (via ioOf), $.agent.register (via syncTeammateTypes), $.clock.after (via openPane), $.clock.every, $.clock.now, $.clock.sleep (via untilNotTyping), $.command.register (via declareCommands), $.command.run, $.config.set, $.env.get, $.env.set (via useLongCache), $.fs.list (via filesOf, ideaFilesOf, ioOf, probeOf, transcriptOf, videoOf), $.fs.read (via filesOf, ignoreWorktrees, ioOf, isDeclaredByUser, isVoiceReady, pointUserRules, probeOf, readShared, sourcesOf, updateTo), $.fs.write (via filesOf, ignoreWorktrees, ioOf, pinShared, pinSharedTo, playVideo, shareWithTeam, updateTo), $.process.run (via checkGh, commitShared, connectedScreens, hasGitHubRemote, hasSharedEdits, hostOf, ignoreWorktrees, installOf, ioOf, isGitRepo, openFile, playVideo, probeOf, releasesOf, screenOff, selfCommit, updateTo, useDevBranch, versionNow), $.process.spawn, $.prompt.read (via checkStatus, untilNotTyping), $.prompt.submit, $.session.id (via filesOf, ioOf, transcriptOf), $.s… [+477 chars]",
       "./register.tsx env writes: CLAUDE_CODE_PROMPT_CACHE_TTL, CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL",
       "./register.tsx env reads: BETTER_TASKS_KOKORO, CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS, CLAUDE_CODE_NO_FLICKER, CLAUDE_CODE_PROMPT_CACHE_TTL, CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL, CLAUDE_CONFIG_DIR, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HOME, TERMINAL_EMULATOR, TERM_PROGRAM, TMUX, XDG_DATA_HOME, __CFBundleIdentifier",
-      "./register.tsx state writes: better-tasks.acting, better-tasks.activity, better-tasks.cacheSteps, better-tasks.footer, better-tasks.listScroll, better-tasks.moving, better-tasks.notice, better-tasks.page, better-tasks.resolved, better-tasks.search, better-tasks.selected, better-tasks.statusCheck, better-tasks.tasks, better-tasks.team, better-tasks.teammateTypes, better-tasks.tokens, better-tasks.turn, better-tasks.turnedOn",
-      "./register.tsx state reads: better-tasks.acting, better-tasks.activity, better-tasks.cacheSteps, better-tasks.footer, better-tasks.listScroll, better-tasks.moving, better-tasks.notice, better-tasks.page, better-tasks.resolved, better-tasks.search, better-tasks.selected, better-tasks.statusCheck, better-tasks.tasks, better-tasks.team, better-tasks.teammateTypes, better-tasks.tokens, better-tasks.turn, better-tasks.turnedOn",
+      "./register.tsx state writes: better-tasks.acting, better-tasks.activity, better-tasks.cacheSteps, better-tasks.footer, better-tasks.listScroll, better-tasks.moving, better-tasks.noGitHub, better-tasks.notice, better-tasks.page, better-tasks.resolved, better-tasks.rulesSent, better-tasks.search, better-tasks.selected, better-tasks.statusCheck, better-tasks.tasks, better-tasks.team, better-tasks.teammateTypes, better-tasks.tokens, better-tasks.turn, better-tasks.turnedOn",
+      "./register.tsx state reads: better-tasks.acting, better-tasks.activity, better-tasks.cacheSteps, better-tasks.footer, better-tasks.listScroll, better-tasks.moving, better-tasks.noGitHub, better-tasks.notice, better-tasks.page, better-tasks.resolved, better-tasks.rulesSent, better-tasks.search, better-tasks.selected, better-tasks.statusCheck, better-tasks.tasks, better-tasks.team, better-tasks.teammateTypes, better-tasks.tokens, better-tasks.turn, better-tasks.turnedOn",
       "./register.tsx surface modules: hooks/spinner.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__task_create}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=AskUserQuestion}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=better-tasks-sprint}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=better-tasks-sprint}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{component=Pane, requestId=better-tasks-sprint}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__screen_off}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "state.set",
+       "hook": "state.set{plugin=better-tasks, key=team}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "config.set",
+       "hook": "config.set{key=/\"^better-tasks\\\\.\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "state.set",
+       "hook": "state.set{plugin=better-tasks, key=turnedOn}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=AskUserQuestion}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__task_create}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__task_update}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__task_list}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__sprint_goal}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__team_status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__project_init}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__task_note}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__task_search}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__better-tasks__upstream_pr}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "e11f754d99709d1"
+ "sourceHash": "4bf30d5cfe293b11"
 }

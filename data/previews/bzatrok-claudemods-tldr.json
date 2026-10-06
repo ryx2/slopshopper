@@ -1,6 +1,6 @@
 {
  "slug": "bzatrok-claudemods-tldr",
- "generatedAt": "2026-10-06T05:33:21.809Z",
+ "generatedAt": "2026-10-06T14:51:23.146Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,32 +12,113 @@
     "matcher": {
      "command": "tldr"
     }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    }
   ],
   "commands": [
    {
     "name": "tldr",
-    "description": "TL;DR of the last reply, not sent to the model (optional: extra ask, e.g. \"one line\")"
+    "description": "TL;DR of the last reply, not sent to the model (\"auto\" toggles it after every reply; eli5/eli8/eli12/eli15 sets the reading level; \"tune <level> <feedback>\" rewrites a level's rules; else an extra ask, e.g. \"one line\")"
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [],
-  "logs": [
-   "TL;DR",
-   "OK"
-  ],
+  "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.state.get": 3,
+   "$.state.set": 2,
    "$.session.messages": 1,
    "$.ui.status": 2,
+   "$.store.get": 1,
    "$.model.complete": 1,
-   "$.ui.log": 2
+   "$.ui.resolve": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "column",
+        "borderStyle": "round",
+        "borderDimColor": true,
+        "paddingX": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "cyan"
+           },
+           "children": [
+            "◆ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "bold": true
+           },
+           "children": [
+            "tl;dr"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          "OK"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -63,24 +144,41 @@
   ],
   "hooks": [
    "session.start",
-   "command.run{command=tldr}"
+   "command.run{command=tldr}",
+   "turn.start",
+   "turn.complete",
+   "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.command.register",
-   "$.model.complete",
+   "$.config.set",
+   "$.model.complete (via summarise",
+   "tune)",
    "$.session.messages",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via readLevel)",
+   "$.store.set",
    "$.ui.log",
-   "$.ui.status"
+   "$.ui.resolve",
+   "$.ui.status (via summarise",
+   "tune)"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "tldr.isAuto",
+   "tldr.summary"
+  ],
+  "stateWrites": [
+   "tldr.isAuto",
+   "tldr.summary"
+  ],
   "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/bzatrok-claudemods-tldr/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/bzatrok-claudemods-tldr/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/bzatrok-claudemods-tldr/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/bzatrok-claudemods-tldr/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [
@@ -90,21 +188,28 @@
       "code": null
      }
     ],
-    "notes": []
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: tldr.isAuto, tldr.summary"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/bzatrok-claudemods-tldr/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/bzatrok-claudemods-tldr/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=tldr}",
-      "./register.ts calls: $.command.register, $.model.complete, $.session.messages, $.ui.log, $.ui.status"
-     ]
+      "./register.tsx hooks: session.start, command.run{command=tldr}, turn.start, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx calls: $.command.register, $.config.set, $.model.complete (via summarise, tune), $.session.messages, $.state.get, $.state.set, $.store.get (via readLevel), $.store.set, $.ui.log, $.ui.resolve, $.ui.status (via summarise, tune)",
+      "./register.tsx state writes: tldr.isAuto, tldr.summary",
+      "./register.tsx state reads: tldr.isAuto, tldr.summary"
+     ],
+     "gatingHooks": []
     }
    ]
   }
  },
- "sourceHash": "8718c9dc3aab6e6c"
+ "sourceHash": "76d4554351e862cd"
 }

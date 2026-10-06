@@ -1,0 +1,8 @@
+{
+ "slug": "belazy167-claude-mods-skill-redact-output",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// ponytail: three token shapes only; widen the list for your own secrets.\nconst TOKEN = /\\b(sk-[A-Za-z0-9_-]{16,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})\\b/g\n\nconst redact = (text: string) => text.replace(TOKEN, '[redacted]')\n\nexport const register: Register = (on) => {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    const ran = await next(e)\n    // A deny or an error has no stdout to clean.\n    if (ran.deny !== undefined || ran.isError) return ran\n\n    const stdout = redact(ran.result.stdout)\n    if (stdout === ran.result.stdout) return ran\n\n    $.ui.status('redact-output: hid a token from the model')\n    // Answer with a new { result }. Leaving out ref and text makes core map it again.\n    return { result: { ...ran.result, stdout } }\n  })\n    // If the hook throws, the raw output would reach the model. Refuse instead.\n    // The command already ran; the deny only keeps its output from the model.\n    .catch(() => ({ deny: 'redact-output: could not check the output' }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"redact-output\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Example: rewrites Bash output so the model never reads tokens\",\n  \"author\": {\n    \"name\": \"BeLazy167\"\n  },\n  \"license\": \"MIT\"\n}"
+ }
+}

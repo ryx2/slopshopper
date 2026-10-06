@@ -1,9 +1,46 @@
 {
  "slug": "alexcz-a11y-claude-mods-dispatch-pilot",
- "generatedAt": "2026-10-06T05:33:16.353Z",
+ "generatedAt": "2026-10-06T14:51:18.187Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "turn.start",
+    "matcher": {
+     "turnId": "/(?:)/"
+    }
+   },
+   {
+    "event": "agent.spawn",
+    "matcher": {
+     "tool_use_id": "/(?:)/"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "turnId": "/(?:)/"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "dp-rationale"
+    }
+   },
    {
     "event": "session.start",
     "matcher": {
@@ -58,6 +95,12 @@
     "event": "prompt.submit",
     "matcher": {
      "text": "/(?:)/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Agent"
     }
    },
    {
@@ -142,6 +185,9 @@
     "event": "prompt.submit"
    },
    {
+    "event": "command.run"
+   },
+   {
     "event": "turn.start"
    },
    {
@@ -154,15 +200,22 @@
   "commands": [
    {
     "name": "dp",
-    "description": "Dispatch Pilot: switches, effort lock, recent decisions",
-    "argumentHint": "[on|off | <name> on|off | lock <effort> | unlock | log [N]]",
+    "description": "Dispatch Pilot：依据面板、功能开关、effort 锁定、最近的决定",
+    "argumentHint": "[log | status | on|off | <name> on|off | lock <effort> | unlock | log N]",
     "immediate": true,
-    "output": "Dispatch Pilot is on. Effort lock: none.\nSwitches (/dp <name> on|off):\n  on   signals              records context, limit and cost readings in the debug log; no decision uses them\n  on   main-effort          decides the main agent's effort when you send a message\n  on   escalation           raises the effort of an agent whose tool calls keep failing\n  off  hook-block-failures  counts a call one of your hooks blocked as a failure when deciding to escalate\n  on   midturn-effort       re-decides the main agent's effort while a turn runs\n  on   dispatched-agents    decides each dispatched agent's model and effort when it is spawned\n  on   workflow-agents      decides the model and effort of each agent() of a Workflow script when the main agent submits it\n  on   workflow-labels      sets the model and effort of each Workflow agent when it starts, by its label, where the script could not be written into\n  on   skill-profiles       rates skills by bilingual profiles a cheap model writes once per SKILL.md version (off: by description)\n  on   skills               suggests the skills that fit each message; the full skill listing stays out\n  on   find-skill           answers the main agent's find_skill: the skills that fit the work it names\n/dp on|off | /dp <name> on|off | /dp lock <low|medium|high|xhigh|max> | /dp unlock | /dp log [N]"
+    "output": "依据面板已打开：p / n 翻看 agent，Esc 关闭"
    }
   ],
   "tools": [],
-  "panes": [],
-  "toasts": [],
+  "panes": [
+   {
+    "id": "dp-rationale",
+    "title": "依据"
+   }
+  ],
+  "toasts": [
+   "主 agent 未路由：决策模型没配好（jev：没有填 typesafeApiKey）"
+  ],
   "logs": [
    "settings for jev: left unset, so jev's defaults: timeoutMs 1500, contextMessages 32, contextTokens 6000, rejudgeSteps 16, thetaUp 0.3, thetaDown 0.55, thetaMax 0.5, thetaExpected 0.25, agentOverride 0.6, skillsMinRelevance 0.75, findSkillMinRelevance 0.5; skill suggestions on until /dp skills off",
    "skills: no decision model is set up, so the main agent keeps the skill listing and nothing is suggested",
@@ -174,14 +227,939 @@
    "$.store.get": 1,
    "$.ui.log": 3,
    "$.command.register": 1,
-   "$.state.get": 15,
-   "$.clock.now": 3,
+   "$.state.get": 33,
+   "$.clock.now": 10,
    "$.session.messages": 1,
-   "$.ui.status": 2,
-   "$.state.set": 4
+   "$.state.set": 8,
+   "$.ui.toast": 1,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 5
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "band-idle",
+        "width": 100
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "wrap": "truncate-end"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "warning",
+            "bold": true
+           },
+           "children": [
+            "◆ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "bold": true
+           },
+           "children": [
+            "第 1 轮"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "inactive"
+           },
+           "children": [
+            " 0:42"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {},
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              " · 主 agent "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": []
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "warning"
+           },
+           "children": [
+            " · 未路由 · 决策模型没配好"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "inactive"
+           },
+           "children": [
+            " · /dp log 看依据"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "SessionMode": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "gap": 1
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "modes": [
+         "auto-accept edits"
+        ]
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "dp-footer"
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "warning",
+            "bold": true
+           },
+           "children": [
+            "◆"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "dp-rationale": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "key": "pane",
+       "flexDirection": "column",
+       "width": 56
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "pane-head",
+         "width": 56
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexGrow": 1,
+           "flexShrink": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude",
+               "bold": true
+              },
+              "children": [
+               "◆ 依据"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               " · "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "主 agent"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "  1/1"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "pane-switches",
+         "width": 56,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "功能（/dp <名字> on|off）  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-signals",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "signals 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-main-effort",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "main-effort 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-escalation",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "escalation 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-hook-block-failures",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "hook-block-failures 关  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-midturn-effort",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "midturn-effort 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-dispatched-agents",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "dispatched-agents 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-workflow-agents",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "workflow-agents 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-workflow-labels",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "workflow-labels 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-skill-profiles",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "skill-profiles 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-skills",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "skills 开  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-switch-find-skill",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "find-skill 开  "
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "pane-nav",
+         "width": 56,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pane-prev",
+             "label": "‹ 上一个 (p)",
+             "hotkey": "p",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             " "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pane-next",
+             "label": "下一个 › (n)",
+             "hotkey": "n",
+             "variant": "primary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexGrow": 1,
+           "flexShrink": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive",
+             "wrap": "wrap"
+            },
+            "children": [
+             "  band 上按 0-9 直接选"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "pane-card",
+         "flexDirection": "column",
+         "width": 56,
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-card-head",
+           "width": 52
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 2,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "warning"
+              },
+              "children": [
+               "◆"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true,
+               "wrap": "wrap"
+              },
+              "children": [
+               "主 agent"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 9,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 " "
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "inactive"
+                },
+                "children": [
+                 " —      "
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 13,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 " "
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "inactive"
+                },
+                "children": [
+                 "▱▱▱▱▱ —     "
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-card-state",
+           "width": 52
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 8,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "状态"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "warning",
+               "wrap": "wrap"
+              },
+              "children": [
+               "未路由 · 决策模型没配好"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-card-kind",
+           "width": 52
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 8,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "类型"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "wrap"
+              },
+              "children": [
+               "没有配好决策模型的密钥或账号，或者密钥被拒绝"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-card-backend",
+           "width": 52
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 8,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "后端"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "wrap"
+              },
+              "children": [
+               "jev"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-card-detail",
+           "width": 52
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 8,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "细节"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "wrap"
+              },
+              "children": [
+               "jev：没有填 typesafeApiKey"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pane-card-where",
+           "width": 52
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 8,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive"
+              },
+              "children": [
+               "排查"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "inactive",
+               "wrap": "wrap"
+              },
+              "children": [
+               "debug log（claude --debug-file <路径>）里有这次请求的那一行，写着它发了什么、等了多久、怎么失败的"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "pane-gap"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "pane-log-head",
+         "width": 56
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "wrap"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "claude",
+             "bold": true
+            },
+            "children": [
+             "◆ 决策日志"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "  还没有决定"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "依据"
+    }
+   }
+  },
   "script": [
    "session.start",
    "turn.start: hook threw undefined is not an object (evaluating 'out.replace')",
@@ -195,10 +1173,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/dp → Dispatch Pilot is on. Effort lock: none.\nSwitches (/dp <name> on|off):\n  on   si…"
+   "$.ui.open(dp-rationale)",
+   "/dp → 依据面板已打开：p / n 翻看 agent，Esc 关闭"
   ],
   "console": [],
-  "status": "dp failed 1 | jev: no TypeSafe API key: set typesafeApiKey",
   "warnings": []
  },
  "validate": {
@@ -206,6 +1184,12 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "turn.start{turnId=/\"(?:)\"/}",
+   "agent.spawn{tool_use_id=/\"(?:)\"/}",
+   "turn.complete{turnId=/\"(?:)\"/}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=SessionMode}",
+   "ui.render{component=Pane, requestId=?}",
    "session.start{cwd=/\"(?:)\"/}",
    "session.measure{context has {window=/\"(?:)\"/}}",
    "command.run{command=dp}",
@@ -215,6 +1199,7 @@
    "tool.call{tool=/\"(?:)\"/}",
    "turn.step{turnId=/\"(?:)\"/}",
    "prompt.submit{text=/\"(?:)\"/}",
+   "tool.call{tool=Agent}",
    "agent.spawn{tool_use_id=/\"(?:)\"/}",
    "tool.call{tool=Workflow}",
    "tool.describe{tool=Workflow}",
@@ -229,21 +1214,23 @@
    "session.start{cwd=/\"(?:)\"/}",
    "tool.call{tool=mcp__dispatch-pilot__find_skill}",
    "prompt.submit",
+   "command.run",
    "turn.start",
    "classic.PreToolUse",
-   "turn.step"
+   "… [+9 chars]"
   ],
   "calls": [
+   "$.agent.list",
+   "$.clock.after (via tick)",
    "$.clock.now",
    "$.clock.sleep",
-   "$.command.list (via readCatalog",
+   "$.command.list (via describeCommand",
+   "readCatalog",
    "sessionCatalog)",
    "$.command.register",
    "$.env.get (via readCatalog",
    "sessionCatalog)",
-   "$.fs.exists (via readCatalog",
-   "readTask",
-   "sessionCatalog)",
+   "$.fs.exists",
    "$.fs.list (via readCatalog",
    "sessionCatalog)",
    "$.fs.read",
@@ -263,22 +1250,31 @@
    "$.store.keys",
    "$.store.set",
    "$.tool.register",
+   "$.ui.close",
+   "$.ui.invalidate",
    "$.ui.log",
-   "$.ui.status"
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
    "dispatch-pilot.agents",
+   "dispatch-pilot.board",
    "dispatch-pilot.decisionLog",
    "dispatch-pilot.escalation",
    "dispatch-pilot.labelRuns",
    "dispatch-pilot.lock",
    "dispatch-pilot.mainStep",
    "dispatch-pilot.midturn",
+   "dispatch-pilot.paneView",
    "dispatch-pilot.pending",
    "dispatch-pilot.returned",
    "dispatch-pilot.said",
+   "dispatch-pilot.selected",
    "dispatch-pilot.skillCatalog",
    "dispatch-pilot.skillListing",
+   "dispatch-pilot.skillProfiles",
    "dispatch-pilot.skillsShown",
    "dispatch-pilot.turns",
    "dispatch-pilot.workflowRuns",
@@ -286,17 +1282,21 @@
   ],
   "stateWrites": [
    "dispatch-pilot.agents",
+   "dispatch-pilot.board",
    "dispatch-pilot.decisionLog",
    "dispatch-pilot.escalation",
    "dispatch-pilot.labelRuns",
    "dispatch-pilot.lock",
    "dispatch-pilot.mainStep",
    "dispatch-pilot.midturn",
+   "dispatch-pilot.paneView",
    "dispatch-pilot.pending",
    "dispatch-pilot.returned",
    "dispatch-pilot.said",
+   "dispatch-pilot.selected",
    "dispatch-pilot.skillCatalog",
    "dispatch-pilot.skillListing",
+   "dispatch-pilot.skillProfiles",
    "dispatch-pilot.skillsShown",
    "dispatch-pilot.turns",
    "dispatch-pilot.workflowRuns",
@@ -308,34 +1308,135 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/alexcz-a11y-claude-mods-dispatch-pilot/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/alexcz-a11y-claude-mods-dispatch-pilot/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/alexcz-a11y-claude-mods-dispatch-pilot/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/alexcz-a11y-claude-mods-dispatch-pilot/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: dispatch-pilot.pending, dispatch-pilot.turns, dispatch-pilot.agents, dispatch-pilot.decisionLog, dispatch-pilot.lock, dispatch-pilot.midturn, dispatch-pilot.mainStep, dispatch-pilot.escalation, dispatch-pilot.said, dispatch-pilot.returned, dispatch-pilot.workflowRuns, dispatch-pilot.labelRuns, dispatch-pilot.workflowTerms, dispatch-pilot.skillsShown, dispatch-pilot.skillCatalog, dispatch-pilot.skillListing"
-    ]
+     "types ./types/index.d.ts declares state: dispatch-pilot.pending, dispatch-pilot.turns, dispatch-pilot.agents, dispatch-pilot.board, dispatch-pilot.decisionLog, dispatch-pilot.selected, dispatch-pilot.paneView, dispatch-pilot.lock, dispatch-pilot.midturn, dispatch-pilot.mainStep, dispatch-pilot.escalation, dispatch-pilot.said, dispatch-pilot.returned, dispatch-pilot.workflowRuns, dispatch-pilot.labelRuns, dispatch-pilot.workflowTerms, dispatch-pilot.skillsShown, dispatch-pilot.skillCatalog, dispatch-pilot.skillProfiles, dispatch-pilot.skillListing"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/alexcz-a11y-claude-mods-dispatch-pilot/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/alexcz-a11y-claude-mods-dispatch-pilot/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./dispatch-pilot.ts hooks: session.start{cwd=/\"(?:)\"/}, session.measure{context has {window=/\"(?:)\"/}}, command.run{command=dp}, prompt.submit{text=/\"(?:)\"/}, tool.call{tool=/\"(?:)\"/}, turn.step{turnId=/\"(?:)\"/}, tool.call{tool=/\"(?:)\"/}, turn.step{turnId=/\"(?:)\"/}, prompt.submit{text=/\"(?:)\"/}, agent.spawn{tool_use_id=/\"(?:)\"/}, tool.call{tool=Workflow}, tool.describe{tool=Workflow}, tool.call{tool=Workflow}, turn.step{agentId=/\"(?:)\"/}, session.start{cwd=/\"(?:)\"/}, session.start{cwd=/\"(?:)\"/}, prompt.attachment{type=skill_listing}, prompt.submit{text=/\"(?:)\"/}, session.end{reason=/\"(?:)\"/}, session.compact{trigger=/\"(?:)\"/}, session.start{cwd=/\"(?:)\"/}, tool.call{tool=mcp__dispatch-pilot__find_skill}, prompt.submit, turn.start, classic.PreToolUse, turn.step",
-      "./dispatch-pilot.ts calls: $.clock.now, $.clock.sleep, $.command.list (via readCatalog, sessionCatalog), $.command.register, $.env.get (via readCatalog, sessionCatalog), $.fs.exists (via readCatalog, readTask, sessionCatalog), $.fs.list (via readCatalog, sessionCatalog), $.fs.read, $.http.fetch, $.model.complete (via writeProfiles), $.session.cwd (via readCatalog, sessionCatalog), $.session.messages, $.session.usage (via readCatalog, sessionCatalog), $.settings.read (via readCatalog, sessionCatalog), $.state.get, $.state.set, $.store.delete (via dropOldProfiles), $.store.get, $.store.keys, $.store.set, $.tool.register, $.ui.log, $.ui.status",
+      "./dispatch-pilot.ts hooks: turn.start{turnId=/\"(?:)\"/}, agent.spawn{tool_use_id=/\"(?:)\"/}, turn.complete{turnId=/\"(?:)\"/}, ui.render{component=AbovePrompt}, ui.render{component=SessionMode}, ui.render{component=Pane, requestId=?}, session.start{cwd=/\"(?:)\"/}, session.measure{context has {window=/\"(?:)\"/}}, command.run{command=dp}, prompt.submit{text=/\"(?:)\"/}, tool.call{tool=/\"(?:)\"/}, turn.step{turnId=/\"(?:)\"/}, tool.call{tool=/\"(?:)\"/}, turn.step{turnId=/\"(?:)\"/}, prompt.submit{text=/\"(?:)\"/}, tool.call{tool=Agent}, agent.spawn{tool_use_id=/\"(?:)\"/}, tool.call{tool=Workflow}, tool.describe{tool=Workflow}, tool.call{tool=Workflow}, turn.step{agentId=/\"(?:)\"/}, session.start{cwd=/\"(?:)\"/}, session.start{cwd=/\"(?:)\"/}, prompt.attachment{type=skill_listing}, prompt.submit{text=/\"(?:)\"/}, session.end{reason=/\"(?:)\"/}, session.compact{trigger=/\"(?:)\"/}, session.start{cwd=/\"(?:)\"/}, tool.call{tool=mcp__dispatch-pilot__find_skill}, prompt.submit, command.run, turn.start, classic.PreToolUse, … [+9 chars]",
+      "./dispatch-pilot.ts gating hook without .catch: agent.spawn{tool_use_id=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: prompt.submit{text=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: tool.call{tool=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: tool.call{tool=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: prompt.submit{text=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: tool.call{tool=Agent}",
+      "./dispatch-pilot.ts gating hook without .catch: agent.spawn{tool_use_id=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: tool.call{tool=Workflow}",
+      "./dispatch-pilot.ts gating hook without .catch: tool.call{tool=Workflow}",
+      "./dispatch-pilot.ts gating hook without .catch: prompt.submit{text=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: session.compact{trigger=/\"(?:)\"/}",
+      "./dispatch-pilot.ts gating hook without .catch: tool.call{tool=mcp__dispatch-pilot__find_skill}",
+      "./dispatch-pilot.ts gating hook without .catch: prompt.submit",
+      "./dispatch-pilot.ts gating hook without .catch: classic.PreToolUse",
+      "./dispatch-pilot.ts calls: $.agent.list, $.clock.after (via tick), $.clock.now, $.clock.sleep, $.command.list (via describeCommand, readCatalog, sessionCatalog), $.command.register, $.env.get (via readCatalog, sessionCatalog), $.fs.exists, $.fs.list (via readCatalog, sessionCatalog), $.fs.read, $.http.fetch, $.model.complete (via writeProfiles), $.session.cwd (via readCatalog, sessionCatalog), $.session.messages, $.session.usage (via readCatalog, sessionCatalog), $.settings.read (via readCatalog, sessionCatalog), $.state.get, $.state.set, $.store.delete (via dropOldProfiles), $.store.get, $.store.keys, $.store.set, $.tool.register, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
       "./dispatch-pilot.ts env writes: nothing",
       "./dispatch-pilot.ts env reads: HOME",
-      "./dispatch-pilot.ts state writes: dispatch-pilot.agents, dispatch-pilot.decisionLog, dispatch-pilot.escalation, dispatch-pilot.labelRuns, dispatch-pilot.lock, dispatch-pilot.mainStep, dispatch-pilot.midturn, dispatch-pilot.pending, dispatch-pilot.returned, dispatch-pilot.said, dispatch-pilot.skillCatalog, dispatch-pilot.skillListing, dispatch-pilot.skillsShown, dispatch-pilot.turns, dispatch-pilot.workflowRuns, dispatch-pilot.workflowTerms",
-      "./dispatch-pilot.ts state reads: dispatch-pilot.agents, dispatch-pilot.decisionLog, dispatch-pilot.escalation, dispatch-pilot.labelRuns, dispatch-pilot.lock, dispatch-pilot.mainStep, dispatch-pilot.midturn, dispatch-pilot.pending, dispatch-pilot.returned, dispatch-pilot.said, dispatch-pilot.skillCatalog, dispatch-pilot.skillListing, dispatch-pilot.skillsShown, dispatch-pilot.turns, dispatch-pilot.workflowRuns, dispatch-pilot.workflowTerms"
+      "./dispatch-pilot.ts state writes: dispatch-pilot.agents, dispatch-pilot.board, dispatch-pilot.decisionLog, dispatch-pilot.escalation, dispatch-pilot.labelRuns, dispatch-pilot.lock, dispatch-pilot.mainStep, dispatch-pilot.midturn, dispatch-pilot.paneView, dispatch-pilot.pending, dispatch-pilot.returned, dispatch-pilot.said, dispatch-pilot.selected, dispatch-pilot.skillCatalog, dispatch-pilot.skillListing, dispatch-pilot.skillProfiles, dispatch-pilot.skillsShown, dispatch-pilot.turns, dispatch-pilot.workflowRuns, dispatch-pilot.workflowTerms",
+      "./dispatch-pilot.ts state reads: dispatch-pilot.agents, dispatch-pilot.board, dispatch-pilot.decisionLog, dispatch-pilot.escalation, dispatch-pilot.labelRuns, dispatch-pilot.lock, dispatch-pilot.mainStep, dispatch-pilot.midturn, dispatch-pilot.paneView, dispatch-pilot.pending, dispatch-pilot.returned, dispatch-pilot.said, dispatch-pilot.selected, dispatch-pilot.skillCatalog, dispatch-pilot.skillListing, dispatch-pilot.skillProfiles, dispatch-pilot.skillsShown, dispatch-pilot.turns, dispatch-pilot.workflowRuns, dispatch-pilot.workflowTerms"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn{tool_use_id=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{text=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{text=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn{tool_use_id=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Workflow}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Workflow}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{text=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact{trigger=/\"(?:)\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__dispatch-pilot__find_skill}",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./dispatch-pilot.ts",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "ca4787898f05b90"
+ "sourceHash": "71e8be4eaf322f34"
 }

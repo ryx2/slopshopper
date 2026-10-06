@@ -1,0 +1,8 @@
+{
+ "slug": "belazy167-claude-mods-skill-dice-tool",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const register: Register = (on) => {\n  // Register in session.start: it is awaited before the first prompt,\n  // so the model sees the tool from turn one.\n  on('session.start', async ($, e, next) => {\n    await $.tool.register({\n      name: 'roll',\n      description: 'Roll a die with the given number of sides and return the result.',\n      inputSchema: {\n        type: 'object',\n        properties: { sides: { type: 'integer', minimum: 2, maximum: 1000 } },\n        required: ['sides'],\n      },\n    })\n    return next(e)\n  })\n\n  // The model calls it as mcp__<plugin name>__<tool name>. This hook serves it.\n  on('tool.call', { tool: 'mcp__dice-tool__roll' }, ($, e) => {\n    const sides = Number(e.sides)\n    if (!Number.isInteger(sides) || sides < 2) {\n      return { result: 'sides must be an integer of 2 or more', isError: true }\n    }\n    const roll = 1 + Math.floor(Math.random() * sides)\n    return { result: `Rolled ${roll} on a d${sides}.` }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"dice-tool\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Example: registers a tool the model can call and answers it\",\n  \"author\": {\n    \"name\": \"BeLazy167\"\n  },\n  \"license\": \"MIT\"\n}"
+ }
+}

@@ -1,6 +1,6 @@
 {
  "slug": "cjmellor-mella-marketplace-session-stats",
- "generatedAt": "2026-10-06T05:28:52.112Z",
+ "generatedAt": "2026-10-06T14:51:24.554Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -41,6 +41,15 @@
     "event": "turn.complete"
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "EnterWorktree",
+      "ExitWorktree"
+     ]
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
@@ -73,10 +82,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 23,
+   "$.state.get": 26,
    "$.state.set": 12,
    "$.session.usage": 5,
    "$.session.model": 4,
+   "$.process.run": 4,
    "$.clock.every": 1,
    "$.command.register": 1,
    "$.ui.open": 1,
@@ -965,6 +975,8 @@
    }
   },
   "script": [
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-dir --git-common-dir) → exit 0",
+   "$.process.run(git branch --show-current) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -975,6 +987,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-dir --git-common-dir) → exit 0",
+   "$.process.run(git branch --show-current) → exit 0",
    "turn.complete",
    "$.ui.open(usage)",
    "/session-stats → Session stats pane opened."
@@ -996,6 +1010,7 @@
    "session.measure",
    "turn.step",
    "turn.complete",
+   "tool.call{tool=EnterWorktree|ExitWorktree}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=usage}"
   ],
@@ -1003,6 +1018,7 @@
    "$.clock.after",
    "$.clock.every (via seed)",
    "$.command.register",
+   "$.process.run (via readLocation)",
    "$.session.model (via refresh)",
    "$.session.usage (via loadBreakdown",
    "refresh)",
@@ -1017,6 +1033,7 @@
    "session-stats.breakdown",
    "session-stats.effort",
    "session-stats.isOpen",
+   "session-stats.location",
    "session-stats.now",
    "session-stats.snapshot",
    "session-stats.totals"
@@ -1025,6 +1042,7 @@
    "session-stats.breakdown",
    "session-stats.effort",
    "session-stats.isOpen",
+   "session-stats.location",
    "session-stats.now",
    "session-stats.snapshot",
    "session-stats.totals"
@@ -1033,32 +1051,49 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/cjmellor-mella-marketplace-session-stats/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/cjmellor-mella-marketplace-session-stats/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/cjmellor-mella-marketplace-session-stats/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/cjmellor-mella-marketplace-session-stats/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-stats.snapshot, session-stats.breakdown, session-stats.isOpen, session-stats.now, session-stats.totals, session-stats.effort"
-    ]
+     "types ./types/index.d.ts declares state: session-stats.snapshot, session-stats.breakdown, session-stats.isOpen, session-stats.now, session-stats.totals, session-stats.effort, session-stats.location"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/cjmellor-mella-marketplace-session-stats/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/cjmellor-mella-marketplace-session-stats/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, command.run{command=session-stats}, command.run{command=effort}, command.run{command=model}, ui.close, session.measure, turn.step, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=usage}",
-      "./register.tsx calls: $.clock.after, $.clock.every (via seed), $.command.register, $.session.model (via refresh), $.session.usage (via loadBreakdown, refresh), $.state.get, $.state.set, $.ui.close (via togglePane), $.ui.open (via openPane), $.ui.panes (via togglePane), $.ui.resolve",
-      "./register.tsx state writes: session-stats.breakdown, session-stats.effort, session-stats.isOpen, session-stats.now, session-stats.snapshot, session-stats.totals",
-      "./register.tsx state reads: session-stats.breakdown, session-stats.effort, session-stats.isOpen, session-stats.now, session-stats.snapshot, session-stats.totals"
+      "./register.tsx hooks: session.start, session.end, command.run{command=session-stats}, command.run{command=effort}, command.run{command=model}, ui.close, session.measure, turn.step, turn.complete, tool.call{tool=EnterWorktree|ExitWorktree}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=usage}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx gating hook without .catch: tool.call{tool=EnterWorktree|ExitWorktree}",
+      "./register.tsx calls: $.clock.after, $.clock.every (via seed), $.command.register, $.process.run (via readLocation), $.session.model (via refresh), $.session.usage (via loadBreakdown, refresh), $.state.get, $.state.set, $.ui.close (via togglePane), $.ui.open (via openPane), $.ui.panes (via togglePane), $.ui.resolve",
+      "./register.tsx state writes: session-stats.breakdown, session-stats.effort, session-stats.isOpen, session-stats.location, session-stats.now, session-stats.snapshot, session-stats.totals",
+      "./register.tsx state reads: session-stats.breakdown, session-stats.effort, session-stats.isOpen, session-stats.location, session-stats.now, session-stats.snapshot, session-stats.totals"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=EnterWorktree|ExitWorktree}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "7fa52541d0775e4f"
+ "sourceHash": "c454698124b927fe"
 }

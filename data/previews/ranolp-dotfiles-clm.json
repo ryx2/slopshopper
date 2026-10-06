@@ -1,6 +1,6 @@
 {
  "slug": "ranolp-dotfiles-clm",
- "generatedAt": "2026-10-06T05:28:12.203Z",
+ "generatedAt": "2026-10-06T14:51:11.470Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,13 +20,50 @@
     "event": "session.compact"
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskCreate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskUpdate"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "TaskCreate"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "TaskUpdate"
+    }
+   },
+   {
+    "event": "prompt.attachment",
+    "matcher": {
+     "type": "todo_reminder"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "clm-board"
+    }
+   },
+   {
     "event": "prompt.compose"
    }
   ],
   "commands": [
    {
     "name": "clm",
-    "description": "Show the clm ledger, budget use and recent decisions (shown to you only).",
+    "description": "Show the clm ledger, budget use and recent decisions; `board` opens the issue board, `link <id>` brings another repo's issue into this session (shown to you only).",
     "immediate": true
    }
   ],
@@ -40,16 +77,207 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.session.id": 4,
-   "$.store.get": 2,
-   "$.session.messages": 2,
+   "$.session.id": 7,
+   "$.store.get": 3,
+   "$.session.messages": 3,
+   "$.env.get": 3,
+   "$.fs.exists": 3,
+   "$.model.complete": 1,
    "$.session.usage": 1,
    "$.ui.log": 1,
-   "$.env.get": 2,
-   "$.fs.exists": 2
+   "$.ui.resolve": 1,
+   "$.state.get": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "Pane": {
+    "clm-board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "repo",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "this repo"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "all",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "all repos"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "refresh"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "todo",
+           "flexDirection": "column",
+           "width": 13
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "To do",
+             " (",
+             "0",
+             ")"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "-"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "doing",
+           "flexDirection": "column",
+           "width": 13
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Doing",
+             " (",
+             "0",
+             ")"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "-"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "done",
+           "flexDirection": "column",
+           "width": 13
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Done",
+             " (",
+             "0",
+             ")"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "-"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "question",
+           "flexDirection": "column",
+           "width": 13
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Question",
+             " (",
+             "0",
+             ")"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "-"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "clm-board"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -77,56 +305,116 @@
    "command.run{command=clm}",
    "turn.complete",
    "session.compact",
+   "tool.call{tool=TaskCreate}",
+   "tool.call{tool=TaskUpdate}",
+   "tool.describe{tool=TaskCreate}",
+   "tool.describe{tool=TaskUpdate}",
+   "prompt.attachment{type=todo_reminder}",
+   "ui.render{component=Pane, requestId=clm-board}",
    "prompt.compose"
   ],
   "calls": [
+   "$.clock.now",
    "$.command.register",
-   "$.env.get (via basePath)",
-   "$.fs.exists (via readText)",
-   "$.fs.read (via readText)",
+   "$.env.get (via basePath",
+   "trackerDir)",
+   "$.fs.exists (via pruneWithheld",
+   "readAll",
+   "readText",
+   "writeEvents)",
+   "$.fs.list (via pruneWithheld",
+   "readAll)",
+   "$.fs.read (via readAll",
+   "readText",
+   "writeEvents)",
    "$.fs.write",
-   "$.model.complete (via fold)",
+   "$.model.complete (via fold",
+   "showTurnChanges)",
+   "$.process.run (via git",
+   "pruneWithheld)",
    "$.session.compact (via maybeClear)",
-   "$.session.id (via sid)",
+   "$.session.cwd (via captureOrigin)",
+   "$.session.id (via captureOrigin",
+   "sid)",
    "$.session.messages",
-   "$.session.usage (via calibrate)",
+   "$.session.usage (via usageReading)",
+   "$.state.get",
+   "$.state.set",
    "$.store.delete",
    "$.store.get",
    "$.store.set (via maybeClear",
    "writeMeta)",
-   "$.ui.log"
+   "$.tool.call (via createTask",
+   "updateTask)",
+   "$.ui.log",
+   "$.ui.open",
+   "$.ui.panes (via refreshBoardIfOpen)",
+   "$.ui.resolve"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "clm.board"
+  ],
+  "stateWrites": [
+   "clm.board"
+  ],
   "envReads": [
    "HOME"
   ],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ranolp-dotfiles-clm/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ranolp-dotfiles-clm/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ranolp-dotfiles-clm/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ranolp-dotfiles-clm/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: clm.board"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ranolp-dotfiles-clm/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ranolp-dotfiles-clm/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=clm}, turn.complete, session.compact, prompt.compose",
-      "./register.ts calls: $.command.register, $.env.get (via basePath), $.fs.exists (via readText), $.fs.read (via readText), $.fs.write, $.model.complete (via fold), $.session.compact (via maybeClear), $.session.id (via sid), $.session.messages, $.session.usage (via calibrate), $.store.delete, $.store.get, $.store.set (via maybeClear, writeMeta), $.ui.log",
+      "./register.ts hooks: session.start, command.run{command=clm}, turn.complete, session.compact, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.describe{tool=TaskCreate}, tool.describe{tool=TaskUpdate}, prompt.attachment{type=todo_reminder}, ui.render{component=Pane, requestId=clm-board}, prompt.compose",
+      "./register.ts gating hook without .catch: session.compact",
+      "./register.ts gating hook without .catch: tool.call{tool=TaskCreate}",
+      "./register.ts gating hook without .catch: tool.call{tool=TaskUpdate}",
+      "./register.ts calls: $.clock.now, $.command.register, $.env.get (via basePath, trackerDir), $.fs.exists (via pruneWithheld, readAll, readText, writeEvents), $.fs.list (via pruneWithheld, readAll), $.fs.read (via readAll, readText, writeEvents), $.fs.write, $.model.complete (via fold, showTurnChanges), $.process.run (via git, pruneWithheld), $.session.compact (via maybeClear), $.session.cwd (via captureOrigin), $.session.id (via captureOrigin, sid), $.session.messages, $.session.usage (via usageReading), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set (via maybeClear, writeMeta), $.tool.call (via createTask, updateTask), $.ui.log, $.ui.open, $.ui.panes (via refreshBoardIfOpen), $.ui.resolve",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME"
+      "./register.ts env reads: HOME",
+      "./register.ts state writes: clm.board",
+      "./register.ts state reads: clm.board"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskCreate}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskUpdate}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "d79b18cbdd51990c"
+ "sourceHash": "3375c4f247c1398e"
 }

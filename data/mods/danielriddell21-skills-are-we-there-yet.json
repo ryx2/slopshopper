@@ -1,0 +1,8 @@
+{
+ "slug": "danielriddell21-skills-are-we-there-yet",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst STEPS: [number, string][] = [\n  [85, 'Context 85%: /compact or /clear now'],\n  [70, 'Context 70%: wrap up, consider /compact'],\n  [50, 'Context 50%: keep reads tight'],\n]\n\n/** Which warning (if any) fires at `pct`, given the highest already shown. */\nexport const nextWarning = (pct: number, warned: number): { warned: number; text?: string } => {\n  const base = pct < 40 ? 0 : warned\n  const hit = STEPS.find(([t]) => pct >= t)\n  return hit && hit[0] > base ? { warned: hit[0], text: hit[1] } : { warned: base }\n}\n\nexport const register: Register = on => {\n  let warned = 0\n\n  on('session.measure', ($, e, next) => {\n    const pct = e.context.percent\n\n    if (pct === undefined) return next(e)\n\n    $.ui.status(`ctx ${Math.round(pct)}%`)\n\n    const w = nextWarning(pct, warned)\n    warned = w.warned\n    if (w.text) $.ui.toast(w.text)\n\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"are-we-there-yet\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Live context % in the status line; toasts at 50/70/85%\",\n  \"author\": {\n    \"name\": \"Daniel Riddell\"\n  },\n  \"homepage\": \"https://github.com/danielriddell21/skills\",\n  \"repository\": \"https://github.com/danielriddell21/skills\",\n  \"keywords\": [\n    \"context\",\n    \"mod\"\n  ],\n  \"license\": \"MIT\"\n}"
+ }
+}
