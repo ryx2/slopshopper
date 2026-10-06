@@ -56,6 +56,14 @@ bun run dev           # http://localhost:4321
 
 The GitHub Actions workflow in `.github/workflows/site.yml` runs the scrape daily, commits the refreshed data, builds the site and deploys it to GitHub Pages. Set the repository variable `SITE_BASE` to `/slopshopper/` for a project page or `/` for a custom domain, and `SITE_URL` to match. A `SCRAPE_TOKEN` secret (a classic PAT with `public_repo`) lets code search run in CI; without it the scheduled job still refreshes known repositories.
 
+### Pointing slopshopper.com at it
+
+1. At the DNS provider, add `A` records for `slopshopper.com` to GitHub Pages (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`) and a `CNAME` for `www` to `ryx2.github.io`.
+2. In the repository's **Settings → Pages**, set the custom domain to `slopshopper.com` and turn on **Enforce HTTPS** once the certificate is issued.
+3. Set the repository variables `SITE_BASE=/` and `SITE_URL=https://slopshopper.com`, then re-run the workflow.
+
+A scrape run on a laptop (`bun run scrape`) can take an hour; `bun run scrape --discover-only` followed by four `--shard k/4 --out .cache/shards/k.json` processes and `bun run scrape --merge` does the same work in parallel. `scripts/publish-data.sh` merges, regenerates previews and builds.
+
 ## Writing a mod
 
 Each mod under `mods/` is a complete plugin: `.claude-plugin/plugin.json`, `hooks/hooks.json` naming the module, the module, a `types/index.d.ts` state contract, tests, and a README. Check one with:
