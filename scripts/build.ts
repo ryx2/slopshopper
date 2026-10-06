@@ -145,8 +145,12 @@ function layout(opts: { title: string; description: string; body: string; path: 
 <meta property="og:description" content="${esc(opts.description)}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="${esc(canonical)}">
-<meta property="og:image" content="${SITE_URL}${u('img/' + (opts.ogImage ?? 'cannon-dairy.jpg'))}">
+<meta property="og:image" content="${SITE_URL}${u('og.jpg')}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SLOPSHOPPER: mods for Claude Code">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${SITE_URL}${u('og.jpg')}">
 <link rel="icon" href="${u('favicon.svg')}" type="image/svg+xml">
 <link rel="alternate" type="application/rss+xml" title="New Claude Code mods" href="${u('feed.xml')}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -360,6 +364,32 @@ bun run build && bun run dev</code></pre></div>
   return layout({ title: 'How slopshopper works', description: 'How slopshopper scrapes GitHub for Claude Code mods and previews them.', body, path: 'about/', nav: 'about', ogImage: 'financial-freedom.jpg' })
 }
 
+
+/** A 1200×630 standalone hero, screenshotted by scripts/og.ts into site/static/og.jpg. */
+function ogPage(stats: { total: number; authors: number }): string {
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>og</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="${u('style.css')}">
+<style>
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #0b0b0d; }
+.og { position: relative; width: 1200px; height: 630px; overflow: hidden; }
+.og img { position: absolute; inset: 0; width: 1200px; height: 630px; object-fit: cover; object-position: center 18%; }
+.og::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 70%; background: linear-gradient(180deg, rgba(11,11,13,0) 0%, rgba(11,11,13,.5) 35%, rgba(11,11,13,.93) 100%); }
+.og .text { position: absolute; left: 56px; right: 56px; bottom: 44px; z-index: 2; }
+.og .wordmark { font-size: 132px; margin-bottom: 14px; }
+.og .tag { font-size: 30px; margin-bottom: 18px; max-width: 1000px; }
+.og .bignums { font-size: 18px; gap: 10px 34px; }
+.og .bignums b { font-size: 34px; }
+</style></head>
+<body><div class="og">${img('cannon-dairy.jpg', 'bg', '')}<div class="text">
+  <h1 class="wordmark">SLOP<br>SHOPPER</h1>
+  <p class="tag"><b>Mods for Claude Code.</b> Scraped daily. Previewed. Installed in two commands.</p>
+  <div class="bignums"><span><b>${num(stats.total)}</b> mods</span><span><b>${num(stats.authors)}</b> authors</span><span><b>2.1.287+</b> required</span></div>
+</div></div></body></html>`
+}
+
 function feed(views: View[]): string {
   const items = [...views]
     .sort((a, b) => new Date(b.mod.firstSeen).getTime() - new Date(a.mod.firstSeen).getTime())
@@ -453,6 +483,7 @@ async function buildInto(DIST: string) {
   await Bun.write(join(DIST, 'cards.json'), JSON.stringify([...views].sort((a, b) => b.rank - a.rank).map(v => ({ slug: v.mod.slug, html: card(v) }))))
   await Bun.write(join(DIST, 'new', 'index.html'), newPage(views))
   await Bun.write(join(DIST, 'about', 'index.html'), aboutPage(stats))
+  await Bun.write(join(DIST, 'og', 'index.html'), ogPage(stats))
   for (const v of views) await Bun.write(join(DIST, 'mods', v.mod.slug, 'index.html'), detailPage(v))
   await Bun.write(join(DIST, 'feed.xml'), feed(views))
   await Bun.write(join(DIST, 'community', 'marketplace.json'), JSON.stringify(communityMarketplace(views), null, 2))
