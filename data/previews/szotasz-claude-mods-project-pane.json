@@ -1,6 +1,6 @@
 {
  "slug": "szotasz-claude-mods-project-pane",
- "generatedAt": "2026-10-06T05:30:33.662Z",
+ "generatedAt": "2026-10-07T15:23:57.975Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,13 @@
     "event": "command.run",
     "matcher": {
      "command": "project"
+    }
+   },
+   {
+    "event": "state.set",
+    "matcher": {
+     "plugin": "tool-hub",
+     "key": "request"
     }
    },
    {
@@ -27,7 +34,9 @@
   "commands": [
    {
     "name": "project",
-    "description": "Open and refresh the project pane",
+    "description": "Project pane on/off (by default opens and refreshes it)",
+    "argumentHint": "[on|off]",
+    "immediate": true,
     "output": "Project pane opened."
    }
   ],
@@ -47,13 +56,15 @@
    "$.clock.now": 5,
    "$.session.cwd": 1,
    "$.process.run": 16,
+   "$.store.get": 1,
+   "$.state.get": 8,
+   "$.state.set": 4,
    "$.command.register": 1,
    "$.ui.open": 2,
    "$.clock.every": 2,
    "$.fs.read": 4,
    "$.fs.exists": 2,
-   "$.state.get": 4,
-   "$.state.set": 2,
+   "$.store.set": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -253,8 +264,8 @@
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "$.ui.open(project)",
    "$.process.run(git fetch --quiet origin) → exit 0",
-   "$.process.run(git remote get-url origin) → exit 0",
    "session.start",
+   "$.process.run(git remote get-url origin) → exit 0",
    "$.process.run(git status --porcelain=2 --branch) → exit 0",
    "$.process.run(gh pr list --limit 8 --json number,title,headRefName,url,reviewDecision,statusCh…) → exit 0",
    "$.process.run(gh run list -L 5 --json databaseId,name,headBranch,status,conclusion,createdAt,u…) → exit 0",
@@ -276,8 +287,8 @@
    "$.process.run(gh run list -L 5 --json databaseId,name,headBranch,status,conclusion,createdAt,u…) → exit 0",
    "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git rev-list --left-right --count HEAD...origin/feat/auth-refresh) → exit 0",
-   "$.process.run(git log -1 --format=%h%x09%ct%x09%s) → exit 0",
    "turn.complete",
+   "$.process.run(git log -1 --format=%h%x09%ct%x09%s) → exit 0",
    "$.ui.open(project)",
    "/project → Project pane opened."
   ],
@@ -291,6 +302,7 @@
   "hooks": [
    "session.start",
    "command.run{command=project}",
+   "state.set{plugin=tool-hub, key=request}",
    "turn.complete",
    "ui.render{component=Pane, requestId=project}"
   ],
@@ -308,16 +320,21 @@
    "$.session.cwd (via repoRoot)",
    "$.state.get",
    "$.state.set",
+   "$.store.get",
+   "$.store.set (via setOn)",
+   "$.ui.close (via setOn)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
    "project-pane.busy",
+   "project-pane.isOn",
    "project-pane.snap"
   ],
   "stateWrites": [
    "project-pane.busy",
+   "project-pane.isOn",
    "project-pane.snap"
   ],
   "envReads": [
@@ -327,34 +344,45 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/szotasz-claude-mods-project-pane/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/szotasz-claude-mods-project-pane/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/szotasz-claude-mods-project-pane/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/szotasz-claude-mods-project-pane/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: project-pane.snap, project-pane.busy"
-    ]
+     "types ./types/index.d.ts declares state: tool-hub.request, project-pane.snap, project-pane.busy, project-pane.isOn"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/szotasz-claude-mods-project-pane/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/szotasz-claude-mods-project-pane/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=project}, turn.complete, ui.render{component=Pane, requestId=project}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via collectNetlify), $.fs.list (via collectSupabase), $.fs.read (via collectNetlify, collectSupabase), $.process.run (via run), $.prompt.fill, $.session.cwd (via repoRoot), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx hooks: session.start, command.run{command=project}, state.set{plugin=tool-hub, key=request}, turn.complete, ui.render{component=Pane, requestId=project}",
+      "./register.tsx answers its own command: command.run{command=project}",
+      "./register.tsx gating hook without .catch: state.set{plugin=tool-hub, key=request}",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via collectNetlify), $.fs.list (via collectSupabase), $.fs.read (via collectNetlify, collectSupabase), $.process.run (via run), $.prompt.fill, $.session.cwd (via repoRoot), $.state.get, $.state.set, $.store.get, $.store.set (via setOn), $.ui.close (via setOn), $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: LANG, LC_ALL",
-      "./register.tsx state writes: project-pane.busy, project-pane.snap",
-      "./register.tsx state reads: project-pane.busy, project-pane.snap"
+      "./register.tsx state writes: project-pane.busy, project-pane.isOn, project-pane.snap",
+      "./register.tsx state reads: project-pane.busy, project-pane.isOn, project-pane.snap"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "state.set",
+       "hook": "state.set{plugin=tool-hub, key=request}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "8945eabdeea3bf94"
+ "sourceHash": "182d08aaec69949c"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "reasonofmoon-bitgame-mods-game-hud",
- "generatedAt": "2026-10-06T14:51:54.465Z",
+ "generatedAt": "2026-10-07T15:22:33.546Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,6 +20,12 @@
     "event": "tool.call"
    },
    {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.append"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
@@ -37,7 +43,7 @@
     "name": "hud",
     "description": "GAME MODE HUD: show HP/MP/G as text, or hide/show the band",
     "argumentHint": "[hide|show]",
-    "output": "HP 51% (context used 49%)\nMP 69% (five_hour used 31%)\nG  $0.42\nLV 2 (successful tool calls 8) · turns 1\nintensity casual · rest/save row at HP ≤ 25%"
+    "output": "HP 51% (context used 49%)\nMP 69% (five_hour used 31%)\nG  ₩588\nLV 2 · EXP 4/12 (successful tool calls 8) · turns 1\nintensity casual · HP LOW! at ≤ 25%"
    }
   ],
   "tools": [],
@@ -52,11 +58,17 @@
    "$.command.list": 2,
    "$.store.get": 1,
    "$.state.get": 14,
-   "$.state.set": 11,
+   "$.state.set": 12,
+   "$.clock.after": 1,
    "$.command.register": 1,
    "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 1500
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": true,
@@ -67,50 +79,136 @@
      },
      "children": [
       {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      },
+      {
        "type": "Box",
        "props": {
-        "flexDirection": "row",
-        "gap": 2,
-        "flexWrap": "wrap"
+        "borderStyle": "double",
+        "borderColor": "#5060d8",
+        "backgroundColor": "#1c2a8a",
+        "paddingX": 1,
+        "flexDirection": "column"
        },
        "children": [
         {
-         "type": "Text",
+         "type": "Box",
          "props": {
-          "color": "#f8d830",
-          "bold": true
+          "flexDirection": "row",
+          "columnGap": 2,
+          "flexWrap": "wrap"
          },
          "children": [
-          "LV ",
-          "2"
+          {
+           "type": "Text",
+           "props": {
+            "color": "#f8d830",
+            "bold": true
+           },
+           "children": [
+            "LV ",
+            "02"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#58d854"
+           },
+           "children": [
+            "EXP ███░░░░░░░ 33%"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#58d854"
+           },
+           "children": [
+            "HP █████░░░░░ 51%"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#3cbcfc"
+           },
+           "children": [
+            "MP ███████░░░ 69% 5h"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#f8d830",
+            "bold": true
+           },
+           "children": [
+            "G ",
+            "₩588"
+           ]
+          }
          ]
         },
         {
-         "type": "Text",
+         "type": "Box",
          "props": {
-          "color": "#58d854"
+          "flexDirection": "row",
+          "columnGap": 1
          },
          "children": [
-          "HP ████░░░░ 51%"
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "color": "#58d854"
-         },
-         "children": [
-          "MP ██████░░ 69% 5h"
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "color": "#f8d830"
-         },
-         "children": [
-          "G ",
-          "$0.42"
+          {
+           "type": "Text",
+           "props": {
+            "color": "#f8d830",
+            "bold": true
+           },
+           "children": [
+            "LEVEL UP!"
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexGrow": 1,
+            "flexShrink": 1
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#fcfcfc",
+              "wrap": "truncate-end"
+             },
+             "children": [
+              "LV 2 달성 · 성공한 행동 8번"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "rest",
+            "label": "휴식 /compact",
+            "hotkey": "r",
+            "variant": "secondary",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
          ]
         }
        ]
@@ -131,7 +229,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/hud → HP 51% (context used 49%)\nMP 69% (five_hour used 31%)\nG  $0.42\nLV 2 (successful …"
+   "/hud → HP 51% (context used 49%)\nMP 69% (five_hour used 31%)\nG  ₩588\nLV 2 · EXP 4/12 (s…"
   ],
   "console": [],
   "warnings": []
@@ -146,10 +244,13 @@
    "session.measure",
    "turn.complete",
    "tool.call",
+   "session.compact",
+   "session.append",
    "ui.render{component=AbovePrompt}",
    "command.run{command=hud}"
   ],
   "calls": [
+   "$.clock.after",
    "$.command.list",
    "$.command.register",
    "$.command.run",
@@ -191,9 +292,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, session.measure, turn.complete, tool.call, ui.render{component=AbovePrompt}, command.run{command=hud}",
+      "./register.tsx hooks: session.start, turn.start, session.measure, turn.complete, tool.call, session.compact, session.append, ui.render{component=AbovePrompt}, command.run{command=hud}",
+      "./register.tsx answers its own command: command.run{command=hud}",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.command.list, $.command.register, $.command.run, $.session.turns, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.resolve, $.ui.toast",
+      "./register.tsx gating hook with .catch: session.compact",
+      "./register.tsx gating hook with .catch: session.append",
+      "./register.tsx calls: $.clock.after, $.command.list, $.command.register, $.command.run, $.session.turns, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.resolve, $.ui.toast",
       "./register.tsx state writes: game-hud.vitals",
       "./register.tsx state reads: game-hud.vitals"
      ],
@@ -203,11 +307,23 @@
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": true
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "7d6b4a00413da1a2"
+ "sourceHash": "f3834d0e04219d33"
 }

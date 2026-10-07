@@ -1,6 +1,6 @@
 {
  "slug": "reasonofmoon-bitgame-mods-game-save-point",
- "generatedAt": "2026-10-06T14:51:54.721Z",
+ "generatedAt": "2026-10-07T15:22:34.398Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,9 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call"
    },
    {
     "event": "command.run",
@@ -25,6 +28,18 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "CommandOutput"
     }
    }
@@ -34,19 +49,19 @@
     "name": "save",
     "description": "GAME MODE save point: save this session (status summary + resume prompt), or show / list saves",
     "argumentHint": "[note|show|list]",
-    "output": "◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · TURN 1 · $0.42 · CTX 49%\n[CLEARED]\n- (none)\n[QUEST LOG]\n- (none)\n[DECIDE]\n- (none)\n[PASSWORD]\nOK\n[INVENTORY]\n- (none)"
+    "output": "◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · DAY 1 · LV 2 (8) · TURN 1 · $0.42 · CTX 49%\n[CODE] SP02-L9HU-MOON · COPIED\n[CLEARED]\n- (none)\n[QUEST LOG]\n- (none)\n[DECIDE]\n- (none)\n[PASSWORD]\nOK\n[INVENTORY]\n- (none)"
    },
    {
     "name": "load",
-    "description": "GAME MODE save point: put a save's resume prompt in the prompt box (1 = latest)",
-    "argumentHint": "[n]",
-    "output": "◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · TURN 1 · $0.42 · CTX 49%\n[CLEARED]\n- (none)\n[QUEST LOG]\n- (none)\n[DECIDE]\n- (none)\n[PASSWORD]\nOK\n[INVENTORY]\n- (none)\n\nThe resume prompt is in the prompt box: edit it or press Enter."
+    "description": "GAME MODE save point: put a save's resume prompt in the prompt box (number, or its password)",
+    "argumentHint": "[n|SP00-XXXX-MOON]",
+    "output": "◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · DAY 1 · LV 2 (8) · TURN 1 · $0.42 · CTX 49%\n[CODE] SP02-L9HU-MOON\n[CLEARED]\n- (none)\n[QUEST LOG]\n- (none)\n[DECIDE]\n- (none)\n[PASSWORD]\nOK\n[INVENTORY]\n- (none)\n\nThe resume prompt is in the prompt box: edit it or press Enter."
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [
-   "♪ 세이브 완료"
+   "♪ 세이브 완료 · SP02-L9HU-MOON"
   ],
   "logs": [],
   "denies": [],
@@ -56,55 +71,350 @@
    "$.session.root": 3,
    "$.store.get": 3,
    "$.clock.now": 2,
+   "$.state.get": 14,
+   "$.ui.status": 2,
+   "$.state.set": 10,
    "$.model.fork": 1,
    "$.session.usage": 1,
    "$.session.turns": 1,
    "$.store.set": 1,
+   "$.ui.copy": 1,
    "$.ui.toast": 1,
    "$.prompt.fill": 1,
-   "$.ui.status": 1,
    "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine"
+   },
    "CommandOutput": {
     "ok": true,
     "tree": {
      "type": "Box",
      "props": {
-      "flexDirection": "column",
-      "borderStyle": "double",
-      "borderColor": "#6878f8",
-      "paddingX": 1,
-      "gap": 1
+      "flexDirection": "column"
      },
      "children": [
       {
        "type": "Box",
        "props": {
+        "borderStyle": "double",
+        "borderColor": "#5060d8",
+        "backgroundColor": "#1c2a8a",
+        "paddingX": 1,
         "flexDirection": "row",
         "justifyContent": "space-between",
-        "gap": 2,
+        "flexWrap": "wrap",
+        "columnGap": 2
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "column",
+          "flexShrink": 1
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "#f8d830",
+            "bold": true
+           },
+           "children": [
+            "◆ ★ SAVE POINT ★"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#fcfcfc"
+           },
+           "children": [
+            "QUEST · save"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "column",
+          "alignItems": "flex-end"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "#b8b8f0"
+           },
+           "children": [
+            "SLOT 1/1 · DAY 1 · 08:53"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#58d854"
+           },
+           "children": [
+            "LV 02 ███░░░░░░░ EXP"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#3cbcfc"
+           },
+           "children": [
+            "CTX █████░░░░░ 49%"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row"
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "borderStyle": "double",
+          "borderColor": "#5060d8",
+          "backgroundColor": "#1c2a8a",
+          "paddingX": 1,
+          "flexDirection": "column",
+          "width": "50%"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#58d854",
+              "bold": true
+             },
+             "children": [
+              "▣ CLEARED"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#f8d830"
+             },
+             "children": [
+              "+0 EXP"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#b8b8f0"
+           },
+           "children": [
+            "  (없음)"
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "marginTop": 1
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#f8d830",
+              "bold": true
+             },
+             "children": [
+              "▢ QUEST LOG"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#f8d830"
+             },
+             "children": [
+              "남은 퀘스트 0"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#b8b8f0"
+           },
+           "children": [
+            "  (없음)"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "column",
+          "width": "50%"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "borderStyle": "double",
+            "borderColor": "#5060d8",
+            "backgroundColor": "#1c2a8a",
+            "paddingX": 1,
+            "flexDirection": "column"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#ff8a6a",
+              "bold": true
+             },
+             "children": [
+              "? 어떻게 하시겠습니까?"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#b8b8f0"
+             },
+             "children": [
+              "  (없음)"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "borderStyle": "double",
+            "borderColor": "#5060d8",
+            "backgroundColor": "#1c2a8a",
+            "paddingX": 1,
+            "flexDirection": "column"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3cbcfc",
+              "bold": true
+             },
+             "children": [
+              "◆ INVENTORY"
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "columnGap": 1
+             },
+             "children": [
+              {
+               "type": "Box",
+               "props": {
+                "borderStyle": "single",
+                "borderColor": "#b8b8f0",
+                "paddingX": 1
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "#b8b8f0"
+                 },
+                 "children": [
+                  "? ???"
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "borderStyle": "double",
+        "borderColor": "#5060d8",
+        "backgroundColor": "#1c2a8a",
+        "paddingX": 1,
+        "flexDirection": "row",
+        "columnGap": 2,
         "flexWrap": "wrap"
        },
        "children": [
         {
          "type": "Text",
          "props": {
-          "color": "#f8d830",
+          "color": "#b8b8f0",
           "bold": true
          },
          "children": [
-          "★ SAVE POINT ★  save"
+          "PASSWORD"
          ]
         },
         {
          "type": "Text",
          "props": {
-          "color": "#a4a4a4"
+          "color": "#3cbcfc",
+          "bold": true
          },
          "children": [
-          "SLOT 1/1 · 2025-10-09 08:53 · TURN 1 · $0.42 · CTX 49%"
+          "SP02-L9HU-MOON"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "#fcfcfc",
+          "backgroundColor": "#f8d830",
+          "bold": true
+         },
+         "children": [
+          " COPIED! "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "#f8d830"
+         },
+         "children": [
+          "▸ /load SP02-L9HU-MOON · 빈 입력창 Tab 이어하기"
          ]
         }
        ]
@@ -112,37 +422,20 @@
       {
        "type": "Box",
        "props": {
-        "flexDirection": "column"
+        "borderStyle": "round",
+        "borderColor": "#fcfcfc",
+        "paddingX": 1
        },
        "children": [
         {
          "type": "Text",
          "props": {
-          "color": "#a4a4a4",
-          "bold": true
+          "color": "#fcfcfc"
          },
          "children": [
-          "PASSWORD (이어하기 프롬프트)"
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "color": "#3cbcfc"
-         },
-         "children": [
-          "OK"
+          "▶ 「OK」"
          ]
         }
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "color": "#a4a4a4"
-       },
-       "children": [
-        "세이브 완료. 다음 세션 빈 입력창에서 Tab으로 이어하기 · /load"
        ]
       }
      ]
@@ -161,8 +454,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/save → ◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · TURN 1 · $0.42 · CTX 49%\n[CLEA…",
-   "/load → ◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · TURN 1 · $0.42 · CTX 49%\n[CLEA…"
+   "/save → ◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · DAY 1 · LV 2 (8) · TURN 1 · $0…",
+   "/load → ◆ SAVE POINT · save\nSLOT 1/1 · 2025-10-09 08:53 · DAY 1 · LV 2 (8) · TURN 1 · $0…"
   ],
   "console": [],
   "warnings": []
@@ -174,8 +467,11 @@
   "hooks": [
    "session.start",
    "prompt.submit",
+   "tool.call",
    "command.run{command=save}",
    "command.run{command=load}",
+   "ui.render{component=PromptHint}",
+   "ui.render{component=AbovePrompt}",
    "ui.render{component=CommandOutput}"
   ],
   "calls": [
@@ -191,14 +487,23 @@
    "$.session.root",
    "$.session.turns",
    "$.session.usage",
+   "$.state.get",
+   "$.state.set",
    "$.store.get (via slotsOf)",
    "$.store.set",
+   "$.ui.copy",
    "$.ui.resolve",
    "$.ui.status",
    "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "game-save-point.hits",
+   "game-save-point.title"
+  ],
+  "stateWrites": [
+   "game-save-point.hits",
+   "game-save-point.title"
+  ],
   "envReads": [],
   "raw": {
    "success": true,
@@ -210,7 +515,8 @@
     "errors": [],
     "warnings": [],
     "notes": [
-     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)"
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: game-save-point.title, game-save-point.hits"
     ],
     "gatingHooks": []
    },
@@ -221,9 +527,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, command.run{command=save}, command.run{command=load}, ui.render{component=CommandOutput}",
+      "./register.tsx hooks: session.start, prompt.submit, tool.call, command.run{command=save}, command.run{command=load}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, ui.render{component=CommandOutput}",
+      "./register.tsx answers its own command: command.run{command=save}",
+      "./register.tsx answers its own command: command.run{command=load}",
       "./register.tsx gating hook with .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after (via offer), $.clock.now, $.command.register, $.model.complete (via summarize), $.model.fork (via summarize), $.prompt.fill, $.prompt.suggest (via offer), $.session.messages (via summarize), $.session.model (via summarize), $.session.root, $.session.turns, $.session.usage, $.store.get (via slotsOf), $.store.set, $.ui.resolve, $.ui.status, $.ui.toast"
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx calls: $.clock.after (via offer), $.clock.now, $.command.register, $.model.complete (via summarize), $.model.fork (via summarize), $.prompt.fill, $.prompt.suggest (via offer), $.session.messages (via summarize), $.session.model (via summarize), $.session.root, $.session.turns, $.session.usage, $.state.get, $.state.set, $.store.get (via slotsOf), $.store.set, $.ui.copy, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: game-save-point.hits, game-save-point.title",
+      "./register.tsx state reads: game-save-point.hits, game-save-point.title"
      ],
      "gatingHooks": [
       {
@@ -231,11 +542,17 @@
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "f2f9559ae99f36fe"
+ "sourceHash": "2ae88418aff97d04"
 }

@@ -1,0 +1,448 @@
+{
+ "slug": "legostin-claude-code-proxy",
+ "generatedAt": "2026-10-07T15:23:31.254Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "proxy"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "proxy"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__proxy__list_rules"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__proxy__add_rule"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__proxy__update_rule"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__proxy__remove_rule"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__proxy__list_requests"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__proxy__get_request"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "proxy",
+    "description": "HTTPS proxy: captured requests, filter, and setup for a browser, iOS and Android",
+    "argumentHint": "[start|stop|clear|setup|rules|status|tree|list]",
+    "output": "The Proxy pane is open."
+   }
+  ],
+  "tools": [
+   {
+    "name": "list_requests",
+    "description": "List the HTTP(S) requests captured by the Claude Code proxy the person runs with /proxy for their browser, iOS simulator/iPhone and Android emulator/phone. Returns the proxy status, then one line per request, oldest first: #id method status url response-size duration type, and the error if one. Status CERT means the client refused the proxy certificate. filter: space-separated terms that must all hold, a leading \"-\" negates one: free text (substring of the URL), method:POST (or method:get,post), status:4xx | status:404 | status:>=400 | status:400-499, host:api.example.com | host:*.example.com, path:/v1/login, type:json|html|xml|js|css|img|font|media|text|form|ws|tunnel|other, is:error|ok|pending|tunnel|ws|https|rejected, client:192.168.."
+   },
+   {
+    "name": "get_request",
+    "description": "Show one captured request in full by its id from list_requests: URL, status, timing, client, error, request and response headers, and the decoded (gunzipped) text bodies, cut at max_body_chars."
+   },
+   {
+    "name": "list_rules",
+    "description": "List the proxy's rules (<project>/.claude/proxy-rules.json): order (priority), id, on/off, what each does in words, errors, and how many captured requests each changed."
+   },
+   {
+    "name": "add_rule",
+    "description": "Add a rule to the proxy's rules engine. A rule changes matching requests before they are sent and their responses before the client gets them: delays, throttling, headers, query, sending elsewhere, mocked answers, rewritten or merged bodies, status codes, failed connections, scripts. Rules live in <project>/.claude/proxy-rules.json; earlier rules apply first and every matching rule chains. It applies at once while the proxy runs. Prefer declarative steps; a script you add here is approved to run. Answers the rule in words. Ids of changed requests show in list_requests."
+   },
+   {
+    "name": "update_rule",
+    "description": "Change a proxy rule by id: replace any of its fields (match, request and response are replaced whole), turn it on or off, or move it in the order. Answers the rule in words."
+   },
+   {
+    "name": "remove_rule",
+    "description": "Remove a proxy rule by id."
+   }
+  ],
+  "panes": [
+   {
+    "id": "proxy",
+    "title": "Proxy"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 6,
+   "$.session.root": 2,
+   "$.fs.read": 2,
+   "$.env.get": 3,
+   "$.state.get": 19,
+   "$.state.set": 5,
+   "$.store.get": 1,
+   "$.ui.open": 1,
+   "$.ui.status": 2,
+   "$.session.id": 1,
+   "$.process.spawn": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "proxy": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "error"
+        },
+        "children": [
+         "✕ not working · 0 requests"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "toggle",
+           "hotkey": "s",
+           "variant": "primary",
+           "label": "Start",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "View"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "layout-list",
+           "hotkey": "l",
+           "variant": "primary",
+           "label": "List",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "layout-tree",
+           "hotkey": "t",
+           "label": "Tree",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "rules",
+           "hotkey": "r",
+           "label": "Rules (0)",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "clear",
+           "hotkey": "x",
+           "label": "Clear",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setup",
+           "hotkey": "n",
+           "label": "Setup",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "error"
+        },
+        "children": [
+         "the proxy exited unexpectedly"
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "filter",
+         "label": "Filter ",
+         "placeholder": "method:POST status:4xx host:*.api.com type:json is:error -text",
+         "value": "",
+         "submitLabel": "apply",
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "The proxy is stopped. Start (s) runs it; Setup (n) shows how to connect clients."
+        ]
+       }
+      ]
+     },
+     "title": "Proxy"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(proxy)",
+   "$.process.spawn(node /plugins/proxy/sidecar/proxy.mjs --port 8899 --host 127.0.0.1 --data /Users…)",
+   "/proxy → The Proxy pane is open."
+  ],
+  "console": [],
+  "status": "⇄ proxy: failed (/proxy)",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "command.run{command=proxy}",
+   "ui.render{component=Pane, requestId=proxy}",
+   "tool.call{tool=mcp__proxy__list_rules}",
+   "tool.call{tool=mcp__proxy__add_rule}",
+   "tool.call{tool=mcp__proxy__update_rule}",
+   "tool.call{tool=mcp__proxy__remove_rule}",
+   "tool.call{tool=mcp__proxy__list_requests}",
+   "tool.call{tool=mcp__proxy__get_request}"
+  ],
+  "calls": [
+   "$.clock.after (via scheduleFlush)",
+   "$.clock.sleep (via startProxy)",
+   "$.command.register",
+   "$.config.set (via drawSetup)",
+   "$.env.get (via adb",
+   "dataDirOf",
+   "findBrowsers)",
+   "$.fs.exists (via adb",
+   "findBrowsers)",
+   "$.fs.read (via loadBody",
+   "loadDetail",
+   "readRulesText",
+   "readTrusted)",
+   "$.fs.write (via editRules",
+   "trustScripts)",
+   "$.process.run (via adb",
+   "addCaToSimulators",
+   "androidDevices",
+   "kill",
+   "launchBrowser",
+   "openCaPageOnAndroid",
+   "pointAndroid",
+   "revertAndroid)",
+   "$.process.spawn (via startProxy)",
+   "$.prompt.fill (via drawDetail)",
+   "$.session.id (via loadDetail",
+   "startProxy)",
+   "$.session.root (via rulesFileOf)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via chooseLayout)",
+   "$.tool.register",
+   "$.ui.copy (via drawDetail",
+   "drawSetup)",
+   "$.ui.log (via startProxy)",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve (via drawDetail",
+   "drawList",
+   "drawRules",
+   "drawSetup)",
+   "$.ui.status (via showStatus)",
+   "$.ui.toast (via openPane)"
+  ],
+  "stateReads": [
+   "proxy.emulators",
+   "proxy.expanded",
+   "proxy.filter",
+   "proxy.flows",
+   "proxy.nextId",
+   "proxy.notice",
+   "proxy.rules",
+   "proxy.status",
+   "proxy.view",
+   "proxy.wanted"
+  ],
+  "stateWrites": [
+   "proxy.emulators",
+   "proxy.expanded",
+   "proxy.filter",
+   "proxy.flows",
+   "proxy.nextId",
+   "proxy.notice",
+   "proxy.rules",
+   "proxy.status",
+   "proxy.view",
+   "proxy.wanted"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/legostin-claude-code-proxy/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/legostin-claude-code-proxy/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: proxy.flows, proxy.status, proxy.view, proxy.filter, proxy.wanted, proxy.nextId, proxy.notice, proxy.emulators, proxy.expanded, proxy.rules"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/legostin-claude-code-proxy/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, command.run{command=proxy}, ui.render{component=Pane, requestId=proxy}, tool.call{tool=mcp__proxy__list_rules}, tool.call{tool=mcp__proxy__add_rule}, tool.call{tool=mcp__proxy__update_rule}, tool.call{tool=mcp__proxy__remove_rule}, tool.call{tool=mcp__proxy__list_requests}, tool.call{tool=mcp__proxy__get_request}",
+      "./register.tsx answers its own command: command.run{command=proxy}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__proxy__list_rules}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__proxy__add_rule}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__proxy__update_rule}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__proxy__remove_rule}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__proxy__list_requests}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__proxy__get_request}",
+      "./register.tsx calls: $.clock.after (via scheduleFlush), $.clock.sleep (via startProxy), $.command.register, $.config.set (via drawSetup), $.env.get (via adb, dataDirOf, findBrowsers), $.fs.exists (via adb, findBrowsers), $.fs.read (via loadBody, loadDetail, readRulesText, readTrusted), $.fs.write (via editRules, trustScripts), $.process.run (via adb, addCaToSimulators, androidDevices, kill, launchBrowser, openCaPageOnAndroid, pointAndroid, revertAndroid), $.process.spawn (via startProxy), $.prompt.fill (via drawDetail), $.session.id (via loadDetail, startProxy), $.session.root (via rulesFileOf), $.state.get, $.state.set, $.store.get, $.store.set (via chooseLayout), $.tool.register, $.ui.copy (via drawDetail, drawSetup), $.ui.log (via startProxy), $.ui.open (via openPane), $.ui.resolve (via drawDetail, drawList, drawRules, drawSetup), $.ui.status (via showStatus), $.ui.toast (via openPane)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: proxy.emulators, proxy.expanded, proxy.filter, proxy.flows, proxy.nextId, proxy.notice, proxy.rules, proxy.status, proxy.view, proxy.wanted",
+      "./register.tsx state reads: proxy.emulators, proxy.expanded, proxy.filter, proxy.flows, proxy.nextId, proxy.notice, proxy.rules, proxy.status, proxy.view, proxy.wanted"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__proxy__list_rules}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__proxy__add_rule}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__proxy__update_rule}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__proxy__remove_rule}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__proxy__list_requests}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__proxy__get_request}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "747d9ddf92e29a5"
+}

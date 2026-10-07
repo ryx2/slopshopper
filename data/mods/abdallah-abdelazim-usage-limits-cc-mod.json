@@ -1,0 +1,10 @@
+{
+ "slug": "abdallah-abdelazim-usage-limits-cc-mod",
+ "files": {
+  "hooks/register.ts": "import { atom, read, update } from 'claude-code'\nimport type { Register } from 'claude-code'\n\nimport { line } from './format'\n\nconst text = atom({ plugin: 'usage-limits', key: 'text' } as const, null)\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const latest = line((await $.session.usage()).rateLimits) ?? null\n    await update($, text, () => latest)\n\n    return next(e)\n  })\n\n  on('session.measure', async ($, e, next) => {\n    if (e.changed.includes('rateLimits')) await update($, text, () => line(e.rateLimits) ?? null)\n\n    return next(e)\n  })\n\n  on('ui.render', { component: 'SessionMode' }, async ($, e, next) => {\n    const current = await read($, text)\n\n    return next(current ? { ...e, props: { ...e.props, modes: [...e.props.modes, current] } } : e)\n  })\n}\n",
+  "hooks/format.ts": "import type { SessionRateLimit } from 'claude-code'\n\nconst WIDTH = 10\nconst LABELS: Record<string, string> = { five_hour: 'Session', seven_day: 'Week' }\n\nexport const bar = (percent: number): string => {\n  const filled = Math.round((Math.min(Math.max(percent, 0), 100) / 100) * WIDTH)\n\n  return '█'.repeat(filled) + '░'.repeat(WIDTH - filled)\n}\n\nexport const line = (limits: readonly SessionRateLimit[]): string | undefined => {\n  const parts = limits\n    .filter(l => l.kind in LABELS)\n    .map(l => `${LABELS[l.kind]} ${bar(l.percentUsed)} ${Math.round(l.percentUsed)}%`)\n\n  return parts.length ? parts.join('  ·  ') : undefined\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"usage-limits\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Progress bars for the session (5h) and week (7d) rate limits in the prompt footer\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "declare module 'claude-code' {\n  interface PluginState {\n    'usage-limits': { text: string | null }\n  }\n}\n"
+ }
+}

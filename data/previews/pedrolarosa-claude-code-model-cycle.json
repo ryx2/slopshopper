@@ -1,6 +1,6 @@
 {
  "slug": "pedrolarosa-claude-code-model-cycle",
- "generatedAt": "2026-10-06T05:33:51.688Z",
+ "generatedAt": "2026-10-07T15:23:43.728Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,10 +17,7 @@
     "event": "turn.step"
    },
    {
-    "event": "command.run",
-    "matcher": {
-     "command": "effort"
-    }
+    "event": "session.append"
    },
    {
     "event": "command.run",
@@ -46,7 +43,7 @@
     "name": "model-cycle",
     "description": "Keys: alt+↑/↓ model · alt+←/→ effort · alt+. ultracode · \"setup\" binds them",
     "argumentHint": "[setup]",
-    "output": "keys (bound in ~/.claude/keybindings.json):\n  alt+↑ / alt+↓   previous / next model (runs /model)\n  alt+← / alt+→   lower / higher effort (this session)\n  alt+.           ultracode on / off (/effort ultracode)"
+    "output": "keys (bound in ~/.claude/keybindings.json):\n  alt+↑ / alt+↓   previous / next model (runs /model)\n  alt+← / alt+→   lower / higher effort (runs /effort)\n  alt+.           ultracode on / off (/effort ultracode)"
    }
   ],
   "tools": [],
@@ -61,7 +58,7 @@
    "$.session.model": 2,
    "$.ui.invalidate": 1,
    "$.ui.resolve": 2,
-   "$.state.get": 2,
+   "$.state.get": 3,
    "$.settings.read": 1,
    "$.clock.now": 1
   },
@@ -244,7 +241,7 @@
    "session.start",
    "command.run{command=model-cycle}",
    "turn.step",
-   "command.run{command=effort}",
+   "session.append",
    "command.run{command=model}",
    "ui.render{component=SessionMode}",
    "ui.render{component=AbovePrompt}"
@@ -253,7 +250,8 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.command.run (via stepModel",
+   "$.command.run (via stepEffort",
+   "stepModel",
    "toggleUltra)",
    "$.env.get (via setupKeys)",
    "$.fs.exists (via setupKeys)",
@@ -269,11 +267,13 @@
   "stateReads": [
    "model-cycle.base",
    "model-cycle.pick",
+   "model-cycle.printed",
    "model-cycle.ultra"
   ],
   "stateWrites": [
    "model-cycle.base",
    "model-cycle.pick",
+   "model-cycle.printed",
    "model-cycle.ultra"
   ],
   "envReads": [
@@ -282,34 +282,52 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/pedrolarosa-claude-code-model-cycle/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/pedrolarosa-claude-code-model-cycle/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/pedrolarosa-claude-code-model-cycle/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/pedrolarosa-claude-code-model-cycle/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: model-cycle.pick, model-cycle.base, model-cycle.ultra"
-    ]
+     "types ./types/index.d.ts declares state: model-cycle.pick, model-cycle.base, model-cycle.printed, model-cycle.ultra"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/pedrolarosa-claude-code-model-cycle/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/pedrolarosa-claude-code-model-cycle/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=model-cycle}, turn.step, command.run{command=effort}, command.run{command=model}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via stepModel, toggleUltra), $.env.get (via setupKeys), $.fs.exists (via setupKeys), $.fs.read (via setupKeys), $.fs.write (via setupKeys), $.session.model, $.settings.read (via engineLevel), $.state.get, $.state.set, $.ui.invalidate, $.ui.resolve",
+      "./register.tsx hooks: session.start, command.run{command=model-cycle}, turn.step, session.append, command.run{command=model}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=model-cycle}",
+      "./register.tsx gating hook with .catch: session.append",
+      "./register.tsx gating hook without .catch: command.run{command=model}",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via stepEffort, stepModel, toggleUltra), $.env.get (via setupKeys), $.fs.exists (via setupKeys), $.fs.read (via setupKeys), $.fs.write (via setupKeys), $.session.model, $.settings.read (via engineLevel), $.state.get, $.state.set, $.ui.invalidate, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: model-cycle.base, model-cycle.pick, model-cycle.ultra",
-      "./register.tsx state reads: model-cycle.base, model-cycle.pick, model-cycle.ultra"
+      "./register.tsx state writes: model-cycle.base, model-cycle.pick, model-cycle.printed, model-cycle.ultra",
+      "./register.tsx state reads: model-cycle.base, model-cycle.pick, model-cycle.printed, model-cycle.ultra"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=model}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "94e14316bc276727"
+ "sourceHash": "cf0e9258f844df0d"
 }

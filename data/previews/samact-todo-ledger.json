@@ -1,0 +1,480 @@
+{
+ "slug": "samact-todo-ledger",
+ "generatedAt": "2026-10-07T15:23:51.397Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "ui.press"
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__todo-ledger__park_item"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__todo-ledger__list_items"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__todo-ledger__get_item"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__todo-ledger__update_item"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TodoWrite"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "todo"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "todos"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ledger-add"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ledger"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "todos",
+    "description": "Toggle the ToDo's pane",
+    "argumentHint": "[list [all] | refresh]",
+    "immediate": true
+   },
+   {
+    "name": "todo",
+    "description": "Add or close a ledger item",
+    "argumentHint": "add [-d|-p|-n] <text> | done <id>",
+    "output": "Usage: /todo add [-d|-p|-n] <text>  ·  /todo done <id>  ·  /todo delete <id> (dropped items only)"
+   }
+  ],
+  "tools": [
+   {
+    "name": "park_item",
+    "description": "Record an item in the user's global todo ledger. Call this, without asking first, whenever you defer, park, postpone or put something out of scope, or propose work the user has not asked for. If it may already be recorded, call list_items first and update that item instead of adding a second one. kind: todo | deferred | proposal | discussion. Keep title to one line."
+   },
+   {
+    "name": "list_items",
+    "description": "List open items in the user's todo ledger (their todos, parked work, proposals and discussions across all projects and sessions). Use it whenever the user mentions todos, the ledger, parked or deferred work, or asks what is pending. scope \"project\" (default) or \"all\". Each line gives the id to use with get_item and update_item."
+   },
+   {
+    "name": "get_item",
+    "description": "Read one ledger item in full: title, details, project, session, status and its notes thread. id may be a unique prefix."
+   },
+   {
+    "name": "update_item",
+    "description": "Update a ledger item: status (open, in_progress, done, dropped), title, kind, details, and/or add a note. Keep the ledger current without being asked: as soon as the user approves a proposal set kind \"todo\"; when they reject or drop it set status \"dropped\"; when an item's work is finished set status \"done\"; when two items are the same, drop one with a note naming the other. To remove an item, set status \"dropped\" (it moves to Done and can be reopened). id may be a unique prefix."
+   }
+  ],
+  "panes": [
+   {
+    "id": "todo-ledger",
+    "title": "ToDo's"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.cwd": 5,
+   "$.clock.every": 1,
+   "$.clock.after": 2,
+   "$.tool.register": 4,
+   "$.command.register": 2,
+   "$.env.get": 2,
+   "$.clock.now": 7,
+   "$.fs.exists": 2,
+   "$.ui.open": 1,
+   "$.ui.invalidate": 1,
+   "$.ui.resolve": 3
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 10000
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   }
+  ],
+  "sites": {
+   "SessionMode": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "key": "ledger-footer",
+      "flexDirection": "row",
+      "columnGap": 2,
+      "alignItems": "center"
+     },
+     "children": [
+      {
+       "type": "Button",
+       "props": {
+        "key": "ledger-toggle",
+        "label": "☰ ToDo's",
+        "plain": true,
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "modes": [
+         "auto-accept edits"
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "todo-ledger": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "scope",
+           "plain": true,
+           "hotkey": "p",
+           "label": "This project ▾",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "plain": true,
+           "dimColor": true,
+           "hotkey": "r",
+           "label": "↻",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "columnGap": 3,
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-agent",
+           "plain": true,
+           "hotkey": "1",
+           "dimColor": false,
+           "label": "Agent 0",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-human",
+           "plain": true,
+           "hotkey": "2",
+           "dimColor": true,
+           "label": "Human 0",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-done",
+           "plain": true,
+           "hotkey": "3",
+           "dimColor": true,
+           "label": "Done 0",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "Nothing open. Claude adds what it parks or proposes; add your own with /todo add <text>."
+        ]
+       }
+      ]
+     },
+     "title": "ToDo's"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(todo-ledger)",
+   "/todos → ",
+   "/todo → Usage: /todo add [-d|-p|-n] <text>  ·  /todo done <id>  ·  /todo delete <id> (dr…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "ui.press",
+   "ui.close",
+   "ui.render{component=SessionMode}",
+   "ui.render{component=Pane}",
+   "turn.start",
+   "turn.complete",
+   "tool.call{tool=mcp__todo-ledger__park_item}",
+   "tool.call{tool=mcp__todo-ledger__list_items}",
+   "tool.call{tool=mcp__todo-ledger__get_item}",
+   "tool.call{tool=mcp__todo-ledger__update_item}",
+   "tool.call{tool=TodoWrite}",
+   "command.run{command=todo}",
+   "command.run{command=todos}",
+   "command.run{command=ledger-add}",
+   "command.run{command=ledger}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register (via registerCommand)",
+   "$.env.get (via hostOf)",
+   "$.fs.exists (via capture",
+   "deleteItem",
+   "loadAll",
+   "syncIfChanged)",
+   "$.fs.list (via loadAll",
+   "syncIfChanged)",
+   "$.fs.read (via loadAll)",
+   "$.fs.write (via doStart",
+   "saveItem)",
+   "$.model.complete (via runScan)",
+   "$.process.run (via doStart",
+   "lookupSessionName",
+   "moveFile",
+   "removeFile)",
+   "$.prompt.fill (via doStart)",
+   "$.prompt.submit (via doStart)",
+   "$.session.cwd",
+   "$.session.id (via capture",
+   "lookupSessionName",
+   "mirrorTodos)",
+   "$.tool.register (via registerTool)",
+   "$.ui.close (via togglePane)",
+   "$.ui.copy (via copyText)",
+   "$.ui.focus",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.open (via togglePane)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "HOME",
+   "OS",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/samact-todo-ledger/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/samact-todo-ledger/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/samact-todo-ledger/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, ui.press, ui.close, ui.render{component=SessionMode}, ui.render{component=Pane}, turn.start, turn.complete, tool.call{tool=mcp__todo-ledger__park_item}, tool.call{tool=mcp__todo-ledger__list_items}, tool.call{tool=mcp__todo-ledger__get_item}, tool.call{tool=mcp__todo-ledger__update_item}, tool.call{tool=TodoWrite}, command.run{command=todo}, command.run{command=todos}, command.run{command=ledger-add}, command.run{command=ledger}",
+      "./register.ts gating hook without .catch: ui.close",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__todo-ledger__park_item}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__todo-ledger__list_items}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__todo-ledger__get_item}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__todo-ledger__update_item}",
+      "./register.ts gating hook without .catch: tool.call{tool=TodoWrite}",
+      "./register.ts gating hook without .catch: command.run{command=todo}",
+      "./register.ts gating hook without .catch: command.run{command=todos}",
+      "./register.ts gating hook without .catch: command.run{command=ledger-add}",
+      "./register.ts gating hook without .catch: command.run{command=ledger}",
+      "./register.ts calls: $.clock.after, $.clock.every, $.clock.now, $.command.register (via registerCommand), $.env.get (via hostOf), $.fs.exists (via capture, deleteItem, loadAll, syncIfChanged), $.fs.list (via loadAll, syncIfChanged), $.fs.read (via loadAll), $.fs.write (via doStart, saveItem), $.model.complete (via runScan), $.process.run (via doStart, lookupSessionName, moveFile, removeFile), $.prompt.fill (via doStart), $.prompt.submit (via doStart), $.session.cwd, $.session.id (via capture, lookupSessionName, mirrorTodos), $.tool.register (via registerTool), $.ui.close (via togglePane), $.ui.copy (via copyText), $.ui.focus, $.ui.invalidate, $.ui.log, $.ui.open (via togglePane), $.ui.resolve, $.ui.toast",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: HOME, OS, USERPROFILE"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__todo-ledger__park_item}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__todo-ledger__list_items}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__todo-ledger__get_item}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__todo-ledger__update_item}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TodoWrite}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=todo}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=todos}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=ledger-add}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=ledger}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "3114fc1996fcd71c"
+}

@@ -1,6 +1,6 @@
 {
  "slug": "ak110-dotfiles-agent-toolkit",
- "generatedAt": "2026-10-06T14:51:15.083Z",
+ "generatedAt": "2026-10-07T15:22:46.494Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,23 +9,51 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "tool.check"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__plugin_agent-toolkit_agents_server__start"
+    }
    }
   ],
   "commands": [],
-  "tools": [],
+  "tools": [
+   {
+    "name": "send_to_user",
+    "description": "ユーザーが書かれたとおりに読む必要がある内容を、ターンの途中でユーザーの画面へそのまま表示する。ツール呼び出しより前に届ける途中の成果物、質問への直接の回答、確認結果、判明した事実や原因、作業完了報告、次の工程の予告に使う。作業経過の説明と推論には使わない。ターンを終える最後の回答には使わず、通常の本文として書く。"
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.tool.register": 1,
    "$.session.id": 2,
-   "$.env.get": 6,
+   "$.env.get": 4,
    "$.fs.write": 2,
    "$.fs.read": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "ToolUse": {
+    "ok": "engine"
+   }
+  },
   "script": [
    "$.fs.write(/Users/dev/.claude/agent-toolkit-function-hooks/request-preview-session.txt)",
    "$.fs.write(/Users/dev/.claude/agent-toolkit-function-hooks/marker-preview-session.txt)",
@@ -50,16 +78,25 @@
   "warnings": [],
   "hooks": [
    "session.start",
-   "turn.complete"
+   "turn.complete",
+   "tool.check",
+   "tool.call",
+   "ui.render{component=ToolUse}",
+   "tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}"
   ],
   "calls": [
    "$.command.run",
-   "$.env.get (via statePath)",
+   "$.env.get",
    "$.fs.read",
    "$.fs.write",
+   "$.process.run (via mount)",
    "$.session.id",
-   "$.tool.call (via deleteSessionCrons)",
-   "$.tool.check (via deleteSessionCrons)"
+   "$.tool.call (via deleteSessionCrons",
+   "mount)",
+   "$.tool.check (via deleteSessionCrons",
+   "mount)",
+   "$.tool.register",
+   "$.ui.resolve"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -87,15 +124,37 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./session_exit.ts hooks: session.start, turn.complete",
-      "./session_exit.ts calls: $.command.run, $.env.get (via statePath), $.fs.read, $.fs.write, $.session.id, $.tool.call (via deleteSessionCrons), $.tool.check (via deleteSessionCrons)",
-      "./session_exit.ts env writes: nothing",
-      "./session_exit.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
+      "./register.ts hooks: session.start, turn.complete, tool.check, tool.call, ui.render{component=ToolUse}, tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
+      "./register.ts gating hook with .catch: tool.check",
+      "./register.ts gating hook with .catch: tool.call",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
+      "./register.ts calls: $.command.run, $.env.get, $.fs.read, $.fs.write, $.process.run (via mount), $.session.id, $.tool.call (via deleteSessionCrons, mount), $.tool.check (via deleteSessionCrons, mount), $.tool.register, $.ui.resolve",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
+       "hasCatch": true
+      }
+     ]
     }
    ]
   }
  },
- "sourceHash": "815817256ddf6567"
+ "sourceHash": "d4ab203a8550861e"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "lamanhnguyenhtw-token-keeper-token-keeper",
- "generatedAt": "2026-10-06T14:51:41.715Z",
+ "generatedAt": "2026-10-07T15:23:30.505Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -88,8 +88,8 @@
    {
     "name": "cache",
     "description": "Token Keeper status and settings",
-    "argumentHint": "[ttl 5|60|auto] [guard on|off] [big $1|default] [alerts on|off]",
-    "output": "**Token Keeper** · 97.4k tokens in context on **Opus 5.5** · cache window **60 min** (default)\n\n- – **Cache:** no request yet this session, so its state is unknown\n- ◆ **Keep warm:** 4h00m by default on the 1h TTL, pays off up to **~34h40m** on Opus 5.5\n- **Plan limits:** 5h 31%\n- **Cost:** session **$0.42** · today **$0** (API list prices)\n- **Cold restarts:** 0 ($0)\n- **Cold-send guard:** on, asks above **$1.00 (default) ≈ 125k tokens on Opus 5.5, 1h TTL** · rewriting now ≈ $0.78, below that\n- **Alerts:** on\n- **Settings:** `/cache ttl 5|60|auto` · `/cache guard on|off` · `/cache big $1|default` · `/cache alerts on|off`"
+    "argumentHint": "[ttl 5|60|auto] [guard on|off] [big $1|default] [handoff 140k|off|default] [alerts on|off]",
+    "output": "**Token Keeper** · cache window **60 min** (default)\n\n- **Context:** **97.4k** / 200k (48%) tokens on **Opus 5.5**\n- – **Cache:** no request yet this session, so its state is unknown\n- ◆ **Keep warm:** 4h00m by default on the 1h TTL, pays off up to **~34h40m** on Opus 5.5\n- **Plan limits:** 5h 31%\n- **Cost:** session **$0.42** · today **$0** (API list prices)\n- **Cold restarts:** 0 ($0)\n- **Cold-send guard:** on, asks above **$1.00 (default) ≈ 125k tokens on Opus 5.5, 1h TTL** · rewriting now ≈ $0.78, below that\n- **Handoff hint:** from **140k** tokens (default), then every 100k more · a handoff costs about **$0.24** now (fresh chat 20.0k estimated, handoff 3.0k estimated)\n- **Alerts:** on\n- **Settings:** `/cache ttl 5|60|auto` · `/cache guard on|off` · `/cache big $1|default` · `/cache handoff 140k|off|default` · `/cache alerts on|off`"
    },
    {
     "name": "keepwarm",
@@ -113,16 +113,16 @@
   "rewrites": [],
   "apiCalls": {
    "$.clock.now": 6,
-   "$.env.get": 3,
+   "$.env.get": 4,
    "$.session.id": 1,
    "$.session.cwd": 1,
    "$.session.model": 1,
-   "$.store.get": 1,
+   "$.store.get": 2,
+   "$.session.usage": 3,
    "$.command.register": 3,
    "$.clock.every": 1,
    "$.fs.read": 1,
    "$.fs.list": 1,
-   "$.session.usage": 1,
    "$.ui.invalidate": 2,
    "$.ui.resolve": 4,
    "$.clock.after": 1
@@ -291,7 +291,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/cache → **Token Keeper** · 97.4k tokens in context on **Opus 5.5** · cache window **60 m…",
+   "/cache → **Token Keeper** · cache window **60 min** (default)\n\n- **Context:** **97.4k** /…",
    "/keepwarm → ℹ️ Keeping this cache warm for **4h00m**, the default on the 1h TTL, until 12:53…",
    "/handoff → Running the session handoff. When it finishes, you can clear this chat and conti…"
   ],
@@ -328,20 +328,23 @@
    "$.command.run (via clearAndContinue",
    "runHandoff)",
    "$.env.get",
+   "$.env.set (via applyTtl)",
    "$.fs.list (via refreshToday)",
    "$.fs.read (via readCosts",
    "refreshToday)",
    "$.fs.write (via refreshToday",
    "saveHandoff)",
    "$.model.fork (via keepWarmStep)",
-   "$.prompt.fill (via clearAndContinue)",
-   "$.prompt.submit (via clearAndContinue)",
-   "$.session.compact",
+   "$.prompt.fill (via clearAndContinue",
+   "compactThenSend)",
+   "$.prompt.submit (via clearAndContinue",
+   "compactThenSend)",
+   "$.session.compact (via compactThenSend)",
    "$.session.cwd",
    "$.session.id",
    "$.session.model",
    "$.session.usage",
-   "$.store.get (via loadSettings)",
+   "$.store.get",
    "$.store.set",
    "$.ui.ask",
    "$.ui.invalidate",
@@ -353,6 +356,7 @@
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
    "CLAUDE_CONFIG_DIR",
    "HOME",
    "USERPROFILE"
@@ -381,9 +385,13 @@
       "./register.mjs gating hook without .catch: prompt.submit",
       "./register.mjs gating hook without .catch: session.compact",
       "./register.mjs gating hook without .catch: tool.call{tool=Skill}",
-      "./register.mjs calls: $.clock.after, $.clock.every, $.clock.now, $.command.list (via runHandoff), $.command.register (via registerCommand), $.command.run (via clearAndContinue, runHandoff), $.env.get, $.fs.list (via refreshToday), $.fs.read (via readCosts, refreshToday), $.fs.write (via refreshToday, saveHandoff), $.model.fork (via keepWarmStep), $.prompt.fill (via clearAndContinue), $.prompt.submit (via clearAndContinue), $.session.compact, $.session.cwd, $.session.id, $.session.model, $.session.usage, $.store.get (via loadSettings), $.store.set, $.ui.ask, $.ui.invalidate, $.ui.log (via log, note, warn), $.ui.resolve",
-      "./register.mjs env writes: nothing",
-      "./register.mjs env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
+      "./register.mjs gating hook without .catch: command.run",
+      "./register.mjs gating hook without .catch: command.run{command=handoff|tk-handoff}",
+      "./register.mjs gating hook without .catch: command.run{command=cache|tk-cache}",
+      "./register.mjs gating hook without .catch: command.run{command=keepwarm|tk-keepwarm}",
+      "./register.mjs calls: $.clock.after, $.clock.every, $.clock.now, $.command.list (via runHandoff), $.command.register (via registerCommand), $.command.run (via clearAndContinue, runHandoff), $.env.get, $.env.set (via applyTtl), $.fs.list (via refreshToday), $.fs.read (via readCosts, refreshToday), $.fs.write (via refreshToday, saveHandoff), $.model.fork (via keepWarmStep), $.prompt.fill (via clearAndContinue, compactThenSend), $.prompt.submit (via clearAndContinue, compactThenSend), $.session.compact (via compactThenSend), $.session.cwd, $.session.id, $.session.model, $.session.usage, $.store.get, $.store.set, $.ui.ask, $.ui.invalidate, $.ui.log (via log, note, warn), $.ui.resolve",
+      "./register.mjs env writes: CLAUDE_CODE_PROMPT_CACHE_TTL",
+      "./register.mjs env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
      ],
      "gatingHooks": [
       {
@@ -409,11 +417,35 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=Skill}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.mjs",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=handoff|tk-handoff}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=cache|tk-cache}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=keepwarm|tk-keepwarm}",
+       "hasCatch": false
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "470111e17d26da51"
+ "sourceHash": "e0485cac0786b557"
 }

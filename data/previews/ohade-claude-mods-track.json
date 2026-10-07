@@ -1,0 +1,858 @@
+{
+ "slug": "ohade-claude-mods-track",
+ "generatedAt": "2026-10-07T15:23:40.951Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__track__track_question"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__track__mark_answered"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__track__track_steps"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__track__mark_step"
+    }
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "prompt"
+    }
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "delivery"
+    }
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "response"
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "UserMessage"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__track__track_question"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__track__mark_answered"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskCreate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskUpdate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TodoWrite"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ExitPlanMode"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Agent"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "AskUserQuestion"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__track__track_steps"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__track__restore_steps"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__track__mark_step"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "track"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AssistantMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "track"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "track"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "track",
+    "description": "Show or hide the track pane: questions asked, where answered, and the steps",
+    "argumentHint": "[status]",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "track_question",
+    "description": "Register the user's current prompt as a question in the track pane. Call it once per distinct question, before answering, with a one-line summary. Returns the question id to pass to mark_answered."
+   },
+   {
+    "name": "mark_answered",
+    "description": "Mark a tracked question answered or deferred. Call it right after writing the answer, so the jump lands under the answer text. status \"deferred\" needs a note saying what it waits for."
+   },
+   {
+    "name": "track_steps",
+    "description": "Show steps in the track pane. For work of more than one step (a skill or slash command such as /retro, a plan, a multi-step task), call mcp__track__track_steps with the steps before the first one; when new work joins a running plan (review comments, a follow-up), call it with `after` set to the id of the step the new ones follow. Mark each step with mcp__track__mark_step as you go: paused when you park it, waiting when it needs the user's answer. Without after, the steps replace the plan and get ids plan:1, plan:2, …; with after, they are inserted and get the next free plan ids. Not needed for TaskCreate tasks or an approved plan-mode plan: those appear on their own."
+   },
+   {
+    "name": "restore_steps",
+    "description": "After a handoff (a /clear that seeds a fresh session), copy the previous session's steps into this session's track pane, in order, with their ids and statuses; its questions are not copied. from_session is the previous session id (the handoff brief's session: field). Refuses when this session already has steps, unless replace is true."
+   },
+   {
+    "name": "mark_step",
+    "description": "Set a step's status in the track pane as you work: in_progress when you start it, completed when done, paused when you park it unfinished, waiting when it needs the user's answer. Ids: plan:1, plan:2, … (from track_steps or the approved plan), task:<taskId>, todo:<the todo text, lowercased>. For Tasks, TaskUpdate does this already."
+   }
+  ],
+  "panes": [
+   {
+    "id": "track",
+    "title": "Session Tracker"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"track: For work of more than one step (a skill or slash command such as /retro, a plan, a multi-step task), call mcp__track__track_steps w…"
+   }
+  ],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 5,
+   "$.ui.panes": 1,
+   "$.state.get": 24,
+   "$.state.set": 6,
+   "$.session.id": 1,
+   "$.store.keys": 1,
+   "$.store.get": 1,
+   "$.store.set": 3,
+   "$.ui.open": 1,
+   "$.clock.now": 1,
+   "$.clock.after": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 1000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine"
+   },
+   "UserMessage": {
+    "ok": "engine"
+   },
+   "AssistantMessage": {
+    "ok": "engine"
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "track": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "height": 30,
+       "overflow": "hidden"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "title",
+         "flexDirection": "row",
+         "justifyContent": "center",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "───────────────────"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           " SESSION TRACKER "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "────────────────────"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "questions-header",
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "columnGap": 2
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "questions-word",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Questions"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "questions-ring",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "warning"
+            },
+            "children": [
+             "○ —"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "questions",
+         "flexDirection": "column",
+         "height": 1,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "  none yet — the model adds a question with track_question"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "────────────────────────────────────────────────────────"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "steps-header",
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "columnGap": 2
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "steps-word",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Steps"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "steps-ring",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "warning"
+            },
+            "children": [
+             "○ —"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "steps",
+         "flexDirection": "column",
+         "height": 1,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "  none yet — tasks and approved plan steps appear here"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexGrow": 1
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "bottom-bar",
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "columnGap": 2,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "item-clear-completed-bottom",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "clear-completed-bottom",
+             "plain": true,
+             "dimColor": true,
+             "hotkey": "c",
+             "label": "clear completed",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "hint",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "/track hides · ctrl+x x closes for good"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "banner",
+         "width": 56,
+         "justifyContent": "center",
+         "backgroundColor": "success"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "inverseText",
+           "bold": true
+          },
+          "children": [
+           " Safe to close "
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Session Tracker"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(track)",
+   "/track → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.describe{tool=mcp__track__track_question}",
+   "tool.describe{tool=mcp__track__mark_answered}",
+   "tool.describe{tool=mcp__track__track_steps}",
+   "tool.describe{tool=mcp__track__mark_step}",
+   "session.append{door=prompt}",
+   "session.append{door=delivery}",
+   "session.append{door=response}",
+   "turn.start",
+   "prompt.compose",
+   "prompt.submit",
+   "classic.Stop",
+   "session.compact",
+   "turn.complete",
+   "ui.render{component=UserMessage}",
+   "tool.call{tool=mcp__track__track_question}",
+   "tool.call{tool=mcp__track__mark_answered}",
+   "tool.call{tool=TaskCreate}",
+   "tool.call{tool=TaskUpdate}",
+   "tool.call{tool=TodoWrite}",
+   "tool.call{tool=ExitPlanMode}",
+   "tool.call{tool=Agent}",
+   "tool.call{tool=AskUserQuestion}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=mcp__track__track_steps}",
+   "tool.call{tool=mcp__track__restore_steps}",
+   "tool.call{tool=mcp__track__mark_step}",
+   "command.run{command=track}",
+   "ui.close",
+   "ui.render{component=PromptHint}",
+   "ui.render{component=AbovePrompt}",
+   "classic.SessionStart",
+   "session.end",
+   "ui.render{component=ToolU… [+163 chars]"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every (via startPulse",
+   "startTick)",
+   "$.clock.now",
+   "$.command.list",
+   "$.command.register",
+   "$.session.id (via saveLedger)",
+   "$.session.messages (via dropRewound)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via saveLedger",
+   "savedIndex)",
+   "$.store.get",
+   "$.store.keys (via savedIndex)",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.log",
+   "$.ui.open (via openPane)",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.scroll (via jump)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "track.activity",
+   "track.flash",
+   "track.ledger",
+   "track.lit",
+   "track.pane",
+   "track.pulse",
+   "track.scroll",
+   "track.tick",
+   "track.turn"
+  ],
+  "stateWrites": [
+   "track.activity",
+   "track.flash",
+   "track.ledger",
+   "track.lit",
+   "track.pane",
+   "track.pulse",
+   "track.scroll",
+   "track.tick",
+   "track.turn"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ohade-claude-mods-track/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ohade-claude-mods-track/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: track.ledger, track.turn, track.pane, track.flash, track.lit, track.activity, track.pulse, track.scroll, track.tick"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ohade-claude-mods-track/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.describe{tool=mcp__track__track_question}, tool.describe{tool=mcp__track__mark_answered}, tool.describe{tool=mcp__track__track_steps}, tool.describe{tool=mcp__track__mark_step}, session.append{door=prompt}, session.append{door=delivery}, session.append{door=response}, turn.start, prompt.compose, prompt.submit, classic.Stop, session.compact, turn.complete, ui.render{component=UserMessage}, tool.call{tool=mcp__track__track_question}, tool.call{tool=mcp__track__mark_answered}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, tool.call{tool=ExitPlanMode}, tool.call{tool=Agent}, tool.call{tool=AskUserQuestion}, tool.call{tool=Bash}, tool.call{tool=mcp__track__track_steps}, tool.call{tool=mcp__track__restore_steps}, tool.call{tool=mcp__track__mark_step}, command.run{command=track}, ui.close, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, classic.SessionStart, session.end, ui.render{component=ToolU… [+163 chars]",
+      "./register.tsx answers its own command: command.run{command=track}",
+      "./register.tsx gating hook without .catch: session.append{door=prompt}",
+      "./register.tsx gating hook without .catch: session.append{door=delivery}",
+      "./register.tsx gating hook without .catch: session.append{door=response}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__track_question}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__mark_answered}",
+      "./register.tsx gating hook without .catch: tool.call{tool=TaskCreate}",
+      "./register.tsx gating hook without .catch: tool.call{tool=TaskUpdate}",
+      "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite}",
+      "./register.tsx gating hook without .catch: tool.call{tool=ExitPlanMode}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
+      "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__track_steps}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__restore_steps}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__mark_step}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx gating hook with .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=track}",
+      "./register.tsx calls: $.clock.after, $.clock.every (via startPulse, startTick), $.clock.now, $.command.list, $.command.register, $.session.id (via saveLedger), $.session.messages (via dropRewound), $.state.get, $.state.set, $.store.delete (via saveLedger, savedIndex), $.store.get, $.store.keys (via savedIndex), $.store.set, $.tool.register, $.ui.close, $.ui.log, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.scroll (via jump), $.ui.toast",
+      "./register.tsx state writes: track.activity, track.flash, track.ledger, track.lit, track.pane, track.pulse, track.scroll, track.tick, track.turn",
+      "./register.tsx state reads: track.activity, track.flash, track.ledger, track.lit, track.pane, track.pulse, track.scroll, track.tick, track.turn"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=prompt}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=delivery}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=response}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__track__track_question}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__track__mark_answered}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskCreate}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskUpdate}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TodoWrite}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=ExitPlanMode}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=AskUserQuestion}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__track__track_steps}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__track__restore_steps}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__track__mark_step}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{component=Pane, requestId=track}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "6913ab6c27284f5d"
+}

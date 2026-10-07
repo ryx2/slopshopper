@@ -1,0 +1,9 @@
+{
+ "slug": "amir20-dotfiles-long-command",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nimport { label } from './label'\n\nconst LONG_MS = 45_000\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    const started = await $.clock.now()\n    const ran = await next(e)\n    const ms = (await $.clock.now()) - started\n    if (ms >= LONG_MS && ran.deny === undefined) {\n      const mark = ran.isError ? '✗' : '✓'\n      $.ui.toast(`${mark} ${label(e.command)} — ${Math.round(ms / 1000)}s`, { timeoutMs: 10_000 })\n    }\n    return ran\n  })\n}\n",
+  "hooks/label.ts": "/** A short name for a command: the part after the last `cd … &&`, cut to 40 chars. */\nexport function label(command: string): string {\n  const parts = command.split(/&&|;/).map(s => s.trim()).filter(s => s && !s.startsWith('cd '))\n  const last = (parts[parts.length - 1] ?? command).split('\\n')[0]\n  return last.length > 40 ? `${last.slice(0, 39)}…` : last\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"long-command\",\n  \"version\": \"0.1.0\",\n  \"description\": \"A toast when a shell command that ran over 45 seconds finishes\"\n}"
+ }
+}

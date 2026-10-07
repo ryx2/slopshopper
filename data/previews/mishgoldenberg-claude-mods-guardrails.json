@@ -1,6 +1,6 @@
 {
  "slug": "mishgoldenberg-claude-mods-guardrails",
- "generatedAt": "2026-10-06T05:32:43.902Z",
+ "generatedAt": "2026-10-07T15:21:45.293Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,12 @@
     "event": "command.run",
     "matcher": {
      "command": "guard-preset"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "guard-log"
     }
    },
    {
@@ -41,6 +47,12 @@
     "description": "Apply a guardrail preset",
     "argumentHint": "safe | locked | review | off",
     "output": "Unknown preset. Use one of: safe, locked, review, off"
+   },
+   {
+    "name": "guard-log",
+    "description": "What guardrails blocked in the last 7 days",
+    "argumentHint": "[json]",
+    "output": "Guardrails blocked 2 calls in the last 7 days.\nBy rule: Protect secrets (1), Block recursive force-delete (1)\nBy project: app (2)\nLatest:\n  2025-10-09 08:53  app  Protect secrets: cat .env\n  2025-10-09 08:53  app  Block recursive force-delete: rm -rf build && git push --force origin main\nStored only on this machine. /guard-log json for the raw list; clear it in /guard."
    }
   ],
   "tools": [],
@@ -67,15 +79,15 @@
   ],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
-   "$.store.get": 1,
-   "$.state.get": 14,
-   "$.state.set": 3,
-   "$.store.set": 1,
+   "$.command.register": 3,
+   "$.store.get": 2,
+   "$.state.get": 24,
+   "$.state.set": 9,
+   "$.store.set": 3,
    "$.ui.status": 1,
    "$.session.root": 9,
    "$.session.cwd": 9,
-   "$.clock.now": 2,
+   "$.clock.now": 4,
    "$.ui.toast": 2,
    "$.ui.open": 1,
    "$.ui.resolve": 1
@@ -434,7 +446,7 @@
                "wrap": "truncate-end"
               },
               "children": [
-               "git reset --hard, git clean -f, git checkout -- ., git restore ., git branch -D, git stash drop/clear"
+               "git reset --hard, git clean -f, git checkout -- ., git restore ., git branch -D, git stash drop/clear, git fetch/pull --prune, git remote prune"
               ]
              }
             ]
@@ -962,12 +974,127 @@
         ]
        },
        {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Last 7 days (2)"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "clear-log",
+             "plain": true,
+             "label": "clear",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 4,
+               "flexShrink": 0,
+               "justifyContent": "flex-end"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "error"
+                },
+                "children": [
+                 "1"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "Protect secrets"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 4,
+               "flexShrink": 0,
+               "justifyContent": "flex-end"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "error"
+                },
+                "children": [
+                 "1"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "Block recursive force-delete"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
         "type": "Text",
         "props": {
          "dimColor": true
         },
         "children": [
-         "Rules are best-effort pattern checks, a seatbelt, not a sandbox. Saved for all your sessions."
+         "Rules are best-effort pattern checks, a seatbelt, not a sandbox. Scripts the agent writes are checked before they run, and the agent can't edit these settings. Everything stays on this machine."
         ]
        }
       ]
@@ -990,7 +1117,8 @@
    "turn.complete",
    "$.ui.open(guardrails)",
    "/guard → Guardrails panel opened.",
-   "/guard-preset → Unknown preset. Use one of: safe, locked, review, off"
+   "/guard-preset → Unknown preset. Use one of: safe, locked, review, off",
+   "/guard-log → Guardrails blocked 2 calls in the last 7 days.\nBy rule: Protect secrets (1), Blo…"
   ],
   "console": [],
   "status": "guard 6 rules",
@@ -1004,6 +1132,7 @@
    "session.start",
    "command.run{command=guard}",
    "command.run{command=guard-preset}",
+   "command.run{command=guard-log}",
    "tool.call",
    "ui.render{component=Pane, requestId=guardrails}"
   ],
@@ -1015,7 +1144,9 @@
    "$.state.get",
    "$.state.set",
    "$.store.get",
-   "$.store.set (via save)",
+   "$.store.set (via clearLog",
+   "logBlock",
+   "save)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.status (via save)",
@@ -1023,42 +1154,59 @@
   ],
   "stateReads": [
    "guardrails.blocks",
-   "guardrails.config"
+   "guardrails.config",
+   "guardrails.log",
+   "guardrails.scripts"
   ],
   "stateWrites": [
    "guardrails.blocks",
-   "guardrails.config"
+   "guardrails.config",
+   "guardrails.log",
+   "guardrails.scripts"
   ],
   "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/mishgoldenberg-claude-mods-guardrails/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/mishgoldenberg-claude-mods-guardrails/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mishgoldenberg-claude-mods-guardrails/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/mishgoldenberg-claude-mods-guardrails/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: guardrails.config, guardrails.blocks"
-    ]
+     "types ./types/index.d.ts declares state: guardrails.config, guardrails.blocks, guardrails.scripts, guardrails.log"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mishgoldenberg-claude-mods-guardrails/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/mishgoldenberg-claude-mods-guardrails/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=guard}, command.run{command=guard-preset}, tool.call, ui.render{component=Pane, requestId=guardrails}",
-      "./register.tsx calls: $.clock.now, $.command.register, $.session.cwd, $.session.root, $.state.get, $.state.set, $.store.get, $.store.set (via save), $.ui.open, $.ui.resolve, $.ui.status (via save), $.ui.toast",
-      "./register.tsx state writes: guardrails.blocks, guardrails.config",
-      "./register.tsx state reads: guardrails.blocks, guardrails.config"
+      "./register.tsx hooks: session.start, command.run{command=guard}, command.run{command=guard-preset}, command.run{command=guard-log}, tool.call, ui.render{component=Pane, requestId=guardrails}",
+      "./register.tsx answers its own command: command.run{command=guard}",
+      "./register.tsx answers its own command: command.run{command=guard-preset}",
+      "./register.tsx answers its own command: command.run{command=guard-log}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.clock.now, $.command.register, $.session.cwd, $.session.root, $.state.get, $.state.set, $.store.get, $.store.set (via clearLog, logBlock, save), $.ui.open, $.ui.resolve, $.ui.status (via save), $.ui.toast",
+      "./register.tsx state writes: guardrails.blocks, guardrails.config, guardrails.log, guardrails.scripts",
+      "./register.tsx state reads: guardrails.blocks, guardrails.config, guardrails.log, guardrails.scripts"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "2f00b9f46ae0ebbd"
+ "sourceHash": "c486c1c9c428ee3a"
 }

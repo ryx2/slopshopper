@@ -1,6 +1,6 @@
 {
  "slug": "mephistopheles4-grimoire",
- "generatedAt": "2026-10-06T14:51:10.969Z",
+ "generatedAt": "2026-10-07T15:22:29.241Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,9 +11,21 @@
     "event": "classic.SessionStart"
    },
    {
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "classic.PreToolUse"
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "brigade"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__grimoire__set_roster"
     }
    },
    {
@@ -21,6 +33,9 @@
     "matcher": {
      "id": "brigade"
     }
+   },
+   {
+    "event": "session.measure"
    },
    {
     "event": "session.receive"
@@ -44,10 +59,15 @@
    {
     "name": "brigade",
     "description": "Show the Brigade pane: the sessions this lead session started",
-    "output": "Brigade pane opened. the session id is not the engine's shape, so no roster file is named. Nothing was read."
+    "output": "Brigade pane opened. the session id is not the engine's shape, so no roster file is named. Nothing was read. `set_roster` is ready: call it with the full roster."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "set_roster",
+    "description": "Keeps the Brigade pane's roster for this lead session. Pass the whole roster every time, every card and every to-do; it replaces the last one. Both lists are required; two empty lists are an empty roster. It works only while the Brigade pane is open, which the owner opens with /brigade, and refuses otherwise. A refusal names the rule that failed."
+   }
+  ],
   "panes": [
    {
     "id": "brigade",
@@ -60,13 +80,17 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.ui.panes": 2,
+   "$.ui.panes": 3,
    "$.ui.open": 1,
    "$.clock.every": 2,
-   "$.state.get": 12,
-   "$.state.set": 3,
+   "$.state.get": 16,
+   "$.state.set": 4,
+   "$.session.surfaces": 1,
+   "$.session.usage": 1,
    "$.session.id": 3,
-   "$.ui.resolve": 1
+   "$.tool.register": 1,
+   "$.ui.resolve": 1,
+   "$.clock.now": 1
   },
   "timers": [
    {
@@ -134,30 +158,51 @@
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "bold": true
+           "marginBottom": 1
           },
           "children": [
-           "Waiting on you ",
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Waiting on you ",
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "borderStyle": "round",
+           "borderColor": "inactive",
+           "borderDimColor": true,
+           "paddingX": 1,
+           "rowGap": 1
+          },
+          "children": [
            {
             "type": "Text",
             "props": {
              "dimColor": true
             },
             "children": [
-             "0"
+             "Nothing waits on you."
             ]
            }
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "Nothing waits on you."
           ]
          }
         ]
@@ -169,19 +214,27 @@
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "bold": true
+           "marginBottom": 1
           },
           "children": [
-           "Sessions ",
            {
             "type": "Text",
             "props": {
-             "dimColor": true
+             "bold": true
             },
             "children": [
-             "0"
+             "Sessions ",
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "0"
+              ]
+             }
             ]
            }
           ]
@@ -195,6 +248,108 @@
         },
         "children": [
          "No reports since the pane opened."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Usage"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "Context        "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "success"
+            },
+            "children": [
+             "██████████░░░░░░░░░░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "49%"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "97k of 200k"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "Current session"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "success"
+            },
+            "children": [
+             "██████░░░░░░░░░░░░░░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "31%"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             ""
+            ]
+           }
+          ]
+         }
         ]
        }
       ]
@@ -228,8 +383,12 @@
   "hooks": [
    "session.start",
    "classic.SessionStart",
+   "classic.UserPromptSubmit",
+   "classic.PreToolUse",
    "command.run{command=brigade}",
+   "tool.call{tool=mcp__grimoire__set_roster}",
    "ui.close{id=brigade}",
+   "session.measure",
    "session.receive",
    "ui.press{plugin=grimoire, requestId=brigade}",
    "ui.render{component=Pane, requestId=brigade}"
@@ -238,20 +397,27 @@
    "$.clock.every (via arm)",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via where)",
-   "$.fs.exists (via loadRoster)",
    "$.fs.read (via loadRoster",
-   "pollAgents)",
-   "$.fs.stat (via loadRoster)",
+   "pollAgents",
+   "setRoster)",
+   "$.fs.stat (via pollAgents",
+   "statOf)",
+   "$.fs.write (via setRoster)",
    "$.process.run (via openInApp",
    "pollAgents)",
    "$.session.id (via where)",
+   "$.session.surfaces (via readUsage)",
+   "$.session.usage (via readUsage)",
    "$.state.get",
    "$.state.set",
+   "$.tool.check (via setRoster)",
+   "$.tool.register (via offerTool)",
    "$.ui.open",
-   "$.ui.panes",
+   "$.ui.panes (via paneOpen",
+   "rosterTick)",
    "$.ui.resolve",
-   "$.ui.toast (via openInApp)"
+   "$.ui.toast (via openInApp",
+   "setRoster)"
   ],
   "stateReads": [
    "grimoire.armed",
@@ -265,7 +431,10 @@
    "grimoire.reports",
    "grimoire.roster",
    "grimoire.rosterError",
-   "grimoire.start"
+   "grimoire.start",
+   "grimoire.ticking",
+   "grimoire.usage",
+   "grimoire.warmth"
   ],
   "stateWrites": [
    "grimoire.armed",
@@ -279,11 +448,12 @@
    "grimoire.reports",
    "grimoire.roster",
    "grimoire.rosterError",
-   "grimoire.start"
+   "grimoire.start",
+   "grimoire.ticking",
+   "grimoire.usage",
+   "grimoire.warmth"
   ],
-  "envReads": [
-   "CLAUDE_PLUGIN_DATA"
-  ],
+  "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
@@ -295,7 +465,7 @@
     "warnings": [],
     "notes": [
      "types ./brigade/types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./brigade/types/index.d.ts declares state: grimoire.armed, grimoire.start, grimoire.files, grimoire.roster, grimoire.rosterError, grimoire.live, grimoire.liveError, grimoire.links, grimoire.looked, grimoire.reports, grimoire.dismissed, grimoire.doneTodos"
+     "types ./brigade/types/index.d.ts declares state: grimoire.armed, grimoire.start, grimoire.files, grimoire.roster, grimoire.rosterError, grimoire.live, grimoire.liveError, grimoire.links, grimoire.looked, grimoire.reports, grimoire.dismissed, grimoire.doneTodos, grimoire.ticking, grimoire.usage, grimoire.warmth"
     ],
     "gatingHooks": []
    },
@@ -306,15 +476,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "../brigade/register.tsx hooks: session.start, classic.SessionStart, command.run{command=brigade}, ui.close{id=brigade}, session.receive, ui.press{plugin=grimoire, requestId=brigade}, ui.render{component=Pane, requestId=brigade}",
+      "../brigade/register.tsx hooks: session.start, classic.SessionStart, classic.UserPromptSubmit, classic.PreToolUse, command.run{command=brigade}, tool.call{tool=mcp__grimoire__set_roster}, ui.close{id=brigade}, session.measure, session.receive, ui.press{plugin=grimoire, requestId=brigade}, ui.render{component=Pane, requestId=brigade}",
+      "../brigade/register.tsx answers its own command: command.run{command=brigade}",
       "../brigade/register.tsx gating hook without .catch: classic.SessionStart",
+      "../brigade/register.tsx gating hook without .catch: classic.UserPromptSubmit",
+      "../brigade/register.tsx gating hook without .catch: classic.PreToolUse",
+      "../brigade/register.tsx gating hook with .catch: tool.call{tool=mcp__grimoire__set_roster}",
       "../brigade/register.tsx gating hook without .catch: ui.close{id=brigade}",
       "../brigade/register.tsx gating hook without .catch: session.receive",
-      "../brigade/register.tsx calls: $.clock.every (via arm), $.clock.now, $.command.register, $.env.get (via where), $.fs.exists (via loadRoster), $.fs.read (via loadRoster, pollAgents), $.fs.stat (via loadRoster), $.process.run (via openInApp, pollAgents), $.session.id (via where), $.state.get, $.state.set, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via openInApp)",
-      "../brigade/register.tsx env writes: nothing",
-      "../brigade/register.tsx env reads: CLAUDE_PLUGIN_DATA",
-      "../brigade/register.tsx state writes: grimoire.armed, grimoire.dismissed, grimoire.doneTodos, grimoire.files, grimoire.links, grimoire.live, grimoire.liveError, grimoire.looked, grimoire.reports, grimoire.roster, grimoire.rosterError, grimoire.start",
-      "../brigade/register.tsx state reads: grimoire.armed, grimoire.dismissed, grimoire.doneTodos, grimoire.files, grimoire.links, grimoire.live, grimoire.liveError, grimoire.looked, grimoire.reports, grimoire.roster, grimoire.rosterError, grimoire.start"
+      "../brigade/register.tsx calls: $.clock.every (via arm), $.clock.now, $.command.register, $.fs.read (via loadRoster, pollAgents, setRoster), $.fs.stat (via pollAgents, statOf), $.fs.write (via setRoster), $.process.run (via openInApp, pollAgents), $.session.id (via where), $.session.surfaces (via readUsage), $.session.usage (via readUsage), $.state.get, $.state.set, $.tool.check (via setRoster), $.tool.register (via offerTool), $.ui.open, $.ui.panes (via paneOpen, rosterTick), $.ui.resolve, $.ui.toast (via openInApp, setRoster)",
+      "../brigade/register.tsx state writes: grimoire.armed, grimoire.dismissed, grimoire.doneTodos, grimoire.files, grimoire.links, grimoire.live, grimoire.liveError, grimoire.looked, grimoire.reports, grimoire.roster, grimoire.rosterError, grimoire.start, grimoire.ticking, grimoire.usage, grimoire.warmth",
+      "../brigade/register.tsx state reads: grimoire.armed, grimoire.dismissed, grimoire.doneTodos, grimoire.files, grimoire.links, grimoire.live, grimoire.liveError, grimoire.looked, grimoire.reports, grimoire.roster, grimoire.rosterError, grimoire.start, grimoire.ticking, grimoire.usage, grimoire.warmth"
      ],
      "gatingHooks": [
       {
@@ -322,6 +494,24 @@
        "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart",
        "hasCatch": false
+      },
+      {
+       "module": "../brigade/register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "../brigade/register.tsx",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "../brigade/register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__grimoire__set_roster}",
+       "hasCatch": true
       },
       {
        "module": "../brigade/register.tsx",
@@ -340,5 +530,5 @@
    ]
   }
  },
- "sourceHash": "ab54da3c96747951"
+ "sourceHash": "abc037a748a3a0d6"
 }

@@ -1,0 +1,1277 @@
+{
+ "slug": "m-esm-claude-code-cockpit",
+ "generatedAt": "2026-10-07T15:23:34.638Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__claude-code-cockpit__meter"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__claude-code-cockpit__status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "AskUserQuestion"
+    }
+   },
+   {
+    "event": "classic.PreToolUse"
+   },
+   {
+    "event": "classic.PostToolUse"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": [
+      "clarity",
+      "cockpit"
+     ]
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "claude-code-cockpit"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "cockpit",
+    "description": "Open the Cockpit pane: questioning, quota, hooks and Smart Subagents.",
+    "output": "Cockpit open."
+   },
+   {
+    "name": "clarity",
+    "description": "Open the Cockpit pane. \"/clarity reset\" clears the questioning meter and interview.",
+    "output": "Cockpit open."
+   }
+  ],
+  "tools": [
+   {
+    "name": "meter",
+    "description": "Report the questioning interview state to the cockpit. Call it from the questioning skill only. event \"start\" when an interview opens; \"question\" right before every ordinary AskUserQuestion, listing that call's questions with lens and move; \"stop_check\" when you print the stop check, listing the stop-check question; \"finish\" at wrap-up. Always send the full current picture: clarity, slots with state, open items with id and impact. Await the result before calling AskUserQuestion. Once started, AskUserQuestion is blocked without a fresh meter call, and after 4 answers without a stop check."
+   },
+   {
+    "name": "status",
+    "description": "Read the Cockpit: questioning meter and enforcer state, AI quota per CLI, recent settings-hook runs and gate/Jev log rows, Smart Subagents runs now and recent history. Read-only, returns JSON."
+   }
+  ],
+  "panes": [
+   {
+    "id": "claude-code-cockpit",
+    "title": "Cockpit"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.tool.register": 2,
+   "$.store.get": 1,
+   "$.state.get": 36,
+   "$.session.messages": 2,
+   "$.ui.open": 3,
+   "$.clock.every": 1,
+   "$.clock.now": 6,
+   "$.ui.panes": 3,
+   "$.env.get": 6,
+   "$.process.run": 3,
+   "$.fs.exists": 2,
+   "$.fs.stat": 2,
+   "$.state.set": 7,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 2000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "claude-code-cockpit": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Cockpit"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "15:23:33"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "refresh",
+             "label": "Refresh",
+             "hotkey": "r",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "tile-q",
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "minWidth": 16,
+           "borderStyle": "round",
+           "borderColor": "gray",
+           "paddingX": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Clarity"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "gray",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "no interview"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "tile-quota",
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "minWidth": 16,
+           "borderStyle": "round",
+           "borderColor": "red",
+           "paddingX": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Tightest quota"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "red",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "error"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "tile-hooks",
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "minWidth": 16,
+           "borderStyle": "round",
+           "borderColor": "green",
+           "paddingX": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Hooks"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "green",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "0 running"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "tile-ssa",
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "minWidth": 16,
+           "borderStyle": "round",
+           "borderColor": "green",
+           "paddingX": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Subagents"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "green",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "0 recent"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "card-questioning",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "gray",
+         "borderDimColor": false,
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "toggle-questioning",
+             "label": "▾  Questioning",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "gray",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "● ",
+             "no interview"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1,
+           "paddingTop": 1,
+           "paddingBottom": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "No interview yet. Run /questioning and the meter fills in here as questions go out."
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "card-quota",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "red",
+         "borderDimColor": false,
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "toggle-quota",
+             "label": "▾  Quota",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "red",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "● ",
+             "error"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1,
+           "paddingTop": 1,
+           "paddingBottom": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "borderStyle": "round",
+             "borderColor": "red",
+             "paddingX": 1,
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "red",
+               "bold": true
+              },
+              "children": [
+               "Feed error"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "red",
+               "wrap": "wrap"
+              },
+              "children": [
+               "Error: ~/.claude/scripts/ai-cli-usage.py not found. Install smart-subagents (https://github.com/m-esm/smart-subagents) to see quota."
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "card-hooks",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "green",
+         "borderDimColor": false,
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "toggle-hooks",
+             "label": "▾  Hooks",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "green",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "● ",
+             "0 running · avg 0 ms"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1,
+           "paddingTop": 1,
+           "paddingBottom": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "11",
+               " hook runs · avg ",
+               "0",
+               " ms"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "Live"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "key": "live-0",
+                 "flexDirection": "row",
+                 "gap": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "15:23:33"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "●"
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexGrow": 1,
+                   "flexShrink": 1
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "Stop",
+                     "",
+                     ""
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "ok"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "key": "live-1",
+                 "flexDirection": "row",
+                 "gap": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "15:23:33"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "●"
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexGrow": 1,
+                   "flexShrink": 1
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "PostToolUse",
+                     " · Bash",
+                     ""
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "ok"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "key": "live-2",
+                 "flexDirection": "row",
+                 "gap": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "15:23:33"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "●"
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexGrow": 1,
+                   "flexShrink": 1
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "PostToolUse",
+                     " · Bash",
+                     ""
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "ok"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "key": "live-3",
+                 "flexDirection": "row",
+                 "gap": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "15:23:33"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "●"
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexGrow": 1,
+                   "flexShrink": 1
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "PostToolUse",
+                     " · Bash",
+                     ""
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "ok"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "key": "live-4",
+                 "flexDirection": "row",
+                 "gap": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "15:23:33"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "●"
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexGrow": 1,
+                   "flexShrink": 1
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "PostToolUse",
+                     " · Bash",
+                     ""
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "ok"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "key": "live-5",
+                 "flexDirection": "row",
+                 "gap": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "15:23:33"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "●"
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexGrow": 1,
+                   "flexShrink": 1
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "wrap": "truncate-end"
+                    },
+                    "children": [
+                     "PostToolUse",
+                     " · Write",
+                     ""
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "cyan"
+                  },
+                  "children": [
+                   "ok"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "Gate and Jev log"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "wrap"
+              },
+              "children": [
+               "No log rows yet."
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "card-subagents",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "green",
+         "borderDimColor": false,
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "toggle-subagents",
+             "label": "▾  Subagents",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "green",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "● ",
+             "0 recent"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1,
+           "paddingTop": 1,
+           "paddingBottom": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "Running now"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "wrap"
+              },
+              "children": [
+               "Nothing running."
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "History"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "wrap"
+              },
+              "children": [
+               "No runs recorded yet."
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Cockpit"
+    }
+   }
+  },
+  "script": [
+   "$.ui.open(claude-code-cockpit)",
+   "session.start",
+   "$.process.run(pwd) → exit 0",
+   "$.process.run(pwd) → exit 0",
+   "$.process.run(pwd) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(claude-code-cockpit)",
+   "/cockpit → Cockpit open.",
+   "$.ui.open(claude-code-cockpit)",
+   "/clarity → Cockpit open."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": false,
+  "errors": [
+   "Plugin name \"claude-code-cockpit\" is reserved: it passes as one of Anthropic's own. A third party's plugin name cannot start with \"claude-\", \"anthropic-\", \"anthropics-\", or \"cc-plugin-\", be \"claude\", \"anthropic\", \"anthropics\", \"claude-code\", or \"claude-mods\", or put \"official\" beside \"claude\" or \"anthropic\". Name it for what it does. If this is one of Anthropic's own plugins, validate the marketplace that lists it."
+  ],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "tool.call{tool=mcp__claude-code-cockpit__meter}",
+   "tool.call{tool=mcp__claude-code-cockpit__status}",
+   "tool.call{tool=AskUserQuestion}",
+   "classic.PreToolUse",
+   "classic.PostToolUse",
+   "classic.UserPromptSubmit",
+   "classic.Stop",
+   "turn.complete",
+   "command.run{command=clarity|cockpit}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=claude-code-cockpit}"
+  ],
+  "calls": [
+   "$.clock.after (via maybeStartPanel",
+   "recoverPanel)",
+   "$.clock.every",
+   "$.clock.now (via countdownTick",
+   "flushHooks",
+   "handleMeter",
+   "launchPanel",
+   "maybeStartPanel",
+   "pollLogs",
+   "pollQuota",
+   "pollSsa",
+   "recoverPanel",
+   "statusReport",
+   "tick)",
+   "$.command.register",
+   "$.env.get (via paths)",
+   "$.fs.exists (via launchPanel",
+   "pollQuota",
+   "pollSsa)",
+   "$.fs.list (via pollSsa",
+   "readTask)",
+   "$.fs.read (via readSmall)",
+   "$.fs.stat (via tailLog)",
+   "$.fs.write (via launchPanel)",
+   "$.process.run (via launchPanel",
+   "panelRepo",
+   "paths",
+   "pollQuota",
+   "tailLog)",
+   "$.process.spawn (via launchPanel)",
+   "$.prompt.fill (via launchPanel)",
+   "$.session.messages (via refreshFromText)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via pollSsa)",
+   "$.tool.register",
+   "$.ui.open (via openPane)",
+   "$.ui.panes (via statusReport",
+   "tick)",
+   "$.ui.resolve",
+   "$.ui.toast (via launchPanel",
+   "maybeStartPanel",
+   "pollSsa)"
+  ],
+  "stateReads": [
+   "claude-code-cockpit.hooks",
+   "claude-code-cockpit.interview",
+   "claude-code-cockpit.isBandHidden",
+   "claude-code-cockpit.meter",
+   "claude-code-cockpit.panel",
+   "claude-code-cockpit.quota",
+   "claude-code-cockpit.sections",
+   "claude-code-cockpit.ssa"
+  ],
+  "stateWrites": [
+   "claude-code-cockpit.hooks",
+   "claude-code-cockpit.interview",
+   "claude-code-cockpit.isBandHidden",
+   "claude-code-cockpit.meter",
+   "claude-code-cockpit.panel",
+   "claude-code-cockpit.quota",
+   "claude-code-cockpit.sections",
+   "claude-code-cockpit.ssa"
+  ],
+  "envReads": [
+   "HOME",
+   "TMPDIR"
+  ],
+  "raw": {
+   "success": false,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/m-esm-claude-code-cockpit/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/m-esm-claude-code-cockpit/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [
+     {
+      "path": "name",
+      "message": "Plugin name \"claude-code-cockpit\" is reserved: it passes as one of Anthropic's own. A third party's plugin name cannot start with \"claude-\", \"anthropic-\", \"anthropics-\", or \"cc-plugin-\", be \"claude\", \"anthropic\", \"anthropics\", \"claude-code\", or \"claude-mods\", or put \"official\" beside \"claude\" or \"anthropic\". Name it for what it does. If this is one of Anthropic's own plugins, validate the marketplace that lists it.",
+      "code": null
+     }
+    ],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: claude-code-cockpit.meter, claude-code-cockpit.isBandHidden, claude-code-cockpit.interview, claude-code-cockpit.panel, claude-code-cockpit.quota, claude-code-cockpit.hooks, claude-code-cockpit.ssa, claude-code-cockpit.sections"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/m-esm-claude-code-cockpit/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, tool.call{tool=mcp__claude-code-cockpit__meter}, tool.call{tool=mcp__claude-code-cockpit__status}, tool.call{tool=AskUserQuestion}, classic.PreToolUse, classic.PostToolUse, classic.UserPromptSubmit, classic.Stop, turn.complete, command.run{command=clarity|cockpit}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=claude-code-cockpit}",
+      "./register.tsx answers its own command: command.run{command=clarity|cockpit}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__claude-code-cockpit__meter}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__claude-code-cockpit__status}",
+      "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
+      "./register.tsx gating hook without .catch: classic.PreToolUse",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
+      "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx calls: $.clock.after (via maybeStartPanel, recoverPanel), $.clock.every, $.clock.now (via countdownTick, flushHooks, handleMeter, launchPanel, maybeStartPanel, pollLogs, pollQuota, pollSsa, recoverPanel, statusReport, tick), $.command.register, $.env.get (via paths), $.fs.exists (via launchPanel, pollQuota, pollSsa), $.fs.list (via pollSsa, readTask), $.fs.read (via readSmall), $.fs.stat (via tailLog), $.fs.write (via launchPanel), $.process.run (via launchPanel, panelRepo, paths, pollQuota, tailLog), $.process.spawn (via launchPanel), $.prompt.fill (via launchPanel), $.session.messages (via refreshFromText), $.state.get, $.state.set, $.store.get, $.store.set (via pollSsa), $.tool.register, $.ui.open (via openPane), $.ui.panes (via statusReport, tick), $.ui.resolve, $.ui.toast (via launchPanel, maybeStartPanel, pollSsa)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, TMPDIR",
+      "./register.tsx state writes: claude-code-cockpit.hooks, claude-code-cockpit.interview, claude-code-cockpit.isBandHidden, claude-code-cockpit.meter, claude-code-cockpit.panel, claude-code-cockpit.quota, claude-code-cockpit.sections, claude-code-cockpit.ssa",
+      "./register.tsx state reads: claude-code-cockpit.hooks, claude-code-cockpit.interview, claude-code-cockpit.isBandHidden, claude-code-cockpit.meter, claude-code-cockpit.panel, claude-code-cockpit.quota, claude-code-cockpit.sections, claude-code-cockpit.ssa"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__claude-code-cockpit__meter}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__claude-code-cockpit__status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=AskUserQuestion}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "1a673cf2c2ce9799"
+}

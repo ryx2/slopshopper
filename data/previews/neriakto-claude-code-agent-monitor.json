@@ -1,6 +1,6 @@
 {
  "slug": "neriakto-claude-code-agent-monitor",
- "generatedAt": "2026-10-06T05:29:57.546Z",
+ "generatedAt": "2026-10-07T15:22:09.451Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,6 +32,12 @@
     "event": "ui.close"
    },
    {
+    "event": "ui.focus",
+    "matcher": {
+     "requestId": "agent-monitor"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
@@ -49,7 +55,7 @@
    {
     "name": "monitor",
     "description": "Toggle the agent monitor pane; expand or collapse its cards",
-    "argumentHint": "[expand|collapse <card|all> · hide <card> · show <card|all> · rows <card> <1-30|default>] cards: inbox, running, session",
+    "argumentHint": "[expand|collapse <card|all> · hide <card> · show <card|all> · rows <card> <1-30|default>] cards: inbox, running, session (quota once Claude reports its limits)",
     "output": "Agent monitor opened."
    }
   ],
@@ -65,14 +71,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.clock.now": 13,
-   "$.state.get": 46,
-   "$.state.set": 25,
-   "$.session.usage": 1,
-   "$.store.get": 4,
+   "$.clock.now": 22,
+   "$.state.get": 66,
+   "$.state.set": 29,
+   "$.session.usage": 4,
+   "$.store.get": 7,
    "$.store.keys": 1,
    "$.command.register": 1,
-   "$.clock.every": 2,
+   "$.clock.every": 3,
+   "$.ui.status": 1,
    "$.ui.panes": 2,
    "$.ui.open": 1,
    "$.agent.list": 1,
@@ -82,6 +89,10 @@
    {
     "kind": "every",
     "ms": 30000
+   },
+   {
+    "kind": "every",
+    "ms": 60000
    },
    {
     "kind": "every",
@@ -134,7 +145,26 @@
              "wrap": "truncate"
             },
             "children": [
-             "                                  "
+             "                         "
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "arrange",
+             "plain": true,
+             "label": "Arrange",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate"
+            },
+            "children": [
+             "  "
             ]
            },
            {
@@ -250,6 +280,142 @@
             },
             "children": [
              "no reply yet"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "quota",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "gray",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "toggle-quota",
+             "plain": true,
+             "label": "-",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "color": "cyan",
+               "bold": true
+              },
+              "children": [
+               " QUOTA"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate"
+              },
+              "children": [
+               "                                      "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true
+              },
+              "children": [
+               "ctx "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "color": "green"
+              },
+              "children": [
+               "49%"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate"
+            },
+            "children": [
+             "Claude 5h    "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate",
+             "color": "green"
+            },
+            "children": [
+             "■■■"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate",
+             "dimColor": true
+            },
+            "children": [
+             "·······"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate",
+             "color": "green"
+            },
+            "children": [
+             "   31%"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate",
+             "color": "green",
+             "bold": true
+            },
+            "children": [
+             "  "
             ]
            }
           ]
@@ -553,10 +719,14 @@
    "prompt.submit",
    "session.append",
    "tool.call",
+   "classic.UserPromptSubmit",
+   "classic.PostToolUse",
+   "classic.Stop",
    "session.compact",
    "session.measure",
    "command.run{command=monitor}",
    "ui.close",
+   "ui.focus{requestId=agent-monitor}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=agent-monitor}"
   ],
@@ -567,83 +737,175 @@
    "$.clock.now",
    "$.command.register",
    "$.process.run (via readCustom",
-   "readDispatches)",
-   "$.session.usage (via restoreSession)",
+   "readDispatches",
+   "readQuota)",
+   "$.session.model (via readStatusSources)",
+   "$.session.usage (via readClaudeQuota",
+   "readStatusSources",
+   "restoreSession)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via restoreSession)",
    "$.store.get",
    "$.store.keys (via restoreSession)",
    "$.store.set (via arrangeCards",
+   "moveCard",
+   "saveHidden",
+   "saveRecent",
    "saveSession",
-   "setExpanded)",
+   "setExpanded",
+   "togglePlacement)",
    "$.ui.close",
    "$.ui.log (via logError)",
    "$.ui.open",
    "$.ui.panes (via isPaneOpen)",
    "$.ui.resolve",
+   "$.ui.status (via pushStatus)",
    "$.ui.toast"
   ],
   "stateReads": [
    "agent-monitor.actions",
    "agent-monitor.agents",
+   "agent-monitor.arranging",
    "agent-monitor.context",
    "agent-monitor.custom",
    "agent-monitor.dispatch",
    "agent-monitor.expanded",
    "agent-monitor.hidden",
    "agent-monitor.lastReplyAt",
+   "agent-monitor.order",
    "agent-monitor.pending",
+   "agent-monitor.placement",
+   "agent-monitor.quota",
+   "agent-monitor.recent",
+   "agent-monitor.revealHidden",
    "agent-monitor.rows",
    "agent-monitor.seen",
+   "agent-monitor.selected",
    "agent-monitor.session",
+   "agent-monitor.status",
    "agent-monitor.tick"
   ],
   "stateWrites": [
    "agent-monitor.actions",
    "agent-monitor.agents",
+   "agent-monitor.arranging",
    "agent-monitor.context",
    "agent-monitor.custom",
    "agent-monitor.dispatch",
    "agent-monitor.expanded",
    "agent-monitor.hidden",
    "agent-monitor.lastReplyAt",
+   "agent-monitor.order",
    "agent-monitor.pending",
+   "agent-monitor.placement",
+   "agent-monitor.quota",
+   "agent-monitor.recent",
+   "agent-monitor.revealHidden",
    "agent-monitor.rows",
    "agent-monitor.seen",
+   "agent-monitor.selected",
    "agent-monitor.session",
+   "agent-monitor.status",
    "agent-monitor.tick"
   ],
   "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/neriakto-claude-code-agent-monitor/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/neriakto-claude-code-agent-monitor/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/neriakto-claude-code-agent-monitor/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/neriakto-claude-code-agent-monitor/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: agent-monitor.pending, agent-monitor.seen, agent-monitor.lastReplyAt, agent-monitor.actions, agent-monitor.tick, agent-monitor.context, agent-monitor.dispatch, agent-monitor.agents, agent-monitor.custom, agent-monitor.session, agent-monitor.expanded, agent-monitor.hidden, agent-monitor.rows"
-    ]
+     "types ./types/index.d.ts declares state: agent-monitor.pending, agent-monitor.seen, agent-monitor.lastReplyAt, agent-monitor.actions, agent-monitor.tick, agent-monitor.context, agent-monitor.dispatch, agent-monitor.agents, agent-monitor.custom, agent-monitor.session, agent-monitor.expanded, agent-monitor.hidden, agent-monitor.rows, agent-monitor.quota, agent-monitor.recent, agent-monitor.order, agent-monitor.placement, agent-monitor.arranging, agent-monitor.selected, agent-monitor.revealHidden, agent-monitor.status"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/neriakto-claude-code-agent-monitor/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/neriakto-claude-code-agent-monitor/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, session.append, tool.call, session.compact, session.measure, command.run{command=monitor}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agent-monitor}",
-      "./register.tsx calls: $.agent.list (via refreshPane), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.process.run (via readCustom, readDispatches), $.session.usage (via restoreSession), $.state.get, $.state.set, $.store.delete (via restoreSession), $.store.get, $.store.keys (via restoreSession), $.store.set (via arrangeCards, saveSession, setExpanded), $.ui.close, $.ui.log (via logError), $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: agent-monitor.actions, agent-monitor.agents, agent-monitor.context, agent-monitor.custom, agent-monitor.dispatch, agent-monitor.expanded, agent-monitor.hidden, agent-monitor.lastReplyAt, agent-monitor.pending, agent-monitor.rows, agent-monitor.seen, agent-monitor.session, agent-monitor.tick",
-      "./register.tsx state reads: agent-monitor.actions, agent-monitor.agents, agent-monitor.context, agent-monitor.custom, agent-monitor.dispatch, agent-monitor.expanded, agent-monitor.hidden, agent-monitor.lastReplyAt, agent-monitor.pending, agent-monitor.rows, agent-monitor.seen, agent-monitor.session, agent-monitor.tick"
+      "./register.tsx hooks: session.start, prompt.submit, session.append, tool.call, classic.UserPromptSubmit, classic.PostToolUse, classic.Stop, session.compact, session.measure, command.run{command=monitor}, ui.close, ui.focus{requestId=agent-monitor}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agent-monitor}",
+      "./register.tsx answers its own command: command.run{command=monitor}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.append",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx gating hook without .catch: ui.focus{requestId=agent-monitor}",
+      "./register.tsx calls: $.agent.list (via refreshPane), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.process.run (via readCustom, readDispatches, readQuota), $.session.model (via readStatusSources), $.session.usage (via readClaudeQuota, readStatusSources, restoreSession), $.state.get, $.state.set, $.store.delete (via restoreSession), $.store.get, $.store.keys (via restoreSession), $.store.set (via arrangeCards, moveCard, saveHidden, saveRecent, saveSession, setExpanded, togglePlacement), $.ui.close, $.ui.log (via logError), $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.status (via pushStatus), $.ui.toast",
+      "./register.tsx state writes: agent-monitor.actions, agent-monitor.agents, agent-monitor.arranging, agent-monitor.context, agent-monitor.custom, agent-monitor.dispatch, agent-monitor.expanded, agent-monitor.hidden, agent-monitor.lastReplyAt, agent-monitor.order, agent-monitor.pending, agent-monitor.placement, agent-monitor.quota, agent-monitor.recent, agent-monitor.revealHidden, agent-monitor.rows, agent-monitor.seen, agent-monitor.selected, agent-monitor.session, agent-monitor.status, agent-monitor.tick",
+      "./register.tsx state reads: agent-monitor.actions, agent-monitor.agents, agent-monitor.arranging, agent-monitor.context, agent-monitor.custom, agent-monitor.dispatch, agent-monitor.expanded, agent-monitor.hidden, agent-monitor.lastReplyAt, agent-monitor.order, agent-monitor.pending, agent-monitor.placement, agent-monitor.quota, agent-monitor.recent, agent-monitor.revealHidden, agent-monitor.rows, agent-monitor.seen, agent-monitor.selected, agent-monitor.session, agent-monitor.status, agent-monitor.tick"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=agent-monitor}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "b7b37fa8c6f731c6"
+ "sourceHash": "95c69aef34221f61"
 }

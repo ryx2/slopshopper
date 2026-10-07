@@ -1,6 +1,6 @@
 {
  "slug": "vianch-vistack",
- "generatedAt": "2026-10-06T05:28:21.046Z",
+ "generatedAt": "2026-10-07T15:22:41.493Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "loop"
+    }
    },
    {
     "event": "command.run",
@@ -33,6 +39,26 @@
    },
    {
     "event": "skill.prompt"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "UserMessage",
+     "props": {
+      "origin": {
+       "kind": "task-notification"
+      }
+     }
+    }
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.SubagentStop"
    },
    {
     "event": "classic.TaskCreated"
@@ -60,7 +86,7 @@
   "commands": [
    {
     "name": "deck",
-    "description": "Open or close the viStack deck: board, org chart, cost, session, changes, flow, recall, settings. /deck <tab> jumps to a tab.",
+    "description": "Open or close the viStack deck: Board, Agents, Cost, Session, Changes, Timeline, Flow, Recall, Settings. /deck <tab> jumps to a tab.",
     "output": "viStack deck closed."
    }
   ],
@@ -77,11 +103,11 @@
   "rewrites": [],
   "apiCalls": {
    "$.env.get": 1,
-   "$.clock.every": 7,
+   "$.clock.every": 9,
    "$.command.register": 1,
-   "$.store.get": 2,
-   "$.state.get": 47,
-   "$.state.set": 26,
+   "$.store.get": 3,
+   "$.state.get": 56,
+   "$.state.set": 27,
    "$.ui.open": 1,
    "$.clock.now": 21,
    "$.fs.stat": 2,
@@ -112,15 +138,26 @@
    },
    {
     "kind": "every",
+    "ms": 20000
+   },
+   {
+    "kind": "every",
     "ms": 4000
    },
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 300000
    }
   ],
   "sites": {
    "AbovePrompt": {
+    "ok": "engine"
+   },
+   "UserMessage": {
     "ok": "engine"
    },
    "Pane": {
@@ -157,6 +194,7 @@
   "hooks": [
    "session.start",
    "session.end",
+   "command.run{command=loop}",
    "command.run{command=deck}",
    "turn.start",
    "turn.step",
@@ -164,6 +202,11 @@
    "agent.spawn",
    "session.send",
    "skill.prompt",
+   "prompt.submit",
+   "ui.render{component=UserMessage",
+   "props.origin has {kind=task-notification}}",
+   "classic.Stop",
+   "classic.SubagentStop",
    "classic.TaskCreated",
    "classic.TaskCompleted",
    "tool.call",
@@ -175,20 +218,30 @@
    "$.agent.spawn (via rehire)",
    "$.clock.every",
    "$.clock.now",
+   "$.clock.sleep (via runWatchOff)",
+   "$.command.list (via findWatchCommand)",
    "$.command.register",
+   "$.command.run (via offByCommand",
+   "startLoop)",
    "$.env.get",
    "$.fs.list (via listDir)",
    "$.fs.read (via readText)",
    "$.fs.stat (via exists)",
    "$.process.run (via checkLazygit",
    "decide",
+   "readAdvisorRows",
+   "readPlatform",
    "recordOutcome",
    "refreshPrs",
+   "runWatchOff",
    "toggleLazygit)",
+   "$.process.spawn (via startAwake)",
    "$.prompt.fill (via draftPrompt)",
-   "$.session.id (via loadAbout)",
+   "$.session.id (via loadAbout",
+   "readAdvisorRows)",
    "$.session.messages (via renderTab",
-   "scanAdvisor)",
+   "scanAdvisor",
+   "scanMonitorNotes)",
    "$.session.model (via loadModel)",
    "$.session.repo (via refreshWorkflow)",
    "$.session.send (via askAgent)",
@@ -196,39 +249,39 @@
    "$.state.get",
    "$.state.set",
    "$.store.get",
-   "$.store.set (via saveSettings)",
-   "$.tool.call (via stopAgent)",
+   "$.store.set (via saveKeepAwake",
+   "saveSettings)",
+   "$.tool.call (via callRecipe",
+   "runStopCall",
+   "stopAgent",
+   "syncCrons)",
    "$.turn.abort (via stopTurn)",
    "$.ui.close",
    "$.ui.log",
-   "$.ui.open (via openPane)",
-   "$.ui.panes (via isPaneUp)",
-   "$.ui.resolve",
-   "$.ui.toast (via askAgent",
-   "draftPrompt",
-   "fireAgent",
-   "killAgent",
-   "noteReview",
-   "rehire",
-   "stopTurn",
-   "toggleLazygit)"
+   "$.ui.open (via open… [+250 chars]"
   ],
   "stateReads": [
    "vistack.activity",
    "vistack.advisor",
    "vistack.agents",
    "vistack.asking",
+   "vistack.awake",
    "vistack.comms",
    "vistack.confirm",
    "vistack.edits",
    "vistack.frame",
    "vistack.isBandOpen",
+   "vistack.keepAwake",
    "vistack.lazygit",
+   "vistack.loopInterval",
+   "vistack.loopPrompt",
    "vistack.model",
+   "vistack.monitors",
    "vistack.openId",
    "vistack.picks",
    "vistack.prs",
    "vistack.query",
+   "vistack.reviewWatch",
    "vistack.selected",
    "vistack.settings",
    "vistack.skills",
@@ -245,17 +298,23 @@
    "vistack.advisor",
    "vistack.agents",
    "vistack.asking",
+   "vistack.awake",
    "vistack.comms",
    "vistack.confirm",
    "vistack.edits",
    "vistack.frame",
    "vistack.isBandOpen",
+   "vistack.keepAwake",
    "vistack.lazygit",
+   "vistack.loopInterval",
+   "vistack.loopPrompt",
    "vistack.model",
+   "vistack.monitors",
    "vistack.openId",
    "vistack.picks",
    "vistack.prs",
    "vistack.query",
+   "vistack.reviewWatch",
    "vistack.selected",
    "vistack.settings",
    "vistack.skills",
@@ -270,39 +329,113 @@
   "envReads": [
    "HOME",
    "TERM_PROGRAM",
-   "TMUX"
+   "TMUX",
+   "VISTACK_REVIEW_WATCH_DIR"
   ],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/vianch-vistack/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/vianch-vistack/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vianch-vistack/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vianch-vistack/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: vistack.tab, vistack.steps, vistack.tools, vistack.edits, vistack.turns, vistack.agents, vistack.picks, vistack.skills, vistack.todos, vistack.prs, vistack.workflow, vistack.usage, vistack.lazygit, vistack.frame, vistack.query, vistack.openId, vistack.settings, vistack.activity, vistack.comms, vistack.advisor, vistack.selected, vistack.confirm, vistack.asking, vistack.isBandOpen, vistack.model"
-    ]
+     "types ./types/index.d.ts declares state: vistack.tab, vistack.steps, vistack.tools, vistack.edits, vistack.turns, vistack.agents, vistack.picks, vistack.skills, vistack.todos, vistack.prs, vistack.workflow, vistack.usage, vistack.lazygit, vistack.frame, vistack.query, vistack.openId, vistack.settings, vistack.activity, vistack.comms, vistack.advisor, vistack.selected, vistack.confirm, vistack.asking, vistack.isBandOpen, vistack.model, vistack.monitors, vistack.awake, vistack.keepAwake, vistack.loopPrompt, vistack.loopInterval, vistack.reviewWatch"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vianch-vistack/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vianch-vistack/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, command.run{command=deck}, turn.start, turn.step, turn.complete, agent.spawn, session.send, skill.prompt, classic.TaskCreated, classic.TaskCompleted, tool.call, ui.render{component=Pane, requestId=vistack-deck}, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.agent.list (via syncAgents), $.agent.spawn (via rehire), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.list (via listDir), $.fs.read (via readText), $.fs.stat (via exists), $.process.run (via checkLazygit, decide, recordOutcome, refreshPrs, toggleLazygit), $.prompt.fill (via draftPrompt), $.session.id (via loadAbout), $.session.messages (via renderTab, scanAdvisor), $.session.model (via loadModel), $.session.repo (via refreshWorkflow), $.session.send (via askAgent), $.session.usage (via refreshUsage), $.state.get, $.state.set, $.store.get, $.store.set (via saveSettings), $.tool.call (via stopAgent), $.turn.abort (via stopTurn), $.ui.close, $.ui.log, $.ui.open (via openPane), $.ui.panes (via isPaneUp), $.ui.resolve, $.ui.toast (via askAgent, draftPrompt, fireAgent, killAgent, noteReview, rehire, stopTurn, toggleLazygit)",
+      "./register.tsx hooks: session.start, session.end, command.run{command=loop}, command.run{command=deck}, turn.start, turn.step, turn.complete, agent.spawn, session.send, skill.prompt, prompt.submit, ui.render{component=UserMessage, props.origin has {kind=task-notification}}, classic.Stop, classic.SubagentStop, classic.TaskCreated, classic.TaskCompleted, tool.call, ui.render{component=Pane, requestId=vistack-deck}, ui.render{component=AbovePrompt}",
+      "./register.tsx gating hook with .catch: command.run{command=loop}",
+      "./register.tsx gating hook without .catch: command.run{command=deck}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: session.send",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: classic.Stop",
+      "./register.tsx gating hook with .catch: classic.SubagentStop",
+      "./register.tsx gating hook without .catch: classic.TaskCreated",
+      "./register.tsx gating hook without .catch: classic.TaskCompleted",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.agent.list (via syncAgents), $.agent.spawn (via rehire), $.clock.every, $.clock.now, $.clock.sleep (via runWatchOff), $.command.list (via findWatchCommand), $.command.register, $.command.run (via offByCommand, startLoop), $.env.get, $.fs.list (via listDir), $.fs.read (via readText), $.fs.stat (via exists), $.process.run (via checkLazygit, decide, readAdvisorRows, readPlatform, recordOutcome, refreshPrs, runWatchOff, toggleLazygit), $.process.spawn (via startAwake), $.prompt.fill (via draftPrompt), $.session.id (via loadAbout, readAdvisorRows), $.session.messages (via renderTab, scanAdvisor, scanMonitorNotes), $.session.model (via loadModel), $.session.repo (via refreshWorkflow), $.session.send (via askAgent), $.session.usage (via refreshUsage), $.state.get, $.state.set, $.store.get, $.store.set (via saveKeepAwake, saveSettings), $.tool.call (via callRecipe, runStopCall, stopAgent, syncCrons), $.turn.abort (via stopTurn), $.ui.close, $.ui.log, $.ui.open (via open… [+250 chars]",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME, TERM_PROGRAM, TMUX",
-      "./register.tsx state writes: vistack.activity, vistack.advisor, vistack.agents, vistack.asking, vistack.comms, vistack.confirm, vistack.edits, vistack.frame, vistack.isBandOpen, vistack.lazygit, vistack.model, vistack.openId, vistack.picks, vistack.prs, vistack.query, vistack.selected, vistack.settings, vistack.skills, vistack.steps, vistack.tab, vistack.todos, vistack.tools, vistack.turns, vistack.usage, vistack.workflow",
-      "./register.tsx state reads: vistack.activity, vistack.advisor, vistack.agents, vistack.asking, vistack.comms, vistack.confirm, vistack.edits, vistack.frame, vistack.isBandOpen, vistack.lazygit, vistack.model, vistack.openId, vistack.picks, vistack.prs, vistack.query, vistack.selected, vistack.settings, vistack.skills, vistack.steps, vistack.tab, vistack.todos, vistack.tools, vistack.turns, vistack.usage, vistack.workflow"
+      "./register.tsx env reads: HOME, TERM_PROGRAM, TMUX, VISTACK_REVIEW_WATCH_DIR",
+      "./register.tsx state writes: vistack.activity, vistack.advisor, vistack.agents, vistack.asking, vistack.awake, vistack.comms, vistack.confirm, vistack.edits, vistack.frame, vistack.isBandOpen, vistack.keepAwake, vistack.lazygit, vistack.loopInterval, vistack.loopPrompt, vistack.model, vistack.monitors, vistack.openId, vistack.picks, vistack.prs, vistack.query, vistack.reviewWatch, vistack.selected, vistack.settings, vistack.skills, vistack.steps, vistack.tab, vistack.todos, vistack.tools, vistack.turns, vistack.usage, vistack.workflow",
+      "./register.tsx state reads: vistack.activity, vistack.advisor, vistack.agents, vistack.asking, vistack.awake, vistack.comms, vistack.confirm, vistack.edits, vistack.frame, vistack.isBandOpen, vistack.keepAwake, vistack.lazygit, vistack.loopInterval, vistack.loopPrompt, vistack.model, vistack.monitors, vistack.openId, vistack.picks, vistack.prs, vistack.query, vistack.reviewWatch, vistack.selected, vistack.settings, vistack.skills, vistack.steps, vistack.tab, vistack.todos, vistack.tools, vistack.turns, vistack.usage, vistack.workflow"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=loop}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=deck}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.send",
+       "hook": "session.send",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.TaskCreated",
+       "hook": "classic.TaskCreated",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.TaskCompleted",
+       "hook": "classic.TaskCompleted",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "d9fa2cc01951a8"
+ "sourceHash": "83f45cfe7c414e9b"
 }

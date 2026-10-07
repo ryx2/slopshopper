@@ -1,11 +1,19 @@
 {
  "slug": "tomaspalsson-worklog-worklog",
- "generatedAt": "2026-10-06T14:52:06.435Z",
+ "generatedAt": "2026-10-07T15:24:02.762Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": "composer"
+     }
+    }
    },
    {
     "event": "ui.render",
@@ -73,8 +81,8 @@
    {
     "name": "wl",
     "description": "Show logged hours, or review today in a pane",
-    "argumentHint": "today|week|review",
-    "output": "usage: /wl today|week|review"
+    "argumentHint": "today|week|review|ask",
+    "output": "usage: /wl today|week|review|ask <question>"
    }
   ],
   "tools": [],
@@ -84,14 +92,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 4,
+   "$.env.get": 5,
    "$.clock.now": 2,
    "$.process.run": 6,
    "$.clock.every": 1,
-   "$.clock.after": 2,
-   "$.http.fetch": 2,
-   "$.state.get": 3,
-   "$.state.set": 1,
+   "$.clock.after": 3,
+   "$.http.fetch": 3,
+   "$.state.get": 7,
+   "$.state.set": 3,
    "$.command.register": 1,
    "$.ui.resolve": 1
   },
@@ -99,6 +107,10 @@
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "after",
+    "ms": 2000
    },
    {
     "kind": "after",
@@ -148,6 +160,7 @@
    "$.process.run(git remote get-url origin) → exit 0",
    "$.http.fetch(http://127.0.0.1:9323/logged?from=2025-10-09&to=2025-10-09) → blocked in preview",
    "session.start",
+   "$.http.fetch(http://127.0.0.1:9323/nudges) → blocked in preview",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -160,19 +173,23 @@
    "$.process.run(git branch --show-current) → exit 0",
    "$.process.run(git remote get-url origin) → exit 0",
    "turn.complete",
-   "/wl → usage: /wl today|week|review"
+   "/wl → usage: /wl today|week|review|ask <question>"
   ],
   "console": [],
   "warnings": []
  },
  "validate": {
-  "ok": true,
-  "errors": [],
+  "ok": false,
+  "errors": [
+   "worklog.nudge is not declared: the manifest's types contract must name it in interface PluginState { worklog: { nudge: ... } }",
+   "worklog.recap is not declared: the manifest's types contract must name it in interface PluginState { worklog: { recap: ... } }"
+  ],
   "warnings": [
    "No author information provided. Consider adding author details for plugin attribution"
   ],
   "hooks": [
    "session.start",
+   "prompt.submit{origin has {kind=composer}}",
    "ui.render{component=PromptHint}",
    "session.start{surface=terminal}",
    "session.end",
@@ -209,17 +226,21 @@
   ],
   "stateReads": [
    "worklog.hours",
+   "worklog.nudge",
+   "worklog.recap",
    "worklog.review"
   ],
   "stateWrites": [
    "worklog.hours",
+   "worklog.nudge",
+   "worklog.recap",
    "worklog.review"
   ],
   "envReads": [
    "HOME"
   ],
   "raw": {
-   "success": true,
+   "success": false,
    "strict": false,
    "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/tomaspalsson-worklog-worklog/.claude-plugin/plugin.json",
    "manifest": {
@@ -243,19 +264,38 @@
     {
      "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/tomaspalsson-worklog-worklog/hooks/hooks.json",
      "type": "hooks",
-     "errors": [],
+     "errors": [
+      {
+       "path": "modules../register.tsx",
+       "message": "worklog.nudge is not declared: the manifest's types contract must name it in interface PluginState { worklog: { nudge: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "worklog.recap is not declared: the manifest's types contract must name it in interface PluginState { worklog: { recap: ... } }",
+       "code": null
+      }
+     ],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, ui.render{component=PromptHint}, session.start{surface=terminal}, session.end, prompt.submit, prompt.context, attribution.text{kind=commit|pr}, tool.call{tool=Bash}, turn.complete, session.start{isInteractive=true}, command.run{command=wl}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx hooks: session.start, prompt.submit{origin has {kind=composer}}, ui.render{component=PromptHint}, session.start{surface=terminal}, session.end, prompt.submit, prompt.context, attribution.text{kind=commit|pr}, tool.call{tool=Bash}, turn.complete, session.start{isInteractive=true}, command.run{command=wl}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx answers its own command: command.run{command=wl}",
+      "./register.tsx gating hook without .catch: prompt.submit{origin has {kind=composer}}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx calls: $.clock.after (via makeIo, verdictPick), $.clock.every, $.clock.now (via makeIo), $.command.register, $.env.get (via makeIo), $.http.fetch (via makeIo), $.process.run (via askTicket, makeIo, verdictPick), $.session.id, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.ask (via askTicket), $.ui.log (via askTicket), $.ui.open, $.ui.resolve (via reviewPane), $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: worklog.hours, worklog.review",
-      "./register.tsx state reads: worklog.hours, worklog.review"
+      "./register.tsx state writes: worklog.hours, worklog.nudge, worklog.recap, worklog.review",
+      "./register.tsx state reads: worklog.hours, worklog.nudge, worklog.recap, worklog.review"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=composer}}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -273,5 +313,5 @@
    ]
   }
  },
- "sourceHash": "cabd4022385d3507"
+ "sourceHash": "58eacd0fafccb829"
 }

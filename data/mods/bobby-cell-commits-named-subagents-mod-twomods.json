@@ -1,0 +1,10 @@
+{
+ "slug": "bobby-cell-commits-named-subagents-mod-twomods",
+ "files": {
+  "hooks/index.ts": "import type { Register } from 'claude-code';\nimport { register as a } from './a.ts';\nimport { register as b } from './b.tsx';\nexport const register: Register = (on, options) => { a(on, options); b(on, options); };\n",
+  "hooks/a.ts": "import type { Register } from 'claude-code';\nexport const order: string[] = [];\nexport const A_FILE = '/tmp/twomods-a.txt';\n// `$`-free: the caller hands in what it may do.\nexport async function startA(write: (path: string, text: string) => Promise<unknown>) { await write(A_FILE, 'a started'); }\nexport const register: Register = (on) => {\n  on('tool.call', { tool: 'Agent' }, async ($, e, next) => {\n    order.push('a-in');\n    const r = await next(e.name ? e : { ...e, name: 'FromA' });\n    order.push('a-out');\n    return r;\n  });\n};\n",
+  "hooks/b.tsx": "import type { Register } from 'claude-code';\nimport { order, startA } from './a.ts';\nexport const register: Register = (on) => {\n  on('session.start', async ($, e, next) => {\n    await startA((path, text) => $.fs.write(path, text));\n    await $.fs.write('/tmp/twomods-b.txt', 'b started');\n    return next(e);\n  });\n  on('tool.call', async ($, e, next) => {\n    order.push('b-in');\n    if (e.tool === 'Agent') await $.fs.write('/tmp/twomods-b-saw.txt', `b saw name=${(e as { name?: string }).name ?? 'none'} order=${order.join(',')}`);\n    const r = await next(e);\n    order.push('b-out');\n    return r;\n  });\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./index.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"twomods\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Probe: two files of hooks in one plugin.\",\n  \"author\": {\n    \"name\": \"Bobby-cell-commits\"\n  }\n}"
+ }
+}

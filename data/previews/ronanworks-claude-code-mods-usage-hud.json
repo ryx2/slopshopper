@@ -1,6 +1,6 @@
 {
  "slug": "ronanworks-claude-code-mods-usage-hud",
- "generatedAt": "2026-10-06T05:33:54.241Z",
+ "generatedAt": "2026-10-07T15:22:10.600Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,13 +32,47 @@
     "event": "classic.SessionStart"
    },
    {
+    "event": "classic.SubagentStart"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
     "event": "tool.call"
    },
    {
     "event": "turn.complete"
    },
    {
+    "event": "ui.render",
+    "matcher": {
+     "component": "TurnDuration"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "hud-agents"
+    }
+   },
+   {
     "event": "session.measure"
+   },
+   {
+    "event": "prompt.edit"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "classic.PermissionRequest"
+   },
+   {
+    "event": "classic.Notification"
    },
    {
     "event": "ui.render",
@@ -56,8 +90,8 @@
   "commands": [
    {
     "name": "hud",
-    "description": "用量面板：完整 → 精简 → 隐藏 循环；/hud top 放输入框上方，/hud bottom 放下方",
-    "argumentHint": "[top|bottom]",
+    "description": "用量面板 (固定在输入框下方)：完整 → 精简 → 隐藏 循环；/hud agents 打开子代理看板，/hud crab 开关输入框上方散步的螃蟹",
+    "argumentHint": "[agents|crab]",
     "immediate": true,
     "output": "用量面板：精简"
    }
@@ -71,22 +105,22 @@
   "apiCalls": {
    "$.store.get": 2,
    "$.fs.read": 1,
-   "$.clock.now": 4,
+   "$.clock.now": 18,
    "$.session.model": 1,
    "$.settings.read": 1,
-   "$.session.cwd": 3,
+   "$.session.root": 3,
    "$.process.run": 6,
-   "$.session.usage": 3,
+   "$.session.usage": 15,
    "$.session.id": 1,
    "$.env.get": 3,
    "$.fs.exists": 1,
    "$.clock.every": 1,
    "$.command.register": 1,
-   "$.ui.invalidate": 24,
-   "$.clock.after": 1,
-   "$.store.set": 1,
-   "$.ui.resolve": 1,
-   "$.agent.list": 1
+   "$.ui.invalidate": 25,
+   "$.ui.resolve": 12,
+   "$.agent.list": 12,
+   "$.clock.after": 2,
+   "$.store.set": 1
   },
   "timers": [
    {
@@ -95,12 +129,50 @@
    },
    {
     "kind": "after",
-    "ms": 1500
+    "ms": 2000
+   },
+   {
+    "kind": "after",
+    "ms": 2000
    }
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Client",
+     "props": {
+      "key": "walkway",
+      "module": "./walkway.tsx",
+      "props": {
+       "w": 100,
+       "rows": 3,
+       "sky": true,
+       "working": false,
+       "agents": [],
+       "mood": "normal",
+       "pct": 49,
+       "tool": "",
+       "typeSeq": 0,
+       "jumpSeq": 1,
+       "celebSeq": 0,
+       "celebFrames": 0,
+       "idleMs": 220,
+       "tip": {
+        "v": [
+         "上下文 49% · 5小时 31% · 小贴士 /hud 切换 完整 / 精简 / 隐藏",
+         "上下文 49% · 5小时 31% · 小贴士 /hud 切换 完整 / 精简 / 隐藏",
+         "上下文 49% · 5小时 31%",
+         "上下文 49% · 5小时 31%"
+        ],
+        "tipMin": 40
+       }
+      },
+      "width": 100,
+      "height": 4
+     },
+     "children": []
+    }
    },
    "PromptHint": {
     "ok": true,
@@ -121,28 +193,6 @@
         "paddingRight": 2
        },
        "children": [
-        {
-         "type": "Box",
-         "props": {
-          "key": "seg-crab",
-          "width": 8,
-          "flexShrink": 0,
-          "flexDirection": "row",
-          "overflow": "hidden"
-         },
-         "children": [
-          {
-           "type": "Raster",
-           "props": {
-            "key": "crab-mini",
-            "columns": 8,
-            "rows": 1,
-            "cells": "gCUAAFd32QBXd9kAgCUAAFd32QAAAAABgCUAADpNhAAAAAABgCUAAFd32QAAAAABgCUAAFd32QAAAAABgCUAADpNhAAAAAABgCUAAFd32QAAAAABgCUAAFd32QBXd9kA"
-           },
-           "children": []
-          }
-         ]
-        },
         {
          "type": "Box",
          "props": {
@@ -594,12 +644,21 @@
           {
            "type": "Text",
            "props": {
-            "key": "c-eff-ew",
-            "color": "#71717a"
+            "key": "c-eff-ews"
            },
            "children": [
-            " --"
+            " "
            ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "btn-effort",
+            "label": "--",
+            "plain": true,
+            "onPress": "[fn]"
+           },
+           "children": []
           }
          ]
         },
@@ -617,11 +676,10 @@
            "type": "Text",
            "props": {
             "key": "st",
-            "color": "#71717a",
-            "wrap": "truncate"
+            "color": "#71717a"
            },
            "children": [
-            "✓ 上一轮 0s，9 .."
+            "✓ 待命"
            ]
           }
          ]
@@ -672,6 +730,94 @@
       }
      ]
     }
+   },
+   "TurnDuration": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row",
+      "alignItems": "flex-end"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "word": "Worked",
+        "durationMs": 42000
+       }
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "receipt",
+        "dimColor": true,
+        "wrap": "truncate"
+       },
+       "children": [
+        " · 改 3 个文件 +14 -1 · 工具 9 次"
+       ]
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "hud-agents": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "key": "kids",
+       "flexDirection": "column",
+       "width": 56
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "k-top",
+         "flexDirection": "row",
+         "height": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "key": "k-title",
+           "color": "#d97757",
+           "bold": true
+          },
+          "children": [
+           "子代理"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "k-sum",
+           "color": "#71717a"
+          },
+          "children": [
+           "  运行中 0 · 已结束 0                             "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "k-none",
+         "color": "#71717a"
+        },
+        "children": [
+         "这个会话还没有子代理，Esc 关闭"
+        ]
+       }
+      ]
+     },
+     "title": "hud-agents"
+    }
    }
   },
   "script": [
@@ -708,16 +854,25 @@
    "turn.start",
    "turn.step",
    "classic.SessionStart",
+   "classic.SubagentStart",
+   "classic.SubagentStop",
    "tool.call",
    "turn.complete",
+   "ui.render{component=TurnDuration}",
+   "ui.render{component=Pane, requestId=hud-agents}",
    "session.measure",
+   "prompt.edit",
+   "prompt.submit",
+   "session.compact",
+   "classic.PermissionRequest",
+   "classic.Notification",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=PromptHint}"
   ],
   "calls": [
-   "$.agent.list (via buildView",
-   "snapshot)",
-   "$.clock.after",
+   "$.agent.list (via syncAgents)",
+   "$.clock.after (via armEnd",
+   "endAsk)",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
@@ -734,22 +889,17 @@
    "ranOk",
    "refreshRepo",
    "runSlash)",
-   "$.session.cwd (via countTokens",
-   "guessTranscript",
-   "openProject",
-   "refreshRepo",
-   "runSlash)",
+   "$.session.cwd (via projectDir)",
    "$.session.id (via guessTranscript)",
    "$.session.model",
-   "$.session.surfaces",
-   "$.session.usage (via buildView",
-   "checkMilestones",
-   "snapshot)",
+   "$.session.root (via projectDir)",
+   "$.session.usage",
    "$.settings.read (via readEffortFromSettings)",
    "$.store.get (via loadPrefs)",
    "$.store.set",
    "$.ui.invalidate (via redraw)",
    "$.ui.log",
+   "$.ui.open (via openAgents)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
@@ -765,29 +915,97 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ronanworks-claude-code-mods-usage-hud/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ronanworks-claude-code-mods-usage-hud/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ronanworks-claude-code-mods-usage-hud/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ronanworks-claude-code-mods-usage-hud/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ronanworks-claude-code-mods-usage-hud/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ronanworks-claude-code-mods-usage-hud/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=hud}, command.run{command=model|effort}, turn.start, turn.step, classic.SessionStart, tool.call, turn.complete, session.measure, ui.render{component=AbovePrompt}, ui.render{component=PromptHint}",
-      "./register.tsx calls: $.agent.list (via buildView, snapshot), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via checkForUpdate, runSlash), $.env.get (via claudeDir, detectOS, homeDir, openPosix), $.fs.exists (via detectOS), $.fs.read (via diskVersion), $.process.run (via countTokens, openProject, ranOk, refreshRepo, runSlash), $.session.cwd (via countTokens, guessTranscript, openProject, refreshRepo, runSlash), $.session.id (via guessTranscript), $.session.model, $.session.surfaces, $.session.usage (via buildView, checkMilestones, snapshot), $.settings.read (via readEffortFromSettings), $.store.get (via loadPrefs), $.store.set, $.ui.invalidate (via redraw), $.ui.log, $.ui.resolve, $.ui.toast",
+      "./register.tsx hooks: session.start, command.run{command=hud}, command.run{command=model|effort}, turn.start, turn.step, classic.SessionStart, classic.SubagentStart, classic.SubagentStop, tool.call, turn.complete, ui.render{component=TurnDuration}, ui.render{component=Pane, requestId=hud-agents}, session.measure, prompt.edit, prompt.submit, session.compact, classic.PermissionRequest, classic.Notification, ui.render{component=AbovePrompt}, ui.render{component=PromptHint}",
+      "./register.tsx answers its own command: command.run{command=hud}",
+      "./register.tsx gating hook without .catch: command.run{command=model|effort}",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: classic.SubagentStart",
+      "./register.tsx gating hook without .catch: classic.SubagentStop",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: classic.PermissionRequest",
+      "./register.tsx gating hook without .catch: classic.Notification",
+      "./register.tsx calls: $.agent.list (via syncAgents), $.clock.after (via armEnd, endAsk), $.clock.every, $.clock.now, $.command.register, $.command.run (via checkForUpdate, runSlash), $.env.get (via claudeDir, detectOS, homeDir, openPosix), $.fs.exists (via detectOS), $.fs.read (via diskVersion), $.process.run (via countTokens, openProject, ranOk, refreshRepo, runSlash), $.session.cwd (via projectDir), $.session.id (via guessTranscript), $.session.model, $.session.root (via projectDir), $.session.usage, $.settings.read (via readEffortFromSettings), $.store.get (via loadPrefs), $.store.set, $.ui.invalidate (via redraw), $.ui.log, $.ui.open (via openAgents), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, OS, USERPROFILE, WSL_DISTRO_NAME"
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, OS, USERPROFILE, WSL_DISTRO_NAME",
+      "./register.tsx surface modules: hooks/walkway.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=model|effort}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStart",
+       "hook": "classic.SubagentStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PermissionRequest",
+       "hook": "classic.PermissionRequest",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Notification",
+       "hook": "classic.Notification",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "d1ffa2c2469b5a11"
+ "sourceHash": "c568331cd62ab41a"
 }

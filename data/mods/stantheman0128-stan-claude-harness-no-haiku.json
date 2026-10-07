@@ -1,0 +1,8 @@
+{
+ "slug": "stantheman0128-stan-claude-harness-no-haiku",
+ "files": {
+  "hooks/register.js": "// Stan 2026-10-02 決定任何地方都不用 haiku。這個 mod 在 subagent 啟動前檢查模型。\n// 擋得到：Agent 工具明確帶 model: \"haiku\"（或任何含 haiku 的完整 id）。\n// 擋不到：沒帶 model、由 agent 定義 frontmatter pin 到 haiku 的；那時模型還沒解析，只能事後記一行。\nconst HAIKU = /haiku/i\n\nexport function register(on) {\n  on('agent.spawn', async ($, e, next) => {\n    // fork 一律繼承父模型、忽略 model 參數，不用擋\n    if (!e.fork && HAIKU.test(e.model ?? '')) {\n      return {\n        deny: 'Stan 不用 haiku。拿掉 model 參數讓角色 agent 用定義裡的模型，或改帶 model: \"sonnet\" 或 \"opus\"，再重派一次。',\n      }\n    }\n    const started = await next(e)\n    if (HAIKU.test(started.model ?? '')) {\n      $.ui.log(`${e.subagentType} 實際跑在 ${started.model}，它的 agent 定義 pin 了 haiku，要改 frontmatter`)\n    }\n    return started\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"no-haiku hooks module\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"no-haiku\",\n  \"version\": \"0.1.0\",\n  \"description\": \"擋下明確帶 haiku 的 subagent 派工；agent 定義 pin 到 haiku 的只記一行提醒（Stan harness mod）\",\n  \"author\": {\n    \"name\": \"Stan Shih\"\n  }\n}"
+ }
+}

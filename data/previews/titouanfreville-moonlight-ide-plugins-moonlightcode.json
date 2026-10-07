@@ -1,0 +1,941 @@
+{
+ "slug": "titouanfreville-moonlight-ide-plugins-moonlightcode",
+ "generatedAt": "2026-10-07T15:24:02.313Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "phase"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ml-review"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "moonlight-review"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__moonlightcode__present_plan"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ml-plan"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "moonlight-plan"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__moonlightcode__request_phase"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "moonlight-phase"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Monitor"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "NotebookEdit"
+    }
+   },
+   {
+    "event": "skill.prompt"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.end"
+   }
+  ],
+  "commands": [
+   {
+    "name": "phase",
+    "description": "Set the Moonlight phase (operator only)",
+    "argumentHint": "plan|auto|test|review|commit|next|approve|deny",
+    "output": "Phase is plan (project read-only); next: auto. Usage: /phase plan|auto|test|review|commit|next. [pane placed; surfaces: terminal]"
+   },
+   {
+    "name": "ml-review",
+    "description": "Moonlight: open or close the Review panel; comment a diff line (operator only)",
+    "argumentHint": "[comment <path:line[-end]> <text> | uncomment <id> | submit [summary] | accept | scope session|head | run [skill] | cancel | attach <skill> | detach <skill> | skills [reset]]",
+    "output": "Review panel open. 0 changed files, 0 comments."
+   },
+   {
+    "name": "ml-plan",
+    "description": "Moonlight: open or close the Plan panel; answer the agent's plan (operator only)",
+    "argumentHint": "[approve [note] | refine <note> | reject <reason> | comment <line[-end]> <text> | uncomment <id>]",
+    "output": "Plan panel open.\nNo plan yet. In the Plan phase, the agent's plan shows up here for you to approve."
+   }
+  ],
+  "tools": [
+   {
+    "name": "present_plan",
+    "description": "Present your plan to the operator for review in the Moonlight Plan panel. In the Plan phase, this is how a plan is proposed: write it as Markdown, call this tool, then stop and wait (do not use EnterPlanMode or ExitPlanMode). Returns at once; the operator comments lines and answers, and the verdict arrives later as a [moonlight] prompt: APPROVED (the phase moves to auto: implement it), REFINEMENT (call present_plan again with the whole revised plan) or REJECTED (stop)."
+   },
+   {
+    "name": "request_phase",
+    "description": "Ask the operator to change the Moonlight workflow phase: plan (project read-only), auto, test, review (project writable), commit (everything frozen until the operator commits), or next (the following one; commit is followed by plan). Returns at once; the operator approves or denies in a dialog, and the decision arrives as a [moonlight] note. Never assume the phase changed before that note."
+   }
+  ],
+  "panes": [
+   {
+    "id": "moonlight-phase",
+    "title": "Moonlight"
+   },
+   {
+    "id": "moonlight-review",
+    "title": "Review"
+   },
+   {
+    "id": "moonlight-plan",
+    "title": "Plan"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Edit: /work/app/src/auth.ts",
+    "reason": "Moonlight (Plan): /work/app/src/auth.ts is a project file and Plan is read-only. Write notes under .ai/, .bmad-output/, .bmad/ or /tmp, then propose the plan."
+   },
+   {
+    "tool": "Write: /work/app/src/audit.ts",
+    "reason": "Moonlight (Plan): /work/app/src/audit.ts is a project file and Plan is read-only. Write notes under .ai/, .bmad-output/, .bmad/ or /tmp, then propose the plan."
+   },
+   {
+    "tool": "Write: /work/app/src/cache.ts",
+    "reason": "Moonlight (Plan): /work/app/src/cache.ts is a project file and Plan is read-only. Write notes under .ai/, .bmad-output/, .bmad/ or /tmp, then propose the plan."
+   },
+   {
+    "tool": "Bash: bun test",
+    "reason": "Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true."
+   },
+   {
+    "tool": "Bash: git status --porcelain",
+    "reason": "Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true."
+   },
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true."
+   },
+   {
+    "tool": "Bash: cat .env",
+    "reason": "Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true."
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.root": 1,
+   "$.fs.stat": 12,
+   "$.env.get": 2,
+   "$.fs.read": 19,
+   "$.store.get": 2,
+   "$.fs.list": 1,
+   "$.fs.write": 2,
+   "$.store.set": 1,
+   "$.state.get": 29,
+   "$.state.set": 7,
+   "$.session.surfaces": 3,
+   "$.session.id": 3,
+   "$.clock.now": 1,
+   "$.clock.every": 1,
+   "$.command.register": 3,
+   "$.tool.register": 2,
+   "$.fs.exists": 6,
+   "$.settings.read": 4,
+   "$.ui.open": 3,
+   "$.ui.panes": 2,
+   "$.process.run": 2,
+   "$.ui.resolve": 4,
+   "$.command.list": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 2000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row"
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "bold": true,
+        "color": "black",
+        "backgroundColor": "yellow"
+       },
+       "children": [
+        " ◐ PLAN "
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "color": "yellow"
+       },
+       "children": [
+        " project read-only "
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "phase-switch",
+        "plain": true,
+        "dimColor": true,
+        "label": "· next: auto",
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "   ? for shortcuts"
+       ]
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "moonlight-phase": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "black",
+           "backgroundColor": "yellow"
+          },
+          "children": [
+           " ◐ PLAN "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "yellow"
+          },
+          "children": [
+           "  project read-only"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "yellow"
+            },
+            "children": [
+             "plan"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " → "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pane-phase:auto",
+             "plain": true,
+             "dimColor": true,
+             "label": "auto",
+             "hotkey": "a",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " → "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pane-phase:test",
+             "plain": true,
+             "dimColor": true,
+             "label": "test",
+             "hotkey": "t",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " → "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pane-phase:review",
+             "plain": true,
+             "dimColor": true,
+             "label": "review",
+             "hotkey": "r",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " → "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pane-phase:commit",
+             "plain": true,
+             "dimColor": true,
+             "label": "commit",
+             "hotkey": "c",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Moonlight"
+    },
+    "moonlight-review": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "cyan"
+          },
+          "children": [
+           "Review"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "  changes since the last commit"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "0 files, 0 comments"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "yellow"
+        },
+        "children": [
+         "No git repository in /work/app or its subfolders (4 levels): nothing to diff against."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "blue"
+          },
+          "children": [
+           "AI review"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "  run a review skill, then keep or dismiss what it finds"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No attached review skill is installed (bmad-code-review, code-review): install one, or /ml-review attach <skill>"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "scope",
+           "label": "This session only",
+           "hotkey": "v",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "Refresh",
+           "hotkey": "r",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "Close",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Review"
+    },
+    "moonlight-plan": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "cyan"
+        },
+        "children": [
+         "Plan"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No plan yet. In the Plan phase, the agent's plan shows up here for you to approve."
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "plan-close",
+         "label": "Close",
+         "role": "dismiss",
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "Plan"
+    }
+   }
+  },
+  "script": [
+   "$.fs.write(/work/app/.claude/settings.local.json)",
+   "$.fs.write(/Users/dev/.moonlight/mod/sessions/preview-session/heartbeat)",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit denied: Moonlight (Plan): /work/app/src/auth.ts is a project file and Plan is read-only. Write notes under .…",
+   "tool.call Write denied: Moonlight (Plan): /work/app/src/audit.ts is a project file and Plan is read-only. Write notes under …",
+   "tool.call Write denied: Moonlight (Plan): /work/app/src/cache.ts is a project file and Plan is read-only. Write notes under …",
+   "tool.call Bash denied: Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true.",
+   "tool.call Bash denied: Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true.",
+   "tool.call Bash denied: Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true.",
+   "tool.call Bash denied: Moonlight (plan): Bash refused, the sandbox is not safe: sandbox.enabled is not true.",
+   "turn.complete",
+   "$.ui.open(moonlight-phase)",
+   "/phase → Phase is plan (project read-only); next: auto. Usage: /phase plan|auto|test|revi…",
+   "$.process.run(git rev-parse --is-inside-work-tree) → exit 0",
+   "$.process.run(find /work/app -maxdepth 4 ( -name node_modules -o -name target -o -name .venv -…) → exit 0",
+   "$.ui.open(moonlight-review)",
+   "/ml-review → Review panel open. 0 changed files, 0 comments.",
+   "$.ui.open(moonlight-plan)",
+   "/ml-plan → Plan panel open.\nNo plan yet. In the Plan phase, the agent's plan shows up here …"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "session.start",
+   "command.run{command=phase}",
+   "command.run{command=ml-review}",
+   "ui.render{component=Pane, requestId=moonlight-review}",
+   "tool.call{tool=mcp__moonlightcode__present_plan}",
+   "command.run{command=ml-plan}",
+   "ui.render{component=Pane, requestId=moonlight-plan}",
+   "tool.call{tool=mcp__moonlightcode__request_phase}",
+   "ui.render{component=PromptHint}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=moonlight-phase}",
+   "tool.call",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=Monitor}",
+   "tool.call{tool=Edit}",
+   "tool.call{tool=Write}",
+   "tool.call{tool=NotebookEdit}",
+   "skill.prompt",
+   "turn.start",
+   "turn.complete",
+   "session.end"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now (via addPlanComment",
+   "addReviewComment",
+   "beat",
+   "ingestAnswer",
+   "sweepStaleBaselines)",
+   "$.command.list",
+   "$.command.register (via startCommands)",
+   "$.env.get (via initGate",
+   "resolveScratchRoots",
+   "sessionsDir)",
+   "$.fs.exists (via baselineFiles",
+   "captureBaseline",
+   "dropBaseline",
+   "isDevUnlocked",
+   "readBaselineIndex",
+   "sweepStaleBaselines)",
+   "$.fs.list (via listRoot",
+   "sweepStaleBaselines)",
+   "$.fs.read (via applySandbox",
+   "captureBaseline",
+   "readBaselineIndex",
+   "readPhase)",
+   "$.fs.stat (via realPathOf",
+   "resolveNoteRoots",
+   "resolveTarget",
+   "sweepStaleBaselines)",
+   "$.fs.write (via applySandbox",
+   "beat",
+   "captureBaseline",
+   "presentPlan",
+   "setPhase)",
+   "$.process.run (via dropBaseline",
+   "findRepos",
+   "git)",
+   "$.prompt.submit (via askModel)",
+   "$.session.append (via tellModel)",
+   "$.session.cwd (via sessionRoot)",
+   "$.session.id (via baselineDir",
+   "beat",
+   "presentPlan",
+   "sweepStaleBaselines)",
+   "$.session.root (via initGate",
+   "sessionRoot)",
+   "$.session.surfaces",
+   "$.settings.read (via shellRefusal)",
+   "$.state.get",
+   "$.state.set",
+   "$.sto… [+294 chars]"
+  ],
+  "stateReads": [
+   "moonlightcode.pending",
+   "moonlightcode.phase",
+   "moonlightcode.planComments",
+   "moonlightcode.planDoc",
+   "moonlightcode.planDraft",
+   "moonlightcode.planNote",
+   "moonlightcode.planRejecting",
+   "moonlightcode.planRowSelection",
+   "moonlightcode.reviewComments",
+   "moonlightcode.reviewDraft",
+   "moonlightcode.reviewExpanded",
+   "moonlightcode.reviewFiles",
+   "moonlightcode.reviewFindings",
+   "moonlightcode.reviewFindingsStatus",
+   "moonlightcode.reviewHasBaselines",
+   "moonlightcode.reviewLayout",
+   "moonlightcode.reviewNoteFor",
+   "moonlightcode.reviewPicking",
+   "moonlightcode.reviewProblem",
+   "moonlightcode.reviewRowSelection",
+   "moonlightcode.reviewRows",
+   "moonlightcode.reviewRun",
+   "moonlightcode.reviewScope",
+   "moonlightcode.reviewSelection",
+   "moonlightcode.reviewView"
+  ],
+  "stateWrites": [
+   "moonlightcode.pending",
+   "moonlightcode.phase",
+   "moonlightcode.planComments",
+   "moonlightcode.planDoc",
+   "moonlightcode.planDraft",
+   "moonlightcode.planNote",
+   "moonlightcode.planRejecting",
+   "moonlightcode.planRowSelection",
+   "moonlightcode.reviewComments",
+   "moonlightcode.reviewDraft",
+   "moonlightcode.reviewExpanded",
+   "moonlightcode.reviewFiles",
+   "moonlightcode.reviewFindings",
+   "moonlightcode.reviewFindingsStatus",
+   "moonlightcode.reviewHasBaselines",
+   "moonlightcode.reviewLayout",
+   "moonlightcode.reviewNoteFor",
+   "moonlightcode.reviewPicking",
+   "moonlightcode.reviewProblem",
+   "moonlightcode.reviewRowSelection",
+   "moonlightcode.reviewRows",
+   "moonlightcode.reviewRun",
+   "moonlightcode.reviewScope",
+   "moonlightcode.reviewSelection",
+   "moonlightcode.reviewView"
+  ],
+  "envReads": [
+   "HOME",
+   "TMPDIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/titouanfreville-moonlight-ide-plugins-moonlightcode/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/titouanfreville-moonlight-ide-plugins-moonlightcode/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: moonlightcode.phase, moonlightcode.pending, moonlightcode.reviewView, moonlightcode.reviewFiles, moonlightcode.reviewRows, moonlightcode.reviewSelection, moonlightcode.reviewComments, moonlightcode.reviewProblem, moonlightcode.reviewLayout, moonlightcode.reviewExpanded, moonlightcode.reviewScope, moonlightcode.reviewHasBaselines, moonlightcode.reviewDraft, moonlightcode.reviewRowSelection, moonlightcode.reviewFindings, moonlightcode.reviewFindingsStatus, moonlightcode.reviewNoteFor, moonlightcode.reviewRun, moonlightcode.reviewPicking, moonlightcode.planDoc, moonlightcode.planComments, moonlightcode.planRowSelection, moonlightcode.planDraft, moonlightcode.planNote, moonlightcode.planRejecting"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/titouanfreville-moonlight-ide-plugins-moonlightcode/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=phase}, command.run{command=ml-review}, ui.render{component=Pane, requestId=moonlight-review}, tool.call{tool=mcp__moonlightcode__present_plan}, command.run{command=ml-plan}, ui.render{component=Pane, requestId=moonlight-plan}, tool.call{tool=mcp__moonlightcode__request_phase}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=moonlight-phase}, tool.call, tool.call{tool=Bash}, tool.call{tool=Monitor}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=NotebookEdit}, skill.prompt, turn.start, turn.complete, session.end",
+      "./register.tsx answers its own command: command.run{command=phase}",
+      "./register.tsx answers its own command: command.run{command=ml-review}",
+      "./register.tsx answers its own command: command.run{command=ml-plan}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__moonlightcode__present_plan}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__moonlightcode__request_phase}",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Monitor}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Edit}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Write}",
+      "./register.tsx gating hook with .catch: tool.call{tool=NotebookEdit}",
+      "./register.tsx calls: $.clock.every, $.clock.now (via addPlanComment, addReviewComment, beat, ingestAnswer, sweepStaleBaselines), $.command.list, $.command.register (via startCommands), $.env.get (via initGate, resolveScratchRoots, sessionsDir), $.fs.exists (via baselineFiles, captureBaseline, dropBaseline, isDevUnlocked, readBaselineIndex, sweepStaleBaselines), $.fs.list (via listRoot, sweepStaleBaselines), $.fs.read (via applySandbox, captureBaseline, readBaselineIndex, readPhase), $.fs.stat (via realPathOf, resolveNoteRoots, resolveTarget, sweepStaleBaselines), $.fs.write (via applySandbox, beat, captureBaseline, presentPlan, setPhase), $.process.run (via dropBaseline, findRepos, git), $.prompt.submit (via askModel), $.session.append (via tellModel), $.session.cwd (via sessionRoot), $.session.id (via baselineDir, beat, presentPlan, sweepStaleBaselines), $.session.root (via initGate, sessionRoot), $.session.surfaces, $.settings.read (via shellRefusal), $.state.get, $.state.set, $.sto… [+294 chars]",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, TMPDIR",
+      "./register.tsx state writes: moonlightcode.pending, moonlightcode.phase, moonlightcode.planComments, moonlightcode.planDoc, moonlightcode.planDraft, moonlightcode.planNote, moonlightcode.planRejecting, moonlightcode.planRowSelection, moonlightcode.reviewComments, moonlightcode.reviewDraft, moonlightcode.reviewExpanded, moonlightcode.reviewFiles, moonlightcode.reviewFindings, moonlightcode.reviewFindingsStatus, moonlightcode.reviewHasBaselines, moonlightcode.reviewLayout, moonlightcode.reviewNoteFor, moonlightcode.reviewPicking, moonlightcode.reviewProblem, moonlightcode.reviewRowSelection, moonlightcode.reviewRows, moonlightcode.reviewRun, moonlightcode.reviewScope, moonlightcode.reviewSelection, moonlightcode.reviewView",
+      "./register.tsx state reads: moonlightcode.pending, moonlightcode.phase, moonlightcode.planComments, moonlightcode.planDoc, moonlightcode.planDraft, moonlightcode.planNote, moonlightcode.planRejecting, moonlightcode.planRowSelection, moonlightcode.reviewComments, moonlightcode.reviewDraft, moonlightcode.reviewExpanded, moonlightcode.reviewFiles, moonlightcode.reviewFindings, moonlightcode.reviewFindingsStatus, moonlightcode.reviewHasBaselines, moonlightcode.reviewLayout, moonlightcode.reviewNoteFor, moonlightcode.reviewPicking, moonlightcode.reviewProblem, moonlightcode.reviewRowSelection, moonlightcode.reviewRows, moonlightcode.reviewRun, moonlightcode.reviewScope, moonlightcode.reviewSelection, moonlightcode.reviewView"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__moonlightcode__present_plan}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__moonlightcode__request_phase}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Monitor}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=NotebookEdit}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "f656dfe852d0b03e"
+}

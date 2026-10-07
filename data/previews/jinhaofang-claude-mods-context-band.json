@@ -1,6 +1,6 @@
 {
  "slug": "jinhaofang-claude-mods-context-band",
- "generatedAt": "2026-10-06T14:51:36.786Z",
+ "generatedAt": "2026-10-07T15:23:22.153Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "session.measure"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "command.run",
@@ -26,8 +32,8 @@
   "commands": [
    {
     "name": "context-band",
-    "description": "Show the context usage band above the prompt again",
-    "output": "Context band shown."
+    "description": "Restore the context band above the prompt, expanded",
+    "output": "Context band expanded."
    }
   ],
   "tools": [],
@@ -38,13 +44,15 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.state.get": 11,
    "$.clock.every": 1,
    "$.ui.invalidate": 1,
-   "$.state.get": 3,
    "$.ui.resolve": 2,
    "$.session.usage": 2,
+   "$.session.model": 2,
+   "$.session.cwd": 2,
    "$.clock.now": 2,
-   "$.state.set": 1
+   "$.state.set": 2
   },
   "timers": [
    {
@@ -57,75 +65,145 @@
     "ok": true,
     "tree": {
      "type": "Box",
-     "props": {},
+     "props": {
+      "flexDirection": "column"
+     },
      "children": [
       {
-       "type": "Text",
-       "props": {
-        "dimColor": true
-       },
+       "type": "Box",
+       "props": {},
        "children": [
-        "Context "
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          "claude-opus-5-5",
+          " "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "inactive"
+         },
+         "children": [
+          "○",
+          " "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "/work/app"
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "hide",
+          "label": "Hide",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "compact",
+          "label": "⟲ Compact",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "settings",
+          "label": "⚙",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "collapse",
+          "label": "▾",
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
        ]
       },
       {
-       "type": "Text",
+       "type": "Box",
        "props": {
-        "color": "success"
+        "key": "readings"
        },
        "children": [
-        "██████░░░░░░",
-        " "
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "Context "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "success"
+         },
+         "children": [
+          "██████░░░░░░",
+          " "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "success",
+          "bold": true
+         },
+         "children": [
+          "49.0",
+          "%"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          " of ",
+          "200.0k"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "key": "five_hour",
+          "color": "suggestion"
+         },
+         "children": [
+          " · █░░ 31%"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          " ↺1h00m"
+         ]
+        }
        ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "color": "success",
-        "bold": true
-       },
-       "children": [
-        "49.0",
-        "%"
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "dimColor": true
-       },
-       "children": [
-        " of ",
-        "200.0k"
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "key": "five_hour",
-        "color": "suggestion"
-       },
-       "children": [
-        " · █░░ 31%"
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "dimColor": true
-       },
-       "children": [
-        " ↺1h00m"
-       ]
-      },
-      {
-       "type": "Button",
-       "props": {
-        "key": "hide",
-        "label": "Hide",
-        "onPress": "[fn]"
-       },
-       "children": []
       }
      ]
     }
@@ -143,7 +221,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/context-band → Context band shown."
+   "/context-band → Context band expanded."
   ],
   "console": [],
   "warnings": []
@@ -155,13 +233,20 @@
   "hooks": [
    "session.start",
    "session.measure",
+   "turn.step",
+   "turn.complete",
    "command.run{command=context-band}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
-   "$.clock.every",
+   "$.agent.list",
+   "$.clock.after",
+   "$.clock.every (via armRefresh)",
    "$.clock.now",
    "$.command.register",
+   "$.session.compact (via tryCompact)",
+   "$.session.cwd",
+   "$.session.model",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
@@ -169,10 +254,18 @@
    "$.ui.resolve"
   ],
   "stateReads": [
-   "context-band.isHidden"
+   "context-band.isCollapsed",
+   "context-band.isHidden",
+   "context-band.mainEffort",
+   "context-band.settings",
+   "context-band.tracker"
   ],
   "stateWrites": [
-   "context-band.isHidden"
+   "context-band.isCollapsed",
+   "context-band.isHidden",
+   "context-band.mainEffort",
+   "context-band.settings",
+   "context-band.tracker"
   ],
   "envReads": [],
   "raw": {
@@ -186,7 +279,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: context-band.isHidden"
+     "types ./types/index.d.ts declares state: context-band.isHidden, context-band.isCollapsed, context-band.mainEffort, context-band.tracker, context-band.settings"
     ],
     "gatingHooks": []
    },
@@ -197,15 +290,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, command.run{command=context-band}, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.session.usage, $.state.get, $.state.set, $.ui.invalidate, $.ui.resolve",
-      "./register.tsx state writes: context-band.isHidden",
-      "./register.tsx state reads: context-band.isHidden"
+      "./register.tsx hooks: session.start, session.measure, turn.step, turn.complete, command.run{command=context-band}, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=context-band}",
+      "./register.tsx calls: $.agent.list, $.clock.after, $.clock.every (via armRefresh), $.clock.now, $.command.register, $.session.compact (via tryCompact), $.session.cwd, $.session.model, $.session.usage, $.state.get, $.state.set, $.ui.invalidate, $.ui.resolve",
+      "./register.tsx state writes: context-band.isCollapsed, context-band.isHidden, context-band.mainEffort, context-band.settings, context-band.tracker",
+      "./register.tsx state reads: context-band.isCollapsed, context-band.isHidden, context-band.mainEffort, context-band.settings, context-band.tracker"
      ],
      "gatingHooks": []
     }
    ]
   }
  },
- "sourceHash": "a33dc3d26813de88"
+ "sourceHash": "e06571cd0ea2739f"
 }

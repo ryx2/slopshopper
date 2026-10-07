@@ -1,11 +1,24 @@
 {
  "slug": "szotasz-claude-mods-usage-band",
- "generatedAt": "2026-10-06T05:30:33.642Z",
+ "generatedAt": "2026-10-07T15:23:58.390Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "limitsav"
+    }
+   },
+   {
+    "event": "state.set",
+    "matcher": {
+     "plugin": "tool-hub",
+     "key": "request"
+    }
    },
    {
     "event": "classic.PostModelSwitch"
@@ -14,7 +27,15 @@
     "event": "session.measure"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "limitsav",
+    "description": "Usage and context bar on/off",
+    "argumentHint": "[on|off]",
+    "immediate": true,
+    "output": "Usage bar off."
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -23,11 +44,14 @@
   "rewrites": [],
   "apiCalls": {
    "$.env.get": 2,
+   "$.store.get": 1,
+   "$.state.get": 18,
+   "$.state.set": 7,
+   "$.command.register": 1,
    "$.session.usage": 1,
-   "$.state.get": 12,
-   "$.state.set": 5,
    "$.session.model": 2,
-   "$.ui.status": 2
+   "$.ui.status": 3,
+   "$.store.set": 1
   },
   "timers": [],
   "sites": {},
@@ -42,10 +66,10 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/limitsav → Usage bar off."
   ],
   "console": [],
-  "status": "🤖 claude-opus-5-5  │  Ctx ████░░░░ 49% 97k/200k  │  5h ██░░░░░░ 31% → 02:53",
   "warnings": []
  },
  "validate": {
@@ -54,26 +78,33 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=limitsav}",
+   "state.set{plugin=tool-hub, key=request}",
    "classic.PostModelSwitch",
    "session.measure"
   ],
   "calls": [
+   "$.command.register",
    "$.env.get (via pickLanguage)",
    "$.session.model (via refreshModel)",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.store.get",
+   "$.store.set (via setOn)",
    "$.ui.status (via pushStatus)",
    "$.ui.toast (via warnPast90)"
   ],
   "stateReads": [
    "usage-band.context",
+   "usage-band.isOn",
    "usage-band.limits",
    "usage-band.model",
    "usage-band.warned"
   ],
   "stateWrites": [
    "usage-band.context",
+   "usage-band.isOn",
    "usage-band.limits",
    "usage-band.model",
    "usage-band.warned"
@@ -85,34 +116,52 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/szotasz-claude-mods-usage-band/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/szotasz-claude-mods-usage-band/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/szotasz-claude-mods-usage-band/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/szotasz-claude-mods-usage-band/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: usage-band.limits, usage-band.warned, usage-band.context, usage-band.model"
-    ]
+     "types ./types/index.d.ts declares state: tool-hub.request, usage-band.limits, usage-band.warned, usage-band.context, usage-band.model, usage-band.isOn"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/szotasz-claude-mods-usage-band/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/szotasz-claude-mods-usage-band/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.PostModelSwitch, session.measure",
-      "./register.tsx calls: $.env.get (via pickLanguage), $.session.model (via refreshModel), $.session.usage, $.state.get, $.state.set, $.ui.status (via pushStatus), $.ui.toast (via warnPast90)",
+      "./register.tsx hooks: session.start, command.run{command=limitsav}, state.set{plugin=tool-hub, key=request}, classic.PostModelSwitch, session.measure",
+      "./register.tsx answers its own command: command.run{command=limitsav}",
+      "./register.tsx gating hook without .catch: state.set{plugin=tool-hub, key=request}",
+      "./register.tsx gating hook without .catch: classic.PostModelSwitch",
+      "./register.tsx calls: $.command.register, $.env.get (via pickLanguage), $.session.model (via refreshModel), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set (via setOn), $.ui.status (via pushStatus), $.ui.toast (via warnPast90)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: LANG, LC_ALL",
-      "./register.tsx state writes: usage-band.context, usage-band.limits, usage-band.model, usage-band.warned",
-      "./register.tsx state reads: usage-band.context, usage-band.limits, usage-band.model, usage-band.warned"
+      "./register.tsx state writes: usage-band.context, usage-band.isOn, usage-band.limits, usage-band.model, usage-band.warned",
+      "./register.tsx state reads: usage-band.context, usage-band.isOn, usage-band.limits, usage-band.model, usage-band.warned"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "state.set",
+       "hook": "state.set{plugin=tool-hub, key=request}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostModelSwitch",
+       "hook": "classic.PostModelSwitch",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "8db8641fab4552a4"
+ "sourceHash": "9ae5f4cccbc010d3"
 }

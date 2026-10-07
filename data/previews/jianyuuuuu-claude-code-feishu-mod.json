@@ -1,6 +1,6 @@
 {
  "slug": "jianyuuuuu-claude-code-feishu-mod",
- "generatedAt": "2026-10-06T14:51:09.048Z",
+ "generatedAt": "2026-10-07T15:22:23.705Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -23,6 +23,12 @@
     "event": "turn.complete"
    },
    {
+    "event": "classic.PermissionRequest"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
     "event": "session.end"
    }
   ],
@@ -31,7 +37,7 @@
     "name": "feishu",
     "description": "飞书桥接：on | off | status | allow <open_id|last> | deny <open_id>",
     "argumentHint": "on|off|status|allow <ou_…|last>|deny <ou_…>",
-    "output": "状态：off（profile claude-code）\n授权用户：无\n最近未授权的发送者：无"
+    "output": "状态：off（profile claude-code）\n授权用户：无\n飞书会话：未知（先在飞书私聊机器人一次）\n等待中的飞书卡片：0\n最近未授权的发送者：无"
    }
   ],
   "tools": [],
@@ -42,8 +48,9 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 3,
-   "$.store.get": 2
+   "$.state.get": 17,
+   "$.state.set": 1,
+   "$.store.get": 3
   },
   "timers": [],
   "sites": {},
@@ -59,7 +66,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/feishu → 状态：off（profile claude-code）\n授权用户：无\n最近未授权的发送者：无"
+   "/feishu → 状态：off（profile claude-code）\n授权用户：无\n飞书会话：未知（先在飞书私聊机器人一次）\n等待中的飞书卡片：0\n最近未授权的发送者：无"
   ],
   "console": [],
   "warnings": []
@@ -74,36 +81,64 @@
    "prompt.submit",
    "turn.start",
    "turn.complete",
+   "classic.PermissionRequest",
+   "tool.call",
    "session.end"
   ],
   "calls": [
-   "$.clock.sleep (via runConsumer)",
+   "$.clock.now (via sendUsage",
+   "waitCardAction)",
+   "$.clock.sleep (via runSlash",
+   "runStream)",
+   "$.command.list (via helpText)",
    "$.command.register",
-   "$.process.run (via lark)",
-   "$.process.spawn (via runConsumer)",
+   "$.command.run (via runSlash)",
+   "$.config.list (via configRows)",
+   "$.config.set (via handleConfigClick)",
+   "$.fs.stat",
+   "$.process.run (via debug",
+   "downloadResources",
+   "handleCardClick",
+   "lark",
+   "localOffset",
+   "waitCardAction)",
+   "$.process.spawn (via runStream)",
    "$.prompt.submit (via handle)",
+   "$.session.cwd (via sendUsage)",
+   "$.session.usage (via sendUsage)",
+   "$.session.version (via sendUsage)",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
-   "$.store.set",
-   "$.ui.log (via handle",
-   "react",
-   "runConsumer)",
+   "$.store.get (via allowList",
+   "feishuCommand",
+   "homeChat)",
+   "$.store.set (via feishuCommand",
+   "handle)",
+   "$.ui.log (via debug)",
    "$.ui.status (via setStatus)",
-   "$.ui.toast (via handle",
-   "reply)"
+   "$.ui.toast"
   ],
   "stateReads": [
+   "feishu-mod.armed",
    "feishu-mod.isOn",
+   "feishu-mod.mirrored",
+   "feishu-mod.model",
+   "feishu-mod.pending",
    "feishu-mod.seen",
    "feishu-mod.status",
-   "feishu-mod.turns"
+   "feishu-mod.turns",
+   "feishu-mod.typing"
   ],
   "stateWrites": [
+   "feishu-mod.armed",
    "feishu-mod.isOn",
+   "feishu-mod.mirrored",
+   "feishu-mod.model",
+   "feishu-mod.pending",
    "feishu-mod.seen",
    "feishu-mod.status",
-   "feishu-mod.turns"
+   "feishu-mod.turns",
+   "feishu-mod.typing"
   ],
   "envReads": [],
   "raw": {
@@ -117,7 +152,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: feishu-mod.isOn, feishu-mod.status, feishu-mod.turns, feishu-mod.seen"
+     "types ./types/index.d.ts declares state: feishu-mod.isOn, feishu-mod.status, feishu-mod.turns, feishu-mod.seen, feishu-mod.mirrored, feishu-mod.armed, feishu-mod.pending, feishu-mod.typing, feishu-mod.model"
     ],
     "gatingHooks": []
    },
@@ -128,17 +163,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=feishu}, prompt.submit, turn.start, turn.complete, session.end",
-      "./register.ts gating hook without .catch: prompt.submit",
-      "./register.ts calls: $.clock.sleep (via runConsumer), $.command.register, $.process.run (via lark), $.process.spawn (via runConsumer), $.prompt.submit (via handle), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.log (via handle, react, runConsumer), $.ui.status (via setStatus), $.ui.toast (via handle, reply)",
-      "./register.ts state writes: feishu-mod.isOn, feishu-mod.seen, feishu-mod.status, feishu-mod.turns",
-      "./register.ts state reads: feishu-mod.isOn, feishu-mod.seen, feishu-mod.status, feishu-mod.turns"
+      "./register.ts hooks: session.start, command.run{command=feishu}, prompt.submit, turn.start, turn.complete, classic.PermissionRequest, tool.call, session.end",
+      "./register.ts answers its own command: command.run{command=feishu}",
+      "./register.ts gating hook with .catch: prompt.submit",
+      "./register.ts gating hook with .catch: classic.PermissionRequest",
+      "./register.ts gating hook without .catch: tool.call",
+      "./register.ts calls: $.clock.now (via sendUsage, waitCardAction), $.clock.sleep (via runSlash, runStream), $.command.list (via helpText), $.command.register, $.command.run (via runSlash), $.config.list (via configRows), $.config.set (via handleConfigClick), $.fs.stat, $.process.run (via debug, downloadResources, handleCardClick, lark, localOffset, waitCardAction), $.process.spawn (via runStream), $.prompt.submit (via handle), $.session.cwd (via sendUsage), $.session.usage (via sendUsage), $.session.version (via sendUsage), $.state.get, $.state.set, $.store.get (via allowList, feishuCommand, homeChat), $.store.set (via feishuCommand, handle), $.ui.log (via debug), $.ui.status (via setStatus), $.ui.toast",
+      "./register.ts state writes: feishu-mod.armed, feishu-mod.isOn, feishu-mod.mirrored, feishu-mod.model, feishu-mod.pending, feishu-mod.seen, feishu-mod.status, feishu-mod.turns, feishu-mod.typing",
+      "./register.ts state reads: feishu-mod.armed, feishu-mod.isOn, feishu-mod.mirrored, feishu-mod.model, feishu-mod.pending, feishu-mod.seen, feishu-mod.status, feishu-mod.turns, feishu-mod.typing"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.PermissionRequest",
+       "hook": "classic.PermissionRequest",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
        "hasCatch": false
       }
      ]
@@ -146,5 +196,5 @@
    ]
   }
  },
- "sourceHash": "73b4d81d3929168a"
+ "sourceHash": "c94d2982bac3cc95"
 }

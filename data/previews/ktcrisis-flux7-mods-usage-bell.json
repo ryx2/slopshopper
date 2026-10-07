@@ -1,11 +1,25 @@
 {
  "slug": "ktcrisis-flux7-mods-usage-bell",
- "generatedAt": "2026-10-06T05:27:58.534Z",
+ "generatedAt": "2026-10-07T15:22:25.034Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "state.set",
+    "matcher": {
+     "plugin": "avatar7",
+     "key": "modelUse"
+    }
+   },
+   {
+    "event": "state.set",
+    "matcher": {
+     "plugin": "jukebox7",
+     "key": "modelUse"
+    }
    },
    {
     "event": "session.measure"
@@ -38,8 +52,8 @@
   "commands": [
    {
     "name": "usage7",
-    "description": "Context, rate limits and memory index, against their limits (test: a sample ring)",
-    "output": "context: 49%, rings at 70 / 85 / 95\n5h: 31%, resets 02:53, rings at 80 / 95\nmemory index: not found in this session"
+    "description": "Context, rate limits, memory index, the mods' model calls and the API spend (test: a sample ring)",
+    "output": "context: 49%, rings at 70 / 85 / 95\n5h: 31%, resets 09:53, rings at 80 / 95\nmemory index: not found in this session\nmods (subscription): no model call yet this session\napi: ops7 did not answer on :8710"
    }
   ],
   "tools": [],
@@ -53,13 +67,18 @@
    "$.command.register": 1,
    "$.ui.status": 1,
    "$.session.usage": 1,
-   "$.clock.every": 1,
-   "$.ui.invalidate": 1
+   "$.clock.every": 2,
+   "$.process.run": 1,
+   "$.ui.invalidate": 2
   },
   "timers": [
    {
     "kind": "every",
     "ms": 2000
+   },
+   {
+    "kind": "every",
+    "ms": 300000
    }
   ],
   "sites": {
@@ -74,6 +93,7 @@
    }
   },
   "script": [
+   "$.process.run(curl -s --max-time 5 http://127.0.0.1:8710/spend) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -85,7 +105,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/usage7 → context: 49%, rings at 70 / 85 / 95\n5h: 31%, resets 02:53, rings at 80 / 95\nmemo…"
+   "/usage7 → context: 49%, rings at 70 / 85 / 95\n5h: 31%, resets 09:53, rings at 80 / 95\nmemo…"
   ],
   "console": [],
   "warnings": []
@@ -98,6 +118,7 @@
   ],
   "hooks": [
    "session.start",
+   "state.set{plugin=avatar7|jukebox7, key=modelUse}",
    "session.measure",
    "ui.render{component=PromptHint}",
    "tool.call{tool=Write|Edit}",
@@ -107,6 +128,7 @@
    "$.clock.every",
    "$.command.register",
    "$.fs.read",
+   "$.process.run",
    "$.session.usage",
    "$.state.set",
    "$.ui.invalidate",
@@ -123,9 +145,9 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ktcrisis-flux7-mods-usage-bell/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ktcrisis-flux7-mods-usage-bell/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ktcrisis-flux7-mods-usage-bell/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ktcrisis-flux7-mods-usage-bell/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [
@@ -137,24 +159,42 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: usage-bell.announce"
-    ]
+     "types ./types/index.d.ts declares state: usage-bell.announce, avatar7.modelUse, jukebox7.modelUse"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ktcrisis-flux7-mods-usage-bell/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ktcrisis-flux7-mods-usage-bell/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.measure, ui.render{component=PromptHint}, tool.call{tool=Write|Edit}, command.run{command=usage7}",
-      "./register.ts calls: $.clock.every, $.command.register, $.fs.read, $.session.usage, $.state.set, $.ui.invalidate, $.ui.status, $.ui.toast",
+      "./register.ts hooks: session.start, state.set{plugin=avatar7|jukebox7, key=modelUse}, session.measure, ui.render{component=PromptHint}, tool.call{tool=Write|Edit}, command.run{command=usage7}",
+      "./register.ts answers its own command: command.run{command=usage7}",
+      "./register.ts gating hook without .catch: state.set{plugin=avatar7|jukebox7, key=modelUse}",
+      "./register.ts gating hook without .catch: tool.call{tool=Write|Edit}",
+      "./register.ts calls: $.clock.every, $.command.register, $.fs.read, $.process.run, $.session.usage, $.state.set, $.ui.invalidate, $.ui.status, $.ui.toast",
       "./register.ts state writes: usage-bell.announce",
       "./register.ts state reads: nothing"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "state.set",
+       "hook": "state.set{plugin=avatar7|jukebox7, key=modelUse}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write|Edit}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "e64ba87a5fb23796"
+ "sourceHash": "3d9d76895de97f37"
 }

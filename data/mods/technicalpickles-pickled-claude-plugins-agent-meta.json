@@ -1,0 +1,8 @@
+{
+ "slug": "technicalpickles-pickled-claude-plugins-agent-meta",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({\n      name: 'session-id',\n      description: 'Show the current session ID',\n      immediate: true,\n    })\n    return next(e)\n  })\n\n  on('command.run', { command: 'session-id' }, async $ => ({\n    text: await $.session.id(),\n  }))\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"Inject session ID and transcript path into context when agent-meta skills are invoked\",\n  \"hooks\": {\n    \"PostToolUse\": [\n      {\n        \"matcher\": \"Skill\",\n        \"hooks\": [\n          {\n            \"type\": \"command\",\n            \"command\": \"python3 \\\"${CLAUDE_PLUGIN_ROOT}\\\"/hooks/inject-session-context.py\"\n          }\n        ]\n      }\n    ]\n  },\n  \"modules\": [\n    \"./register.ts\"\n  ]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"agent-meta\",\n  \"description\": \"Meta-development tools for agentic workflows\"\n}"
+ }
+}

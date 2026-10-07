@@ -1,6 +1,6 @@
 {
  "slug": "astrosteveo-claude-plugins-issue-board",
- "generatedAt": "2026-10-06T14:51:21.170Z",
+ "generatedAt": "2026-10-07T15:22:52.633Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,9 @@
     }
    },
    {
+    "event": "session.compact"
+   },
+   {
     "event": "classic.SessionStart"
    },
    {
@@ -26,16 +29,18 @@
     }
    },
    {
-    "event": "ui.focus",
-    "matcher": {
-     "component": "Pane",
-     "requestId": "issue-board"
-    }
-   },
-   {
     "event": "ui.close",
     "matcher": {
      "id": "issue-board"
+    }
+   },
+   {
+    "event": "tool.describe"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ToolSearch"
     }
    },
    {
@@ -72,6 +77,12 @@
     "event": "session.receive"
    },
    {
+    "event": "prompt.autocomplete",
+    "matcher": {
+     "token": "/^#/"
+    }
+   },
+   {
     "event": "prompt.suggest"
    },
    {
@@ -95,12 +106,36 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "mcp__issue-board__project_plan"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__project_plan"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__issue-board__issue_create"
     }
    },
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "mcp__issue-board__capture"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__capture"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__issue-board__project_status"
     }
    },
@@ -121,6 +156,21 @@
     "matcher": {
      "tool": "mcp__issue-board__project_archive"
     }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__issue-board__project_adopt"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__project_adopt"
+    }
+   },
+   {
+    "event": "classic.UserPromptSubmit"
    },
    {
     "event": "tool.call",
@@ -132,6 +182,12 @@
     "event": "tool.check",
     "matcher": {
      "tool": "mcp__issue-board__issue_update"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__issue-board__tick"
     }
    },
    {
@@ -173,38 +229,50 @@
    {
     "name": "issues",
     "description": "Show open issues and pull requests in a pane",
-    "argumentHint": "[refresh | new | new epic | setup | check | help]",
-    "output": "Issues pane opened. Filters: 1 Active, 2 Future, 3 Bugs, 4 Mine, 5 All, 7 Closed. Enter opens an issue: Start hands it to Claude, Change edits it, and Esc folds it. r refreshes. Also: /issues new [epic] drafts an issue, /issues setup links a project, /issues check says what is missing. /issues help lists everything."
+    "argumentHint": "[refresh | new | new epic | setup | statuses | labels | check | stats | help]",
+    "output": "Issues pane opened. Filters: 1 Active, 2 Future, 3 Bugs, 4 Mine, 5 All, 7 Closed. Enter opens an issue: Start hands it to Claude, Change edits it, and Esc folds it. r refreshes. Also: /issues new [epic] captures an issue to the Inbox, /issues setup links a project, /issues check says what is missing. /issues help lists everything."
    }
   ],
   "tools": [
    {
     "name": "issues",
-    "description": "Lists this repository's open GitHub issues and pull requests from the issue board's copy, which refreshes every few minutes and after gh changes. Without `number`, one line each: number, title, labels and how many task-list boxes are ticked; pull requests also give their branch, CI and review. With `number`, that issue in full as the board has it: labels, assignees and its task-list boxes, numbered as the tick tool counts them; a closed issue is read from GitHub, with how it closed. With `state` closed or all, or `search`, it searches every issue with GitHub's own search instead, one line each with how it stands. Read an issue's whole text with `gh issue view`."
+    "description": "Lists this repo's open issues and pull requests from the issue board's copy, one line each. With `number`, one in full with its boxes numbered as tick counts them. With `state` closed or all, or `search`, it searches GitHub instead. Read an issue's whole text with `gh issue view`."
    },
    {
     "name": "tick",
-    "description": "Ticks task-list boxes (`- [ ]` lines) in a GitHub issue's body, so the issue board shows the progress. Tick a box only once its work is done and checked. Boxes are counted from 1 in the order the body lists them, as the issues tool shows them with `number`. Set `done` to false to untick."
+    "description": "Ticks `- [ ]` boxes in an issue's body once their work is done and checked. Boxes count from 1 in body order, as the issues tool shows them with `number`."
    },
    {
     "name": "issue_update",
-    "description": "Changes a GitHub issue of this repository and updates the issue board at once: its title and body, its acceptance boxes, its Status and Priority in the repo's GitHub Project, labels, assignees, parent (the epic it is a sub-issue of), milestone, a comment, closing it as completed or not planned, or reopening it. Give only what changes. Moving the Status of the issue the person started needs no permission; any other change asks. When you start work on an issue or pull request in this conversation, without the board's Start, call this with start: true, so the board shows it under way. To work one in the background, dispatch the issue-board:worker agent with a description that starts with the issue's #number: the board follows it on its own."
+    "description": "Changes an issue and the issue board at once. Give only what changes. When you start work on an issue or pull request here without the board's Start, call this with start: true. To work one in the background instead, dispatch the issue-board:worker agent with a description that starts with the issue's #number."
    },
    {
-    "name": "milestone",
-    "description": "Makes or changes a milestone of this repository, by its title: one the repo hasn't got is made, with an optional due date and description; one it has is renamed, given a new due date or description, closed or reopened. The issue board shows open milestones with their progress. List them with the issues tool and `milestones`. Changing a milestone asks for permission."
-   },
-   {
-    "name": "project_status",
-    "description": "Reads or posts the status update of the repo's GitHub Project, which shows at the top of the project and in the issue board's pane. Without status, it answers the latest update. With status (On track, At risk, Off track, Complete or Inactive), it posts one, with a note and optional start and target dates. Reading needs no permission; posting asks."
-   },
-   {
-    "name": "project_archive",
-    "description": "Archives items in the repo's GitHub Project, which takes them out of its views and leaves the issues as they are: one issue's item, by number, or every item at Done whose issue closed before a date. The first call says how many and which, and changes nothing; call again with confirm: true to archive."
+    "name": "capture",
+    "description": "Files work found in conversation to the project's Inbox, for the person to triage, without asking. If an open issue, or one closed in the last 30 days, is the same work, it comments there instead."
    },
    {
     "name": "issue_create",
-    "description": "Files a new GitHub issue in this repository and puts it on the issue board at once: its title and body, labels, assignees, milestone, the epic it is a sub-issue of, and its Status and Priority in the repo's GitHub Project. Without a Status it goes to the project's Inbox. Write the body in Markdown, with an Acceptance list of `- [ ]` boxes. For an epic, give its sub-issues too: each is filed under it, in order, with the same fields. Filing asks for permission. If a step after filing fails, the answer says which, and gives the new issue's number."
+    "description": "Files an issue and puts it on the issue board. Without a status it goes to the project's Inbox. Write the body in Markdown with an Acceptance list of `- [ ]` boxes. If a step after filing fails, the answer says which, with the new number."
+   },
+   {
+    "name": "milestone",
+    "description": "Makes a milestone by title if the repo hasn't got it, or else changes it. The issues tool lists them with `milestones`."
+   },
+   {
+    "name": "project_status",
+    "description": "Reads the latest status update of the repo's GitHub Project, or with status posts one."
+   },
+   {
+    "name": "project_archive",
+    "description": "Archives items in the repo's GitHub Project, leaving the issues as they are: one issue's item, or every Done item closed before a date. The first call lists them and changes nothing; call again with confirm: true to archive."
+   },
+   {
+    "name": "project_plan",
+    "description": "Proposes many issue, label and view changes as one plan, each with a reason, refused whole if any is invalid. The person approves it once, or applies some of it in /issues. A new plan replaces the last."
+   },
+   {
+    "name": "project_adopt",
+    "description": "Lets the issue board write to a GitHub Project of this repo, which it otherwise only reads; release: true stops it. Call it only when the person asks you to let the board write to a project, or to release one; never on your own, and never to get past a refusal."
    }
   ],
   "panes": [
@@ -218,20 +286,21 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.clock.now": 7,
+   "$.settings.read": 6,
    "$.command.register": 1,
-   "$.tool.register": 7,
+   "$.tool.register": 10,
    "$.agent.register": 1,
-   "$.state.get": 72,
+   "$.state.get": 78,
    "$.state.set": 14,
    "$.ui.status": 1,
    "$.session.repo": 5,
-   "$.store.get": 1,
-   "$.clock.now": 6,
+   "$.store.get": 2,
    "$.process.run": 11,
    "$.clock.after": 3,
-   "$.clock.sleep": 6,
+   "$.clock.sleep": 9,
    "$.ui.open": 1,
-   "$.ui.resolve": 2
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -272,7 +341,9 @@
         "children": [
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "wrap": "truncate-end"
+          },
           "children": [
            {
             "type": "Text",
@@ -298,7 +369,8 @@
           "type": "Box",
           "props": {
            "flexDirection": "row",
-           "gap": 1
+           "gap": 1,
+           "flexShrink": 0
           },
           "children": [
            {
@@ -406,10 +478,12 @@
   "hooks": [
    "session.start",
    "session.end{reason=clear|resume}",
+   "session.compact",
    "classic.SessionStart",
    "command.run{command=issues}",
-   "ui.focus{component=Pane, requestId=issue-board}",
    "ui.close{id=issue-board}",
+   "tool.describe",
+   "tool.call{tool=ToolSearch}",
    "tool.call{tool=Bash}",
    "tool.call{tool=EnterWorktree|ExitWorktree}",
    "tool.call{tool=TaskUpdate}",
@@ -417,104 +491,101 @@
    "turn.complete",
    "agent.spawn",
    "session.receive",
+   "prompt.autocomplete{token=/\"^#\"/}",
    "prompt.suggest",
    "tool.call{tool=mcp__issue-board__issues}",
    "tool.call{tool=mcp__issue-board__tick}",
    "tool.call{tool=mcp__issue-board__issue_update}",
+   "tool.call{tool=mcp__issue-board__project_plan}",
+   "tool.check{tool=mcp__issue-board__project_plan}",
    "tool.call{tool=mcp__issue-board__issue_create}",
+   "tool.call{tool=mcp__issue-board__capture}",
+   "tool.check{tool=mcp__issue-board__capture}",
    "tool.call{tool=mcp__issue-board__project_status}",
    "tool.check{tool=mcp__issue-board__project_status}",
    "tool.call{tool=mcp__issue-board__project_archive}",
    "tool.check{tool=mcp__issue-board__project_archive}",
-   "tool.call{tool=mcp__issue-board__milestone}",
-   "tool.check{tool=mcp__issue-board__issue_update}",
-   "tool.check{tool=mcp__issue-board__issues}",
-   "tool.check{tool=Bash}",
-   "prompt.compose",
-   "ui.render{component=Pane, requestId=issue-board}",
-   "ui.render{component=Promp… [+40 chars]"
+   "tool.call{tool=mcp__i… [+436 chars]"
   ],
   "calls": [
-   "$.agent.list",
+   "$.agent.list (via checkWorkers",
+   "workerIdOf)",
    "$.agent.register",
+   "$.agent.spawn (via startInBackground)",
    "$.clock.after (via checkWorkers",
-   "schedule",
-   "startInBackground)",
+   "schedule)",
    "$.clock.every (via pollWorkers)",
    "$.clock.now (via nowOf)",
    "$.clock.sleep (via afterTurn",
    "lookForRuns",
    "settle)",
    "$.command.register",
+   "$.config.list (via footerBranch)",
+   "$.config.set (via writeSetting)",
    "$.fs.list (via foldersOf",
    "hasTemplate)",
    "$.fs.read (via hasTemplate)",
-   "$.model.complete (via draftIssue",
+   "$.model.complete (via captureFromTalk",
    "suggestInbox)",
-   "$.model.fork (via draftIssue)",
+   "$.model.fork (via captureFromTalk)",
    "$.process.run (via changed",
    "checkAccess",
    "currentBranch",
-   "gh)",
+   "runGh)",
    "$.process.spawn (via watchRun)",
    "$.prompt.fill",
-   "$.prompt.submit",
+   "$.prompt.submit (via submit)",
    "$.prompt.suggest (via afterTurn)",
    "$.session.id",
    "$.session.repo",
-   "$.session.root (via keyOf",
-   "readSetup)",
+   "$.session.root (via readSetup",
+   "rootOf)",
+   "$.settings.read (via storedIn)",
    "$.state.get",
    "$.state.set",
    "$.store.get (via adopt",
-   "applySetup",
-   "restore",
-   "savedSetup)",
-   "$.store.set (via applySetup",
+   "choicesOf",
+   "restore)",
+   "$.store.set (via changeChoices",
    "save)",
    "$.tool.call (via makeTasks)",
-   "$.tool.register",
-   "$.ui.copy (via copyFix)",
-   "$.ui.focus",
-   "$.ui.log",
-   "$.ui.open",
-   "$.ui.resolve",
-   "$.ui.scroll",
-   "$.ui.status",
-   "$.ui.toast"
+   "$.tool.register (via registerTool)",
+   "$.ui.copy (via copyFix),… [+72 chars]"
   ],
   "stateReads": [
    "issue-board.access",
+   "issue-board.adoption",
+   "issue-board.armed",
    "issue-board.board",
    "issue-board.branch",
-   "issue-board.closing",
-   "issue-board.confirming",
-   "issue-board.creating",
+   "issue-board.captured",
    "issue-board.dismissed",
-   "issue-board.draft",
-   "issue-board.drafting",
+   "issue-board.drafted",
    "issue-board.editing",
    "issue-board.editorMore",
+   "issue-board.epicNotes",
    "issue-board.error",
    "issue-board.expanded",
    "issue-board.filter",
    "issue-board.greened",
    "issue-board.groupBy",
+   "issue-board.guessSeen",
    "issue-board.launching",
    "issue-board.loading",
+   "issue-board.markerPicks",
+   "issue-board.markers",
    "issue-board.openPr",
    "issue-board.palette",
+   "issue-board.plan",
    "issue-board.query",
    "issue-board.recent",
-   "issue-board.revising",
-   "issue-board.ring",
    "issue-board.runs",
    "issue-board.sections",
    "issue-board.setup",
+   "issue-board.statusPicks",
    "issue-board.talk",
    "issue-board.tasks",
    "issue-board.triage",
-   "issue-board.typedFields",
    "issue-board.typing",
    "issue-board.unfolded",
    "issue-board.values",
@@ -524,36 +595,38 @@
   ],
   "stateWrites": [
    "issue-board.access",
+   "issue-board.adoption",
+   "issue-board.armed",
    "issue-board.board",
    "issue-board.branch",
-   "issue-board.closing",
-   "issue-board.confirming",
-   "issue-board.creating",
+   "issue-board.captured",
    "issue-board.dismissed",
-   "issue-board.draft",
-   "issue-board.drafting",
+   "issue-board.drafted",
    "issue-board.editing",
    "issue-board.editorMore",
+   "issue-board.epicNotes",
    "issue-board.error",
    "issue-board.expanded",
    "issue-board.filter",
    "issue-board.greened",
    "issue-board.groupBy",
+   "issue-board.guessSeen",
    "issue-board.launching",
    "issue-board.loading",
+   "issue-board.markerPicks",
+   "issue-board.markers",
    "issue-board.openPr",
    "issue-board.palette",
+   "issue-board.plan",
    "issue-board.query",
    "issue-board.recent",
-   "issue-board.revising",
-   "issue-board.ring",
    "issue-board.runs",
    "issue-board.sections",
    "issue-board.setup",
+   "issue-board.statusPicks",
    "issue-board.talk",
    "issue-board.tasks",
    "issue-board.triage",
-   "issue-board.typedFields",
    "issue-board.typing",
    "issue-board.unfolded",
    "issue-board.values",
@@ -573,7 +646,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: issue-board.board, issue-board.error, issue-board.loading, issue-board.filter, issue-board.expanded, issue-board.working, issue-board.dismissed, issue-board.confirming, issue-board.query, issue-board.viewer, issue-board.branch, issue-board.greened, issue-board.draft, issue-board.drafting, issue-board.revising, issue-board.ring, issue-board.creating, issue-board.editing, issue-board.palette, issue-board.closing, issue-board.typing, issue-board.talk, issue-board.access, issue-board.openPr, issue-board.groupBy, issue-board.unfolded, issue-board.setup, issue-board.tasks, issue-board.triage, issue-board.runs, issue-board.workers, issue-board.launching, issue-board.recent, issue-board.values, issue-board.Record, issue-board.typedFields, issue-board.sections, issue-board.editorMore"
+     "types ./types/index.d.ts declares state: issue-board.board, issue-board.error, issue-board.loading, issue-board.filter, issue-board.expanded, issue-board.working, issue-board.dismissed, issue-board.armed, issue-board.query, issue-board.viewer, issue-board.branch, issue-board.greened, issue-board.captured, issue-board.editing, issue-board.palette, issue-board.typing, issue-board.talk, issue-board.access, issue-board.openPr, issue-board.groupBy, issue-board.unfolded, issue-board.setup, issue-board.tasks, issue-board.triage, issue-board.runs, issue-board.workers, issue-board.launching, issue-board.recent, issue-board.values, issue-board.sections, issue-board.editorMore, issue-board.epicNotes, issue-board.drafted, issue-board.adoption, issue-board.statusPicks, issue-board.guessSeen, issue-board.plan, issue-board.markers, issue-board.markerPicks"
     ],
     "gatingHooks": []
    },
@@ -584,10 +657,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end{reason=clear|resume}, classic.SessionStart, command.run{command=issues}, ui.focus{component=Pane, requestId=issue-board}, ui.close{id=issue-board}, tool.call{tool=Bash}, tool.call{tool=EnterWorktree|ExitWorktree}, tool.call{tool=TaskUpdate}, prompt.submit, turn.complete, agent.spawn, session.receive, prompt.suggest, tool.call{tool=mcp__issue-board__issues}, tool.call{tool=mcp__issue-board__tick}, tool.call{tool=mcp__issue-board__issue_update}, tool.call{tool=mcp__issue-board__issue_create}, tool.call{tool=mcp__issue-board__project_status}, tool.check{tool=mcp__issue-board__project_status}, tool.call{tool=mcp__issue-board__project_archive}, tool.check{tool=mcp__issue-board__project_archive}, tool.call{tool=mcp__issue-board__milestone}, tool.check{tool=mcp__issue-board__issue_update}, tool.check{tool=mcp__issue-board__issues}, tool.check{tool=Bash}, prompt.compose, ui.render{component=Pane, requestId=issue-board}, ui.render{component=Promp… [+40 chars]",
+      "./register.tsx hooks: session.start, session.end{reason=clear|resume}, session.compact, classic.SessionStart, command.run{command=issues}, ui.close{id=issue-board}, tool.describe, tool.call{tool=ToolSearch}, tool.call{tool=Bash}, tool.call{tool=EnterWorktree|ExitWorktree}, tool.call{tool=TaskUpdate}, prompt.submit, turn.complete, agent.spawn, session.receive, prompt.autocomplete{token=/\"^#\"/}, prompt.suggest, tool.call{tool=mcp__issue-board__issues}, tool.call{tool=mcp__issue-board__tick}, tool.call{tool=mcp__issue-board__issue_update}, tool.call{tool=mcp__issue-board__project_plan}, tool.check{tool=mcp__issue-board__project_plan}, tool.call{tool=mcp__issue-board__issue_create}, tool.call{tool=mcp__issue-board__capture}, tool.check{tool=mcp__issue-board__capture}, tool.call{tool=mcp__issue-board__project_status}, tool.check{tool=mcp__issue-board__project_status}, tool.call{tool=mcp__issue-board__project_archive}, tool.check{tool=mcp__issue-board__project_archive}, tool.call{tool=mcp__i… [+436 chars]",
+      "./register.tsx answers its own command: command.run{command=issues}",
+      "./register.tsx gating hook with .catch: session.compact",
       "./register.tsx gating hook with .catch: classic.SessionStart",
-      "./register.tsx gating hook with .catch: ui.focus{component=Pane, requestId=issue-board}",
       "./register.tsx gating hook with .catch: ui.close{id=issue-board}",
+      "./register.tsx gating hook with .catch: tool.call{tool=ToolSearch}",
       "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook with .catch: tool.call{tool=EnterWorktree|ExitWorktree}",
       "./register.tsx gating hook with .catch: tool.call{tool=TaskUpdate}",
@@ -597,20 +672,34 @@
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__issues}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__tick}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__issue_update}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__project_plan}",
+      "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__project_plan}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__issue_create}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__capture}",
+      "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__capture}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__project_status}",
       "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__project_status}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__project_archive}",
       "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__project_archive}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__project_adopt}",
+      "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__project_adopt}",
+      "./register.tsx gating hook with .catch: classic.UserPromptSubmit",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__issue-board__milestone}",
       "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__issue_update}",
+      "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__tick}",
       "./register.tsx gating hook with .catch: tool.check{tool=mcp__issue-board__issues}",
       "./register.tsx gating hook with .catch: tool.check{tool=Bash}",
-      "./register.tsx calls: $.agent.list, $.agent.register, $.clock.after (via checkWorkers, schedule, startInBackground), $.clock.every (via pollWorkers), $.clock.now (via nowOf), $.clock.sleep (via afterTurn, lookForRuns, settle), $.command.register, $.fs.list (via foldersOf, hasTemplate), $.fs.read (via hasTemplate), $.model.complete (via draftIssue, suggestInbox), $.model.fork (via draftIssue), $.process.run (via changed, checkAccess, currentBranch, gh), $.process.spawn (via watchRun), $.prompt.fill, $.prompt.submit, $.prompt.suggest (via afterTurn), $.session.id, $.session.repo, $.session.root (via keyOf, readSetup), $.state.get, $.state.set, $.store.get (via adopt, applySetup, restore, savedSetup), $.store.set (via applySetup, save), $.tool.call (via makeTasks), $.tool.register, $.ui.copy (via copyFix), $.ui.focus, $.ui.log, $.ui.open, $.ui.resolve, $.ui.scroll, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: issue-board.access, issue-board.board, issue-board.branch, issue-board.closing, issue-board.confirming, issue-board.creating, issue-board.dismissed, issue-board.draft, issue-board.drafting, issue-board.editing, issue-board.editorMore, issue-board.error, issue-board.expanded, issue-board.filter, issue-board.greened, issue-board.groupBy, issue-board.launching, issue-board.loading, issue-board.openPr, issue-board.palette, issue-board.query, issue-board.recent, issue-board.revising, issue-board.ring, issue-board.runs, issue-board.sections, issue-board.setup, issue-board.talk, issue-board.tasks, issue-board.triage, issue-board.typedFields, issue-board.typing, issue-board.unfolded, issue-board.values, issue-board.viewer, issue-board.workers, issue-board.working",
-      "./register.tsx state reads: issue-board.access, issue-board.board, issue-board.branch, issue-board.closing, issue-board.confirming, issue-board.creating, issue-board.dismissed, issue-board.draft, issue-board.drafting, issue-board.editing, issue-board.editorMore, issue-board.error, issue-board.expanded, issue-board.filter, issue-board.greened, issue-board.groupBy, issue-board.launching, issue-board.loading, issue-board.openPr, issue-board.palette, issue-board.query, issue-board.recent, issue-board.revising, issue-board.ring, issue-board.runs, issue-board.sections, issue-board.setup, issue-board.talk, issue-board.tasks, issue-board.triage, issue-board.typedFields, issue-board.typing, issue-board.unfolded, issue-board.values, issue-board.viewer, issue-board.workers, issue-board.working"
+      "./register.tsx calls: $.agent.list (via checkWorkers, workerIdOf), $.agent.register, $.agent.spawn (via startInBackground), $.clock.after (via checkWorkers, schedule), $.clock.every (via pollWorkers), $.clock.now (via nowOf), $.clock.sleep (via afterTurn, lookForRuns, settle), $.command.register, $.config.list (via footerBranch), $.config.set (via writeSetting), $.fs.list (via foldersOf, hasTemplate), $.fs.read (via hasTemplate), $.model.complete (via captureFromTalk, suggestInbox), $.model.fork (via captureFromTalk), $.process.run (via changed, checkAccess, currentBranch, runGh), $.process.spawn (via watchRun), $.prompt.fill, $.prompt.submit (via submit), $.prompt.suggest (via afterTurn), $.session.id, $.session.repo, $.session.root (via readSetup, rootOf), $.settings.read (via storedIn), $.state.get, $.state.set, $.store.get (via adopt, choicesOf, restore), $.store.set (via changeChoices, save), $.tool.call (via makeTasks), $.tool.register (via registerTool), $.ui.copy (via copyFix),… [+72 chars]",
+      "./register.tsx state writes: issue-board.access, issue-board.adoption, issue-board.armed, issue-board.board, issue-board.branch, issue-board.captured, issue-board.dismissed, issue-board.drafted, issue-board.editing, issue-board.editorMore, issue-board.epicNotes, issue-board.error, issue-board.expanded, issue-board.filter, issue-board.greened, issue-board.groupBy, issue-board.guessSeen, issue-board.launching, issue-board.loading, issue-board.markerPicks, issue-board.markers, issue-board.openPr, issue-board.palette, issue-board.plan, issue-board.query, issue-board.recent, issue-board.runs, issue-board.sections, issue-board.setup, issue-board.statusPicks, issue-board.talk, issue-board.tasks, issue-board.triage, issue-board.typing, issue-board.unfolded, issue-board.values, issue-board.viewer, issue-board.workers, issue-board.working",
+      "./register.tsx state reads: issue-board.access, issue-board.adoption, issue-board.armed, issue-board.board, issue-board.branch, issue-board.captured, issue-board.dismissed, issue-board.drafted, issue-board.editing, issue-board.editorMore, issue-board.epicNotes, issue-board.error, issue-board.expanded, issue-board.filter, issue-board.greened, issue-board.groupBy, issue-board.guessSeen, issue-board.launching, issue-board.loading, issue-board.markerPicks, issue-board.markers, issue-board.openPr, issue-board.palette, issue-board.plan, issue-board.query, issue-board.recent, issue-board.runs, issue-board.sections, issue-board.setup, issue-board.statusPicks, issue-board.talk, issue-board.tasks, issue-board.triage, issue-board.typing, issue-board.unfolded, issue-board.values, issue-board.viewer, issue-board.workers, issue-board.working"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "classic.SessionStart",
@@ -619,14 +708,14 @@
       },
       {
        "module": "./register.tsx",
-       "pattern": "ui.focus",
-       "hook": "ui.focus{component=Pane, requestId=issue-board}",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=issue-board}",
        "hasCatch": true
       },
       {
        "module": "./register.tsx",
-       "pattern": "ui.close",
-       "hook": "ui.close{id=issue-board}",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=ToolSearch}",
        "hasCatch": true
       },
       {
@@ -686,7 +775,31 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__issue-board__project_plan}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__issue-board__project_plan}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__issue-board__issue_create}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__issue-board__capture}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__issue-board__capture}",
        "hasCatch": true
       },
       {
@@ -716,6 +829,24 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__issue-board__project_adopt}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__issue-board__project_adopt}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__issue-board__milestone}",
        "hasCatch": true
       },
@@ -723,6 +854,12 @@
        "module": "./register.tsx",
        "pattern": "tool.check",
        "hook": "tool.check{tool=mcp__issue-board__issue_update}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__issue-board__tick}",
        "hasCatch": true
       },
       {
@@ -742,5 +879,5 @@
    ]
   }
  },
- "sourceHash": "ea10b2ccda144fb3"
+ "sourceHash": "8983d3002f4755c4"
 }

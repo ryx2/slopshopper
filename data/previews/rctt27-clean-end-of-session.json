@@ -1,6 +1,6 @@
 {
  "slug": "rctt27-clean-end-of-session",
- "generatedAt": "2026-10-06T14:51:11.993Z",
+ "generatedAt": "2026-10-07T15:22:32.105Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -66,7 +66,7 @@
    {
     "name": "clean-end-of-session",
     "description": "Wind agents down cleanly before the session credit runs out",
-    "argumentHint": "[status|stop|reset|off|on]",
+    "argumentHint": "[status|stop|resume|on|off]",
     "immediate": true,
     "output": "Phase: armed (thresholds session 90%, weekly 95%, overage budget $2.00, grace 5 calls)\nCredit: five_hour 31%"
    }
@@ -81,7 +81,8 @@
    "$.command.register": 1,
    "$.ui.invalidate": 1,
    "$.state.get": 14,
-   "$.session.usage": 1,
+   "$.session.usage": 2,
+   "$.clock.now": 1,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -170,12 +171,17 @@
    "$.agent.list (via activeAgents",
    "adoptAgent",
    "writeFallback)",
-   "$.clock.now (via fallbackMemo",
+   "$.clock.after (via resume)",
+   "$.clock.now (via creditBack",
+   "fallbackMemo",
    "startStop)",
    "$.command.register",
-   "$.fs.exists (via isMemoReplaced)",
+   "$.fs.exists (via findMemo",
+   "isMemoReplaced)",
+   "$.fs.list (via findMemo)",
    "$.fs.read (via isMemoReplaced)",
    "$.fs.write (via writeFallback)",
+   "$.prompt.submit (via submitResume)",
    "$.session.append (via warnAgent",
    "warnMain)",
    "$.session.id (via fallbackMemo",
@@ -187,10 +193,14 @@
    "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.store.get (via findMemo",
+   "readWindows)",
+   "$.store.set",
    "$.ui.invalidate",
    "$.ui.resolve",
    "$.ui.toast (via halt",
-   "startStop)"
+   "startStop",
+   "submitResume)"
   ],
   "stateReads": [
    "clean-end-of-session.status"
@@ -224,7 +234,8 @@
       "./register.tsx hooks: session.start, config.describe, session.measure, turn.start, turn.complete, turn.step, agent.spawn, tool.call, command.run{command=clean-end-of-session}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=CommandOutput, props has {command=clean-end-of-session}}, ui.render{component=AbovePrompt}",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via activeAgents, adoptAgent, writeFallback), $.clock.now (via fallbackMemo, startStop), $.command.register, $.fs.exists (via isMemoReplaced), $.fs.read (via isMemoReplaced), $.fs.write (via writeFallback), $.session.append (via warnAgent, warnMain), $.session.id (via fallbackMemo, warnMain), $.session.repo (via memoDir), $.session.root (via memoDir), $.session.send (via warnAgent, warnMain), $.session.usage, $.state.get, $.state.set, $.ui.invalidate, $.ui.resolve, $.ui.toast (via halt, startStop)",
+      "./register.tsx gating hook without .catch: command.run{command=clean-end-of-session}",
+      "./register.tsx calls: $.agent.list (via activeAgents, adoptAgent, writeFallback), $.clock.after (via resume), $.clock.now (via creditBack, fallbackMemo, startStop), $.command.register, $.fs.exists (via findMemo, isMemoReplaced), $.fs.list (via findMemo), $.fs.read (via isMemoReplaced), $.fs.write (via writeFallback), $.prompt.submit (via submitResume), $.session.append (via warnAgent, warnMain), $.session.id (via fallbackMemo, warnMain), $.session.repo (via memoDir), $.session.root (via memoDir), $.session.send (via warnAgent, warnMain), $.session.usage, $.state.get, $.state.set, $.store.get (via findMemo, readWindows), $.store.set, $.ui.invalidate, $.ui.resolve, $.ui.toast (via halt, startStop, submitResume)",
       "./register.tsx state writes: clean-end-of-session.status",
       "./register.tsx state reads: clean-end-of-session.status"
      ],
@@ -240,11 +251,17 @@
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=clean-end-of-session}",
+       "hasCatch": false
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "b2b7a25d5eb5a4b1"
+ "sourceHash": "e58a08c67c2f6172"
 }

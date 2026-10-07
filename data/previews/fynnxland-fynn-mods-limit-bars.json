@@ -1,6 +1,6 @@
 {
  "slug": "fynnxland-fynn-mods-limit-bars",
- "generatedAt": "2026-10-06T14:51:06.970Z",
+ "generatedAt": "2026-10-07T15:21:50.402Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -38,6 +38,27 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "bars"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "disk"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "CommandOutput",
+     "props": {
+      "command": "disk"
+     }
+    }
+   },
+   {
     "event": "session.measure"
    },
    {
@@ -65,6 +86,18 @@
     "description": "Keep the prompt cache warm (costs quota), at most 4 h",
     "argumentHint": "[hours|off]",
     "output": "No request in this chat yet, so nothing to keep warm."
+   },
+   {
+    "name": "disk",
+    "description": "Drive usage by file type: ring with legend",
+    "argumentHint": "[refresh]",
+    "output": "The storage ring is off. Set `storagePath` in /config, for example `E:\\`."
+   },
+   {
+    "name": "bars",
+    "description": "Show or hide parts of the display: 5h, week, cache, storage",
+    "argumentHint": "[show 5h|week|cache|storage on|off] [reset]",
+    "output": "### limit-bars · display\n\n| Part | Shown | Set by |\n|---|---|---|\n| 5-hour bar | on | settings |\n| Weekly bar | on | settings |\n| Cache ring | on | settings |\n| Storage ring | on, but no `storagePath` | settings |\n\nChange: `/bars show 5h|week|cache|storage on|off` · back to the settings: `/bars reset`. Applies to all open chats within 10 s."
    }
   ],
   "tools": [],
@@ -74,14 +107,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.store.get": 6,
    "$.session.usage": 1,
    "$.ui.invalidate": 1,
-   "$.clock.now": 6,
-   "$.store.get": 4,
+   "$.clock.now": 7,
    "$.clock.every": 2,
    "$.ui.resolve": 2,
    "$.session.id": 4,
-   "$.command.register": 3,
+   "$.command.register": 5,
    "$.store.keys": 1
   },
   "timers": [
@@ -212,6 +245,9 @@
       }
      ]
     }
+   },
+   "CommandOutput": {
+    "ok": "engine"
    }
   },
   "script": [
@@ -228,7 +264,9 @@
    "turn.complete",
    "/cache → ### Prompt cache · not known yet\n\nNo request in this chat yet. The ring starts w…",
    "/handoff → Writing the handoff (skill \"uebergabe\"). Afterwards you can clear the chat and c…",
-   "/keepwarm → No request in this chat yet, so nothing to keep warm."
+   "/keepwarm → No request in this chat yet, so nothing to keep warm.",
+   "/disk → The storage ring is off. Set `storagePath` in /config, for example `E:\\`.",
+   "/bars → ### limit-bars · display\n\n| Part | Shown | Set by |\n|---|---|---|\n| 5-hour bar |…"
   ],
   "console": [],
   "warnings": []
@@ -246,6 +284,10 @@
    "command.run{command=cache}",
    "command.run{command=handoff}",
    "command.run{command=keepwarm}",
+   "command.run{command=bars}",
+   "command.run{command=disk}",
+   "ui.render{component=CommandOutput",
+   "props has {command=disk}}",
    "session.measure",
    "ui.render{component=AbovePrompt}"
   ],
@@ -256,11 +298,12 @@
    "$.command.register",
    "$.command.run",
    "$.model.fork (via keepStep)",
+   "$.process.run (via runPs)",
    "$.prompt.submit",
    "$.session.compact",
    "$.session.id (via bindSession)",
    "$.session.usage",
-   "$.store.delete (via cleanup)",
+   "$.store.delete",
    "$.store.get",
    "$.store.keys (via cleanup)",
    "$.store.set",
@@ -291,10 +334,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.step, turn.complete, session.compact, prompt.submit, command.run{command=cache}, command.run{command=handoff}, command.run{command=keepwarm}, session.measure, ui.render{component=AbovePrompt}",
+      "./register.ts hooks: session.start, turn.step, turn.complete, session.compact, prompt.submit, command.run{command=cache}, command.run{command=handoff}, command.run{command=keepwarm}, command.run{command=bars}, command.run{command=disk}, ui.render{component=CommandOutput, props has {command=disk}}, session.measure, ui.render{component=AbovePrompt}",
       "./register.ts gating hook without .catch: session.compact",
       "./register.ts gating hook without .catch: prompt.submit",
-      "./register.ts calls: $.clock.every, $.clock.now, $.command.list, $.command.register, $.command.run, $.model.fork (via keepStep), $.prompt.submit, $.session.compact, $.session.id (via bindSession), $.session.usage, $.store.delete (via cleanup), $.store.get, $.store.keys (via cleanup), $.store.set, $.ui.ask, $.ui.invalidate, $.ui.resolve, $.ui.toast"
+      "./register.ts gating hook without .catch: command.run{command=cache}",
+      "./register.ts gating hook without .catch: command.run{command=handoff}",
+      "./register.ts gating hook without .catch: command.run{command=keepwarm}",
+      "./register.ts gating hook without .catch: command.run{command=bars}",
+      "./register.ts gating hook without .catch: command.run{command=disk}",
+      "./register.ts calls: $.clock.every, $.clock.now, $.command.list, $.command.register, $.command.run, $.model.fork (via keepStep), $.process.run (via runPs), $.prompt.submit, $.session.compact, $.session.id (via bindSession), $.session.usage, $.store.delete, $.store.get, $.store.keys (via cleanup), $.store.set, $.ui.ask, $.ui.invalidate, $.ui.resolve, $.ui.toast"
      ],
      "gatingHooks": [
       {
@@ -308,11 +356,41 @@
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=cache}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=handoff}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=keepwarm}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=bars}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=disk}",
+       "hasCatch": false
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "3ed967b90b77fb33"
+ "sourceHash": "d3b7e4ee7d9071a0"
 }

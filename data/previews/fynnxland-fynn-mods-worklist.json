@@ -1,6 +1,6 @@
 {
  "slug": "fynnxland-fynn-mods-worklist",
- "generatedAt": "2026-10-06T14:51:07.805Z",
+ "generatedAt": "2026-10-07T15:21:51.177Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -21,6 +21,9 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
    },
    {
     "event": "turn.start"
@@ -83,8 +86,8 @@
    },
    {
     "name": "todos",
-    "description": "To-do list: sidebar, status, pause, resume, done, skip, clear, history, close",
-    "argumentHint": "[status | pause | resume | done | skip | clear | history | close]",
+    "description": "To-do list: sidebar, status, pause, resume, done, skip, retry, clear, history, close",
+    "argumentHint": "[status | pause | resume | done | skip | retry | clear | history | close]",
     "immediate": true
    }
   ],
@@ -104,10 +107,10 @@
   "apiCalls": {
    "$.session.id": 5,
    "$.session.root": 1,
-   "$.store.get": 3,
+   "$.store.get": 4,
+   "$.clock.now": 4,
    "$.state.get": 14,
    "$.state.set": 12,
-   "$.clock.now": 4,
    "$.command.register": 2,
    "$.ui.log": 1,
    "$.clock.every": 3,
@@ -149,47 +152,18 @@
         "type": "Box",
         "props": {
          "flexDirection": "column",
-         "borderStyle": "round",
-         "borderColor": "#4A4A4A",
          "paddingX": 1
         },
         "children": [
          {
           "type": "Text",
           "props": {
+           "wrap": "wrap",
+           "bold": false,
            "dimColor": true
           },
           "children": [
-           "NOW"
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "row",
-           "justifyContent": "space-between"
-          },
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "bold": true,
-             "color": "#9A9A9A"
-            },
-            "children": [
-             "◇ free"
-            ]
-           }
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true,
-           "wrap": "wrap"
-          },
-          "children": [
-           "checking whether Claude is clearly done …"
+           "◌ checking whether Claude is clearly done"
           ]
          }
         ]
@@ -199,7 +173,7 @@
         "props": {
          "flexDirection": "column",
          "borderStyle": "round",
-         "borderDimColor": true,
+         "borderColor": "#4A4A4A",
          "paddingX": 1
         },
         "children": [
@@ -207,35 +181,52 @@
           "type": "Box",
           "props": {
            "flexDirection": "row",
-           "justifyContent": "space-between"
+           "justifyContent": "space-between",
+           "alignItems": "center"
           },
           "children": [
            {
             "type": "Text",
-            "props": {
-             "bold": true,
-             "color": "#D77757"
-            },
+            "props": {},
             "children": [
-             "NEXT"
+             {
+              "type": "Text",
+              "props": {
+               "bold": true,
+               "color": "#D77757"
+              },
+              "children": [
+               "NEXT"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               " · nothing open"
+              ]
+             }
             ]
            },
            {
-            "type": "Text",
+            "type": "Button",
             "props": {
-             "dimColor": true,
-             "wrap": "truncate-end"
+             "key": "pause",
+             "label": "⏸ Pause",
+             "plain": true,
+             "onPress": "[fn]"
             },
-            "children": [
-             "nothing open"
-            ]
+            "children": []
            }
           ]
          },
          {
           "type": "Box",
           "props": {
-           "marginTop": 1
+           "marginTop": 1,
+           "marginBottom": 0
           },
           "children": [
            {
@@ -249,26 +240,6 @@
              "value": "",
              "onInput": "[fn]",
              "onSubmit": "[fn]"
-            },
-            "children": []
-           }
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "row",
-           "marginTop": 1,
-           "columnGap": 2
-          },
-          "children": [
-           {
-            "type": "Button",
-            "props": {
-             "key": "pause",
-             "label": "⏸ Pause",
-             "plain": true,
-             "onPress": "[fn]"
             },
             "children": []
            }
@@ -348,6 +319,7 @@
    "command.run{command=todo}",
    "command.run{command=todos}",
    "prompt.submit",
+   "classic.UserPromptSubmit",
    "turn.start",
    "tool.call",
    "tool.call{tool=TaskCreate}",
@@ -363,11 +335,14 @@
   "calls": [
    "$.agent.list (via busyAgents)",
    "$.clock.every (via ensureTicker",
+   "ensureWaitTimer",
    "once)",
    "$.clock.now",
+   "$.command.list (via findCommand)",
    "$.command.register",
+   "$.command.run (via runCommand)",
    "$.model.complete (via askHaiku)",
-   "$.prompt.submit (via send)",
+   "$.prompt.submit (via submit)",
    "$.session.id",
    "$.session.root",
    "$.state.get",
@@ -378,7 +353,8 @@
    "loadSafe)",
    "$.store.set (via addCost",
    "addHistory",
-   "saveQueue)",
+   "saveQueue",
+   "saveSent)",
    "$.ui.close (via runTodos)",
    "$.ui.focus (via openPane)",
    "$.ui.log",
@@ -386,6 +362,7 @@
    "raise)",
    "$.ui.resolve",
    "$.ui.toast (via raise",
+   "resume",
    "runTodo",
    "warnStore)"
   ],
@@ -420,15 +397,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=todo}, command.run{command=todos}, prompt.submit, turn.start, tool.call, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, classic.Stop, classic.StopFailure, turn.complete, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=Pane}",
+      "./register.ts hooks: session.start, command.run{command=todo}, command.run{command=todos}, prompt.submit, classic.UserPromptSubmit, turn.start, tool.call, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, classic.Stop, classic.StopFailure, turn.complete, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=Pane}",
+      "./register.ts answers its own command: command.run{command=todo}",
+      "./register.ts answers its own command: command.run{command=todos}",
       "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: classic.UserPromptSubmit",
       "./register.ts gating hook without .catch: tool.call",
       "./register.ts gating hook without .catch: tool.call{tool=TaskCreate}",
       "./register.ts gating hook without .catch: tool.call{tool=TaskUpdate}",
       "./register.ts gating hook without .catch: tool.call{tool=TodoWrite}",
       "./register.ts gating hook without .catch: classic.Stop",
       "./register.ts gating hook without .catch: classic.StopFailure",
-      "./register.ts calls: $.agent.list (via busyAgents), $.clock.every (via ensureTicker, once), $.clock.now, $.command.register, $.model.complete (via askHaiku), $.prompt.submit (via send), $.session.id, $.session.root, $.state.get, $.state.set, $.store.delete (via saveQueue), $.store.get (via addCost, addHistory, loadSafe), $.store.set (via addCost, addHistory, saveQueue), $.ui.close (via runTodos), $.ui.focus (via openPane), $.ui.log, $.ui.open (via openPane, raise), $.ui.resolve, $.ui.toast (via raise, runTodo, warnStore)",
+      "./register.ts calls: $.agent.list (via busyAgents), $.clock.every (via ensureTicker, ensureWaitTimer, once), $.clock.now, $.command.list (via findCommand), $.command.register, $.command.run (via runCommand), $.model.complete (via askHaiku), $.prompt.submit (via submit), $.session.id, $.session.root, $.state.get, $.state.set, $.store.delete (via saveQueue), $.store.get (via addCost, addHistory, loadSafe), $.store.set (via addCost, addHistory, saveQueue, saveSent), $.ui.close (via runTodos), $.ui.focus (via openPane), $.ui.log, $.ui.open (via openPane, raise), $.ui.resolve, $.ui.toast (via raise, resume, runTodo, warnStore)",
       "./register.ts state writes: worklist.paint, worklist.rt",
       "./register.ts state reads: worklist.paint, worklist.rt"
      ],
@@ -437,6 +417,12 @@
        "module": "./register.ts",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
        "hasCatch": false
       },
       {
@@ -480,5 +466,5 @@
    ]
   }
  },
- "sourceHash": "699e6cbcccaa0ad8"
+ "sourceHash": "313eb1428d6f7363"
 }

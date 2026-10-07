@@ -1,6 +1,6 @@
 {
  "slug": "ytruong11201-claude-code-mods-agent-party",
- "generatedAt": "2026-10-06T05:30:54.174Z",
+ "generatedAt": "2026-10-07T15:24:12.886Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -16,7 +16,31 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "agent-size"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agent-outline"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "agent-voice"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agent-log"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agent-cast"
     }
    },
    {
@@ -36,6 +60,13 @@
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "agent-log"
+    }
    }
   ],
   "commands": [
@@ -48,21 +79,49 @@
     "name": "agent-theme",
     "description": "Switch the cast: party (fantasy RPG) or wizarding (wizarding school)",
     "output": "agent-party theme: wizarding"
+   },
+   {
+    "name": "agent-size",
+    "description": "Hero size: auto, large (16×16), medium (12×12), small (8×8) or line (one row each)",
+    "output": "agent-party size: large"
+   },
+   {
+    "name": "agent-outline",
+    "description": "Hero outline: thin (shadow side), dark (all round) or none",
+    "output": "agent-party outline: dark"
+   },
+   {
+    "name": "agent-cast",
+    "description": "Pick the hero for an agent type: /agent-cast my-agent=code-reviewer",
+    "output": "Roles: planner, backend-developer, frontend-developer, fullstack-developer, tester, code-reviewer, security-auditor, git-manager, researcher, Explore, scout, docs-manager, general-purpose\nNo picks yet: an unknown type plays the role its name hints at.\nPick: /agent-cast my-agent=code-reviewer · undo: /agent-cast my-agent= · clear all: /agent-cast reset"
+   },
+   {
+    "name": "agent-log",
+    "description": "Open the Quest Log: every agent of this session, running and finished",
+    "output": "agent-party: Quest Log opened"
    }
   ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "agent-log",
+    "title": "Quest Log"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
-   "$.store.get": 1,
+   "$.command.register": 6,
+   "$.store.get": 4,
+   "$.state.get": 14,
+   "$.state.set": 5,
    "$.clock.every": 1,
-   "$.state.get": 4,
-   "$.state.set": 2,
-   "$.store.set": 1
+   "$.store.set": 3,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1,
+   "$.clock.now": 1
   },
   "timers": [
    {
@@ -73,6 +132,44 @@
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
+   },
+   "Pane": {
+    "agent-log": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "wrap": "truncate"
+        },
+        "children": [
+         "⚔ ",
+         "0",
+         " out · ",
+         "0",
+         " back",
+         ""
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No quests yet. Spawn an agent and it shows up here."
+        ]
+       }
+      ]
+     },
+     "title": "Quest Log"
+    }
    }
   },
   "script": [
@@ -88,7 +185,12 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/agent-voice → agent-party voice off",
-   "/agent-theme → agent-party theme: wizarding"
+   "/agent-theme → agent-party theme: wizarding",
+   "/agent-size → agent-party size: large",
+   "/agent-outline → agent-party outline: dark",
+   "/agent-cast → Roles: planner, backend-developer, frontend-developer, fullstack-developer, test…",
+   "$.ui.open(agent-log)",
+   "/agent-log → agent-party: Quest Log opened"
   ],
   "console": [],
   "warnings": []
@@ -100,12 +202,17 @@
   "hooks": [
    "session.start",
    "command.run{command=agent-theme}",
+   "command.run{command=agent-size}",
+   "command.run{command=agent-outline}",
    "command.run{command=agent-voice}",
+   "command.run{command=agent-log}",
+   "command.run{command=agent-cast}",
    "agent.spawn",
    "tool.call",
    "turn.step",
    "turn.complete",
-   "ui.render{component=AbovePrompt}"
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=agent-log}"
   ],
   "calls": [
    "$.audio.speak (via speakNext)",
@@ -118,49 +225,82 @@
    "$.store.get",
    "$.store.set",
    "$.ui.invalidate",
+   "$.ui.open",
    "$.ui.resolve",
+   "$.ui.status",
    "$.ui.toast (via speakNext)"
   ],
   "stateReads": [
    "agent-party.agents",
+   "agent-party.cast",
    "agent-party.isVoiceOn",
+   "agent-party.log",
+   "agent-party.outline",
+   "agent-party.size",
    "agent-party.theme"
   ],
   "stateWrites": [
    "agent-party.agents",
+   "agent-party.cast",
    "agent-party.isVoiceOn",
+   "agent-party.log",
+   "agent-party.outline",
+   "agent-party.size",
    "agent-party.theme"
   ],
   "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ytruong11201-claude-code-mods-agent-party/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ytruong11201-claude-code-mods-agent-party/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ytruong11201-claude-code-mods-agent-party/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ytruong11201-claude-code-mods-agent-party/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: agent-party.agents, agent-party.isVoiceOn, agent-party.theme"
-    ]
+     "types ./types/index.d.ts declares state: agent-party.agents, agent-party.isVoiceOn, agent-party.theme, agent-party.size, agent-party.outline, agent-party.cast, agent-party.log"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ytruong11201-claude-code-mods-agent-party/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ytruong11201-claude-code-mods-agent-party/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=agent-theme}, command.run{command=agent-voice}, agent.spawn, tool.call, turn.step, turn.complete, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.audio.speak (via speakNext), $.clock.every, $.clock.now, $.command.register, $.process.run (via speakNext), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.invalidate, $.ui.resolve, $.ui.toast (via speakNext)",
-      "./register.tsx state writes: agent-party.agents, agent-party.isVoiceOn, agent-party.theme",
-      "./register.tsx state reads: agent-party.agents, agent-party.isVoiceOn, agent-party.theme"
+      "./register.tsx hooks: session.start, command.run{command=agent-theme}, command.run{command=agent-size}, command.run{command=agent-outline}, command.run{command=agent-voice}, command.run{command=agent-log}, command.run{command=agent-cast}, agent.spawn, tool.call, turn.step, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agent-log}",
+      "./register.tsx answers its own command: command.run{command=agent-theme}",
+      "./register.tsx answers its own command: command.run{command=agent-size}",
+      "./register.tsx answers its own command: command.run{command=agent-outline}",
+      "./register.tsx answers its own command: command.run{command=agent-voice}",
+      "./register.tsx answers its own command: command.run{command=agent-log}",
+      "./register.tsx answers its own command: command.run{command=agent-cast}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.audio.speak (via speakNext), $.clock.every, $.clock.now, $.command.register, $.process.run (via speakNext), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via speakNext)",
+      "./register.tsx state writes: agent-party.agents, agent-party.cast, agent-party.isVoiceOn, agent-party.log, agent-party.outline, agent-party.size, agent-party.theme",
+      "./register.tsx state reads: agent-party.agents, agent-party.cast, agent-party.isVoiceOn, agent-party.log, agent-party.outline, agent-party.size, agent-party.theme"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "72b6876a30bcffe2"
+ "sourceHash": "89437f47ac7a270c"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "ronanworks-claude-code-mods-html-shelf",
- "generatedAt": "2026-10-06T05:33:54.070Z",
+ "generatedAt": "2026-10-07T15:22:10.167Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,7 +14,22 @@
     }
    },
    {
+    "event": "ui.render",
+    "matcher": {
+     "component": "CommandOutput",
+     "props": {
+      "command": "open"
+     }
+    }
+   },
+   {
     "event": "tool.call"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
    },
    {
     "event": "ui.render",
@@ -26,10 +41,10 @@
   "commands": [
    {
     "name": "open",
-    "description": "用浏览器打开最近提到的 HTML（/open 2 = 倒数第 2 个）",
-    "argumentHint": "[N]",
+    "description": "打开最近提到或写出的文件（/open 2 = 倒数第 2 个，/open list = 列出最近 10 个）",
+    "argumentHint": "[N | list]",
     "immediate": true,
-    "output": "还没有可打开的 HTML。"
+    "output": "还没有可打开的文件。"
    }
   ],
   "tools": [],
@@ -40,13 +55,80 @@
   "rewrites": [],
   "apiCalls": {
    "$.session.cwd": 2,
-   "$.env.get": 2,
+   "$.session.root": 2,
+   "$.env.get": 3,
    "$.fs.exists": 1,
-   "$.command.register": 1
+   "$.command.register": 1,
+   "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
    "AssistantMessage": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "key": "reply",
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "text": "Done. I made refresh reject expired claims and added an audit call."
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "position": "absolute",
+        "top": 0,
+        "right": 0,
+        "display": "none",
+        "hover": {
+         "display": "flex"
+        }
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "key": "copy-all-chip",
+          "paddingX": 1,
+          "backgroundColor": "composerSidebarBackground",
+          "hover": {
+           "backgroundColor": "userMessageBackground"
+          }
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "copy-all",
+            "plain": true,
+            "dimColor": true,
+            "label": "Copy all",
+            "hover": {
+             "color": "claude",
+             "bold": true,
+             "dimColor": false
+            },
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "CommandOutput": {
     "ok": "engine"
    }
   },
@@ -62,7 +144,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/open → 还没有可打开的 HTML。"
+   "/open → 还没有可打开的文件。"
   ],
   "console": [],
   "warnings": []
@@ -74,30 +156,43 @@
   "hooks": [
    "session.start",
    "command.run{command=open}",
+   "ui.render{component=CommandOutput",
+   "props has {command=open}}",
    "tool.call",
+   "ui.render{component=ToolUse}",
    "ui.render{component=AssistantMessage}"
   ],
   "calls": [
-   "$.clock.after (via copyCode)",
+   "$.clock.after (via copyText)",
    "$.command.register",
-   "$.env.get (via detectOS",
+   "$.env.get (via bangShell",
+   "detectOS",
    "homeDir",
    "openPosix)",
    "$.fs.exists (via detectOS",
    "exists)",
-   "$.process.run (via openFile",
-   "ranOk)",
-   "$.session.cwd",
-   "$.ui.copy (via copyCode)",
+   "$.fs.stat (via isDirectory)",
+   "$.process.run (via act",
+   "ranOk",
+   "runPowerShell",
+   "startWindows)",
+   "$.prompt.fill (via fillPrompt)",
+   "$.prompt.read (via fillPrompt)",
+   "$.session.cwd (via useOS)",
+   "$.session.root (via useOS)",
+   "$.settings.read (via bangShell)",
+   "$.ui.copy (via copyText)",
    "$.ui.invalidate (via markCopied)",
    "$.ui.log",
    "$.ui.resolve",
-   "$.ui.toast (via copyCode",
-   "openFile)"
+   "$.ui.toast (via act",
+   "copyText",
+   "fillPrompt)"
   ],
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "CLAUDE_CODE_USE_POWERSHELL_TOOL",
    "HOME",
    "OS",
    "USERPROFILE",
@@ -106,29 +201,40 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/ronanworks-claude-code-mods-html-shelf/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ronanworks-claude-code-mods-html-shelf/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ronanworks-claude-code-mods-html-shelf/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ronanworks-claude-code-mods-html-shelf/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/ronanworks-claude-code-mods-html-shelf/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ronanworks-claude-code-mods-html-shelf/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=open}, tool.call, ui.render{component=AssistantMessage}",
-      "./register.tsx calls: $.clock.after (via copyCode), $.command.register, $.env.get (via detectOS, homeDir, openPosix), $.fs.exists (via detectOS, exists), $.process.run (via openFile, ranOk), $.session.cwd, $.ui.copy (via copyCode), $.ui.invalidate (via markCopied), $.ui.log, $.ui.resolve, $.ui.toast (via copyCode, openFile)",
+      "./register.tsx hooks: session.start, command.run{command=open}, ui.render{component=CommandOutput, props has {command=open}}, tool.call, ui.render{component=ToolUse}, ui.render{component=AssistantMessage}",
+      "./register.tsx answers its own command: command.run{command=open}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.clock.after (via copyText), $.command.register, $.env.get (via bangShell, detectOS, homeDir, openPosix), $.fs.exists (via detectOS, exists), $.fs.stat (via isDirectory), $.process.run (via act, ranOk, runPowerShell, startWindows), $.prompt.fill (via fillPrompt), $.prompt.read (via fillPrompt), $.session.cwd (via useOS), $.session.root (via useOS), $.settings.read (via bangShell), $.ui.copy (via copyText), $.ui.invalidate (via markCopied), $.ui.log, $.ui.resolve, $.ui.toast (via act, copyText, fillPrompt)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME, OS, USERPROFILE, WSL_DISTRO_NAME"
+      "./register.tsx env reads: CLAUDE_CODE_USE_POWERSHELL_TOOL, HOME, OS, USERPROFILE, WSL_DISTRO_NAME"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "53e9f066a906e86b"
+ "sourceHash": "fcdc51d34c536e48"
 }

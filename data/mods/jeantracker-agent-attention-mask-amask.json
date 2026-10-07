@@ -1,0 +1,8 @@
+{
+ "slug": "jeantracker-agent-attention-mask-amask",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// An interrupted turn fires no Claude Code hook -- not Stop, not anything --\n// so the runner kept the rain up until HOOK_STALL ran out (D-036). A mod sees\n// the turn end either way; this hands that one fact to the runner's FIFO\n// through the same emitter the hooks use (D-056).\n//\n// amask passes this folder with --plugin-dir and sets the three variables.\n// Run any other way they are unset and this does nothing.\n//\n// Inline rather than through a helper: before 2.1.260 the engine refuses a\n// module that hands $ to a function of its own.\nexport const register: Register = on => {\n  on('turn.complete', async ($, e, next) => {\n    const result = await next(e)\n    // A subagent's turn ending says nothing about the main thread (D-033),\n    // and a finished turn already has its Stop.\n    if (e.agentId === undefined && e.reason === 'aborted') {\n      const emitter = await $.env.get('AMASK_HOOK_EMITTER')\n      const fifo = await $.env.get('AMASK_HOOK_FIFO')\n      const token = await $.env.get('AMASK_HOOK_TOKEN')\n      if (emitter && fifo && token) {\n        try {\n          await $.process.run([emitter, fifo, 'TurnAborted', token], { stdin: '{}', timeoutMs: 5000 })\n        } catch {\n          // The runner may be gone; that is not the agent's problem (P-101).\n        }\n      }\n    }\n    return result\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"amask\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Tells the amask runner what Claude Code hooks do not: a turn the person interrupted\"\n}"
+ }
+}

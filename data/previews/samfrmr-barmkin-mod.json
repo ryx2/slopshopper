@@ -1,6 +1,6 @@
 {
  "slug": "samfrmr-barmkin-mod",
- "generatedAt": "2026-10-06T14:51:57.992Z",
+ "generatedAt": "2026-10-07T15:22:35.994Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -28,7 +28,15 @@
    {
     "event": "tool.call",
     "matcher": {
-     "tool": "Bash"
+     "tool": [
+      "Bash",
+      "PowerShell",
+      "WebFetch",
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "NotebookEdit"
+     ]
     }
    },
    {
@@ -61,6 +69,15 @@
     "event": "tool.call",
     "matcher": {
      "tool": "Skill"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": [
+      "Bash",
+      "PowerShell"
+     ]
     }
    },
    {
@@ -114,7 +131,7 @@
    {
     "name": "barmkin-mod-status",
     "description": "Show barmkin-mod taint, breaker, and last classifier verdict",
-    "output": "barmkin-mod status\ntaint: off\nclassifier breaker: closed\nlast verdict: none yet"
+    "output": "barmkin-mod status\ntaint: off\nsensitive access: ON (a Bash call named a credential path)\negress: open\nclassifier breaker: closed\nlast verdict: none yet"
    }
   ],
   "tools": [],
@@ -138,17 +155,47 @@
    "$.settings.read": 2,
    "$.ui.status": 1,
    "$.command.register": 2,
-   "$.state.get": 22,
-   "$.state.set": 5,
+   "$.state.get": 53,
+   "$.state.set": 11,
    "$.session.cwd": 1,
    "$.process.run": 5,
    "$.ui.open": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 2
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      },
+      {
+       "type": "Text",
+       "props": {},
+       "children": [
+        "barmkin-mod · taint:off · sensitive:ON · classifier:ok"
+       ]
+      }
+     ]
+    }
    },
    "Pane": {
     "barmkin-mod-findings": {
@@ -191,7 +238,7 @@
    "turn.complete",
    "$.ui.open(barmkin-mod-findings)",
    "/barmkin-mod-findings → ",
-   "/barmkin-mod-status → barmkin-mod status\ntaint: off\nclassifier breaker: closed\nlast verdict: none yet"
+   "/barmkin-mod-status → barmkin-mod status\ntaint: off\nsensitive access: ON (a Bash call named a credenti…"
   ],
   "console": [],
   "status": "barmkin-mod posture: barmkin-mod is not seated in managed prependPlugins: skill text, CLAUDE.md and other prompt-assembly content stay out of its reach (README \"Seat requirements\"). | barmkin-mod posture: the Bash sandbox is off (sandbox.enabled is not true): no OS-level egress floor backs this mod's taint-gated denies. | barmkin-mod posture: disableSkillShellExecution is unset: a skill's inline shell (`!`command``) still bypasses every tool.call-based guard this mod has. | barmkin-mod posture: mcp_server_allowlist is empty: every MCP server is allowed to run tools (audit-only, not enforced).",
@@ -207,11 +254,12 @@
    "tool.describe{tool=/\"^mcp__\"/}",
    "tool.call",
    "tool.call{tool=/\"^mcp__\"/}",
-   "tool.call{tool=Bash}",
+   "tool.call{tool=Bash|PowerShell|WebFetch|Edit|Write|MultiEdit|NotebookEdit}",
    "tool.call{tool=WebFetch|WebSearch}",
    "tool.call{tool=Read}",
    "tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}",
    "tool.call{tool=Skill}",
+   "tool.check{tool=Bash|PowerShell}",
    "skill.prompt",
    "prompt.attachment{type=skill_listing}",
    "session.receive",
@@ -242,18 +290,24 @@
   "stateReads": [
    "barmkin-mod.breakerFailureCount",
    "barmkin-mod.breakerOpenUntil",
+   "barmkin-mod.lastEgress",
    "barmkin-mod.lastVerdict",
    "barmkin-mod.sastFindingsByToolUse",
    "barmkin-mod.semgrepUnavailable",
+   "barmkin-mod.sensitiveAccess",
+   "barmkin-mod.sensitiveReason",
    "barmkin-mod.taintReason",
    "barmkin-mod.tainted"
   ],
   "stateWrites": [
    "barmkin-mod.breakerFailureCount",
    "barmkin-mod.breakerOpenUntil",
+   "barmkin-mod.lastEgress",
    "barmkin-mod.lastVerdict",
    "barmkin-mod.sastFindingsByToolUse",
    "barmkin-mod.semgrepUnavailable",
+   "barmkin-mod.sensitiveAccess",
+   "barmkin-mod.sensitiveReason",
    "barmkin-mod.taintReason",
    "barmkin-mod.tainted"
   ],
@@ -269,7 +323,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: barmkin-mod.tainted, barmkin-mod.taintReason, barmkin-mod.lastVerdict, barmkin-mod.breakerOpenUntil, barmkin-mod.breakerFailureCount, barmkin-mod.sastFindingsByToolUse, barmkin-mod.semgrepUnavailable"
+     "types ./types/index.d.ts declares state: barmkin-mod.tainted, barmkin-mod.taintReason, barmkin-mod.sensitiveAccess, barmkin-mod.sensitiveReason, barmkin-mod.lastEgress, barmkin-mod.lastVerdict, barmkin-mod.breakerOpenUntil, barmkin-mod.breakerFailureCount, barmkin-mod.sastFindingsByToolUse, barmkin-mod.semgrepUnavailable"
     ],
     "gatingHooks": []
    },
@@ -280,21 +334,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.submit, tool.describe{tool=/\"^mcp__\"/}, tool.call, tool.call{tool=/\"^mcp__\"/}, tool.call{tool=Bash}, tool.call{tool=WebFetch|WebSearch}, tool.call{tool=Read}, tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}, tool.call{tool=Skill}, skill.prompt, prompt.attachment{type=skill_listing}, session.receive, session.send, agent.spawn, ui.render{component=Pane}, ui.render{component=AbovePrompt}, command.run{command=barmkin-mod-findings}, command.run{command=barmkin-mod-status}",
+      "./register.ts hooks: session.start, prompt.submit, tool.describe{tool=/\"^mcp__\"/}, tool.call, tool.call{tool=/\"^mcp__\"/}, tool.call{tool=Bash|PowerShell|WebFetch|Edit|Write|MultiEdit|NotebookEdit}, tool.call{tool=WebFetch|WebSearch}, tool.call{tool=Read}, tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}, tool.call{tool=Skill}, tool.check{tool=Bash|PowerShell}, skill.prompt, prompt.attachment{type=skill_listing}, session.receive, session.send, agent.spawn, ui.render{component=Pane}, ui.render{component=AbovePrompt}, command.run{command=barmkin-mod-findings}, command.run{command=barmkin-mod-status}",
+      "./register.ts answers its own command: command.run{command=barmkin-mod-findings}",
+      "./register.ts answers its own command: command.run{command=barmkin-mod-status}",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.call{tool=/\"^mcp__\"/}",
-      "./register.ts gating hook with .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook with .catch: tool.call{tool=Bash|PowerShell|WebFetch|Edit|Write|MultiEdit|NotebookEdit}",
       "./register.ts gating hook with .catch: tool.call{tool=WebFetch|WebSearch}",
       "./register.ts gating hook with .catch: tool.call{tool=Read}",
       "./register.ts gating hook without .catch: tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}",
       "./register.ts gating hook with .catch: tool.call{tool=Skill}",
+      "./register.ts gating hook with .catch: tool.check{tool=Bash|PowerShell}",
       "./register.ts gating hook with .catch: session.receive",
       "./register.ts gating hook with .catch: session.send",
       "./register.ts gating hook with .catch: agent.spawn",
       "./register.ts calls: $.clock.after (via callJevSystemOne), $.command.register, $.http.fetch (via callJevSystemOne), $.process.run, $.session.cwd, $.session.version, $.settings.read, $.state.get, $.state.set, $.ui.ask, $.ui.log, $.ui.notice (via screenContent), $.ui.open, $.ui.resolve, $.ui.status",
-      "./register.ts state writes: barmkin-mod.breakerFailureCount, barmkin-mod.breakerOpenUntil, barmkin-mod.lastVerdict, barmkin-mod.sastFindingsByToolUse, barmkin-mod.semgrepUnavailable, barmkin-mod.taintReason, barmkin-mod.tainted",
-      "./register.ts state reads: barmkin-mod.breakerFailureCount, barmkin-mod.breakerOpenUntil, barmkin-mod.lastVerdict, barmkin-mod.sastFindingsByToolUse, barmkin-mod.semgrepUnavailable, barmkin-mod.taintReason, barmkin-mod.tainted"
+      "./register.ts state writes: barmkin-mod.breakerFailureCount, barmkin-mod.breakerOpenUntil, barmkin-mod.lastEgress, barmkin-mod.lastVerdict, barmkin-mod.sastFindingsByToolUse, barmkin-mod.semgrepUnavailable, barmkin-mod.sensitiveAccess, barmkin-mod.sensitiveReason, barmkin-mod.taintReason, barmkin-mod.tainted",
+      "./register.ts state reads: barmkin-mod.breakerFailureCount, barmkin-mod.breakerOpenUntil, barmkin-mod.lastEgress, barmkin-mod.lastVerdict, barmkin-mod.sastFindingsByToolUse, barmkin-mod.semgrepUnavailable, barmkin-mod.sensitiveAccess, barmkin-mod.sensitiveReason, barmkin-mod.taintReason, barmkin-mod.tainted"
      ],
      "gatingHooks": [
       {
@@ -318,7 +375,7 @@
       {
        "module": "./register.ts",
        "pattern": "tool.call",
-       "hook": "tool.call{tool=Bash}",
+       "hook": "tool.call{tool=Bash|PowerShell|WebFetch|Edit|Write|MultiEdit|NotebookEdit}",
        "hasCatch": true
       },
       {
@@ -347,6 +404,12 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Bash|PowerShell}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
        "pattern": "session.receive",
        "hook": "session.receive",
        "hasCatch": true
@@ -368,5 +431,5 @@
    ]
   }
  },
- "sourceHash": "322b5fc6a707e39"
+ "sourceHash": "4ff18e16d433ecb8"
 }

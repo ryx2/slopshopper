@@ -1,11 +1,45 @@
 {
  "slug": "astrosteveo-claude-plugins-ask",
- "generatedAt": "2026-10-06T14:51:19.106Z",
+ "generatedAt": "2026-10-07T15:22:51.610Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "decisions"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "AskUserQuestion"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AskUserQuestion"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "decisions"
+    }
    },
    {
     "event": "command.run",
@@ -26,6 +60,10 @@
     "name": "ask",
     "description": "Ask Claude on the side; the answer shows in a pane, not the chat",
     "argumentHint": "[question]"
+   },
+   {
+    "name": "decisions",
+    "description": "Show the decision log and the answers Claude reuses"
    }
   ],
   "tools": [],
@@ -33,6 +71,10 @@
    {
     "id": "ask",
     "title": "Ask"
+   },
+   {
+    "id": "decisions",
+    "title": "Decisions"
    }
   ],
   "toasts": [],
@@ -40,15 +82,20 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.state.get": 3,
-   "$.state.set": 1,
+   "$.command.register": 2,
+   "$.state.get": 14,
+   "$.state.set": 5,
    "$.ui.status": 1,
-   "$.ui.open": 1,
-   "$.ui.resolve": 1
+   "$.store.get": 4,
+   "$.ui.open": 2,
+   "$.ui.resolve": 2,
+   "$.session.root": 1
   },
   "timers": [],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "Pane": {
     "ask": {
      "ok": true,
@@ -132,6 +179,142 @@
       ]
      },
      "title": "Ask"
+    },
+    "decisions": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Input",
+        "props": {
+         "key": "search",
+         "label": "Search ",
+         "placeholder": "Filter by question or answer…",
+         "submitLabel": "filter",
+         "value": "",
+         "autoFocus": true,
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "claude"
+        },
+        "children": [
+         "✦ Answers Claude reuses"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Asked again, these are answered for you. Forget one to be asked again."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "None yet. Press Remember on the band after you answer."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "────────────────────────────────────────────────────────"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "claude"
+        },
+        "children": [
+         "✦ Decision log"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "0",
+         " answered in this project"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Nothing yet. Answers to Claude's questions show here."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "────────────────────────────────────────────────────────"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "decision-controls",
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "copy",
+           "label": "Copy as Markdown",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Decisions"
     }
    }
   },
@@ -148,7 +331,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(ask)",
-   "/ask → "
+   "/ask → ",
+   "$.ui.open(decisions)",
+   "/decisions → "
   ],
   "console": [],
   "warnings": []
@@ -159,33 +344,57 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=decisions}",
+   "prompt.submit",
+   "tool.call{tool=AskUserQuestion}",
+   "ui.render{component=AskUserQuestion}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=decisions}",
    "command.run{command=ask}",
    "ui.render{component=Pane, requestId=ask}"
   ],
   "calls": [
-   "$.clock.now (via start)",
+   "$.clock.now",
    "$.command.register",
-   "$.model.complete (via answer)",
-   "$.model.fork (via answer)",
+   "$.model.complete (via forkOrComplete)",
+   "$.model.fork (via forkOrComplete)",
    "$.prompt.fill (via use)",
+   "$.session.root",
+   "$.settings.read (via timeoutOf)",
    "$.state.get",
    "$.state.set",
+   "$.store.get",
+   "$.store.set (via changeLog",
+   "changeRemembered)",
    "$.ui.copy",
-   "$.ui.log (via toEnd)",
+   "$.ui.log (via fallBack",
+   "timeoutOf",
+   "toEnd)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.scroll (via toEnd)",
    "$.ui.status",
-   "$.ui.toast (via run",
-   "use)"
+   "$.ui.toast"
   ],
   "stateReads": [
+   "ask.advice",
    "ask.asks",
-   "ask.draft"
+   "ask.away",
+   "ask.draft",
+   "ask.log",
+   "ask.offer",
+   "ask.remembered",
+   "ask.search"
   ],
   "stateWrites": [
+   "ask.advice",
    "ask.asks",
-   "ask.draft"
+   "ask.away",
+   "ask.draft",
+   "ask.log",
+   "ask.offer",
+   "ask.remembered",
+   "ask.search"
   ],
   "envReads": [],
   "raw": {
@@ -199,7 +408,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ask.asks, ask.draft"
+     "types ./types/index.d.ts declares state: ask.asks, ask.draft, ask.advice, ask.offer, ask.away, ask.log, ask.remembered, ask.search"
     ],
     "gatingHooks": []
    },
@@ -210,15 +419,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=ask}, ui.render{component=Pane, requestId=ask}",
-      "./register.tsx calls: $.clock.now (via start), $.command.register, $.model.complete (via answer), $.model.fork (via answer), $.prompt.fill (via use), $.state.get, $.state.set, $.ui.copy, $.ui.log (via toEnd), $.ui.open, $.ui.resolve, $.ui.scroll (via toEnd), $.ui.status, $.ui.toast (via run, use)",
-      "./register.tsx state writes: ask.asks, ask.draft",
-      "./register.tsx state reads: ask.asks, ask.draft"
+      "./register.tsx hooks: session.start, command.run{command=decisions}, prompt.submit, tool.call{tool=AskUserQuestion}, ui.render{component=AskUserQuestion}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=decisions}, command.run{command=ask}, ui.render{component=Pane, requestId=ask}",
+      "./register.tsx answers its own command: command.run{command=decisions}",
+      "./register.tsx answers its own command: command.run{command=ask}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: tool.call{tool=AskUserQuestion}",
+      "./register.tsx calls: $.clock.now, $.command.register, $.model.complete (via forkOrComplete), $.model.fork (via forkOrComplete), $.prompt.fill (via use), $.session.root, $.settings.read (via timeoutOf), $.state.get, $.state.set, $.store.get, $.store.set (via changeLog, changeRemembered), $.ui.copy, $.ui.log (via fallBack, timeoutOf, toEnd), $.ui.open, $.ui.resolve, $.ui.scroll (via toEnd), $.ui.status, $.ui.toast",
+      "./register.tsx state writes: ask.advice, ask.asks, ask.away, ask.draft, ask.log, ask.offer, ask.remembered, ask.search",
+      "./register.tsx state reads: ask.advice, ask.asks, ask.away, ask.draft, ask.log, ask.offer, ask.remembered, ask.search"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=AskUserQuestion}",
+       "hasCatch": true
+      }
+     ]
     }
    ]
   }
  },
- "sourceHash": "c68234d87c53e5ec"
+ "sourceHash": "a70db05d91d0fd1b"
 }

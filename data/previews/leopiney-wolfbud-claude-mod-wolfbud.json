@@ -1,6 +1,6 @@
 {
  "slug": "leopiney-wolfbud-claude-mod-wolfbud",
- "generatedAt": "2026-10-06T05:27:15.435Z",
+ "generatedAt": "2026-10-07T15:21:44.229Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -43,7 +43,8 @@
    {
     "name": "wolfbud",
     "description": "WolfBud: a voice coworker that watches this session and can message Claude",
-    "argumentHint": "[call | end | window | stop | status]"
+    "argumentHint": "[call | end | window | stop | status]",
+    "output": "WolfBud hub is down. This session keeps working."
    }
   ],
   "tools": [],
@@ -59,13 +60,22 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 21,
+   "$.state.get": 9,
    "$.clock.now": 12,
-   "$.state.set": 2,
+   "$.clock.after": 1,
+   "$.state.set": 3,
    "$.ui.open": 1,
+   "$.http.fetch": 2,
+   "$.env.get": 1,
+   "$.process.run": 1,
    "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   }
+  ],
   "sites": {
    "Pane": {
     "wolfbud": {
@@ -109,7 +119,17 @@
          "dimColor": true
         },
         "children": [
-         "Claude is idle"
+         "hub down, session still working"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "yellow",
+         "wrap": "wrap"
+        },
+        "children": [
+         "WolfBud hub is down. This session keeps working. /wolfbud tries again."
         ]
        },
        {
@@ -181,8 +201,10 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(wolfbud)",
-   "command.run: hook threw crypto is not defined",
-   "/wolfbud → "
+   "$.http.fetch(http://127.0.0.1:4747/api/health) → blocked in preview",
+   "$.process.run(node /plugins/wolfbud/bridge/launch.mjs) → exit 0",
+   "$.http.fetch(http://127.0.0.1:4747/api/health) → blocked in preview",
+   "/wolfbud → WolfBud hub is down. This session keeps working."
   ],
   "console": [],
   "warnings": []
@@ -203,81 +225,102 @@
    "ui.render{component=Pane, requestId=wolfbud}"
   ],
   "calls": [
+   "$.clock.after (via armPoll",
+   "report)",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via openWindow",
-   "startBridge)",
-   "$.http.fetch (via post)",
-   "$.process.run (via openWindow)",
-   "$.process.spawn (via startBridge)",
+   "$.env.get (via ensureHub",
+   "readServiceToken",
+   "subscribe)",
+   "$.fs.read (via readServiceToken)",
+   "$.http.fetch (via hubFetch",
+   "isHubUp)",
+   "$.process.run (via ensureHub)",
    "$.prompt.submit (via deliver)",
    "$.session.append (via deliver)",
-   "$.session.cwd (via onBridgeMessage",
-   "sendSnapshot)",
+   "$.session.cwd (via sendSnapshot",
+   "subscribe)",
    "$.session.messages (via sendSnapshot)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via startBridge)",
-   "$.store.set (via onBridgeMessage)",
    "$.turn.abort (via stopClaude)",
-   "$.ui.log (via deliver",
-   "pump)",
-   "$.ui.open (via openPane)",
-   "$.ui.resolve",
-   "$.ui.toast (via openWindow",
-   "raiseWindow)"
+   "$.ui.log (via deliver)",
+   "$.ui.open",
+   "$.ui.resolve"
   ],
   "stateReads": [
-   "wolfbud.bridge",
    "wolfbud.call",
    "wolfbud.claude",
+   "wolfbud.hub",
    "wolfbud.lines"
   ],
   "stateWrites": [
-   "wolfbud.bridge",
    "wolfbud.call",
    "wolfbud.claude",
+   "wolfbud.hub",
    "wolfbud.lines"
   ],
   "envReads": [
    "ELEVENLABS_API_KEY",
    "HOME",
-   "ORCA_WORKTREE_ID",
-   "WOLFBUD_AGENT_ID",
-   "WOLFBUD_BROWSER",
    "WOLFBUD_NODE"
   ],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/leopiney-wolfbud-claude-mod-wolfbud/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/leopiney-wolfbud-claude-mod-wolfbud/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/leopiney-wolfbud-claude-mod-wolfbud/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/leopiney-wolfbud-claude-mod-wolfbud/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: wolfbud.bridge, wolfbud.call, wolfbud.lines, wolfbud.claude"
-    ]
+     "types ./types/index.d.ts declares state: wolfbud.hub, wolfbud.call, wolfbud.lines, wolfbud.claude"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/leopiney-wolfbud-claude-mod-wolfbud/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/leopiney-wolfbud-claude-mod-wolfbud/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, command.run{command=wolfbud}, prompt.submit, turn.start, tool.call, turn.complete, classic.Notification, session.end, ui.render{component=Pane, requestId=wolfbud}",
-      "./register.tsx calls: $.clock.now, $.command.register, $.env.get (via openWindow, startBridge), $.http.fetch (via post), $.process.run (via openWindow), $.process.spawn (via startBridge), $.prompt.submit (via deliver), $.session.append (via deliver), $.session.cwd (via onBridgeMessage, sendSnapshot), $.session.messages (via sendSnapshot), $.state.get, $.state.set, $.store.get (via startBridge), $.store.set (via onBridgeMessage), $.turn.abort (via stopClaude), $.ui.log (via deliver, pump), $.ui.open (via openPane), $.ui.resolve, $.ui.toast (via openWindow, raiseWindow)",
+      "./register.tsx answers its own command: command.run{command=wolfbud}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: classic.Notification",
+      "./register.tsx calls: $.clock.after (via armPoll, report), $.clock.now, $.command.register, $.env.get (via ensureHub, readServiceToken, subscribe), $.fs.read (via readServiceToken), $.http.fetch (via hubFetch, isHubUp), $.process.run (via ensureHub), $.prompt.submit (via deliver), $.session.append (via deliver), $.session.cwd (via sendSnapshot, subscribe), $.session.messages (via sendSnapshot), $.state.get, $.state.set, $.turn.abort (via stopClaude), $.ui.log (via deliver), $.ui.open, $.ui.resolve",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: ELEVENLABS_API_KEY, HOME, ORCA_WORKTREE_ID, WOLFBUD_AGENT_ID, WOLFBUD_BROWSER, WOLFBUD_NODE",
-      "./register.tsx state writes: wolfbud.bridge, wolfbud.call, wolfbud.claude, wolfbud.lines",
-      "./register.tsx state reads: wolfbud.bridge, wolfbud.call, wolfbud.claude, wolfbud.lines"
+      "./register.tsx env reads: ELEVENLABS_API_KEY, HOME, WOLFBUD_NODE",
+      "./register.tsx state writes: wolfbud.call, wolfbud.claude, wolfbud.hub, wolfbud.lines",
+      "./register.tsx state reads: wolfbud.call, wolfbud.claude, wolfbud.hub, wolfbud.lines"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Notification",
+       "hook": "classic.Notification",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "226e0878d043b58b"
+ "sourceHash": "d1e5e109909fc9af"
 }

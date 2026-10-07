@@ -1,0 +1,8 @@
+{
+ "slug": "kokatsu-dotfiles-language-guard",
+ "files": {
+  "hooks/register.ts": "import type { Register, SessionMessage } from \"claude-code\";\n\nconst MIN_LATIN = 40;\n\nconst ENGLISH_REQUEST =\n  /英語(?:だけ|のみ)?で|英訳|英文|in English|English only/i;\n\nconst REASON =\n  \"本文が英語です。同じ内容を日本語で書き直してください (コード・識別子・コミットメッセージは原文のまま)。\";\n\nexport function isUntranslated(text: string): boolean {\n  const prose = text\n    .replace(/(```|~~~)[\\s\\S]*?\\1/g, \"\")\n    .replace(/`[^`\\n]*`/g, \"\")\n    .replace(/https?:\\/\\/\\S+/g, \"\");\n  if (/[\\p{Script=Hiragana}\\p{Script=Katakana}]/u.test(prose)) return false;\n  return (prose.match(/[A-Za-z]/g)?.length ?? 0) >= MIN_LATIN;\n}\n\nexport function requestsEnglish(messages: readonly SessionMessage[]): boolean {\n  const prompt = messages.findLast((m) =>\n    m.role === \"user\" && !m.toolResults?.length && m.text !== \"\"\n  );\n  return ENGLISH_REQUEST.test(prompt?.text ?? \"\");\n}\n\nexport const register: Register = (on) => {\n  on(\"classic.Stop\", async ($, e, next) => {\n    if (\n      isUntranslated(e.last_assistant_message ?? \"\") &&\n      !requestsEnglish(await $.session.messages())\n    ) {\n      return { block: REASON };\n    }\n    return next(e);\n  }).catch((_$, e, next) => next(e));\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"language-guard\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Send back a final answer whose prose is English instead of Japanese\"\n}"
+ }
+}

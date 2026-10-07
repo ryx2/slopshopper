@@ -1,6 +1,6 @@
 {
  "slug": "schalkneethling-claude-chef",
- "generatedAt": "2026-10-06T14:51:58.477Z",
+ "generatedAt": "2026-10-07T15:23:52.032Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,7 +8,19 @@
     "event": "session.start"
    },
    {
+    "event": "turn.start"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
     "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "chef"
+    }
    },
    {
     "event": "ui.render",
@@ -17,7 +29,15 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "chef",
+    "description": "Show a station of the chef tray, or rescan your Claude Code history with backfill.",
+    "argumentHint": "[usage|trend|breakdown|activity|backfill]",
+    "immediate": true,
+    "output": "Chef tray: trend"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -26,73 +46,1057 @@
   "rewrites": [],
   "apiCalls": {
    "$.session.usage": 2,
-   "$.state.get": 3,
-   "$.state.set": 2,
+   "$.session.root": 1,
+   "$.session.model": 2,
+   "$.store.get": 5,
+   "$.state.get": 22,
+   "$.state.set": 13,
+   "$.clock.now": 6,
+   "$.store.keys": 2,
+   "$.command.register": 1,
+   "$.clock.every": 2,
+   "$.clock.after": 1,
+   "$.session.id": 1,
+   "$.store.set": 2,
    "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   },
+   {
+    "kind": "after",
+    "ms": 5000
+   },
+   {
+    "kind": "every",
+    "ms": 1000
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": true,
     "tree": {
      "type": "Box",
      "props": {
-      "flexDirection": "row",
-      "paddingX": 1,
-      "paddingY": 1
+      "flexDirection": "column",
+      "paddingX": 1
      },
      "children": [
       {
-       "type": "Text",
+       "type": "Box",
        "props": {
-        "color": "cyan",
-        "bold": true
+        "flexDirection": "row",
+        "flexWrap": "wrap",
+        "columnGap": 1
        },
        "children": [
-        "☁ Cloudy"
+        {
+         "type": "Text",
+         "props": {
+          "color": "claude",
+          "bold": true
+         },
+         "children": [
+          "✻ Claude"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "·"
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "station-usage",
+          "label": "Usage",
+          "hotkey": "1",
+          "variant": "secondary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "station-trend",
+          "label": "Trend",
+          "hotkey": "2",
+          "variant": "primary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "station-breakdown",
+          "label": "Breakdown",
+          "hotkey": "3",
+          "variant": "secondary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "station-activity",
+          "label": "Activity",
+          "hotkey": "4",
+          "variant": "secondary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
        ]
       },
       {
-       "type": "Text",
-       "props": {},
-       "children": [
-        "  49% of context"
-       ]
-      },
-      {
-       "type": "Text",
+       "type": "Box",
        "props": {
-        "dimColor": true
+        "flexDirection": "column",
+        "marginTop": 1
        },
        "children": [
-        "  97.4k / 200k"
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "dimColor": true
-       },
-       "children": [
-        "   last turn "
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "color": "cyan"
-       },
-       "children": [
-        "██"
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "dimColor": true
-       },
-       "children": [
-        "  steady"
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "width": 72,
+          "justifyContent": "space-between"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "bold": true
+           },
+           "children": [
+            "Spend by hour"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true
+           },
+           "children": [
+            "Today · $0.00"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "subtle"
+           },
+           "children": [
+            "▁▁ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "   "
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "00                                  12                                23"
+         ]
+        }
        ]
       }
      ]
@@ -110,53 +1114,78 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/chef → Chef tray: trend"
   ],
   "console": [],
   "warnings": []
  },
  "validate": {
-  "ok": false,
-  "errors": [
-   "Plugin name \"claude-chef\" is reserved: it passes as one of Anthropic's own. A third party's plugin name cannot start with \"claude-\", \"anthropic-\", \"anthropics-\", or \"cc-plugin-\", be \"claude\", \"anthropic\", \"anthropics\", \"claude-code\", or \"claude-mods\", or put \"official\" beside \"claude\" or \"anthropic\". Name it for what it does. If this is one of Anthropic's own plugins, validate the marketplace that lists it."
-  ],
+  "ok": true,
+  "errors": [],
   "warnings": [],
   "hooks": [
    "session.start",
+   "turn.start",
+   "session.measure",
    "turn.complete",
+   "command.run{command=chef}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
-   "$.session.usage (via takeReading)",
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via projectsDirectory)",
+   "$.fs.list (via listTranscripts)",
+   "$.fs.read (via scanWithFs)",
+   "$.process.run (via scanWithNode)",
+   "$.session.id",
+   "$.session.model",
+   "$.session.root",
+   "$.session.usage",
    "$.state.get",
-   "$.state.set (via takeReading)",
+   "$.state.set",
+   "$.store.delete (via loadLedger)",
+   "$.store.get",
+   "$.store.keys (via loadLedger)",
+   "$.store.set",
    "$.ui.resolve"
   ],
   "stateReads": [
-   "claude-chef.readings"
+   "chef-station.backfillStatus",
+   "chef-station.ledger",
+   "chef-station.live",
+   "chef-station.now",
+   "chef-station.recordedUsd",
+   "chef-station.station"
   ],
   "stateWrites": [
-   "claude-chef.readings"
+   "chef-station.backfillStatus",
+   "chef-station.ledger",
+   "chef-station.live",
+   "chef-station.now",
+   "chef-station.recordedUsd",
+   "chef-station.station"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
-   "success": false,
+   "success": true,
    "strict": false,
    "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/schalkneethling-claude-chef/.claude-plugin/plugin.json",
    "manifest": {
     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/schalkneethling-claude-chef/.claude-plugin/plugin.json",
     "type": "plugin",
-    "errors": [
-     {
-      "path": "name",
-      "message": "Plugin name \"claude-chef\" is reserved: it passes as one of Anthropic's own. A third party's plugin name cannot start with \"claude-\", \"anthropic-\", \"anthropics-\", or \"cc-plugin-\", be \"claude\", \"anthropic\", \"anthropics\", \"claude-code\", or \"claude-mods\", or put \"official\" beside \"claude\" or \"anthropic\". Name it for what it does. If this is one of Anthropic's own plugins, validate the marketplace that lists it.",
-      "code": null
-     }
-    ],
+    "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: claude-chef.readings"
+     "types ./types/index.d.ts declares state: chef-station.station, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.backfillStatus"
     ],
     "gatingHooks": []
    },
@@ -167,15 +1196,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./claude-chef.mjs hooks: session.start, turn.complete, ui.render{component=AbovePrompt}",
-      "./claude-chef.mjs calls: $.session.usage (via takeReading), $.state.get, $.state.set (via takeReading), $.ui.resolve",
-      "./claude-chef.mjs state writes: claude-chef.readings",
-      "./claude-chef.mjs state reads: claude-chef.readings"
+      "./register.tsx hooks: session.start, turn.start, session.measure, turn.complete, command.run{command=chef}, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=chef}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via projectsDirectory), $.fs.list (via listTranscripts), $.fs.read (via scanWithFs), $.process.run (via scanWithNode), $.session.id, $.session.model, $.session.root, $.session.usage, $.state.get, $.state.set, $.store.delete (via loadLedger), $.store.get, $.store.keys (via loadLedger), $.store.set, $.ui.resolve",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
+      "./register.tsx state writes: chef-station.backfillStatus, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station",
+      "./register.tsx state reads: chef-station.backfillStatus, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station"
      ],
      "gatingHooks": []
     }
    ]
   }
  },
- "sourceHash": "f94cc2b144a84450"
+ "sourceHash": "e8aeaf7fde41791e"
 }
