@@ -1,0 +1,279 @@
+{
+ "slug": "jepperip-claude-session-todo",
+ "generatedAt": "2026-10-08T15:54:08.993Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "session-todo"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-todo__todo"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "todo"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "session-todo"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "todo",
+    "description": "The session todo pane: /todo, add [@list] <text>, start <n>, done <n>, remove <n>, about <list> [text], clear [list], drop <list>, focus <list>, theme <name>, compact [on|off], band [on|off]",
+    "argumentHint": "[add [@list] <text> | start <n> | done <n> | remove <n> | about <list> [text] | clear [list] | drop <list> | focus <list> | theme <name> | compact [on|off] | band [on|off]]",
+    "output": "Todo: no lists"
+   }
+  ],
+  "tools": [
+   {
+    "name": "todo",
+    "description": "The todo lists the user watches in the Todo side pane. They are their view of the plan, so keep them current without being asked.\nLists are named (default \"main\"); items are addressed by id, unique across lists.\n- write: replace one list with its steps (list, title, items, optional about). Do this before work with three or more steps, or that spans more than one turn, starts. The first list written becomes the active one, drawn first; focus switches it.\n- about (optional, one line of at most 80 characters; a longer one is cut with an ellipsis): one short sentence under the title saying what the list is for or what done looks like, so the user still knows a day later. Not a summary of the items. Set it with write and leave it; describe changes it later.\n- add / update / remove: one item. Mark the step you begin in_progress (prefer one at a time, several when work really runs in parallel), done the moment it finishes, blocked with a note when it waits on the user.\n- owner: who does the item, \"agent\" (you; the default) or \"user\". Mark a step \"user\" when only the person can take it: approve, decide, click, run something you may not. The pane marks your own items so theirs stand out.\n- read: every list as the pane shows it, with ids. Call it after a context compaction.\n- clear: empty one list (list) or all. drop: remove a list. focus: make a list the active one. describe: set or clear a list's about (list, about).\nUse a second list, e.g. \"followup\", for things to do after the main work (open the PR, report a finding to Jira), so the main list stays focused.\nKeep item text short and imperative, one line each. Before reporting a task finished, leave its list true: every item done, items that fell away removed."
+   }
+  ],
+  "panes": [
+   {
+    "id": "session-todo",
+    "title": "Todo"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 1,
+   "$.command.register": 1,
+   "$.session.id": 1,
+   "$.store.get": 1,
+   "$.state.get": 8,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.state.set": 1,
+   "$.ui.invalidate": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "session-todo": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "paddingX": 1,
+       "minHeight": 30
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "flex-end"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "key": "settings",
+           "label": "⚙",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "Nothing planned yet. The agent fills this in as work is planned; /todo add adds your own."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexGrow": 1
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "[ ] pending  [>] in progress  [x] done  [!] blocked  ✱ Claude's  ♟ yours  · click a glyph to cycle"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Todo"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(session-todo)",
+   "/todo → Todo: no lists"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "ui.close{id=session-todo}",
+   "ui.render{component=AbovePrompt}",
+   "prompt.compose",
+   "tool.call{tool=mcp__session-todo__todo}",
+   "command.run{command=todo}",
+   "ui.render{component=Pane, requestId=session-todo}"
+  ],
+  "calls": [
+   "$.clock.after (via commit)",
+   "$.command.register",
+   "$.config.list (via setOption)",
+   "$.config.set (via setOption)",
+   "$.session.id",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via commit)",
+   "$.tool.register",
+   "$.ui.invalidate (via redraw)",
+   "$.ui.open (via openPane)",
+   "$.ui.panes (via isPaneShown",
+   "openPane)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "session-todo.board",
+   "session-todo.justDone",
+   "session-todo.paneAutoOpened",
+   "session-todo.settingsOpen"
+  ],
+  "stateWrites": [
+   "session-todo.board",
+   "session-todo.justDone",
+   "session-todo.paneAutoOpened",
+   "session-todo.settingsOpen"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/jepperip-claude-session-todo/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/jepperip-claude-session-todo/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: session-todo.board, session-todo.settingsOpen, session-todo.justDone, session-todo.paneAutoOpened"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/jepperip-claude-session-todo/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, ui.close{id=session-todo}, ui.render{component=AbovePrompt}, prompt.compose, tool.call{tool=mcp__session-todo__todo}, command.run{command=todo}, ui.render{component=Pane, requestId=session-todo}",
+      "./register.tsx gating hook without .catch: ui.close{id=session-todo}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-todo__todo}",
+      "./register.tsx gating hook without .catch: command.run{command=todo}",
+      "./register.tsx calls: $.clock.after (via commit), $.command.register, $.config.list (via setOption), $.config.set (via setOption), $.session.id, $.state.get, $.state.set, $.store.get, $.store.set (via commit), $.tool.register, $.ui.invalidate (via redraw), $.ui.open (via openPane), $.ui.panes (via isPaneShown, openPane), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: session-todo.board, session-todo.justDone, session-todo.paneAutoOpened, session-todo.settingsOpen",
+      "./register.tsx state reads: session-todo.board, session-todo.justDone, session-todo.paneAutoOpened, session-todo.settingsOpen"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=session-todo}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-todo__todo}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=todo}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "5ea0eb6a00bb7d8e"
+}

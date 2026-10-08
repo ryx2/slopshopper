@@ -1,6 +1,6 @@
 {
  "slug": "pablog55-ghostfleet-ghostfleet",
- "generatedAt": "2026-10-07T15:21:53.515Z",
+ "generatedAt": "2026-10-08T15:53:13.998Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,9 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "turn.complete"
@@ -54,6 +57,15 @@
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ledger"
+    }
    }
   ],
   "commands": [
@@ -68,6 +80,12 @@
     "description": "What needs the lead, marked seen as fleet-inbox does (no turn)",
     "immediate": true,
     "output": "fleet-inbox: this session is not in a fleet (no socket in its record or its environment)."
+   },
+   {
+    "name": "ledger",
+    "description": "This session's open requests and promises; close <id>, clear (no turn)",
+    "immediate": true,
+    "output": "ledger: the file could not be read just now"
    }
   ],
   "tools": [],
@@ -78,17 +96,18 @@
   "rewrites": [],
   "apiCalls": {
    "$.process.run": 1,
-   "$.clock.sleep": 9,
+   "$.clock.sleep": 19,
    "$.session.turns": 1,
-   "$.clock.now": 4,
-   "$.session.id": 8,
-   "$.env.get": 41,
+   "$.clock.now": 7,
+   "$.session.id": 11,
+   "$.env.get": 54,
    "$.fs.read": 7,
    "$.clock.after": 1,
    "$.clock.every": 3,
-   "$.command.register": 2,
-   "$.state.get": 2,
-   "$.fs.exists": 4
+   "$.command.register": 3,
+   "$.fs.exists": 7,
+   "$.state.get": 3,
+   "$.session.surfaces": 1
   },
   "timers": [
    {
@@ -127,7 +146,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/fleet → fleet-list: this session is not in a fleet (no socket in its record or its envir…",
-   "/inbox → fleet-inbox: this session is not in a fleet (no socket in its record or its envi…"
+   "/inbox → fleet-inbox: this session is not in a fleet (no socket in its record or its envi…",
+   "/ledger → ledger: the file could not be read just now"
   ],
   "console": [],
   "warnings": []
@@ -139,6 +159,7 @@
   "hooks": [
    "session.start",
    "turn.start",
+   "turn.step",
    "turn.complete",
    "tool.check",
    "tool.call",
@@ -148,7 +169,9 @@
    "command.run{command=inbox}",
    "tool.call{tool=Bash}",
    "tool.call{tool=/\"^mcp__\"/}",
-   "ui.render{component=AbovePrompt}"
+   "ui.render{component=AbovePrompt}",
+   "prompt.submit",
+   "command.run{command=ledger}"
   ],
   "calls": [
    "$.clock.after (via startState)",
@@ -157,13 +180,16 @@
    "startState)",
    "$.clock.now",
    "$.clock.sleep (via bounded)",
-   "$.command.register (via startCommands)",
+   "$.command.register (via ledgerStart",
+   "startCommands)",
    "$.env.get (via fleetDir",
    "identity",
    "jarvisDir",
+   "ledgerConfigOf",
    "mergeGuard",
    "registeredProject)",
    "$.fs.exists (via maybeJarvis",
+   "readLedger",
    "registeredProject)",
    "$.fs.list (via childBranches",
    "deliverTick",
@@ -174,36 +200,46 @@
    "$.fs.read (via childBranches",
    "childrenOf",
    "maybeJarvis",
+   "readLedger",
    "readRecord",
    "readTeamRecords",
    "refreshPrs",
    "registeredProject)",
-   "$.fs.write (via applyPatch",
+   "$.fs.write (via applyLedger",
+   "applyPatch",
    "writeSpool)",
+   "$.model.complete (via judgeTurn)",
    "$.process.run",
-   "$.prompt.submit (via deliverTick)",
+   "$.prompt.submit (via deliverTick",
+   "judgeTurn)",
    "$.session.cwd (via answerGuardBash",
    "mergeGuard",
    "refreshPrs)",
    "$.session.id (via applyPatch",
    "deliveryStart",
+   "ledgerPath",
    "ownRecord)",
+   "$.session.messages (via judgeTurn)",
    "$.session.root (via mergeGuard)",
-   "$.session.turns (via startState)",
-   "$.state.get",
-   "$.state.set (via publish)",
-   "$.ui.resolve"
+   "$.session.surfaces (via judgeTurn)",
+   "$.session.turns (via startS… [+117 chars]"
   ],
   "stateReads": [
-   "ghostfleet.band"
+   "ghostfleet.band",
+   "ghostfleet.ledger"
   ],
   "stateWrites": [
-   "ghostfleet.band"
+   "ghostfleet.band",
+   "ghostfleet.ledger"
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
    "CLAUDE_FLEET_DIR",
    "CLAUDE_FLEET_JARVIS_DIR",
+   "CLAUDE_FLEET_LEDGER",
+   "CLAUDE_FLEET_LEDGER_GATE",
+   "CLAUDE_FLEET_LEDGER_MODEL",
+   "CLAUDE_FLEET_LEDGER_PROMISES",
    "CLAUDE_FLEET_SLOT",
    "CLAUDE_FLEET_SOCK",
    "CLAUDE_JOB_DIR",
@@ -222,7 +258,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ghostfleet.band"
+     "types ./types/index.d.ts declares state: ghostfleet.band, ghostfleet.ledger"
     ],
     "gatingHooks": []
    },
@@ -233,18 +269,20 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, turn.start, turn.complete, tool.check, tool.call, session.end, session.measure, command.run{command=fleet}, command.run{command=inbox}, tool.call{tool=Bash}, tool.call{tool=/\"^mcp__\"/}, ui.render{component=AbovePrompt}",
+      "./register.js hooks: session.start, turn.start, turn.step, turn.complete, tool.check, tool.call, session.end, session.measure, command.run{command=fleet}, command.run{command=inbox}, tool.call{tool=Bash}, tool.call{tool=/\"^mcp__\"/}, ui.render{component=AbovePrompt}, prompt.submit, command.run{command=ledger}",
       "./register.js answers its own command: command.run{command=fleet}",
       "./register.js answers its own command: command.run{command=inbox}",
+      "./register.js answers its own command: command.run{command=ledger}",
       "./register.js gating hook without .catch: tool.check",
       "./register.js gating hook without .catch: tool.call",
       "./register.js gating hook with .catch: tool.call{tool=Bash}",
       "./register.js gating hook with .catch: tool.call{tool=/\"^mcp__\"/}",
-      "./register.js calls: $.clock.after (via startState), $.clock.every (via deliveryStart, startBand, startState), $.clock.now, $.clock.sleep (via bounded), $.command.register (via startCommands), $.env.get (via fleetDir, identity, jarvisDir, mergeGuard, registeredProject), $.fs.exists (via maybeJarvis, registeredProject), $.fs.list (via childBranches, deliverTick, deliveryStart, mergeGuard, refresh, registeredProject), $.fs.read (via childBranches, childrenOf, maybeJarvis, readRecord, readTeamRecords, refreshPrs, registeredProject), $.fs.write (via applyPatch, writeSpool), $.process.run, $.prompt.submit (via deliverTick), $.session.cwd (via answerGuardBash, mergeGuard, refreshPrs), $.session.id (via applyPatch, deliveryStart, ownRecord), $.session.root (via mergeGuard), $.session.turns (via startState), $.state.get, $.state.set (via publish), $.ui.resolve",
+      "./register.js gating hook without .catch: prompt.submit",
+      "./register.js calls: $.clock.after (via startState), $.clock.every (via deliveryStart, startBand, startState), $.clock.now, $.clock.sleep (via bounded), $.command.register (via ledgerStart, startCommands), $.env.get (via fleetDir, identity, jarvisDir, ledgerConfigOf, mergeGuard, registeredProject), $.fs.exists (via maybeJarvis, readLedger, registeredProject), $.fs.list (via childBranches, deliverTick, deliveryStart, mergeGuard, refresh, registeredProject), $.fs.read (via childBranches, childrenOf, maybeJarvis, readLedger, readRecord, readTeamRecords, refreshPrs, registeredProject), $.fs.write (via applyLedger, applyPatch, writeSpool), $.model.complete (via judgeTurn), $.process.run, $.prompt.submit (via deliverTick, judgeTurn), $.session.cwd (via answerGuardBash, mergeGuard, refreshPrs), $.session.id (via applyPatch, deliveryStart, ledgerPath, ownRecord), $.session.messages (via judgeTurn), $.session.root (via mergeGuard), $.session.surfaces (via judgeTurn), $.session.turns (via startS… [+117 chars]",
       "./register.js env writes: nothing",
-      "./register.js env reads: CLAUDE_CONFIG_DIR, CLAUDE_FLEET_DIR, CLAUDE_FLEET_JARVIS_DIR, CLAUDE_FLEET_SLOT, CLAUDE_FLEET_SOCK, CLAUDE_JOB_DIR, HOME, TMUX, TMUX_PANE",
-      "./register.js state writes: ghostfleet.band",
-      "./register.js state reads: ghostfleet.band"
+      "./register.js env reads: CLAUDE_CONFIG_DIR, CLAUDE_FLEET_DIR, CLAUDE_FLEET_JARVIS_DIR, CLAUDE_FLEET_LEDGER, CLAUDE_FLEET_LEDGER_GATE, CLAUDE_FLEET_LEDGER_MODEL, CLAUDE_FLEET_LEDGER_PROMISES, CLAUDE_FLEET_SLOT, CLAUDE_FLEET_SOCK, CLAUDE_JOB_DIR, HOME, TMUX, TMUX_PANE",
+      "./register.js state writes: ghostfleet.band, ghostfleet.ledger",
+      "./register.js state reads: ghostfleet.band, ghostfleet.ledger"
      ],
      "gatingHooks": [
       {
@@ -270,11 +308,17 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=/\"^mcp__\"/}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.js",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "640b02112f7871ff"
+ "sourceHash": "4d086952ecea583e"
 }

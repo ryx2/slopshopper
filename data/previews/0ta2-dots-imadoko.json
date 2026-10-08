@@ -1,6 +1,6 @@
 {
  "slug": "0ta2-dots-imadoko",
- "generatedAt": "2026-10-07T15:22:42.218Z",
+ "generatedAt": "2026-10-08T15:53:42.197Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -44,6 +44,12 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "AssistantMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "AbovePrompt"
     }
    }
@@ -55,7 +61,12 @@
     "immediate": true
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "fix",
+    "description": "Corrects this session's imadoko summary when the user says it is wrong: sets a task's state (e.g. a finished task still shown as doing or waiting), or drops a pending item that is already settled. The correction holds for every later summary."
+   }
+  ],
   "panes": [
    {
     "id": "imadoko",
@@ -69,11 +80,14 @@
   "apiCalls": {
    "$.settings.read": 1,
    "$.command.register": 1,
-   "$.state.get": 21,
+   "$.tool.register": 1,
+   "$.state.get": 24,
    "$.session.id": 1,
    "$.session.messages": 1,
    "$.store.get": 2,
    "$.state.set": 10,
+   "$.clock.now": 1,
+   "$.env.get": 3,
    "$.clock.after": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
@@ -86,6 +100,9 @@
   ],
   "sites": {
    "AbovePrompt": {
+    "ok": "engine"
+   },
+   "AssistantMessage": {
     "ok": "engine"
    },
    "Pane": {
@@ -275,7 +292,7 @@
            {
             "type": "Button",
             "props": {
-             "key": "section:decisions",
+             "key": "section:pending",
              "label": "▾",
              "plain": true,
              "onPress": "[fn]"
@@ -290,7 +307,7 @@
              "wrap": "wrap"
             },
             "children": [
-             "Decisions"
+             "Waiting on you"
             ]
            }
           ]
@@ -322,7 +339,7 @@
            {
             "type": "Button",
             "props": {
-             "key": "section:pending",
+             "key": "section:decisions",
              "label": "▾",
              "plain": true,
              "onPress": "[fn]"
@@ -337,7 +354,7 @@
              "wrap": "wrap"
             },
             "children": [
-             "Waiting on you"
+             "Decisions"
             ]
            }
           ]
@@ -406,6 +423,7 @@
    "tool.call",
    "command.run{command=imadoko}",
    "ui.render{component=Pane, requestId=imadoko}",
+   "ui.render{component=AssistantMessage}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
@@ -413,16 +431,13 @@
    "$.clock.every (via followNextSession",
    "watchPulls",
    "watchTeam)",
-   "$.clock.now (via keepBook",
-   "noteMembers",
-   "refreshTeam",
-   "saveKnown",
-   "summarize)",
+   "$.clock.now",
    "$.command.register",
    "$.env.get",
    "$.fs.read (via noteMembers",
+   "reviewRule",
    "taskRecords)",
-   "$.fs.write (via summarize)",
+   "$.fs.write (via writeStatus)",
    "$.model.complete (via noteFromScreen",
    "summarize)",
    "$.process.run (via herdr",
@@ -430,6 +445,7 @@
    "$.session.id (via followNextSession",
    "openSession)",
    "$.session.messages (via openSession)",
+   "$.session.root (via reviewRule)",
    "$.settings.read",
    "$.state.get",
    "$.state.set",
@@ -443,11 +459,13 @@
    "saveKnown",
    "savePulls",
    "summarize)",
+   "$.tool.register",
    "$.ui.close",
    "$.ui.log",
    "$.ui.open",
    "$.ui.panes",
    "$.ui.resolve",
+   "$.ui.scroll",
    "$.ui.status (via clearTeam",
    "refreshTeam)",
    "$.ui.toast (via refreshTeam)"
@@ -558,12 +576,12 @@
      ],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, prompt.submit, turn.start, turn.complete, tool.call{tool=AskUserQuestion}, tool.call, command.run{command=imadoko}, ui.render{component=Pane, requestId=imadoko}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, session.end, prompt.submit, turn.start, turn.complete, tool.call{tool=AskUserQuestion}, tool.call, command.run{command=imadoko}, ui.render{component=Pane, requestId=imadoko}, ui.render{component=AssistantMessage}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=imadoko}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.after (via summarizeLater), $.clock.every (via followNextSession, watchPulls, watchTeam), $.clock.now (via keepBook, noteMembers, refreshTeam, saveKnown, summarize), $.command.register, $.env.get, $.fs.read (via noteMembers, taskRecords), $.fs.write (via summarize), $.model.complete (via noteFromScreen, summarize), $.process.run (via herdr, readPulls), $.session.id (via followNextSession, openSession), $.session.messages (via openSession), $.settings.read, $.state.get, $.state.set, $.store.delete (via pruneStore), $.store.get (via bookFor, keepBook, openSession, pruneStore), $.store.keys (via pruneStore), $.store.set (via keepBook, saveKnown, savePulls, summarize), $.ui.close, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via clearTeam, refreshTeam), $.ui.toast (via refreshTeam)",
+      "./register.tsx calls: $.clock.after (via summarizeLater), $.clock.every (via followNextSession, watchPulls, watchTeam), $.clock.now, $.command.register, $.env.get, $.fs.read (via noteMembers, reviewRule, taskRecords), $.fs.write (via writeStatus), $.model.complete (via noteFromScreen, summarize), $.process.run (via herdr, readPulls), $.session.id (via followNextSession, openSession), $.session.messages (via openSession), $.session.root (via reviewRule), $.settings.read, $.state.get, $.state.set, $.store.delete (via pruneStore), $.store.get (via bookFor, keepBook, openSession, pruneStore), $.store.keys (via pruneStore), $.store.set (via keepBook, saveKnown, savePulls, summarize), $.tool.register, $.ui.close, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.scroll, $.ui.status (via clearTeam, refreshTeam), $.ui.toast (via refreshTeam)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HERDR_ENV, HERDR_PANE_ID, HERDR_WORKSPACE_ID, HOME",
       "./register.tsx state writes: imadoko.expanded, imadoko.folded, imadoko.frame, imadoko.imadoko, imadoko.isLead, imadoko.marks, imadoko.notes, imadoko.pullViews, imadoko.pulls, imadoko.team",
@@ -593,5 +611,5 @@
    ]
   }
  },
- "sourceHash": "8f26de2bf1b2540a"
+ "sourceHash": "fb0eb71d438f5b7d"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "heidiks-agent-kit-pr-watch",
- "generatedAt": "2026-10-07T15:23:15.194Z",
+ "generatedAt": "2026-10-08T15:54:05.745Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -48,7 +48,8 @@
   "commands": [
    {
     "name": "pr-watch",
-    "description": "Watch ADO/GitHub PRs: /pr-watch <id|url|owner/repo#N> | mine | rm <target> | overview | mode [full|compact|mini] | clear | hide | show | style [name]",
+    "description": "Watch Azure DevOps and GitHub PRs (/pr-watch help lists every command)",
+    "argumentHint": "[id|url ...] | mine | rm | clear | clear-all | overview | focus | mode | style | hide | show | help",
     "output": "No PRs being watched."
    }
   ],
@@ -60,18 +61,27 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.store.get": 3,
-   "$.clock.now": 2,
-   "$.state.get": 23,
-   "$.state.set": 3,
-   "$.store.set": 1,
    "$.session.id": 1,
+   "$.state.get": 28,
+   "$.state.set": 4,
+   "$.store.get": 6,
+   "$.clock.now": 6,
+   "$.store.set": 1,
+   "$.store.keys": 1,
+   "$.clock.every": 3,
+   "$.clock.after": 4,
    "$.config.list": 1,
-   "$.clock.every": 2,
-   "$.clock.after": 3,
    "$.ui.resolve": 1
   },
   "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   },
    {
     "kind": "every",
     "ms": 5000
@@ -249,7 +259,10 @@
    "$.session.root (via scanPlans)",
    "$.state.get",
    "$.state.set",
+   "$.store.delete (via pruneAbandonedSessions)",
    "$.store.get",
+   "$.store.keys (via pruneAbandonedSessions",
+   "syncOthers)",
    "$.store.set",
    "$.ui.copy (via copySummary)",
    "$.ui.open (via openOverview)",
@@ -263,9 +276,12 @@
   ],
   "stateReads": [
    "pr-watch.doneExpanded",
+   "pr-watch.expanded",
    "pr-watch.frame",
+   "pr-watch.isFocused",
    "pr-watch.isHidden",
    "pr-watch.mode",
+   "pr-watch.others",
    "pr-watch.pendingRemove",
    "pr-watch.plans",
    "pr-watch.prs",
@@ -278,9 +294,12 @@
   ],
   "stateWrites": [
    "pr-watch.doneExpanded",
+   "pr-watch.expanded",
    "pr-watch.frame",
+   "pr-watch.isFocused",
    "pr-watch.isHidden",
    "pr-watch.mode",
+   "pr-watch.others",
    "pr-watch.pendingRemove",
    "pr-watch.plans",
    "pr-watch.prs",
@@ -303,7 +322,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: pr-watch.prs, pr-watch.frame, pr-watch.mode, pr-watch.scope, pr-watch.sessionId, pr-watch.summary, pr-watch.summaryStatus, pr-watch.isHidden, pr-watch.style, pr-watch.tone, pr-watch.pendingRemove, pr-watch.doneExpanded, pr-watch.plans"
+     "types ./types/index.d.ts declares state: pr-watch.prs, pr-watch.frame, pr-watch.mode, pr-watch.isFocused, pr-watch.scope, pr-watch.sessionId, pr-watch.summary, pr-watch.summaryStatus, pr-watch.isHidden, pr-watch.style, pr-watch.tone, pr-watch.pendingRemove, pr-watch.expanded, pr-watch.doneExpanded, pr-watch.plans, pr-watch.others"
     ],
     "gatingHooks": []
    },
@@ -319,9 +338,9 @@
       "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook with .catch: config.set{key=theme}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__azure-devops__repo_pull_request_write}",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.config.list (via syncTone), $.fs.exists (via scanPlans), $.fs.list (via readPlan, scanPlans), $.fs.read (via readPlan), $.model.complete (via summarize), $.process.run (via ioOf, openUrl), $.prompt.submit (via bandContext), $.session.id, $.session.root (via scanPlans), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.copy (via copySummary), $.ui.open (via openOverview), $.ui.resolve, $.ui.status (via syncStatus), $.ui.toast (via bandContext, copySummary, openOverview, openUrl, refreshOne)",
-      "./register.tsx state writes: pr-watch.doneExpanded, pr-watch.frame, pr-watch.isHidden, pr-watch.mode, pr-watch.pendingRemove, pr-watch.plans, pr-watch.prs, pr-watch.scope, pr-watch.sessionId, pr-watch.style, pr-watch.summary, pr-watch.summaryStatus, pr-watch.tone",
-      "./register.tsx state reads: pr-watch.doneExpanded, pr-watch.frame, pr-watch.isHidden, pr-watch.mode, pr-watch.pendingRemove, pr-watch.plans, pr-watch.prs, pr-watch.scope, pr-watch.sessionId, pr-watch.style, pr-watch.summary, pr-watch.summaryStatus, pr-watch.tone"
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.config.list (via syncTone), $.fs.exists (via scanPlans), $.fs.list (via readPlan, scanPlans), $.fs.read (via readPlan), $.model.complete (via summarize), $.process.run (via ioOf, openUrl), $.prompt.submit (via bandContext), $.session.id, $.session.root (via scanPlans), $.state.get, $.state.set, $.store.delete (via pruneAbandonedSessions), $.store.get, $.store.keys (via pruneAbandonedSessions, syncOthers), $.store.set, $.ui.copy (via copySummary), $.ui.open (via openOverview), $.ui.resolve, $.ui.status (via syncStatus), $.ui.toast (via bandContext, copySummary, openOverview, openUrl, refreshOne)",
+      "./register.tsx state writes: pr-watch.doneExpanded, pr-watch.expanded, pr-watch.frame, pr-watch.isFocused, pr-watch.isHidden, pr-watch.mode, pr-watch.others, pr-watch.pendingRemove, pr-watch.plans, pr-watch.prs, pr-watch.scope, pr-watch.sessionId, pr-watch.style, pr-watch.summary, pr-watch.summaryStatus, pr-watch.tone",
+      "./register.tsx state reads: pr-watch.doneExpanded, pr-watch.expanded, pr-watch.frame, pr-watch.isFocused, pr-watch.isHidden, pr-watch.mode, pr-watch.others, pr-watch.pendingRemove, pr-watch.plans, pr-watch.prs, pr-watch.scope, pr-watch.sessionId, pr-watch.style, pr-watch.summary, pr-watch.summaryStatus, pr-watch.tone"
      ],
      "gatingHooks": [
       {
@@ -347,5 +366,5 @@
    ]
   }
  },
- "sourceHash": "bab3567268d159b4"
+ "sourceHash": "e6c8f51dcc9add0f"
 }

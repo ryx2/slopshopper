@@ -1,6 +1,6 @@
 {
  "slug": "darkraise-darkraise-ai-plugins-dr-cockpit",
- "generatedAt": "2026-10-07T15:23:01.418Z",
+ "generatedAt": "2026-10-08T15:53:55.590Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,12 @@
     "matcher": {
      "command": "cockpit"
     }
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "agent.spawn"
@@ -43,6 +49,12 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "Pane",
      "requestId": "dr-cockpit"
     }
@@ -51,7 +63,7 @@
   "commands": [
    {
     "name": "cockpit",
-    "description": "Show subagent seats, their token use and the handoff budget in a pane",
+    "description": "Show context, usage, subagents, the plan and the repo in a pane",
     "output": "Cockpit pane opened."
    }
   ],
@@ -68,11 +80,15 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.session.usage": 11,
+   "$.settings.read": 2,
+   "$.session.usage": 13,
    "$.env.get": 11,
-   "$.state.get": 28,
-   "$.state.set": 11,
+   "$.state.get": 50,
+   "$.state.set": 3,
+   "$.clock.now": 2,
+   "$.ui.panes": 1,
    "$.ui.open": 1,
+   "$.process.run": 1,
    "$.ui.resolve": 2
   },
   "timers": [],
@@ -88,30 +104,30 @@
       {
        "type": "Text",
        "props": {
-        "color": "yellow",
-        "bold": false
+        "color": "red",
+        "bold": true
        },
        "children": [
-        "Nearing handoff: ",
+        "Hand off: ",
         "97k",
         " of ",
-        "100k",
+        "46k",
         " (",
-        "97",
+        "212",
         "%)",
         " "
        ]
-      },
-      {
-       "type": "Button",
-       "props": {
-        "key": "hide",
-        "label": "Hide",
-        "onPress": "[fn]"
-       },
-       "children": []
       }
      ]
+    }
+   },
+   "PromptHint": {
+    "ok": "engine",
+    "props": {
+     "isDraft": false,
+     "isWorking": false,
+     "hint": "? for shortcuts",
+     "tail": "97k/46k handoff"
     }
    },
    "Pane": {
@@ -124,57 +140,231 @@
       },
       "children": [
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "bold": true
+         "key": "context",
+         "flexDirection": "column"
         },
         "children": [
-         "Main session"
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Context"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "ctx"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "ctx "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "error"
+              },
+              "children": [
+               "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "error",
+               "bold": true
+              },
+              "children": [
+               " ",
+               "212",
+               "%"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               " · ",
+               "97k of 46k handoff"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "ctx-details",
+             "flexDirection": "column",
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "ctx-window",
+               "dimColor": true
+              },
+              "children": [
+               "window ",
+               "200k",
+               "",
+               ""
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "actions"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "pane-compact",
+               "label": "Compact",
+               "hotkey": "c",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "dimColor": true
+         "key": "usage",
+         "flexDirection": "column"
         },
         "children": [
-         "97k of 100k handoff budget · $0.42 so far"
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Usage"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "limit-five_hour"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "5h  "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "success"
+              },
+              "children": [
+               "▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "success",
+               "bold": true
+              },
+              "children": [
+               " ",
+               "31",
+               "%"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "cost",
+             "dimColor": false
+            },
+            "children": [
+             "$0.42 this session · $0.84/h"
+            ]
+           }
+          ]
+         }
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "bold": true
+         "key": "agents",
+         "flexDirection": "column"
         },
         "children": [
-         "Seats"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "No subagent has finished yet."
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "bold": true
-        },
-        "children": [
-         "Recent"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "No subagents yet."
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Agents"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "agents-none",
+             "dimColor": true
+            },
+            "children": [
+             "No subagents yet."
+            ]
+           }
+          ]
+         }
         ]
        }
       ]
@@ -196,6 +386,7 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(dr-cockpit)",
+   "$.process.run(git --no-optional-locks -c core.fsmonitor=false status --porcelain=v2 --branch) → exit 0",
    "/cockpit → Cockpit pane opened."
   ],
   "console": [],
@@ -208,41 +399,62 @@
   "hooks": [
    "session.start",
    "command.run{command=cockpit}",
+   "session.measure",
+   "session.compact",
    "agent.spawn",
    "turn.complete",
    "attribution.text{kind=commit}",
    "attribution.text{kind=pr}",
    "tool.call",
    "ui.render{component=AbovePrompt}",
+   "ui.render{component=PromptHint}",
    "ui.render{component=Pane, requestId=dr-cockpit}"
   ],
   "calls": [
+   "$.clock.now",
    "$.command.register",
    "$.env.get (via refresh)",
+   "$.process.run (via refreshDetail)",
    "$.prompt.submit",
    "$.session.append (via refresh)",
-   "$.session.usage (via refresh)",
+   "$.session.compact",
+   "$.session.usage",
+   "$.settings.read (via readCompactWindow)",
    "$.state.get",
    "$.state.set",
    "$.ui.open",
+   "$.ui.panes (via isPaneUp)",
    "$.ui.resolve",
-   "$.ui.toast (via refresh)"
+   "$.ui.toast (via alertLimits",
+   "refresh)"
   ],
   "stateReads": [
+   "dr-cockpit.alerted",
+   "dr-cockpit.breakdown",
    "dr-cockpit.budget",
    "dr-cockpit.isBandHidden",
    "dr-cockpit.isNudged",
    "dr-cockpit.isPlanSession",
+   "dr-cockpit.plan",
+   "dr-cockpit.refusals",
+   "dr-cockpit.repo",
    "dr-cockpit.seats",
-   "dr-cockpit.spawns"
+   "dr-cockpit.spawns",
+   "dr-cockpit.usage"
   ],
   "stateWrites": [
+   "dr-cockpit.alerted",
+   "dr-cockpit.breakdown",
    "dr-cockpit.budget",
    "dr-cockpit.isBandHidden",
    "dr-cockpit.isNudged",
    "dr-cockpit.isPlanSession",
+   "dr-cockpit.plan",
+   "dr-cockpit.refusals",
+   "dr-cockpit.repo",
    "dr-cockpit.seats",
-   "dr-cockpit.spawns"
+   "dr-cockpit.spawns",
+   "dr-cockpit.usage"
   ],
   "envReads": [
    "DR_SUPERPOWERS_BUDGET"
@@ -258,7 +470,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: dr-cockpit.budget, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession"
+     "types ./types/index.d.ts declares state: dr-cockpit.budget, dr-cockpit.usage, dr-cockpit.breakdown, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.plan, dr-cockpit.repo, dr-cockpit.refusals, dr-cockpit.alerted, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession"
     ],
     "gatingHooks": []
    },
@@ -269,17 +481,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=cockpit}, agent.spawn, turn.complete, attribution.text{kind=commit}, attribution.text{kind=pr}, tool.call, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=dr-cockpit}",
+      "./register.tsx hooks: session.start, command.run{command=cockpit}, session.measure, session.compact, agent.spawn, turn.complete, attribution.text{kind=commit}, attribution.text{kind=pr}, tool.call, ui.render{component=AbovePrompt}, ui.render{component=PromptHint}, ui.render{component=Pane, requestId=dr-cockpit}",
       "./register.tsx answers its own command: command.run{command=cockpit}",
+      "./register.tsx gating hook with .catch: session.compact",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.command.register, $.env.get (via refresh), $.prompt.submit, $.session.append (via refresh), $.session.usage (via refresh), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast (via refresh)",
+      "./register.tsx calls: $.clock.now, $.command.register, $.env.get (via refresh), $.process.run (via refreshDetail), $.prompt.submit, $.session.append (via refresh), $.session.compact, $.session.usage, $.settings.read (via readCompactWindow), $.state.get, $.state.set, $.ui.open, $.ui.panes (via isPaneUp), $.ui.resolve, $.ui.toast (via alertLimits, refresh)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: DR_SUPERPOWERS_BUDGET",
-      "./register.tsx state writes: dr-cockpit.budget, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.seats, dr-cockpit.spawns",
-      "./register.tsx state reads: dr-cockpit.budget, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.seats, dr-cockpit.spawns"
+      "./register.tsx state writes: dr-cockpit.alerted, dr-cockpit.breakdown, dr-cockpit.budget, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.plan, dr-cockpit.refusals, dr-cockpit.repo, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.usage",
+      "./register.tsx state reads: dr-cockpit.alerted, dr-cockpit.breakdown, dr-cockpit.budget, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.plan, dr-cockpit.refusals, dr-cockpit.repo, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.usage"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "agent.spawn",
@@ -297,5 +516,5 @@
    ]
   }
  },
- "sourceHash": "d4da96bfba4f4c79"
+ "sourceHash": "2dcb85682005e082"
 }

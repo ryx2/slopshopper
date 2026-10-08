@@ -1,6 +1,6 @@
 {
  "slug": "nulldefault-toa-sheet-toa-sheet",
- "generatedAt": "2026-10-07T15:23:40.241Z",
+ "generatedAt": "2026-10-08T15:54:32.996Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,9 +14,21 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__vault__(vault_query|draft_write)$/"
+    }
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "sheet"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "party"
     }
    },
    {
@@ -26,6 +38,61 @@
     "event": "ui.render",
     "matcher": {
      "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.input",
+    "matcher": {
+     "plugin": "toa-sheet"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolGroup",
+     "props": {
+      "calls": {
+       "tool": "/^mcp__.+__(sheet_read|sheet_write|level_up|spell_get|monster_get|character_option_get|condition_search|variantrule_search|book_content_get)$/"
+      }
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolGroup",
+     "props": {
+      "calls": {
+       "tool": "/^mcp__vault__(vault_query|canon_query|draft_write)$/"
+      }
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "/^mcp__.+__(sheet_read|sheet_write|level_up|spell_get|monster_get|character_option_get|condition_search|variantrule_search|book_content_get)$/"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "/^mcp__vault__(vault_query|canon_query|draft_write)$/"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "props": {
+      "tool": "/^mcp__.+__(sheet_read|sheet_write|level_up|spell_get|monster_get|character_option_get|condition_search|variantrule_search|book_content_get)$/"
+     }
     }
    },
    {
@@ -47,6 +114,12 @@
     "description": "Show a character sheet beside the transcript",
     "argumentHint": "[name] [actions|saves|features|gear|notes]",
     "immediate": true
+   },
+   {
+    "name": "party",
+    "description": "The DM's party view: every sheet, the table log, the session",
+    "argumentHint": "[S04]",
+    "immediate": true
    }
   ],
   "tools": [],
@@ -62,16 +135,19 @@
   "rewrites": [],
   "apiCalls": {
    "$.store.keys": 1,
-   "$.store.get": 1,
-   "$.command.register": 1,
-   "$.ui.open": 1,
-   "$.ui.invalidate": 1,
+   "$.store.get": 3,
+   "$.command.register": 2,
+   "$.ui.open": 2,
+   "$.ui.invalidate": 2,
    "$.ui.resolve": 2,
    "$.clock.now": 2
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
+    "ok": "engine"
+   },
+   "ToolUse": {
     "ok": "engine"
    },
    "Pane": {
@@ -84,6 +160,58 @@
       },
       "children": [
        {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "NO SESSION · /party S04, or start the Table operation"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "columnGap": 2
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "act-a",
+           "label": "add",
+           "hotkey": "a",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "act-i",
+           "label": "init",
+           "hotkey": "i",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "truncate"
+        },
+        "children": [
+         "── PARTY ───────────────────────────────────────────────"
+        ]
+       },
+       {
         "type": "Box",
         "props": {
          "flexDirection": "row",
@@ -94,7 +222,7 @@
           "type": "Text",
           "props": {},
           "children": [
-           "AWAITING SHEET"
+           "AWAITING SHEETS"
           ]
          },
          {
@@ -115,12 +243,32 @@
          "wrap": "wrap"
         },
         "children": [
-         "Ask Claude to show your sheet; the pane fills in from its sheet_read result."
+         "Press e to read every sheet this connector serves, or ask Claude to."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "reread",
+           "label": "re-read",
+           "hotkey": "e",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
         ]
        }
       ]
      },
-     "title": "Sheet"
+     "title": "Party"
     }
    }
   },
@@ -137,7 +285,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(toa-sheet)",
-   "/sheet → "
+   "/sheet → ",
+   "$.ui.open(toa-sheet)",
+   "/party → "
   ],
   "console": [],
   "warnings": []
@@ -151,19 +301,40 @@
   "hooks": [
    "session.start",
    "tool.call{tool=/\"^mcp__.+__sheet_(read|write)$\"/}",
+   "tool.call{tool=/\"^mcp__vault__(vault_query|draft_write)$\"/}",
    "command.run{command=sheet}",
+   "command.run{command=party}",
    "ui.close",
    "ui.render{component=Pane}",
+   "ui.input{plugin=toa-sheet}",
+   "ui.render{component=ToolGroup",
+   "props.calls has {tool=?}}",
+   "ui.render{component=ToolGroup",
+   "props.calls has {tool=?}}",
+   "ui.render{component=ToolUse",
+   "props has {tool=?}}",
+   "ui.render{component=ToolUse",
+   "props has {tool=?}}",
+   "ui.render{component=ToolResult",
+   "props has {tool=?}}",
    "ui.press{plugin=toa-sheet}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.clock.after (via watch)",
    "$.clock.now",
    "$.command.register",
-   "$.store.get (via loadSheets",
-   "remember)",
-   "$.store.keys (via loadSheets)",
-   "$.store.set (via remember)",
+   "$.store.get (via loadStore",
+   "update)",
+   "$.store.keys (via loadStore)",
+   "$.store.set",
+   "$.tool.call (via logFight",
+   "refresh",
+   "write)",
+   "$.tool.list (via logFight",
+   "refresh",
+   "write)",
+   "$.ui.focus (via focusOn)",
    "$.ui.invalidate",
    "$.ui.log",
    "$.ui.open",
@@ -198,17 +369,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, tool.call{tool=/\"^mcp__.+__sheet_(read|write)$\"/}, command.run{command=sheet}, ui.close, ui.render{component=Pane}, ui.press{plugin=toa-sheet}, ui.render{component=AbovePrompt}",
+      "./register.ts hooks: session.start, tool.call{tool=/\"^mcp__.+__sheet_(read|write)$\"/}, tool.call{tool=/\"^mcp__vault__(vault_query|draft_write)$\"/}, command.run{command=sheet}, command.run{command=party}, ui.close, ui.render{component=Pane}, ui.input{plugin=toa-sheet}, ui.render{component=ToolGroup, props.calls has {tool=?}}, ui.render{component=ToolGroup, props.calls has {tool=?}}, ui.render{component=ToolUse, props has {tool=?}}, ui.render{component=ToolUse, props has {tool=?}}, ui.render{component=ToolResult, props has {tool=?}}, ui.press{plugin=toa-sheet}, ui.render{component=AbovePrompt}",
       "./register.ts answers its own command: command.run{command=sheet}",
+      "./register.ts answers its own command: command.run{command=party}",
       "./register.ts gating hook without .catch: tool.call{tool=/\"^mcp__.+__sheet_(read|write)$\"/}",
+      "./register.ts gating hook without .catch: tool.call{tool=/\"^mcp__vault__(vault_query|draft_write)$\"/}",
       "./register.ts gating hook without .catch: ui.close",
-      "./register.ts calls: $.clock.now, $.command.register, $.store.get (via loadSheets, remember), $.store.keys (via loadSheets), $.store.set (via remember), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.toast"
+      "./register.ts calls: $.clock.after (via watch), $.clock.now, $.command.register, $.store.get (via loadStore, update), $.store.keys (via loadStore), $.store.set, $.tool.call (via logFight, refresh, write), $.tool.list (via logFight, refresh, write), $.ui.focus (via focusOn), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.toast"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=/\"^mcp__.+__sheet_(read|write)$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__vault__(vault_query|draft_write)$\"/}",
        "hasCatch": false
       },
       {
@@ -222,5 +401,5 @@
    ]
   }
  },
- "sourceHash": "e9e66aa5e317997f"
+ "sourceHash": "6762a410d7f878d8"
 }

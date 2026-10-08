@@ -1,6 +1,6 @@
 {
  "slug": "herman925-925-cc-plugins-clean-view",
- "generatedAt": "2026-10-07T15:22:21.106Z",
+ "generatedAt": "2026-10-08T15:53:27.497Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,12 @@
     "event": "command.run",
     "matcher": {
      "command": "simple"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "askchoices"
     }
    },
    {
@@ -94,6 +100,12 @@
   ],
   "commands": [
    {
+    "name": "askchoices",
+    "description": "Turn the ask_choices question tool on or off (no argument flips it). Off by default.",
+    "argumentHint": "on|off",
+    "output": "ask_choices is on."
+   },
+   {
     "name": "simple",
     "description": "Turn Clean View on or off (no argument flips it), or pick the look: bars or list.",
     "argumentHint": "on|off|bars|list",
@@ -121,11 +133,12 @@
    },
    {
     "name": "ask_choices",
-    "description": "Clean View: ask the person a question with 2 to 4 options, the recommended option first. Use this whenever you need their input, then stop and wait for their reply."
+    "description": "Off by default: use AskUserQuestion to ask the person. Call this only if the person has said they turned on ask_choices. When on: ask a question with 2 to 4 options, the recommended option first, then stop and wait for their reply."
    }
   ],
   "panes": [],
   "toasts": [
+   "ask_choices is on.",
    "Clean View is off: details are showing.",
    "Bar view"
   ],
@@ -133,14 +146,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 2,
+   "$.state.get": 63,
+   "$.state.set": 28,
    "$.tool.register": 3,
-   "$.command.register": 3,
-   "$.state.get": 54,
+   "$.command.register": 4,
    "$.clock.now": 3,
-   "$.state.set": 24,
-   "$.store.set": 2,
-   "$.ui.toast": 2,
+   "$.store.set": 3,
+   "$.ui.toast": 3,
+   "$.config.set": 3,
    "$.ui.resolve": 1,
    "$.env.get": 4
   },
@@ -172,11 +185,45 @@
       {
        "type": "Box",
        "props": {
-        "flexDirection": "row",
-        "justifyContent": "space-between",
+        "flexDirection": "column",
+        "borderStyle": "round",
+        "borderColor": "cyan",
+        "paddingX": 1,
         "width": 100
        },
        "children": [
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+          "width": 96
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "bold": true,
+            "inverse": false,
+            "backgroundColor": "cyan",
+            "color": "black"
+           },
+           "children": [
+            " Clean View · off "
+           ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "settings",
+            "variant": "secondary",
+            "label": "⚙ Settings ▾",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        },
         {
          "type": "Text",
          "props": {
@@ -184,17 +231,8 @@
           "wrap": "truncate"
          },
          "children": [
-          ""
+          "Tool calls are showing. Open Settings to hide them again."
          ]
-        },
-        {
-         "type": "Button",
-         "props": {
-          "key": "toggle",
-          "label": "Show details",
-          "onPress": "[fn]"
-         },
-         "children": []
         }
        ]
       }
@@ -218,6 +256,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "/askchoices → ask_choices is on.",
    "/simple → Clean View is off.",
    "/progress → Bar view.",
    "/progress-clear → Finished bars removed."
@@ -234,6 +273,7 @@
   "hooks": [
    "session.start",
    "command.run{command=simple}",
+   "command.run{command=askchoices}",
    "command.run{command=progress}",
    "command.run{command=progress-clear}",
    "prompt.compose",
@@ -256,6 +296,7 @@
    "$.clock.every (via runClock)",
    "$.clock.now",
    "$.command.register",
+   "$.config.set (via syncRow)",
    "$.env.get",
    "$.model.complete",
    "$.process.run (via bell)",
@@ -263,24 +304,30 @@
    "$.state.get",
    "$.state.set",
    "$.store.get",
-   "$.store.set (via setEnabled",
+   "$.store.set (via setAskEnabled",
+   "setEnabled",
    "setStyle)",
    "$.tool.register",
    "$.ui.resolve",
-   "$.ui.toast (via setEnabled",
+   "$.ui.toast (via setAskEnabled",
+   "setEnabled",
    "setStyle)"
   ],
   "stateReads": [
+   "clean-view.askChoicesEnabled",
    "clean-view.checklist",
    "clean-view.cleanViewEnabled",
    "clean-view.finished",
+   "clean-view.settingsOpen",
    "clean-view.tick",
    "clean-view.viewStyle"
   ],
   "stateWrites": [
+   "clean-view.askChoicesEnabled",
    "clean-view.checklist",
    "clean-view.cleanViewEnabled",
    "clean-view.finished",
+   "clean-view.settingsOpen",
    "clean-view.tick",
    "clean-view.viewStyle"
   ],
@@ -308,7 +355,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: clean-view.cleanViewEnabled, clean-view.checklist, clean-view.tick, clean-view.viewStyle, clean-view.finished"
+     "types ./types/index.d.ts declares state: clean-view.cleanViewEnabled, clean-view.askChoicesEnabled, clean-view.settingsOpen, clean-view.checklist, clean-view.tick, clean-view.viewStyle, clean-view.finished"
     ],
     "gatingHooks": []
    },
@@ -319,8 +366,9 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=simple}, command.run{command=progress}, command.run{command=progress-clear}, prompt.compose, prompt.submit, turn.start, classic.Notification, tool.call{tool=mcp__clean-view__plan_steps}, tool.call{tool=mcp__clean-view__report_progress}, tool.call{tool=mcp__clean-view__ask_choices}, tool.call, turn.complete, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=ToolProgress}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=simple}, command.run{command=askchoices}, command.run{command=progress}, command.run{command=progress-clear}, prompt.compose, prompt.submit, turn.start, classic.Notification, tool.call{tool=mcp__clean-view__plan_steps}, tool.call{tool=mcp__clean-view__report_progress}, tool.call{tool=mcp__clean-view__ask_choices}, tool.call, turn.complete, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=ToolProgress}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=simple}",
+      "./register.tsx answers its own command: command.run{command=askchoices}",
       "./register.tsx answers its own command: command.run{command=progress}",
       "./register.tsx answers its own command: command.run{command=progress-clear}",
       "./register.tsx gating hook without .catch: prompt.submit",
@@ -329,11 +377,11 @@
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__clean-view__report_progress}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__clean-view__ask_choices}",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.after, $.clock.every (via runClock), $.clock.now, $.command.register, $.env.get, $.model.complete, $.process.run (via bell), $.prompt.submit, $.state.get, $.state.set, $.store.get, $.store.set (via setEnabled, setStyle), $.tool.register, $.ui.resolve, $.ui.toast (via setEnabled, setStyle)",
+      "./register.tsx calls: $.clock.after, $.clock.every (via runClock), $.clock.now, $.command.register, $.config.set (via syncRow), $.env.get, $.model.complete, $.process.run (via bell), $.prompt.submit, $.state.get, $.state.set, $.store.get, $.store.set (via setAskEnabled, setEnabled, setStyle), $.tool.register, $.ui.resolve, $.ui.toast (via setAskEnabled, setEnabled, setStyle)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: NO_COLOR, NO_MOTION, OS, PREFERS_REDUCED_MOTION, REDUCE_MOTION",
-      "./register.tsx state writes: clean-view.checklist, clean-view.cleanViewEnabled, clean-view.finished, clean-view.tick, clean-view.viewStyle",
-      "./register.tsx state reads: clean-view.checklist, clean-view.cleanViewEnabled, clean-view.finished, clean-view.tick, clean-view.viewStyle"
+      "./register.tsx state writes: clean-view.askChoicesEnabled, clean-view.checklist, clean-view.cleanViewEnabled, clean-view.finished, clean-view.settingsOpen, clean-view.tick, clean-view.viewStyle",
+      "./register.tsx state reads: clean-view.askChoicesEnabled, clean-view.checklist, clean-view.cleanViewEnabled, clean-view.finished, clean-view.settingsOpen, clean-view.tick, clean-view.viewStyle"
      ],
      "gatingHooks": [
       {
@@ -377,5 +425,5 @@
    ]
   }
  },
- "sourceHash": "a8a9c20ab5ca343f"
+ "sourceHash": "7b289a5cb5052444"
 }

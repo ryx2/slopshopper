@@ -1,6 +1,6 @@
 {
  "slug": "schreibse-claude-code-mods-handover",
- "generatedAt": "2026-10-06T05:30:19.232Z",
+ "generatedAt": "2026-10-08T15:53:19.699Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,7 +11,19 @@
     }
    },
    {
-    "event": "classic.SessionStart"
+    "event": "command.run",
+    "matcher": {
+     "command": "clear"
+    }
+   },
+   {
+    "event": "classic.SessionStart",
+    "matcher": {
+     "source": "startup"
+    }
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "session.start"
@@ -20,6 +32,12 @@
     "event": "command.run",
     "matcher": {
      "command": "handover-copy"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handover"
     }
    },
    {
@@ -34,6 +52,11 @@
     "name": "handover-copy",
     "description": "Copy the handover sentence and hide its band",
     "output": "No handover sentence yet."
+   },
+   {
+    "name": "handover",
+    "description": "List this repo's handovers; /handover N puts one in the prompt",
+    "output": "No handover for this repo."
    }
   ],
   "tools": [],
@@ -43,12 +66,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
+   "$.command.register": 2,
+   "$.clock.now": 3,
+   "$.store.keys": 3,
    "$.session.root": 2,
-   "$.store.get": 2,
-   "$.clock.now": 1,
+   "$.state.get": 4,
+   "$.state.set": 1,
    "$.env.get": 2,
-   "$.state.get": 2
+   "$.session.id": 3,
+   "$.store.get": 1
   },
   "timers": [],
   "sites": {
@@ -68,7 +94,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/handover-copy → No handover sentence yet."
+   "/handover-copy → No handover sentence yet.",
+   "/handover → No handover for this repo."
   ],
   "console": [],
   "warnings": []
@@ -79,30 +106,38 @@
   "warnings": [],
   "hooks": [
    "tool.call{tool=Write}",
-   "classic.SessionStart",
+   "command.run{command=clear}",
+   "classic.SessionStart{source=startup}",
+   "prompt.submit",
    "session.start",
    "command.run{command=handover-copy}",
+   "command.run{command=handover}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
-   "$.clock.every",
+   "$.clock.every (via suggest)",
    "$.clock.now",
    "$.command.register",
-   "$.env.get",
-   "$.prompt.suggest",
+   "$.env.get (via home)",
+   "$.process.run (via remove)",
+   "$.prompt.suggest (via suggest)",
+   "$.session.id",
    "$.session.root",
    "$.state.get",
    "$.state.set",
-   "$.store.delete",
+   "$.store.delete (via remove)",
    "$.store.get",
+   "$.store.keys (via entries)",
    "$.store.set",
    "$.ui.copy",
    "$.ui.resolve"
   ],
   "stateReads": [
+   "handover.choices",
    "handover.pending"
   ],
   "stateWrites": [
+   "handover.choices",
    "handover.pending"
   ],
   "envReads": [
@@ -111,34 +146,79 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/schreibse-claude-code-mods-handover/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/schreibse-claude-code-mods-handover/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/schreibse-claude-code-mods-handover/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/schreibse-claude-code-mods-handover/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: handover.pending"
-    ]
+     "types ./types/index.d.ts declares state: handover.pending, handover.choices"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/schreibse-claude-code-mods-handover/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/schreibse-claude-code-mods-handover/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.call{tool=Write}, classic.SessionStart, session.start, command.run{command=handover-copy}, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get, $.prompt.suggest, $.session.root, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.ui.copy, $.ui.resolve",
+      "./register.tsx hooks: tool.call{tool=Write}, command.run{command=clear}, classic.SessionStart{source=startup}, prompt.submit, session.start, command.run{command=handover-copy}, command.run{command=handover}, ui.render{component=AbovePrompt}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Write}",
+      "./register.tsx gating hook without .catch: command.run{command=clear}",
+      "./register.tsx gating hook without .catch: classic.SessionStart{source=startup}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: command.run{command=handover-copy}",
+      "./register.tsx gating hook without .catch: command.run{command=handover}",
+      "./register.tsx calls: $.clock.every (via suggest), $.clock.now, $.command.register, $.env.get (via home), $.process.run (via remove), $.prompt.suggest (via suggest), $.session.id, $.session.root, $.state.get, $.state.set, $.store.delete (via remove), $.store.get, $.store.keys (via entries), $.store.set, $.ui.copy, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: handover.pending",
-      "./register.tsx state reads: handover.pending"
+      "./register.tsx state writes: handover.choices, handover.pending",
+      "./register.tsx state reads: handover.choices, handover.pending"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=clear}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=startup}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=handover-copy}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=handover}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "90999d63e2989c55"
+ "sourceHash": "70fab2ab08de2193"
 }

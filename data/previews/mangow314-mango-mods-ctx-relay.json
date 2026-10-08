@@ -1,6 +1,6 @@
 {
  "slug": "mangow314-mango-mods-ctx-relay",
- "generatedAt": "2026-10-06T05:33:02.138Z",
+ "generatedAt": "2026-10-08T15:53:31.697Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -21,6 +21,9 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "skill.prompt",
@@ -50,13 +53,13 @@
   "commands": [
    {
     "name": "ctx-relay-status",
-    "description": "ctx-relay：門檻、讀數、自動交接狀態與背景工作",
-    "output": "[ctx-relay] context 97400；交接線 170000（壓縮點的 85%）；壓縮點 200000；提醒線 149600；有背景工作時延後上限 185000\n自動交接：idle\n背景工作：無\n上一次交接檔：無"
+    "description": "ctx-relay: thresholds, readings, auto handoff state and background work",
+    "output": "[ctx-relay] context 97400; handoff line 170000 (85% of the compaction point); compaction point 200000; warning line 149600; deferral cap 185000\nauto handoff: idle\nbackground work: none\ncache: ttl 1h (subscription) · last request 0s ago · 59m left\nlast handoff file: none"
    },
    {
     "name": "ctx-relay-now",
-    "description": "ctx-relay：立刻產生交接檔並 /clear 接續（有背景工作時要加 yes；後面可接最新指令）",
-    "output": "[ctx-relay] 開始產生交接檔，完成後 /clear 並在新對話接續"
+    "description": "ctx-relay: write a handoff file now and /clear to resume (add yes when background work runs; text after it is passed on)",
+    "output": "[ctx-relay] writing a handoff file; then /clear and resume in the new conversation"
    }
   ],
   "tools": [],
@@ -66,20 +69,31 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.usage": 3,
-   "$.state.get": 32,
-   "$.state.set": 6,
+   "$.session.usage": 4,
+   "$.state.get": 40,
+   "$.state.set": 8,
    "$.session.cwd": 1,
    "$.process.run": 1,
+   "$.clock.every": 2,
    "$.session.messages": 1,
    "$.ui.invalidate": 4,
    "$.command.register": 2,
-   "$.ui.resolve": 8,
-   "$.clock.now": 4,
+   "$.ui.resolve": 12,
+   "$.clock.now": 7,
+   "$.env.get": 3,
+   "$.settings.read": 1,
    "$.agent.list": 2,
    "$.clock.after": 1
   },
   "timers": [
+   {
+    "kind": "every",
+    "ms": 250
+   },
+   {
+    "kind": "every",
+    "ms": 250
+   },
    {
     "kind": "after",
     "ms": 0
@@ -112,61 +126,46 @@
       {
        "type": "Box",
        "props": {
-        "flexDirection": "row",
-        "backgroundColor": "#321210"
+        "flexDirection": "row"
        },
        "children": [
         {
          "type": "Text",
          "props": {
-          "color": "#D55E00",
+          "color": "#009E73",
+          "bold": true
+         },
+         "children": [
+          " 󰯉 "
+         ]
+        },
+        {
+         "type": "Raster",
+         "props": {
+          "key": "bar",
+          "columns": 10,
+          "rows": 1,
+          "cells": "A+4AAMfYmQAAAAABBO4AAJ27TQAAAAABBO4AAHOeAAAAAAABBO4AAHOeAAAAAAABBO4AAHOeAAAAAAABBO4AAHOeAAAAAAABAe4AAFpORgAAAAABAe4AAFpORgAAAAABAe4AAFpORgAAAAABAu4AAFpORgAAAAAB"
+         },
+         "children": []
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          " "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
           "wrap": "truncate-end"
          },
          "children": [
           {
            "type": "Text",
            "props": {
-            "bold": true
-           },
-           "children": [
-            " ",
-            {
-             "type": "Text",
-             "props": {},
-             "children": [
-              "󰯉"
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {},
-             "children": [
-              " 󰯉"
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "color": "#7d8794"
-             },
-             "children": [
-              " 󰊠"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#7d8794"
-           },
-           "children": [
-            "  CTX "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
+            "color": "#f5f7fa",
             "bold": true
            },
            "children": [
@@ -179,7 +178,16 @@
             "color": "#7d8794"
            },
            "children": [
-            "/170K"
+            "/170K "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#009E73"
+           },
+           "children": [
+            "57%"
            ]
           },
           {
@@ -189,15 +197,6 @@
            },
            "children": [
             " · "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#7d8794"
-           },
-           "children": [
-            "本輪 "
            ]
           },
           {
@@ -221,9 +220,20 @@
           },
           {
            "type": "Text",
-           "props": {},
+           "props": {
+            "color": "#464e5a"
+           },
            "children": [
-            " 93%"
+            " · "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#7d8794"
+           },
+           "children": [
+            "cache 59m"
            ]
           },
           {
@@ -237,9 +247,11 @@
           },
           {
            "type": "Text",
-           "props": {},
+           "props": {
+            "color": "#D55E00"
+           },
            "children": [
-            "正在產生交接檔…"
+            "Writing handoff file…"
            ]
           },
           {
@@ -270,8 +282,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/ctx-relay-status → [ctx-relay] context 97400；交接線 170000（壓縮點的 85%）；壓縮點 200000；提醒線 149600；有背景工作時延後上限 …",
-   "/ctx-relay-now → [ctx-relay] 開始產生交接檔，完成後 /clear 並在新對話接續"
+   "/ctx-relay-status → [ctx-relay] context 97400; handoff line 170000 (85% of the compaction point); co…",
+   "/ctx-relay-now → [ctx-relay] writing a handoff file; then /clear and resume in the new conversati…"
   ],
   "console": [],
   "warnings": []
@@ -287,6 +299,7 @@
    "classic.Stop",
    "prompt.submit",
    "turn.start",
+   "session.compact",
    "skill.prompt{skill=handoff}",
    "command.run{command=ctx-relay-status}",
    "command.run{command=ctx-relay-now}",
@@ -295,16 +308,13 @@
   "calls": [
    "$.agent.list (via runningWork)",
    "$.clock.after",
-   "$.clock.every (via arm)",
-   "$.clock.now (via afterStop",
-   "drawBand",
-   "drawPickup",
-   "prepare",
-   "rearm",
-   "scanPickup)",
+   "$.clock.every (via arm",
+   "startFrames)",
+   "$.clock.now",
    "$.clock.sleep (via prepare)",
    "$.command.register",
    "$.command.run (via prepare)",
+   "$.env.get (via resolveTtl)",
    "$.fs.exists (via readOr",
    "scanPickup)",
    "$.fs.list (via scanPickup)",
@@ -322,6 +332,7 @@
    "$.session.id (via prepare)",
    "$.session.messages",
    "$.session.usage",
+   "$.settings.read (via resolveTtl)",
    "$.state.get",
    "$.state.set",
    "$.store.get (via scanPickup)",
@@ -332,46 +343,92 @@
   ],
   "stateReads": [
    "ctx-relay.auto",
+   "ctx-relay.cache",
    "ctx-relay.limits",
    "ctx-relay.readings",
    "ctx-relay.receipt"
   ],
   "stateWrites": [
    "ctx-relay.auto",
+   "ctx-relay.cache",
    "ctx-relay.limits",
    "ctx-relay.readings",
    "ctx-relay.receipt"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
+   "ENABLE_PROMPT_CACHING_1H",
+   "FORCE_PROMPT_CACHING_5M"
+  ],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/mangow314-mango-mods-ctx-relay/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/mangow314-mango-mods-ctx-relay/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mangow314-mango-mods-ctx-relay/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/mangow314-mango-mods-ctx-relay/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ctx-relay.readings, ctx-relay.receipt, ctx-relay.limits, ctx-relay.auto"
-    ]
+     "types ./types/index.d.ts declares state: ctx-relay.readings, ctx-relay.receipt, ctx-relay.limits, ctx-relay.auto, ctx-relay.cache"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mangow314-mango-mods-ctx-relay/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/mangow314-mango-mods-ctx-relay/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.end, session.start, turn.complete, classic.Stop, prompt.submit, turn.start, skill.prompt{skill=handoff}, command.run{command=ctx-relay-status}, command.run{command=ctx-relay-now}, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.agent.list (via runningWork), $.clock.after, $.clock.every (via arm), $.clock.now (via afterStop, drawBand, drawPickup, prepare, rearm, scanPickup), $.clock.sleep (via prepare), $.command.register, $.command.run (via prepare), $.fs.exists (via readOr, scanPickup), $.fs.list (via scanPickup), $.fs.read (via readOr), $.fs.write (via markPicked, prepare), $.model.fork (via prepare), $.process.run (via gitTruth, harnessRoot, prepare), $.prompt.submit (via pickUp, prepare), $.session.cwd (via harnessRoot, prepare), $.session.id (via prepare), $.session.messages, $.session.usage, $.state.get, $.state.set, $.store.get (via scanPickup), $.store.set (via scanPickup), $.ui.invalidate, $.ui.log, $.ui.resolve",
-      "./register.tsx state writes: ctx-relay.auto, ctx-relay.limits, ctx-relay.readings, ctx-relay.receipt",
-      "./register.tsx state reads: ctx-relay.auto, ctx-relay.limits, ctx-relay.readings, ctx-relay.receipt"
+      "./register.tsx hooks: session.end, session.start, turn.complete, classic.Stop, prompt.submit, turn.start, session.compact, skill.prompt{skill=handoff}, command.run{command=ctx-relay-status}, command.run{command=ctx-relay-now}, ui.render{component=AbovePrompt}",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: command.run{command=ctx-relay-status}",
+      "./register.tsx gating hook without .catch: command.run{command=ctx-relay-now}",
+      "./register.tsx calls: $.agent.list (via runningWork), $.clock.after, $.clock.every (via arm, startFrames), $.clock.now, $.clock.sleep (via prepare), $.command.register, $.command.run (via prepare), $.env.get (via resolveTtl), $.fs.exists (via readOr, scanPickup), $.fs.list (via scanPickup), $.fs.read (via readOr), $.fs.write (via markPicked, prepare), $.model.fork (via prepare), $.process.run (via gitTruth, harnessRoot, prepare), $.prompt.submit (via pickUp, prepare), $.session.cwd (via harnessRoot, prepare), $.session.id (via prepare), $.session.messages, $.session.usage, $.settings.read (via resolveTtl), $.state.get, $.state.set, $.store.get (via scanPickup), $.store.set (via scanPickup), $.ui.invalidate, $.ui.log, $.ui.resolve",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M",
+      "./register.tsx state writes: ctx-relay.auto, ctx-relay.cache, ctx-relay.limits, ctx-relay.readings, ctx-relay.receipt",
+      "./register.tsx state reads: ctx-relay.auto, ctx-relay.cache, ctx-relay.limits, ctx-relay.readings, ctx-relay.receipt"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=ctx-relay-status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=ctx-relay-now}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "64b5c44616376498"
+ "sourceHash": "ffa19ed757bffdcf"
 }

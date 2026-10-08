@@ -1,6 +1,6 @@
 {
  "slug": "danielriddell21-skills-your-call",
- "generatedAt": "2026-10-07T15:22:17.431Z",
+ "generatedAt": "2026-10-08T15:53:25.346Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,7 +8,25 @@
     "event": "session.start"
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "decisions"
+    }
+   },
+   {
     "event": "prompt.compose"
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__your-call__ask"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__your-call__approve"
+    }
    },
    {
     "event": "tool.call",
@@ -17,7 +35,31 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__your-call__approve"
+    }
+   },
+   {
     "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult"
+    }
    },
    {
     "event": "ui.render",
@@ -29,15 +71,32 @@
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
+     "requestId": "your-call-plan"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
      "requestId": "your-call"
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "decisions",
+    "description": "List this session's decisions; /decisions <n> reopens one",
+    "output": "No decisions yet this session."
+   }
+  ],
   "tools": [
    {
     "name": "ask",
     "description": "Ask the user to choose or refine via rich UI (select, multi, rank, compare matrix, multi-step wizard). Blocks until answered."
+   },
+   {
+    "name": "approve",
+    "description": "Show the user a list of things you are about to do (commands, file changes, a push) and let them approve some or all. Blocks until answered; do only what comes back in approved."
    }
   ],
   "panes": [],
@@ -46,16 +105,37 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 1,
-   "$.ui.resolve": 1,
-   "$.state.get": 1
+   "$.state.get": 5,
+   "$.state.set": 1,
+   "$.tool.register": 2,
+   "$.command.register": 1,
+   "$.ui.resolve": 2
   },
   "timers": [],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "AssistantMessage": {
     "ok": "engine"
    },
+   "ToolUse": {
+    "ok": "engine"
+   },
    "Pane": {
+    "your-call-plan": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No plan pending."
+      ]
+     },
+     "title": "your-call-plan"
+    },
     "your-call": {
      "ok": true,
      "tree": {
@@ -82,7 +162,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/decisions → No decisions yet this session."
   ],
   "console": [],
   "warnings": []
@@ -93,15 +174,29 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=decisions}",
    "prompt.compose",
+   "tool.check{tool=mcp__your-call__ask}",
+   "tool.check{tool=mcp__your-call__approve}",
    "tool.call{tool=mcp__your-call__ask}",
+   "tool.call{tool=mcp__your-call__approve}",
    "ui.close",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=ToolResult}",
    "ui.render{component=AssistantMessage}",
+   "ui.render{component=Pane, requestId=your-call-plan}",
    "ui.render{component=Pane, requestId=your-call}"
   ],
   "calls": [
+   "$.clock.after",
+   "$.clock.now",
+   "$.command.register",
+   "$.prompt.fill",
    "$.state.get",
    "$.state.set",
+   "$.store.get",
+   "$.store.set",
    "$.tool.register",
    "$.ui.ask",
    "$.ui.close",
@@ -110,9 +205,19 @@
    "$.ui.toast"
   ],
   "stateReads": [
+   "looks-good-to-me.gate",
+   "too-long-didnt-read.card",
+   "your-call.approvals",
+   "your-call.hiddenCard",
+   "your-call.plan",
+   "your-call.ready",
    "your-call.view"
   ],
   "stateWrites": [
+   "your-call.approvals",
+   "your-call.hiddenCard",
+   "your-call.plan",
+   "your-call.ready",
    "your-call.view"
   ],
   "envReads": [],
@@ -127,7 +232,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: your-call.view"
+     "types ./types/index.d.ts declares state: your-call.view, your-call.plan, your-call.approvals, your-call.ready, your-call.hiddenCard, looks-good-to-me.gate, too-long-didnt-read.card"
     ],
     "gatingHooks": []
    },
@@ -138,18 +243,41 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.compose, tool.call{tool=mcp__your-call__ask}, ui.close, ui.render{component=AssistantMessage}, ui.render{component=Pane, requestId=your-call}",
+      "./register.tsx hooks: session.start, command.run{command=decisions}, prompt.compose, tool.check{tool=mcp__your-call__ask}, tool.check{tool=mcp__your-call__approve}, tool.call{tool=mcp__your-call__ask}, tool.call{tool=mcp__your-call__approve}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=AssistantMessage}, ui.render{component=Pane, requestId=your-call-plan}, ui.render{component=Pane, requestId=your-call}",
+      "./register.tsx answers its own command: command.run{command=decisions}",
+      "./register.tsx gating hook without .catch: tool.check{tool=mcp__your-call__ask}",
+      "./register.tsx gating hook without .catch: tool.check{tool=mcp__your-call__approve}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__your-call__ask}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__your-call__approve}",
       "./register.tsx gating hook without .catch: ui.close",
-      "./register.tsx calls: $.state.get, $.state.set, $.tool.register, $.ui.ask, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: your-call.view",
-      "./register.tsx state reads: your-call.view"
+      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.prompt.fill, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.ask, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: your-call.approvals, your-call.hiddenCard, your-call.plan, your-call.ready, your-call.view",
+      "./register.tsx state reads: looks-good-to-me.gate, too-long-didnt-read.card, your-call.approvals, your-call.hiddenCard, your-call.plan, your-call.ready, your-call.view",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): looks-good-to-me.gate, too-long-didnt-read.card"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__your-call__ask}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__your-call__approve}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__your-call__ask}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__your-call__approve}",
        "hasCatch": false
       },
       {
@@ -163,5 +291,5 @@
    ]
   }
  },
- "sourceHash": "3395c3f6b5c068f7"
+ "sourceHash": "39045f1e106d8ac1"
 }

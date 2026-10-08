@@ -1,0 +1,293 @@
+{
+ "slug": "tomwangowa-agent-skills-handoff-mod",
+ "generatedAt": "2026-10-08T15:53:21.073Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "skill.prompt"
+   },
+   {
+    "event": "skill.prompt",
+    "matcher": {
+     "skill": "handoff-mod:handoff"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handoff-mod:handoff"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "clear"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handoff-stats"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handoff-resume"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "handoff-resume",
+    "description": "列出未完成的交接；/handoff-resume <編號> 接續其中一筆；drop <編號|all> 放棄",
+    "argumentHint": "[編號|all|drop]"
+   },
+   {
+    "name": "handoff-stats",
+    "description": "顯示這台機器上交接寫入與接續的次數（只存在本機，不外傳）"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [
+   "目前沒有未完成的交接。",
+   "交接寫入 0 次，接續 0 次"
+  ],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 12,
+   "$.command.register": 2,
+   "$.clock.now": 6,
+   "$.store.keys": 1,
+   "$.session.turns": 2,
+   "$.state.get": 20,
+   "$.session.id": 5,
+   "$.process.run": 6,
+   "$.session.surfaces": 2,
+   "$.session.repo": 3,
+   "$.fs.exists": 3,
+   "$.state.set": 3,
+   "$.ui.status": 3,
+   "$.ui.invalidate": 3,
+   "$.store.set": 2,
+   "$.session.usage": 1,
+   "$.store.get": 2,
+   "$.ui.log": 2
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   }
+  },
+  "script": [
+   "session.start",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "/handoff-resume → ",
+   "/handoff-stats → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "classic.SessionStart",
+   "prompt.submit",
+   "skill.prompt",
+   "skill.prompt{skill=handoff-mod:handoff}",
+   "command.run{command=handoff-mod:handoff}",
+   "turn.complete",
+   "session.end",
+   "command.run{command=clear}",
+   "command.run{command=handoff-stats}",
+   "command.run{command=handoff-resume}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.after (via startHandoffLater",
+   "writeEndNote)",
+   "$.clock.now (via buildList",
+   "checkHandoff",
+   "dropCommand",
+   "markHandoffStarted",
+   "recordRequest",
+   "recordResponse",
+   "resume",
+   "sweepOldRecords",
+   "writeEndNote)",
+   "$.command.register",
+   "$.command.run (via startHandoffLater)",
+   "$.env.get (via loadConfig)",
+   "$.fs.exists (via checkHandoff",
+   "findNewHandoff",
+   "readHandoffs",
+   "writeEndNote)",
+   "$.fs.list (via findNewHandoff",
+   "readHandoffs)",
+   "$.fs.read (via checkHandoff",
+   "findNewHandoff",
+   "readHandoffs",
+   "writeEndNote)",
+   "$.fs.stat (via findNewHandoff)",
+   "$.fs.write (via checkHandoff",
+   "writeEndNote)",
+   "$.process.run (via git",
+   "writeEndNote)",
+   "$.prompt.fill (via resume)",
+   "$.session.id (via askBeforeClear",
+   "buildList",
+   "dropCommand",
+   "recordRequest",
+   "recordResponse",
+   "resume)",
+   "$.session.repo (via repoRoot)",
+   "$.session.root (via projectBase",
+   "writeEndNote)",
+   "$.session.surfaces",
+   "$.session.turns",
+   "$.session.usage (via checkThreshold)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via sweepOldRecords",
+   "writeEndNote)",
+   "$.store.get (via bumpSt… [+291 chars]"
+  ],
+  "stateReads": [
+   "handoff-mod.askPending",
+   "handoff-mod.askedAt",
+   "handoff-mod.expanded",
+   "handoff-mod.handoffStartedAt",
+   "handoff-mod.handoffTurns",
+   "handoff-mod.listDone",
+   "handoff-mod.nextAt",
+   "handoff-mod.suppressed",
+   "handoff-mod.t1Percent"
+  ],
+  "stateWrites": [
+   "handoff-mod.askPending",
+   "handoff-mod.askedAt",
+   "handoff-mod.expanded",
+   "handoff-mod.handoffStartedAt",
+   "handoff-mod.handoffTurns",
+   "handoff-mod.listDone",
+   "handoff-mod.nextAt",
+   "handoff-mod.suppressed",
+   "handoff-mod.t1Percent"
+  ],
+  "envReads": [
+   "HANDOFF_AUTO_NOTE",
+   "HANDOFF_DEBUG",
+   "HANDOFF_LANG",
+   "HANDOFF_THRESHOLD_PCT"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/tomwangowa-agent-skills-handoff-mod/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/tomwangowa-agent-skills-handoff-mod/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: handoff-mod.nextAt, handoff-mod.askedAt, handoff-mod.suppressed, handoff-mod.askPending, handoff-mod.handoffStartedAt, handoff-mod.handoffTurns, handoff-mod.t1Percent, handoff-mod.listDone, handoff-mod.expanded"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/tomwangowa-agent-skills-handoff-mod/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.js hooks: session.start, classic.SessionStart, prompt.submit, skill.prompt, skill.prompt{skill=handoff-mod:handoff}, command.run{command=handoff-mod:handoff}, turn.complete, session.end, command.run{command=clear}, command.run{command=handoff-stats}, command.run{command=handoff-resume}, ui.render{component=AbovePrompt}",
+      "./register.js answers its own command: command.run{command=handoff-stats}",
+      "./register.js answers its own command: command.run{command=handoff-resume}",
+      "./register.js gating hook without .catch: classic.SessionStart",
+      "./register.js gating hook without .catch: prompt.submit",
+      "./register.js gating hook without .catch: command.run{command=handoff-mod:handoff}",
+      "./register.js gating hook without .catch: command.run{command=clear}",
+      "./register.js calls: $.clock.after (via startHandoffLater, writeEndNote), $.clock.now (via buildList, checkHandoff, dropCommand, markHandoffStarted, recordRequest, recordResponse, resume, sweepOldRecords, writeEndNote), $.command.register, $.command.run (via startHandoffLater), $.env.get (via loadConfig), $.fs.exists (via checkHandoff, findNewHandoff, readHandoffs, writeEndNote), $.fs.list (via findNewHandoff, readHandoffs), $.fs.read (via checkHandoff, findNewHandoff, readHandoffs, writeEndNote), $.fs.stat (via findNewHandoff), $.fs.write (via checkHandoff, writeEndNote), $.process.run (via git, writeEndNote), $.prompt.fill (via resume), $.session.id (via askBeforeClear, buildList, dropCommand, recordRequest, recordResponse, resume), $.session.repo (via repoRoot), $.session.root (via projectBase, writeEndNote), $.session.surfaces, $.session.turns, $.session.usage (via checkThreshold), $.state.get, $.state.set, $.store.delete (via sweepOldRecords, writeEndNote), $.store.get (via bumpSt… [+291 chars]",
+      "./register.js env writes: nothing",
+      "./register.js env reads: HANDOFF_AUTO_NOTE, HANDOFF_DEBUG, HANDOFF_LANG, HANDOFF_THRESHOLD_PCT",
+      "./register.js state writes: handoff-mod.askPending, handoff-mod.askedAt, handoff-mod.expanded, handoff-mod.handoffStartedAt, handoff-mod.handoffTurns, handoff-mod.listDone, handoff-mod.nextAt, handoff-mod.suppressed, handoff-mod.t1Percent",
+      "./register.js state reads: handoff-mod.askPending, handoff-mod.askedAt, handoff-mod.expanded, handoff-mod.handoffStartedAt, handoff-mod.handoffTurns, handoff-mod.listDone, handoff-mod.nextAt, handoff-mod.suppressed, handoff-mod.t1Percent"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.js",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "command.run",
+       "hook": "command.run{command=handoff-mod:handoff}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "command.run",
+       "hook": "command.run{command=clear}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "336b12f970c5f309"
+}

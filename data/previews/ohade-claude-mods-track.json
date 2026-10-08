@@ -1,9 +1,18 @@
 {
  "slug": "ohade-claude-mods-track",
- "generatedAt": "2026-10-07T15:23:40.951Z",
+ "generatedAt": "2026-10-08T15:54:33.854Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__track__restore_tracker"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
    {
     "event": "session.start"
    },
@@ -29,6 +38,24 @@
     "event": "tool.describe",
     "matcher": {
      "tool": "mcp__track__mark_step"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__track__restore_tracker"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__track__checkpoint"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__track__checkpoint"
     }
    },
    {
@@ -136,7 +163,7 @@
    {
     "event": "tool.call",
     "matcher": {
-     "tool": "mcp__track__restore_steps"
+     "tool": "mcp__track__restore_tracker"
     }
    },
    {
@@ -181,6 +208,12 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "InfoNotice"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "AssistantMessage"
     }
    },
@@ -209,30 +242,34 @@
    {
     "name": "track",
     "description": "Show or hide the track pane: questions asked, where answered, and the steps",
-    "argumentHint": "[status]",
+    "argumentHint": "[status | export <absolute-path> | import <absolute-path>]",
     "immediate": true
    }
   ],
   "tools": [
    {
     "name": "track_question",
-    "description": "Register the user's current prompt as a question in the track pane. Call it once per distinct question, before answering, with a one-line summary. Returns the question id to pass to mark_answered."
+    "description": "Register a substantive question from any sender before answering, or reuse its existing open id. For a known user source, pass source_text as its exact first line; it is verified against current prompt rows. Alternatively pass a known source_request_id. If the source cannot be verified, the question links to this tracking call. Returns the id for mark_answered."
    },
    {
     "name": "mark_answered",
-    "description": "Mark a tracked question answered or deferred. Call it right after writing the answer, so the jump lands under the answer text. status \"deferred\" needs a note saying what it waits for."
+    "description": "Mark a tracked question answered or deferred. Call it right after writing the answer. An optional answer_request_id must name the latest host-observed response in this turn; an unknown source is refused. A known answer is kept. If called before text, only one pending question can bind the next response. status \"deferred\" needs a note saying what it waits for."
    },
    {
     "name": "track_steps",
-    "description": "Show steps in the track pane. For work of more than one step (a skill or slash command such as /retro, a plan, a multi-step task), call mcp__track__track_steps with the steps before the first one; when new work joins a running plan (review comments, a follow-up), call it with `after` set to the id of the step the new ones follow. Mark each step with mcp__track__mark_step as you go: paused when you park it, waiting when it needs the user's answer. Without after, the steps replace the plan and get ids plan:1, plan:2, …; with after, they are inserted and get the next free plan ids. Not needed for TaskCreate tasks or an approved plan-mode plan: those appear on their own."
+    "description": "Register meaningful work from any sender. For work of more than one step (a skill or slash command such as /retro, a plan, a multi-step task), call mcp__track__track_steps with the steps before the first one; when new work joins a running plan (review comments, a follow-up), call it with `after` set to the id of the step the new ones follow. Mark each step with mcp__track__mark_step as you go: paused when you park it, waiting when it needs the user's answer. Reuse existing open steps. Without after, explicit plan rows are replaced; with after, new work is inserted. TaskCreate tasks appear on their own. Plan approval only adds a reminder."
    },
    {
-    "name": "restore_steps",
-    "description": "After a handoff (a /clear that seeds a fresh session), copy the previous session's steps into this session's track pane, in order, with their ids and statuses; its questions are not copied. from_session is the previous session id (the handoff brief's session: field). Refuses when this session already has steps, unless replace is true."
+    "name": "restore_tracker",
+    "description": "Restore the complete steps, uncleared questions, statuses, notes and saved answers from from_session. Repeat calls reuse stable source IDs and preserve local progress, including cleared displayed rows. Unrelated existing steps cause a refusal; replace:true explicitly replaces prior restored rows and steps. The call row shows saved answers; programmatic calls use an acknowledged source snapshot. expected_checkpoint validates the source before applying and returns a v1 JSON text receipt with actual applied values."
+   },
+   {
+    "name": "checkpoint",
+    "description": "Save and read back the complete questions, saved answers and steps for expected_session. Returns a v1 JSON receipt as text; ok:false means keep the current context."
    },
    {
     "name": "mark_step",
-    "description": "Set a step's status in the track pane as you work: in_progress when you start it, completed when done, paused when you park it unfinished, waiting when it needs the user's answer. Ids: plan:1, plan:2, … (from track_steps or the approved plan), task:<taskId>, todo:<the todo text, lowercased>. For Tasks, TaskUpdate does this already."
+    "description": "Set a step's status in the track pane as you work: in_progress when you start it, completed when done, paused when you park it unfinished, waiting when it needs the user's answer. Set delegated:true while agents own the work, including agents launched through other tools; set delegated:false when you resume it. Ids: plan:1, plan:2, … (from track_steps), task:<taskId>, todo:<the todo text, lowercased>. For Tasks, TaskUpdate does this already."
    }
   ],
   "panes": [
@@ -241,29 +278,37 @@
     "title": "Session Tracker"
    }
   ],
-  "toasts": [],
-  "logs": [],
+  "toasts": [
+   "track: unsaved — undefined is not an object (evaluating 'stream.result.catch')",
+   "track: unsaved — undefined is not an object (evaluating 'stream.result.catch')"
+  ],
+  "logs": [
+   "track: unsaved; save failed: undefined is not an object (evaluating 'stream.result.catch')",
+   "track: unsaved; save failed: undefined is not an object (evaluating 'stream.result.catch')"
+  ],
   "denies": [],
   "rewrites": [
    {
     "event": "prompt.submit",
-    "summary": "context added: [\"track: For work of more than one step (a skill or slash command such as /retro, a plan, a multi-step task), call mcp__track__track_steps w…"
+    "summary": "context added: [\"track: For meaningful work or substantive questions, regardless of sender, reuse open items or call mcp__track__track_steps / mcp__track__…"
    }
   ],
   "apiCalls": {
    "$.command.register": 1,
-   "$.tool.register": 5,
-   "$.ui.panes": 1,
-   "$.state.get": 24,
-   "$.state.set": 6,
-   "$.session.id": 1,
-   "$.store.keys": 1,
+   "$.tool.register": 6,
+   "$.session.id": 5,
    "$.store.get": 1,
-   "$.store.set": 3,
+   "$.state.get": 34,
+   "$.env.set": 2,
+   "$.ui.panes": 1,
+   "$.state.set": 9,
+   "$.process.spawn": 2,
+   "$.ui.log": 2,
+   "$.ui.toast": 2,
    "$.ui.open": 1,
    "$.clock.now": 1,
    "$.clock.after": 1,
-   "$.ui.resolve": 2
+   "$.ui.resolve": 3
   },
   "timers": [
    {
@@ -278,11 +323,29 @@
    "PromptHint": {
     "ok": "engine"
    },
+   "InfoNotice": {
+    "ok": "engine"
+   },
    "UserMessage": {
     "ok": "engine"
    },
    "AssistantMessage": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "key": "answer:msg-1"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "text": "Done. I made refresh reject expired claims and added an audit call."
+       }
+      }
+     ]
+    }
    },
    "ToolUse": {
     "ok": "engine"
@@ -400,7 +463,7 @@
            "wrap": "wrap"
           },
           "children": [
-           "  none yet — the model adds a question with track_question"
+           "  None yet."
           ]
          }
         ]
@@ -477,7 +540,7 @@
            "wrap": "wrap"
           },
           "children": [
-           "  none yet — tasks and approved plan steps appear here"
+           "  None yet."
           ]
          }
         ]
@@ -546,7 +609,7 @@
          "key": "banner",
          "width": 56,
          "justifyContent": "center",
-         "backgroundColor": "success"
+         "backgroundColor": "warning"
         },
         "children": [
          {
@@ -556,7 +619,7 @@
            "bold": true
           },
           "children": [
-           " Safe to close "
+           " Unsaved "
           ]
          }
         ]
@@ -578,7 +641,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.spawn(python3 /plugins/track/hooks/writer-lock.py lease preview-session 47bb90b6-f78c-…)",
    "turn.complete",
+   "$.process.spawn(python3 /plugins/track/hooks/writer-lock.py lease preview-session 47bb90b6-f78c-…)",
    "$.ui.open(track)",
    "/track → "
   ],
@@ -590,11 +655,16 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "tool.call{tool=mcp__track__restore_tracker}",
+   "tool.call",
    "session.start",
    "tool.describe{tool=mcp__track__track_question}",
    "tool.describe{tool=mcp__track__mark_answered}",
    "tool.describe{tool=mcp__track__track_steps}",
    "tool.describe{tool=mcp__track__mark_step}",
+   "tool.describe{tool=mcp__track__restore_tracker}",
+   "tool.describe{tool=mcp__track__checkpoint}",
+   "tool.call{tool=mcp__track__checkpoint}",
    "session.append{door=prompt}",
    "session.append{door=delivery}",
    "session.append{door=response}",
@@ -615,15 +685,8 @@
    "tool.call{tool=AskUserQuestion}",
    "tool.call{tool=Bash}",
    "tool.call{tool=mcp__track__track_steps}",
-   "tool.call{tool=mcp__track__restore_steps}",
-   "tool.call{tool=mcp__track__mark_step}",
-   "command.run{command=track}",
-   "ui.close",
-   "ui.render{component=PromptHint}",
-   "ui.render{component=AbovePrompt}",
-   "classic.SessionStart",
-   "session.end",
-   "ui.render{component=ToolU… [+163 chars]"
+   "tool.call{tool=mcp__track__restore_tracker}",
+   "tool.call{too… [+387 chars]"
   ],
   "calls": [
    "$.clock.after",
@@ -632,15 +695,23 @@
    "$.clock.now",
    "$.command.list",
    "$.command.register",
-   "$.session.id (via saveLedger)",
-   "$.session.messages (via dropRewound)",
+   "$.env.set (via publishGate)",
+   "$.fs.read (via migrateStore)",
+   "$.fs.write (via migrateStore)",
+   "$.process.spawn (via acquireLock)",
+   "$.session.append",
+   "$.session.id",
+   "$.session.messages (via observeRewind)",
    "$.state.get",
    "$.state.set",
-   "$.store.delete (via saveLedger",
-   "savedIndex)",
+   "$.store.delete (via recoverSave",
+   "saveLedger)",
    "$.store.get",
-   "$.store.keys (via savedIndex)",
-   "$.store.set",
+   "$.store.keys (via migrateStore",
+   "savedIndex)",
+   "$.store.set (via migrateStore",
+   "recoverSave",
+   "saveLedger)",
    "$.tool.register",
    "$.ui.close",
    "$.ui.log",
@@ -652,6 +723,7 @@
   ],
   "stateReads": [
    "track.activity",
+   "track.durability",
    "track.flash",
    "track.ledger",
    "track.lit",
@@ -663,6 +735,7 @@
   ],
   "stateWrites": [
    "track.activity",
+   "track.durability",
    "track.flash",
    "track.ledger",
    "track.lit",
@@ -672,7 +745,9 @@
    "track.tick",
    "track.turn"
   ],
-  "envReads": [],
+  "envReads": [
+   "nothing"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -684,7 +759,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: track.ledger, track.turn, track.pane, track.flash, track.lit, track.activity, track.pulse, track.scroll, track.tick"
+     "types ./types/index.d.ts declares state: track.ledger, track.turn, track.pane, track.flash, track.lit, track.activity, track.pulse, track.scroll, track.tick, track.durability"
     ],
     "gatingHooks": []
    },
@@ -695,8 +770,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.describe{tool=mcp__track__track_question}, tool.describe{tool=mcp__track__mark_answered}, tool.describe{tool=mcp__track__track_steps}, tool.describe{tool=mcp__track__mark_step}, session.append{door=prompt}, session.append{door=delivery}, session.append{door=response}, turn.start, prompt.compose, prompt.submit, classic.Stop, session.compact, turn.complete, ui.render{component=UserMessage}, tool.call{tool=mcp__track__track_question}, tool.call{tool=mcp__track__mark_answered}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, tool.call{tool=ExitPlanMode}, tool.call{tool=Agent}, tool.call{tool=AskUserQuestion}, tool.call{tool=Bash}, tool.call{tool=mcp__track__track_steps}, tool.call{tool=mcp__track__restore_steps}, tool.call{tool=mcp__track__mark_step}, command.run{command=track}, ui.close, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, classic.SessionStart, session.end, ui.render{component=ToolU… [+163 chars]",
+      "./register.tsx hooks: tool.call{tool=mcp__track__restore_tracker}, tool.call, session.start, tool.describe{tool=mcp__track__track_question}, tool.describe{tool=mcp__track__mark_answered}, tool.describe{tool=mcp__track__track_steps}, tool.describe{tool=mcp__track__mark_step}, tool.describe{tool=mcp__track__restore_tracker}, tool.describe{tool=mcp__track__checkpoint}, tool.call{tool=mcp__track__checkpoint}, session.append{door=prompt}, session.append{door=delivery}, session.append{door=response}, turn.start, prompt.compose, prompt.submit, classic.Stop, session.compact, turn.complete, ui.render{component=UserMessage}, tool.call{tool=mcp__track__track_question}, tool.call{tool=mcp__track__mark_answered}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, tool.call{tool=ExitPlanMode}, tool.call{tool=Agent}, tool.call{tool=AskUserQuestion}, tool.call{tool=Bash}, tool.call{tool=mcp__track__track_steps}, tool.call{tool=mcp__track__restore_tracker}, tool.call{too… [+387 chars]",
       "./register.tsx answers its own command: command.run{command=track}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__restore_tracker}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__checkpoint}",
       "./register.tsx gating hook without .catch: session.append{door=prompt}",
       "./register.tsx gating hook without .catch: session.append{door=delivery}",
       "./register.tsx gating hook without .catch: session.append{door=response}",
@@ -713,16 +791,36 @@
       "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__track_steps}",
-      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__restore_steps}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__restore_tracker}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__track__mark_step}",
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook with .catch: classic.SessionStart",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=track}",
-      "./register.tsx calls: $.clock.after, $.clock.every (via startPulse, startTick), $.clock.now, $.command.list, $.command.register, $.session.id (via saveLedger), $.session.messages (via dropRewound), $.state.get, $.state.set, $.store.delete (via saveLedger, savedIndex), $.store.get, $.store.keys (via savedIndex), $.store.set, $.tool.register, $.ui.close, $.ui.log, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.scroll (via jump), $.ui.toast",
-      "./register.tsx state writes: track.activity, track.flash, track.ledger, track.lit, track.pane, track.pulse, track.scroll, track.tick, track.turn",
-      "./register.tsx state reads: track.activity, track.flash, track.ledger, track.lit, track.pane, track.pulse, track.scroll, track.tick, track.turn"
+      "./register.tsx calls: $.clock.after, $.clock.every (via startPulse, startTick), $.clock.now, $.command.list, $.command.register, $.env.set (via publishGate), $.fs.read (via migrateStore), $.fs.write (via migrateStore), $.process.spawn (via acquireLock), $.session.append, $.session.id, $.session.messages (via observeRewind), $.state.get, $.state.set, $.store.delete (via recoverSave, saveLedger), $.store.get, $.store.keys (via migrateStore, savedIndex), $.store.set (via migrateStore, recoverSave, saveLedger), $.tool.register, $.ui.close, $.ui.log, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.scroll (via jump), $.ui.toast",
+      "./register.tsx env writes: TRACK_GATE_SNAPSHOT",
+      "./register.tsx env reads: nothing",
+      "./register.tsx state writes: track.activity, track.durability, track.flash, track.ledger, track.lit, track.pane, track.pulse, track.scroll, track.tick, track.turn",
+      "./register.tsx state reads: track.activity, track.durability, track.flash, track.ledger, track.lit, track.pane, track.pulse, track.scroll, track.tick, track.turn"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__track__restore_tracker}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__track__checkpoint}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "session.append",
@@ -822,7 +920,7 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__track__restore_steps}",
+       "hook": "tool.call{tool=mcp__track__restore_tracker}",
        "hasCatch": false
       },
       {
@@ -854,5 +952,5 @@
    ]
   }
  },
- "sourceHash": "6913ab6c27284f5d"
+ "sourceHash": "4d72070c5019f1d5"
 }

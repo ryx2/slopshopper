@@ -1,6 +1,6 @@
 {
  "slug": "leopiney-wolfbud-claude-mod-wolfbud",
- "generatedAt": "2026-10-07T15:21:44.229Z",
+ "generatedAt": "2026-10-08T15:53:04.771Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,6 +32,9 @@
     "event": "session.end"
    },
    {
+    "event": "ui.close"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -43,8 +46,8 @@
    {
     "name": "wolfbud",
     "description": "WolfBud: a voice coworker that watches this session and can message Claude",
-    "argumentHint": "[call | end | window | stop | status]",
-    "output": "WolfBud hub is down. This session keeps working."
+    "argumentHint": "[call | end | window | hide | stop | status]",
+    "output": "WolfBud hub is down. This session keeps working. /wolfbud tries again."
    }
   ],
   "tools": [],
@@ -54,20 +57,25 @@
     "title": "WolfBud"
    }
   ],
-  "toasts": [],
+  "toasts": [
+   "WolfBud: WolfBud hub is down. This session keeps working. /wolfbud tries again."
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 9,
+   "$.state.get": 27,
    "$.clock.now": 12,
    "$.clock.after": 1,
-   "$.state.set": 3,
+   "$.state.set": 4,
+   "$.ui.panes": 5,
+   "$.ui.status": 5,
    "$.ui.open": 1,
+   "$.env.get": 4,
    "$.http.fetch": 2,
-   "$.env.get": 1,
    "$.process.run": 1,
+   "$.ui.toast": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -179,6 +187,17 @@
            "onPress": "[fn]"
           },
           "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "hide",
+           "label": "Hide",
+           "hotkey": "h",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
          }
         ]
        }
@@ -204,7 +223,7 @@
    "$.http.fetch(http://127.0.0.1:4747/api/health) → blocked in preview",
    "$.process.run(node /plugins/wolfbud/bridge/launch.mjs) → exit 0",
    "$.http.fetch(http://127.0.0.1:4747/api/health) → blocked in preview",
-   "/wolfbud → WolfBud hub is down. This session keeps working."
+   "/wolfbud → WolfBud hub is down. This session keeps working. /wolfbud tries again."
   ],
   "console": [],
   "warnings": []
@@ -222,6 +241,7 @@
    "turn.complete",
    "classic.Notification",
    "session.end",
+   "ui.close",
    "ui.render{component=Pane, requestId=wolfbud}"
   ],
   "calls": [
@@ -230,7 +250,9 @@
    "$.clock.now",
    "$.command.register",
    "$.env.get (via ensureHub",
+   "isRemoteSession",
    "readServiceToken",
+   "remoteHost",
    "subscribe)",
    "$.fs.read (via readServiceToken)",
    "$.http.fetch (via hubFetch",
@@ -244,9 +266,13 @@
    "$.state.get",
    "$.state.set",
    "$.turn.abort (via stopClaude)",
+   "$.ui.close",
    "$.ui.log (via deliver)",
-   "$.ui.open",
-   "$.ui.resolve"
+   "$.ui.open (via openPane)",
+   "$.ui.panes (via refreshStatus)",
+   "$.ui.resolve",
+   "$.ui.status (via refreshStatus)",
+   "$.ui.toast (via markDown)"
   ],
   "stateReads": [
    "wolfbud.call",
@@ -261,9 +287,14 @@
    "wolfbud.lines"
   ],
   "envReads": [
+   "CLAUDE_CODE_REMOTE",
    "ELEVENLABS_API_KEY",
    "HOME",
-   "WOLFBUD_NODE"
+   "HOSTNAME",
+   "SSH_CONNECTION",
+   "WOLFBUD_HOST",
+   "WOLFBUD_NODE",
+   "WOLFBUD_REMOTE"
   ],
   "raw": {
    "success": true,
@@ -287,14 +318,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=wolfbud}, prompt.submit, turn.start, tool.call, turn.complete, classic.Notification, session.end, ui.render{component=Pane, requestId=wolfbud}",
+      "./register.tsx hooks: session.start, command.run{command=wolfbud}, prompt.submit, turn.start, tool.call, turn.complete, classic.Notification, session.end, ui.close, ui.render{component=Pane, requestId=wolfbud}",
       "./register.tsx answers its own command: command.run{command=wolfbud}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: classic.Notification",
-      "./register.tsx calls: $.clock.after (via armPoll, report), $.clock.now, $.command.register, $.env.get (via ensureHub, readServiceToken, subscribe), $.fs.read (via readServiceToken), $.http.fetch (via hubFetch, isHubUp), $.process.run (via ensureHub), $.prompt.submit (via deliver), $.session.append (via deliver), $.session.cwd (via sendSnapshot, subscribe), $.session.messages (via sendSnapshot), $.state.get, $.state.set, $.turn.abort (via stopClaude), $.ui.log (via deliver), $.ui.open, $.ui.resolve",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.clock.after (via armPoll, report), $.clock.now, $.command.register, $.env.get (via ensureHub, isRemoteSession, readServiceToken, remoteHost, subscribe), $.fs.read (via readServiceToken), $.http.fetch (via hubFetch, isHubUp), $.process.run (via ensureHub), $.prompt.submit (via deliver), $.session.append (via deliver), $.session.cwd (via sendSnapshot, subscribe), $.session.messages (via sendSnapshot), $.state.get, $.state.set, $.turn.abort (via stopClaude), $.ui.close, $.ui.log (via deliver), $.ui.open (via openPane), $.ui.panes (via refreshStatus), $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast (via markDown)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: ELEVENLABS_API_KEY, HOME, WOLFBUD_NODE",
+      "./register.tsx env reads: CLAUDE_CODE_REMOTE, ELEVENLABS_API_KEY, HOME, HOSTNAME, SSH_CONNECTION, WOLFBUD_HOST, WOLFBUD_NODE, WOLFBUD_REMOTE",
       "./register.tsx state writes: wolfbud.call, wolfbud.claude, wolfbud.hub, wolfbud.lines",
       "./register.tsx state reads: wolfbud.call, wolfbud.claude, wolfbud.hub, wolfbud.lines"
      ],
@@ -316,11 +348,17 @@
        "pattern": "classic.Notification",
        "hook": "classic.Notification",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "d1e5e109909fc9af"
+ "sourceHash": "ddce4438a8a9a80a"
 }

@@ -1,0 +1,8 @@
+{
+ "slug": "dillonmohr8777-claude-skills-repo-finish-toast",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Toasts are plain text (no ANSI), so color rides on the emoji marker.\nconst MIN_MS = 45_000 // short turns stay silent; the person is still looking\n\n// Pure, so it can be dry-run without the engine.\nexport const toastText = (e: { durationMs: number; answer: string; reason: string }): string | null => {\n  if (e.durationMs < MIN_MS || e.reason === 'aborted') return null\n  const s = Math.round(e.durationMs / 1000)\n  const t = s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`\n  const asks = e.answer.trim().endsWith('?')\n  return asks ? `🟡 Needs your input (after ${t})` : `🟢 Finished in ${t}`\n}\n\nexport const register: Register = on => {\n  on('turn.complete', ($, e, next) => {\n    const text = toastText(e)\n    if (text) $.ui.toast(text)\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"finish-toast\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Sober toast when a long turn finishes or is waiting on an answer\"\n}"
+ }
+}

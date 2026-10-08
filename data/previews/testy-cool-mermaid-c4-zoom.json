@@ -1,11 +1,14 @@
 {
  "slug": "testy-cool-mermaid-c4-zoom",
- "generatedAt": "2026-10-07T15:24:00.812Z",
+ "generatedAt": "2026-10-08T15:54:49.851Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
    },
    {
     "event": "tool.call",
@@ -33,7 +36,7 @@
   "commands": [
    {
     "name": "diagrams",
-    "description": "Open or close the diagrams pane",
+    "description": "Open or close the diagrams pane; /diagrams map draws a problem map, /diagrams toc a table of contents of this session",
     "immediate": true,
     "output": "Diagrams pane opened."
    }
@@ -57,10 +60,11 @@
   "apiCalls": {
    "$.tool.register": 1,
    "$.command.register": 1,
+   "$.state.get": 4,
+   "$.state.set": 1,
    "$.ui.panes": 1,
    "$.ui.open": 1,
-   "$.ui.resolve": 1,
-   "$.state.get": 2
+   "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
@@ -91,6 +95,45 @@
         },
         "children": [
          "No diagrams yet. Ask the agent to draw one, or it can write a mermaid block in a reply."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 3
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "map",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": [
+             "problem map"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "toc",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": [
+             "table of contents"
+            ]
+           }
+          ]
+         }
         ]
        }
       ]
@@ -123,13 +166,17 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "classic.UserPromptSubmit",
    "tool.call{tool=mcp__mermaid-c4-zoom__show_diagram}",
    "turn.complete",
    "command.run{command=diagrams}",
    "ui.render{component=Pane, requestId=diagrams}"
   ],
   "calls": [
+   "$.clock.after",
    "$.command.register",
+   "$.model.fork (via mapSession)",
+   "$.process.run (via promptTimes)",
    "$.state.get",
    "$.state.set",
    "$.tool.register",
@@ -138,17 +185,22 @@
    "togglePane)",
    "$.ui.panes (via openPane",
    "togglePane)",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.toast (via mapSession)"
   ],
   "stateReads": [
+   "mermaid-c4-zoom.isMapping",
    "mermaid-c4-zoom.list",
    "mermaid-c4-zoom.path",
-   "mermaid-c4-zoom.shown"
+   "mermaid-c4-zoom.shown",
+   "mermaid-c4-zoom.transcriptPath"
   ],
   "stateWrites": [
+   "mermaid-c4-zoom.isMapping",
    "mermaid-c4-zoom.list",
    "mermaid-c4-zoom.path",
-   "mermaid-c4-zoom.shown"
+   "mermaid-c4-zoom.shown",
+   "mermaid-c4-zoom.transcriptPath"
   ],
   "envReads": [],
   "raw": {
@@ -162,7 +214,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: mermaid-c4-zoom.list, mermaid-c4-zoom.shown, mermaid-c4-zoom.path"
+     "types ./types/index.d.ts declares state: mermaid-c4-zoom.list, mermaid-c4-zoom.shown, mermaid-c4-zoom.path, mermaid-c4-zoom.isMapping, mermaid-c4-zoom.transcriptPath"
     ],
     "gatingHooks": []
    },
@@ -173,14 +225,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=mcp__mermaid-c4-zoom__show_diagram}, turn.complete, command.run{command=diagrams}, ui.render{component=Pane, requestId=diagrams}",
+      "./register.tsx hooks: session.start, classic.UserPromptSubmit, tool.call{tool=mcp__mermaid-c4-zoom__show_diagram}, turn.complete, command.run{command=diagrams}, ui.render{component=Pane, requestId=diagrams}",
       "./register.tsx answers its own command: command.run{command=diagrams}",
+      "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__mermaid-c4-zoom__show_diagram}",
-      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.tool.register, $.ui.close (via togglePane), $.ui.open (via openPane, togglePane), $.ui.panes (via openPane, togglePane), $.ui.resolve",
-      "./register.tsx state writes: mermaid-c4-zoom.list, mermaid-c4-zoom.path, mermaid-c4-zoom.shown",
-      "./register.tsx state reads: mermaid-c4-zoom.list, mermaid-c4-zoom.path, mermaid-c4-zoom.shown"
+      "./register.tsx calls: $.clock.after, $.command.register, $.model.fork (via mapSession), $.process.run (via promptTimes), $.state.get, $.state.set, $.tool.register, $.ui.close (via togglePane), $.ui.open (via openPane, togglePane), $.ui.panes (via openPane, togglePane), $.ui.resolve, $.ui.toast (via mapSession)",
+      "./register.tsx state writes: mermaid-c4-zoom.isMapping, mermaid-c4-zoom.list, mermaid-c4-zoom.path, mermaid-c4-zoom.shown, mermaid-c4-zoom.transcriptPath",
+      "./register.tsx state reads: mermaid-c4-zoom.isMapping, mermaid-c4-zoom.list, mermaid-c4-zoom.path, mermaid-c4-zoom.shown, mermaid-c4-zoom.transcriptPath"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -192,5 +251,5 @@
    ]
   }
  },
- "sourceHash": "e0f8f946fe1a8fd6"
+ "sourceHash": "59f9ad9777e789e0"
 }

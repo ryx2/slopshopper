@@ -1,0 +1,488 @@
+{
+ "slug": "aosmcleod-next-up-mod",
+ "generatedAt": "2026-10-08T15:53:46.635Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.CwdChanged"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "next-up-tasks"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "next-up"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/spawn_task$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__next-up__add_tasks$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__next-up__list_tasks$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__next-up__update_task$/"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "/^mcp__next-up__(add_tasks|update_session_tasks)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__next-up__update_session_tasks$/"
+    }
+   },
+   {
+    "event": "prompt.attachment"
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "next"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "next",
+    "description": "Next Up: open the pane; `/next tasks`, `/next list`, `/next all`, `/next band`, or `/next plan <goal>`",
+    "output": "Next Up pane toggled."
+   }
+  ],
+  "tools": [
+   {
+    "name": "update_session_tasks",
+    "description": "Keep the task list for the work in this session, shown to the user in a Tasks pane. add appends steps in order; update rewords steps; done and remove take ids (s1, s2, ...). Call with no changes to read the list. Returns the current list. This is separate from the Next Up backlog, which is for work outside this session."
+   },
+   {
+    "name": "add_tasks",
+    "description": "Add tasks to the user's Next Up backlog: follow-up work shared across all their Claude sessions. Use it when the user asks to add something to Next Up or to plan work into it, and for worthwhile follow-ups outside the current task. Each task needs a short imperative title; give a self-contained prompt another session could act on, or details to build one from. Pass plan.title to group the tasks as the ordered steps of one plan."
+   },
+   {
+    "name": "list_tasks",
+    "description": "List the open tasks in the user's Next Up backlog, for the current project or all projects, with their ids."
+   },
+   {
+    "name": "update_task",
+    "description": "Update one Next Up task by id: mark it done or dropped, reopen it, or set it as a favourite. Use when you have finished a task that came from Next Up."
+   }
+  ],
+  "panes": [
+   {
+    "id": "next-up",
+    "title": "Next Up"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"From the Next Up mod the user has installed:\\n\\n# Next Up\\nThe user keeps a shared backlog of follow-up work across their Claude sessions,…"
+   }
+  ],
+  "apiCalls": {
+   "$.session.id": 1,
+   "$.env.get": 3,
+   "$.command.register": 1,
+   "$.tool.register": 4,
+   "$.process.run": 2,
+   "$.state.get": 14,
+   "$.fs.exists": 3,
+   "$.state.set": 2,
+   "$.clock.every": 1,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 3
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "SessionMode": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "key": "next-up-footer",
+      "flexDirection": "row",
+      "alignItems": "center",
+      "gap": 1
+     },
+     "children": [
+      {
+       "type": "Button",
+       "props": {
+        "key": "next-up-tasks-open",
+        "label": "Tasks ↗",
+        "hover": {
+         "color": "#d48a1a"
+        },
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "next-up-open",
+        "label": "Next Up ↗",
+        "hover": {
+         "color": "#d48a1a"
+        },
+        "onPress": "[fn]"
+       },
+       "children": []
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "next-up": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-favourites",
+           "label": "★ 0",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-all",
+           "label": "All 0",
+           "variant": "primary",
+           "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Nothing here yet. Claude adds tasks as it suggests them."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "Next Up"
+    },
+    "next-up-tasks": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tasks-tab-todo",
+           "label": "To Do 0",
+           "variant": "primary",
+           "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tasks-tab-done",
+           "label": "Done 0",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Nothing to do. Claude lists the steps here when work takes more than one."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "next-up-tasks"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(uname -s) → exit 0",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(next-up)",
+   "/next → Next Up pane toggled."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "classic.CwdChanged",
+   "ui.render{component=SessionMode}",
+   "ui.render{component=Pane, requestId=next-up-tasks}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=next-up}",
+   "tool.call{tool=/\"spawn_task$\"/}",
+   "tool.call{tool=/\"^mcp__next-up__add_tasks$\"/}",
+   "tool.call{tool=/\"^mcp__next-up__list_tasks$\"/}",
+   "tool.call{tool=/\"^mcp__next-up__update_task$\"/}",
+   "tool.describe{tool=/\"^mcp__next-up__(add_tasks|update_session_tasks)$\"/}",
+   "tool.call{tool=/\"^mcp__next-up__update_session_tasks$\"/}",
+   "prompt.attachment",
+   "prompt.compose",
+   "prompt.submit",
+   "command.run{command=next}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.command.register",
+   "$.env.get (via dataDir",
+   "platformOf)",
+   "$.fs.exists (via filesOf)",
+   "$.fs.list (via filesOf)",
+   "$.fs.read (via filesOf)",
+   "$.fs.write (via filesOf)",
+   "$.process.run (via newSession",
+   "platformOf",
+   "projectOf)",
+   "$.prompt.fill (via act)",
+   "$.prompt.submit",
+   "$.session.id",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register (via registerBacklogTools",
+   "registerTasksTools)",
+   "$.ui.close (via togglePane)",
+   "$.ui.open (via togglePane)",
+   "$.ui.panes (via togglePane)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "next-up.band",
+   "next-up.project",
+   "next-up.session",
+   "next-up.tab",
+   "next-up.tasks",
+   "next-up.tasksTab"
+  ],
+  "stateWrites": [
+   "next-up.band",
+   "next-up.project",
+   "next-up.session",
+   "next-up.tab",
+   "next-up.tasks",
+   "next-up.tasksTab"
+  ],
+  "envReads": [
+   "HOME",
+   "OS",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/aosmcleod-next-up-mod/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/aosmcleod-next-up-mod/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: next-up.tasks, next-up.project, next-up.tab, next-up.band, next-up.session, next-up.tasksTab"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/aosmcleod-next-up-mod/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, classic.CwdChanged, ui.render{component=SessionMode}, ui.render{component=Pane, requestId=next-up-tasks}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=next-up}, tool.call{tool=/\"spawn_task$\"/}, tool.call{tool=/\"^mcp__next-up__add_tasks$\"/}, tool.call{tool=/\"^mcp__next-up__list_tasks$\"/}, tool.call{tool=/\"^mcp__next-up__update_task$\"/}, tool.describe{tool=/\"^mcp__next-up__(add_tasks|update_session_tasks)$\"/}, tool.call{tool=/\"^mcp__next-up__update_session_tasks$\"/}, prompt.attachment, prompt.compose, prompt.submit, command.run{command=next}",
+      "./register.tsx answers its own command: command.run{command=next}",
+      "./register.tsx gating hook with .catch: classic.CwdChanged",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"spawn_task$\"/}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^mcp__next-up__add_tasks$\"/}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^mcp__next-up__list_tasks$\"/}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^mcp__next-up__update_task$\"/}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^mcp__next-up__update_session_tasks$\"/}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx calls: $.clock.every, $.command.register, $.env.get (via dataDir, platformOf), $.fs.exists (via filesOf), $.fs.list (via filesOf), $.fs.read (via filesOf), $.fs.write (via filesOf), $.process.run (via newSession, platformOf, projectOf), $.prompt.fill (via act), $.prompt.submit, $.session.id, $.state.get, $.state.set, $.tool.register (via registerBacklogTools, registerTasksTools), $.ui.close (via togglePane), $.ui.open (via togglePane), $.ui.panes (via togglePane), $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, OS, USERPROFILE",
+      "./register.tsx state writes: next-up.band, next-up.project, next-up.session, next-up.tab, next-up.tasks, next-up.tasksTab",
+      "./register.tsx state reads: next-up.band, next-up.project, next-up.session, next-up.tab, next-up.tasks, next-up.tasksTab"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.CwdChanged",
+       "hook": "classic.CwdChanged",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"spawn_task$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__next-up__add_tasks$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__next-up__list_tasks$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__next-up__update_task$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__next-up__update_session_tasks$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "a925c021f3db7ca3"
+}

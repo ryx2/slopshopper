@@ -1,0 +1,9 @@
+{
+ "slug": "dillonmohr8777-claude-skills-repo-clawd-buddy",
+ "files": {
+  "hooks/register.tsx": "import { atom, read, update } from 'claude-code'\nimport type { Register } from 'claude-code'\n\nconst frame = atom({ plugin: 'clawd-buddy', key: 'frame' } as const, 0)\n\nconst HANDS = ['  ▘▘ ▝▝', '  ▝▝ ▘▘']\nconst DOTS = ['●○○', '○●○', '○○●', '○●○']\n\n// One frame of Clawd: idle types at a third of the working speed.\nexport function sprite(tick: number, working: boolean) {\n  const t = working ? tick : Math.floor(tick / 3)\n  return { hands: HANDS[t % HANDS.length], dots: DOTS[t % DOTS.length], caption: working ? 'typing' : 'vibing' }\n}\n\nexport const register: Register = on => {\n  on('session.start', ($, e, next) => {\n    $.clock.every(450, () => void update($, frame, f => (f + 1) % 1200))\n    return next(e)\n  })\n\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {\n    if (e.props.hasSurvey || e.props.maxRows < 3) return next(e)\n    const { Box, Text } = $.ui.resolve(e)\n    const s = sprite(await read($, frame), e.props.isWorking)\n    return (\n      <Box flexDirection=\"column\">\n        <Text color=\"claude\"> ▐▛███▜▌</Text>\n        <Text>\n          <Text color=\"claude\">▝▜█████▛▘ </Text>\n          <Text color=\"#A99BF5\">{s.dots}</Text>\n          <Text dimColor> clawd is {s.caption}</Text>\n        </Text>\n        <Text color=\"claude\">{s.hands}</Text>\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"clawd-buddy\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Clawd sits above the prompt and keeps typing: fast while Claude works, slow while idle\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "export type Frame = number\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'clawd-buddy': { frame: Frame }\n  }\n}\n"
+ }
+}

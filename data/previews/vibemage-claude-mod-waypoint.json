@@ -1,0 +1,277 @@
+{
+ "slug": "vibemage-claude-mod-waypoint",
+ "generatedAt": "2026-10-08T15:54:53.810Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": "clear"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "TodoWrite",
+      "TaskCreate",
+      "TaskUpdate"
+     ]
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "waypoint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "waypoint"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "waypoint",
+    "description": "Project progress: open or close the detail pane; `refresh` to re-read now, `config` for the config file",
+    "argumentHint": "[refresh|config]",
+    "output": "pane opened"
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "waypoint",
+    "title": "Waypoint"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.env.get": 6,
+   "$.session.messages": 1,
+   "$.clock.now": 2,
+   "$.clock.every": 1,
+   "$.state.get": 11,
+   "$.session.cwd": 3,
+   "$.session.root": 2,
+   "$.state.set": 5,
+   "$.fs.exists": 7,
+   "$.process.run": 4,
+   "$.fs.read": 16,
+   "$.session.id": 1,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.settings.read": 2,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 20000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "waypoint": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "rowGap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "#f5f5f7",
+           "bold": true
+          },
+          "children": [
+           "app"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#98989f"
+        },
+        "children": [
+         "Nothing to track yet: no /goal, todos, checklist or roadmap found."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "#7c7c80",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "No waypoint.json: showing what was found. /waypoint config shows how to add one."
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Waypoint"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "$.process.run(find /Users/dev/.claude/projects -maxdepth 2 -name preview-session.jsonl) → exit 0",
+   "$.process.run(grep -E \"goal_status\"|<command-name>/goal< package.json) → exit 0",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(waypoint)",
+   "/waypoint → pane opened",
+   "$.process.run(grep -E \"goal_status\"|<command-name>/goal< package.json) → exit 0"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.complete",
+   "session.end{reason=clear}",
+   "tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}",
+   "command.run{command=waypoint}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=waypoint}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now (via collect)",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.exists (via beads",
+   "resolveConfig",
+   "transcriptPath)",
+   "$.fs.read (via checklistCounts",
+   "readJson",
+   "roadmap)",
+   "$.fs.stat (via locks)",
+   "$.process.run (via run)",
+   "$.session.cwd (via resolveConfig",
+   "transcriptPath)",
+   "$.session.id (via transcriptPath)",
+   "$.session.messages (via backfillTodos)",
+   "$.session.root (via resolveConfig)",
+   "$.settings.read (via palette)",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.close",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve"
+  ],
+  "stateReads": [
+   "waypoint.goal",
+   "waypoint.snapshot",
+   "waypoint.todos"
+  ],
+  "stateWrites": [
+   "waypoint.goal",
+   "waypoint.snapshot",
+   "waypoint.todos"
+  ],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "LANG",
+   "OTTY_PANE_ID"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibemage-claude-mod-waypoint/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibemage-claude-mod-waypoint/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: waypoint.goal, waypoint.todos, waypoint.snapshot"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibemage-claude-mod-waypoint/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, turn.complete, session.end{reason=clear}, tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}, command.run{command=waypoint}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=waypoint}",
+      "./register.tsx answers its own command: command.run{command=waypoint}",
+      "./register.tsx gating hook with .catch: tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}",
+      "./register.tsx calls: $.clock.every, $.clock.now (via collect), $.command.register, $.env.get, $.fs.exists (via beads, resolveConfig, transcriptPath), $.fs.read (via checklistCounts, readJson, roadmap), $.fs.stat (via locks), $.process.run (via run), $.session.cwd (via resolveConfig, transcriptPath), $.session.id (via transcriptPath), $.session.messages (via backfillTodos), $.session.root (via resolveConfig), $.settings.read (via palette), $.state.get, $.state.set, $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, LANG, OTTY_PANE_ID",
+      "./register.tsx state writes: waypoint.goal, waypoint.snapshot, waypoint.todos",
+      "./register.tsx state reads: waypoint.goal, waypoint.snapshot, waypoint.todos"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "54a76f60c0f4bff0"
+}

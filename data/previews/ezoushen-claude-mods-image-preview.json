@@ -1,6 +1,6 @@
 {
  "slug": "ezoushen-claude-mods-image-preview",
- "generatedAt": "2026-10-06T14:51:31.441Z",
+ "generatedAt": "2026-10-08T15:54:02.294Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -25,10 +25,10 @@
   ],
   "commands": [
    {
-    "name": "image",
-    "description": "Store image paths; reference them in prompts as [Image #N] with an inline preview.",
-    "argumentHint": "<path... | list | clear>",
-    "output": "image: /image <path...> to store, [Image #N] to reference; /image on|off toggles thumbnails; /image list, /image clear."
+    "name": "image-preview",
+    "description": "Image previews: thumbnails on|off for this session",
+    "argumentHint": "[on|off]",
+    "output": "Thumbnails ON: image paths and pasted images draw inline. /image-preview off to switch."
    }
   ],
   "tools": [],
@@ -39,9 +39,10 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 2,
+   "$.state.get": 3,
    "$.ui.resolve": 2,
-   "$.session.cwd": 2
+   "$.session.cwd": 2,
+   "$.env.get": 2
   },
   "timers": [],
   "sites": {
@@ -64,7 +65,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/image → image: /image <path...> to store, [Image #N] to reference; /image on|off toggles…"
+   "/image-preview → Thumbnails ON: image paths and pasted images draw inline. /image-preview off to …"
   ],
   "console": [],
   "warnings": []
@@ -81,8 +82,10 @@
   ],
   "calls": [
    "$.command.register",
+   "$.env.get (via collectThumbs)",
    "$.process.run (via run)",
-   "$.session.cwd",
+   "$.session.cwd (via collectThumbs)",
+   "$.session.messages (via learnPastes)",
    "$.state.get (via loadState)",
    "$.state.set (via saveState)",
    "$.ui.resolve (via renderRow)"
@@ -93,7 +96,9 @@
   "stateWrites": [
    "image-preview.state"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -117,14 +122,24 @@
      "warnings": [],
      "notes": [
       "./image-preview.mjs hooks: ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, session.start, command.run",
-      "./image-preview.mjs calls: $.command.register, $.process.run (via run), $.session.cwd, $.state.get (via loadState), $.state.set (via saveState), $.ui.resolve (via renderRow)",
+      "./image-preview.mjs gating hook without .catch: command.run",
+      "./image-preview.mjs calls: $.command.register, $.env.get (via collectThumbs), $.process.run (via run), $.session.cwd (via collectThumbs), $.session.messages (via learnPastes), $.state.get (via loadState), $.state.set (via saveState), $.ui.resolve (via renderRow)",
+      "./image-preview.mjs env writes: nothing",
+      "./image-preview.mjs env reads: HOME",
       "./image-preview.mjs state writes: image-preview.state",
       "./image-preview.mjs state reads: image-preview.state"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./image-preview.mjs",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": false
+      }
+     ]
     }
    ]
   }
  },
- "sourceHash": "f63e649f46f2c0ed"
+ "sourceHash": "5f1c32b13469bad0"
 }

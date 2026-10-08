@@ -1,6 +1,6 @@
 {
  "slug": "infiquetra-infiquetra-agent-plugins-com-infiquetra-claude-2",
- "generatedAt": "2026-10-07T15:23:18.457Z",
+ "generatedAt": "2026-10-08T15:54:07.190Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -77,6 +77,31 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__saga__review_merge"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "saga-merge"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "saga-merge"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "review-view"
@@ -100,6 +125,31 @@
     "matcher": {
      "component": "Pane",
      "requestId": "saga-review"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__saga__setup"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "saga-setup"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "saga-setup"
     }
    },
    {
@@ -187,10 +237,20 @@
    {
     "name": "review_admission",
     "description": "Opens saga's admission review pane for an issue: the staffing table (admission question 4, staffing_overrides) and the lens table (question 5, lens_declaration), each row with its own control. The operator's answers are recorded through scripts/admission.py, which validates them. Returns status submitted (with the answers recorded), dismissed, not-placed, unavailable, nothing-to-review, timed-out or error; on anything but submitted, print admission.py --render tables and collect the answers in the conversation."
+   },
+   {
+    "name": "review_merge",
+    "description": "Opens saga's merge-confirmation pane for an issue: the lens grades, blocking items left at an early stop or the round limit, disputed declarations, consequence disagreements, the fix-later list with three choices per item, degraded inputs and the cost. The operator's answers are recorded through scripts/review_state.py, which validates them. Returns status submitted (with the answers recorded), dismissed, not-placed, unavailable, nothing-to-review, timed-out or error; on timed-out the unattended rules already ran and the merge follows the run's merge setting, so do not re-ask; on anything but submitted or timed-out, run review_state.py render --render markdown and collect the answers in the conversation."
+   },
+   {
+    "name": "setup",
+    "description": "Opens saga's setup pane for a checkout: C3's surveyed tool rows with a checkbox each, and an Install button that runs the ticked tools through scripts/saga_setup.py and shows live progress. Returns status submitted (with the installed and failed ids), dismissed, not-placed, unavailable, nothing-to-review, timed-out or error; on anything but submitted, print the survey table and ask which tools to install instead."
    }
   ],
   "panes": [],
-  "toasts": [],
+  "toasts": [
+   "saga: could not read the machine record (unreadable): saga_setup offer-status printed no JSON object"
+  ],
   "logs": [
    "saga agent types: none registered; role_agent_types printed no JSON: SyntaxError: JSON Parse error: Unexpected identifier \"dev\"",
    "saga agent types: none registered; role_agent_types printed no JSON: SyntaxError: JSON Parse error: Unexpected identifier \"dev\""
@@ -200,14 +260,16 @@
   "apiCalls": {
    "$.command.register": 2,
    "$.clock.every": 3,
-   "$.tool.register": 1,
-   "$.process.run": 5,
-   "$.state.get": 10,
+   "$.tool.register": 3,
+   "$.process.run": 6,
+   "$.state.get": 12,
    "$.state.set": 1,
    "$.clock.after": 2,
    "$.ui.log": 2,
+   "$.store.get": 1,
+   "$.ui.toast": 1,
    "$.session.cwd": 3,
-   "$.ui.resolve": 4
+   "$.ui.resolve": 6
   },
   "timers": [
    {
@@ -270,6 +332,19 @@
      },
      "title": "saga-admission"
     },
+    "saga-merge": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No merge confirmation is open."
+      ]
+     },
+     "title": "saga-merge"
+    },
     "saga-review": {
      "ok": true,
      "tree": {
@@ -290,6 +365,19 @@
       ]
      },
      "title": "saga-review"
+    },
+    "saga-setup": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No setup is open."
+      ]
+     },
+     "title": "saga-setup"
     },
     "saga-record": {
      "ok": true,
@@ -317,6 +405,7 @@
   "script": [
    "$.process.run(python3 /plugins/com.infiquetra.claude/scripts/run_status.py --repo-root /work/a…) → exit 0",
    "$.process.run(python3 /plugins/com.infiquetra.claude/scripts/role_agent_types.py --cwd /work/a…) → exit 0",
+   "$.process.run(python3 /plugins/com.infiquetra.claude/scripts/saga_setup.py offer-status) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -343,6 +432,7 @@
    "$.state.set refers to saga.admissionReview, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.agentTypes, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.bandHidden, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
+   "$.state.set refers to saga.mergeReview, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.planPage, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.planSelected, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.planView, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
@@ -351,6 +441,7 @@
    "$.state.set refers to saga.reviewMtimeMs, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.reviewView, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.runStatus, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
+   "$.state.set refers to saga.setupReview, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.usageQueue, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
    "$.state.set refers to saga.usageTarget, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)"
   ],
@@ -372,22 +463,25 @@
    "ui.close{id=saga-admission}",
    "ui.render{component=Pane, requestId=saga-admission}",
    "session.start{cwd=/\"^\"/}",
+   "tool.call{tool=mcp__saga__review_merge}",
+   "ui.close{id=saga-merge}",
+   "ui.render{component=Pane, requestId=saga-merge}",
+   "session.start{cwd=/\"^\"/}",
    "command.run{command=review-view}",
    "ui.press{plugin=saga, element=?}",
    "tool.call{tool=Bash}",
    "ui.render{component=Pane, requestId=saga-review}",
+   "session.start{cwd=/\"^\"/}",
+   "tool.call{tool=mcp__saga__setup}",
+   "ui.close{id=saga-setup}",
+   "ui.render{component=Pane, requestId=saga-setup}",
    "session.start{cwd=/\"^\"/}",
    "turn.step{model=/\"^\"/}",
    "session.end{sessionId=/\"^\"/}",
    "session.start{cwd=/\"^\"/}",
    "turn.complete{turnId=/\"^\"/}",
    "tool.call{tool=Bash}",
-   "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=saga-record}",
-   "session.start{cwd=/\"^\"/}",
-   "turn.complete",
-   "agent.offer",
-   "turn.step"
+   "ui.render{component=AboveProm… [+118 chars]"
   ],
   "calls": [
    "$.agent.list",
@@ -404,6 +498,8 @@
    "$.session.surfaces",
    "$.state.get",
    "$.state.set (via refresh)",
+   "$.store.get (via maybeOfferSetup)",
+   "$.store.set (via maybeOfferSetup)",
    "$.tool.register",
    "$.ui.close",
    "$.ui.log",
@@ -417,6 +513,7 @@
    "saga.admissionReview",
    "saga.agentTypes",
    "saga.bandHidden",
+   "saga.mergeReview",
    "saga.planPage",
    "saga.planSelected",
    "saga.planView",
@@ -425,6 +522,7 @@
    "saga.reviewMtimeMs",
    "saga.reviewView",
    "saga.runStatus",
+   "saga.setupReview",
    "saga.usageQueue",
    "saga.usageTarget"
   ],
@@ -432,6 +530,7 @@
    "saga.admissionReview",
    "saga.agentTypes",
    "saga.bandHidden",
+   "saga.mergeReview",
    "saga.planPage",
    "saga.planSelected",
    "saga.planView",
@@ -440,6 +539,7 @@
    "saga.reviewMtimeMs",
    "saga.reviewView",
    "saga.runStatus",
+   "saga.setupReview",
    "saga.usageQueue",
    "saga.usageTarget"
   ],
@@ -494,6 +594,11 @@
       },
       {
        "path": "modules.../mods/index.ts",
+       "message": "$.state.set refers to saga.mergeReview, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
+       "code": null
+      },
+      {
+       "path": "modules.../mods/index.ts",
        "message": "$.state.set refers to saga.planPage, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
        "code": null
       },
@@ -534,6 +639,11 @@
       },
       {
        "path": "modules.../mods/index.ts",
+       "message": "$.state.set refers to saga.setupReview, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
+       "code": null
+      },
+      {
+       "path": "modules.../mods/index.ts",
        "message": "$.state.set refers to saga.usageQueue, which saga owns: only a value's owner writes it (to change what is written, hook saga's state.set and rewrite e.value)",
        "code": null
       },
@@ -545,7 +655,7 @@
      ],
      "warnings": [],
      "notes": [
-      "../mods/index.ts hooks: session.start{cwd=/\"^\"/}, command.run{command=plan-view}, ui.press{plugin=saga, element=?}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=saga-plan}, session.start, tool.call{tool=mcp__saga__review_admission}, ui.close{id=saga-admission}, ui.render{component=Pane, requestId=saga-admission}, session.start{cwd=/\"^\"/}, command.run{command=review-view}, ui.press{plugin=saga, element=?}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=saga-review}, session.start{cwd=/\"^\"/}, turn.step{model=/\"^\"/}, session.end{sessionId=/\"^\"/}, session.start{cwd=/\"^\"/}, turn.complete{turnId=/\"^\"/}, tool.call{tool=Bash}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=saga-record}, session.start{cwd=/\"^\"/}, turn.complete, agent.offer, turn.step",
+      "../mods/index.ts hooks: session.start{cwd=/\"^\"/}, command.run{command=plan-view}, ui.press{plugin=saga, element=?}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=saga-plan}, session.start, tool.call{tool=mcp__saga__review_admission}, ui.close{id=saga-admission}, ui.render{component=Pane, requestId=saga-admission}, session.start{cwd=/\"^\"/}, tool.call{tool=mcp__saga__review_merge}, ui.close{id=saga-merge}, ui.render{component=Pane, requestId=saga-merge}, session.start{cwd=/\"^\"/}, command.run{command=review-view}, ui.press{plugin=saga, element=?}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=saga-review}, session.start{cwd=/\"^\"/}, tool.call{tool=mcp__saga__setup}, ui.close{id=saga-setup}, ui.render{component=Pane, requestId=saga-setup}, session.start{cwd=/\"^\"/}, turn.step{model=/\"^\"/}, session.end{sessionId=/\"^\"/}, session.start{cwd=/\"^\"/}, turn.complete{turnId=/\"^\"/}, tool.call{tool=Bash}, ui.render{component=AboveProm… [+118 chars]",
       "../mods/index.ts answers its own command: command.run{command=plan-view}",
       "../mods/index.ts answers its own command: command.run{command=review-view}",
       "../mods/index.ts gating hook without .catch: tool.call{tool=Edit}",
@@ -553,13 +663,17 @@
       "../mods/index.ts gating hook without .catch: tool.call{tool=Bash}",
       "../mods/index.ts gating hook without .catch: tool.call{tool=mcp__saga__review_admission}",
       "../mods/index.ts gating hook without .catch: ui.close{id=saga-admission}",
+      "../mods/index.ts gating hook without .catch: tool.call{tool=mcp__saga__review_merge}",
+      "../mods/index.ts gating hook without .catch: ui.close{id=saga-merge}",
       "../mods/index.ts gating hook without .catch: tool.call{tool=Bash}",
+      "../mods/index.ts gating hook without .catch: tool.call{tool=mcp__saga__setup}",
+      "../mods/index.ts gating hook without .catch: ui.close{id=saga-setup}",
       "../mods/index.ts gating hook without .catch: tool.call{tool=Bash}",
       "../mods/index.ts gating hook without .catch: agent.offer",
-      "../mods/index.ts calls: $.agent.list, $.agent.register (via refresh), $.clock.after (via requestRefresh), $.clock.every, $.command.register, $.fs.read (via loadPlan), $.fs.stat, $.process.run, $.prompt.fill (via fillPrompt), $.session.cwd, $.session.id, $.session.surfaces, $.state.get, $.state.set (via refresh), $.tool.register, $.ui.close, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via refreshBand), $.ui.toast",
-      "../mods/index.ts state writes: saga.admissionReview, saga.agentTypes, saga.bandHidden, saga.planPage, saga.planSelected, saga.planView, saga.recordView, saga.reviewLens, saga.reviewMtimeMs, saga.reviewView, saga.runStatus, saga.usageQueue, saga.usageTarget",
-      "../mods/index.ts state reads: saga.admissionReview, saga.agentTypes, saga.bandHidden, saga.planPage, saga.planSelected, saga.planView, saga.recordView, saga.reviewLens, saga.reviewMtimeMs, saga.reviewView, saga.runStatus, saga.usageQueue, saga.usageTarget",
-      "../mods/index.ts state of other plugins, not checked (run validate in a session with them enabled): saga.admissionReview, saga.agentTypes, saga.bandHidden, saga.planPage, saga.planSelected, saga.planView, saga.recordView, saga.reviewLens, saga.reviewMtimeMs, saga.reviewView, saga.runStatus, saga.usageQueue, saga.usageTarget"
+      "../mods/index.ts calls: $.agent.list, $.agent.register (via refresh), $.clock.after (via requestRefresh), $.clock.every, $.command.register, $.fs.read (via loadPlan), $.fs.stat, $.process.run, $.prompt.fill (via fillPrompt), $.session.cwd, $.session.id, $.session.surfaces, $.state.get, $.state.set (via refresh), $.store.get (via maybeOfferSetup), $.store.set (via maybeOfferSetup), $.tool.register, $.ui.close, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via refreshBand), $.ui.toast",
+      "../mods/index.ts state writes: saga.admissionReview, saga.agentTypes, saga.bandHidden, saga.mergeReview, saga.planPage, saga.planSelected, saga.planView, saga.recordView, saga.reviewLens, saga.reviewMtimeMs, saga.reviewView, saga.runStatus, saga.setupReview, saga.usageQueue, saga.usageTarget",
+      "../mods/index.ts state reads: saga.admissionReview, saga.agentTypes, saga.bandHidden, saga.mergeReview, saga.planPage, saga.planSelected, saga.planView, saga.recordView, saga.reviewLens, saga.reviewMtimeMs, saga.reviewView, saga.runStatus, saga.setupReview, saga.usageQueue, saga.usageTarget",
+      "../mods/index.ts state of other plugins, not checked (run validate in a session with them enabled): saga.admissionReview, saga.agentTypes, saga.bandHidden, saga.mergeReview, saga.planPage, saga.planSelected, saga.planView, saga.recordView, saga.reviewLens, saga.reviewMtimeMs, saga.reviewView, saga.runStatus, saga.setupReview, saga.usageQueue, saga.usageTarget"
      ],
      "gatingHooks": [
       {
@@ -595,7 +709,31 @@
       {
        "module": "../mods/index.ts",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__saga__review_merge}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=saga-merge}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.ts",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__saga__setup}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=saga-setup}",
        "hasCatch": false
       },
       {
@@ -615,5 +753,5 @@
    ]
   }
  },
- "sourceHash": "d88dbaacefba2239"
+ "sourceHash": "677955620bcb5af9"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "higorcesarqn-rich-input-editor-rich-input",
- "generatedAt": "2026-10-07T15:23:15.920Z",
+ "generatedAt": "2026-10-08T15:54:05.801Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,25 @@
     "event": "command.run",
     "matcher": {
      "command": "rich"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "rich-input-pane"
+    }
+   },
+   {
+    "event": "ui.message",
+    "matcher": {
+     "requestId": "rich-input-pane"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "rich-input-pane"
     }
    },
    {
@@ -38,7 +57,8 @@
   "commands": [
    {
     "name": "rich",
-    "description": "Turn rich input on or off: Enter takes a new line, Ctrl+Enter sends",
+    "description": "Turn rich input on or off (Enter new line, Ctrl+Enter send); /rich pane opens the editor pane",
+    "argumentHint": "[pane]",
     "output": "Rich input on: Enter takes a new line, Ctrl+Enter sends (Ctrl+S where the terminal sends Ctrl+Enter as Enter)."
    }
   ],
@@ -52,13 +72,13 @@
    "$.command.register": 1,
    "$.env.get": 4,
    "$.fs.exists": 2,
-   "$.state.get": 4,
+   "$.state.get": 5,
    "$.state.set": 2,
    "$.session.cwd": 1,
    "$.clock.now": 1,
    "$.process.run": 1,
    "$.fs.write": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 2
   },
   "timers": [],
   "sites": {
@@ -88,7 +108,28 @@
         "dimColor": true
        },
        "children": [
-        "  Enter new line · Ctrl+Enter send · @ browses folders"
+        "  Enter new line · Ctrl+Enter send  "
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "open-pane",
+        "label": "▤ Editor",
+        "plain": true,
+        "dimColor": true,
+        "action": "app:toggleDiffPreSession",
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "  Alt+E"
        ]
       }
      ]
@@ -101,6 +142,44 @@
       "auto-accept edits",
       "rich input"
      ]
+    }
+   },
+   "Pane": {
+    "rich-input-pane": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "Enter new line · Ctrl+S puts it in the prompt · right-click pastes · @ files"
+        ]
+       },
+       {
+        "type": "Client",
+        "props": {
+         "key": "editor",
+         "module": "./editor.tsx",
+         "props": {
+          "initial": "",
+          "menu": null,
+          "paste": null
+         },
+         "height": 29
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "rich-input-pane"
     }
    }
   },
@@ -130,6 +209,9 @@
   "hooks": [
    "session.start",
    "command.run{command=rich}",
+   "ui.render{component=Pane, requestId=rich-input-pane}",
+   "ui.message{requestId=rich-input-pane}",
+   "ui.close{id=rich-input-pane}",
    "prompt.autocomplete{token=/\"^@\"/}",
    "prompt.edit",
    "ui.render{component=SessionMode}",
@@ -143,17 +225,25 @@
    "$.fs.list (via walk)",
    "$.fs.read (via load)",
    "$.fs.write (via toggle)",
-   "$.process.run (via entries)",
+   "$.process.run (via clipboard",
+   "entries)",
+   "$.prompt.fill",
+   "$.prompt.read (via openPane)",
    "$.session.cwd (via entries)",
    "$.state.get",
    "$.state.set",
+   "$.ui.close (via closePane)",
+   "$.ui.open (via openPane)",
+   "$.ui.panes (via togglePane)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
+   "rich-input.editor",
    "rich-input.mode"
   ],
   "stateWrites": [
+   "rich-input.editor",
    "rich-input.mode"
   ],
   "envReads": [
@@ -172,7 +262,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: rich-input.mode"
+     "types ./types/index.d.ts declares state: rich-input.mode, rich-input.editor"
     ],
     "gatingHooks": []
    },
@@ -183,18 +273,27 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=rich}, prompt.autocomplete{token=/\"^@\"/}, prompt.edit, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=rich}, ui.render{component=Pane, requestId=rich-input-pane}, ui.message{requestId=rich-input-pane}, ui.close{id=rich-input-pane}, prompt.autocomplete{token=/\"^@\"/}, prompt.edit, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=rich}",
-      "./register.tsx calls: $.clock.now (via entries), $.command.register, $.env.get (via bindingsPath), $.fs.exists (via load), $.fs.list (via walk), $.fs.read (via load), $.fs.write (via toggle), $.process.run (via entries), $.session.cwd (via entries), $.state.get, $.state.set, $.ui.resolve, $.ui.toast",
+      "./register.tsx gating hook without .catch: ui.close{id=rich-input-pane}",
+      "./register.tsx calls: $.clock.now (via entries), $.command.register, $.env.get (via bindingsPath), $.fs.exists (via load), $.fs.list (via walk), $.fs.read (via load), $.fs.write (via toggle), $.process.run (via clipboard, entries), $.prompt.fill, $.prompt.read (via openPane), $.session.cwd (via entries), $.state.get, $.state.set, $.ui.close (via closePane), $.ui.open (via openPane), $.ui.panes (via togglePane), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./register.tsx state writes: rich-input.mode",
-      "./register.tsx state reads: rich-input.mode"
+      "./register.tsx state writes: rich-input.editor, rich-input.mode",
+      "./register.tsx state reads: rich-input.editor, rich-input.mode",
+      "./register.tsx surface modules: hooks/editor.tsx"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=rich-input-pane}",
+       "hasCatch": false
+      }
+     ]
     }
    ]
   }
  },
- "sourceHash": "d74c06896d19a986"
+ "sourceHash": "c30e21cac18a9e05"
 }

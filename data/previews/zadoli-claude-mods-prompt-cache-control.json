@@ -1,0 +1,742 @@
+{
+ "slug": "zadoli-claude-mods-prompt-cache-control",
+ "generatedAt": "2026-10-08T15:54:57.921Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cache"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.press"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "keepwarm"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "cache",
+    "description": "Prompt-cache usage per turn and the time left before it lapses (stop closes)",
+    "argumentHint": "[stop]",
+    "immediate": true,
+    "output": "1h cache (Claude subscription default) · no request yet: the first one writes the cache · /cache stop closes"
+   },
+   {
+    "name": "keepwarm",
+    "description": "Keep the prompt cache warm: bare for 6h, a window such as 90m, always, off, or status",
+    "argumentHint": "[6h | always | off | status]",
+    "immediate": true,
+    "output": "keepwarm on for 6h00m, a ping 50m after each idle stretch keeps the cache read, not re-written"
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "cache",
+    "title": "cache"
+   }
+  ],
+  "toasts": [],
+  "logs": [
+   "prompt-cache-control loaded: 1h cache (Claude subscription default), /cache opens the table"
+  ],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 8,
+   "$.session.cwd": 1,
+   "$.fs.read": 3,
+   "$.session.usage": 2,
+   "$.command.register": 2,
+   "$.ui.log": 1,
+   "$.ui.status": 2,
+   "$.store.get": 7,
+   "$.session.id": 2,
+   "$.store.keys": 3,
+   "$.store.delete": 3,
+   "$.clock.every": 1,
+   "$.store.set": 2,
+   "$.session.surfaces": 1,
+   "$.ui.open": 1,
+   "$.ui.invalidate": 2,
+   "$.ui.resolve": 2,
+   "$.clock.after": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1000
+   },
+   {
+    "kind": "after",
+    "ms": 21600000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "cache": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "title",
+         "flexDirection": "row",
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "cyan"
+          },
+          "children": [
+           "⚡ PROMPT CACHE"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "○ no request yet: the first one writes the cache"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "cache",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "cyan"
+          },
+          "children": [
+           "CACHE"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "c:ttl",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 13,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "lifetime"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "v",
+             "bold": true
+            },
+            "children": [
+             "1h"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "s",
+             "dimColor": true
+            },
+            "children": [
+             "(Claude subscription default)"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "c:left",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 13,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "expires in"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "v",
+             "bold": true
+            },
+            "children": [
+             "--:--"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "kw",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "cyan"
+          },
+          "children": [
+           "KEEPWARM"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "k:state",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 13,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "window"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "kwbar",
+             "flexDirection": "row",
+             "height": 1,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "key": "kwbar:0",
+               "width": 32,
+               "height": 1,
+               "flexShrink": 0,
+               "backgroundColor": "magenta"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "v",
+             "bold": true,
+             "color": "magenta"
+            },
+            "children": [
+             "6h00m left"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "kw-stop",
+             "label": "stop",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "k:next",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 13,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "next ping"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "v",
+             "bold": true
+            },
+            "children": [
+             "after the next turn"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "s",
+             "dimColor": true
+            },
+            "children": [
+             "every 50m"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "cost",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "cyan"
+          },
+          "children": [
+           "COST"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "$:guard",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 13,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "guard"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "v",
+             "bold": true
+            },
+            "children": [
+             "refuse once"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "s",
+             "dimColor": true
+            },
+            "children": [
+             "on a cold cache of 50k+ tokens"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "$:plan",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 13,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "5h window"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "v",
+             "dimColor": true
+            },
+            "children": [
+             "🧪 calibrating… · 1 active session"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "$:session",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 13,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "this session"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "v",
+             "bold": true
+            },
+            "children": [
+             "0 cold writes · $0.00"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "turns",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "cyan"
+          },
+          "children": [
+           "TURNS"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "none",
+           "dimColor": true
+          },
+          "children": [
+           "no requests yet"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "foot",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "close",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "cache"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(cache)",
+   "/cache → 1h cache (Claude subscription default) · no request yet: the first one writes th…",
+   "/keepwarm → keepwarm on for 6h00m, a ping 50m after each idle stretch keeps the cache read, …"
+  ],
+  "console": [],
+  "status": "5h 31%",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "session.measure",
+   "turn.step",
+   "command.run{command=cache}",
+   "ui.close",
+   "ui.press",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane}",
+   "prompt.submit",
+   "session.compact",
+   "turn.complete",
+   "command.run{command=keepwarm}"
+  ],
+  "calls": [
+   "$.clock.after (via arm)",
+   "$.clock.every",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.read (via readSetting)",
+   "$.model.fork (via ping)",
+   "$.session.cwd (via readSetting)",
+   "$.session.id",
+   "$.session.surfaces",
+   "$.session.usage",
+   "$.store.delete (via calibrate",
+   "keepwarmStart",
+   "restoreSamples",
+   "startWindow",
+   "stop)",
+   "$.store.get",
+   "$.store.keys (via calibrate",
+   "refreshActive",
+   "restoreSamples)",
+   "$.store.set",
+   "$.ui.close",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
+   "DISABLE_PROMPT_CACHING",
+   "DISABLE_PROMPT_CACHING_HAIKU",
+   "DISABLE_PROMPT_CACHING_OPUS",
+   "DISABLE_PROMPT_CACHING_SONNET",
+   "ENABLE_PROMPT_CACHING_1H",
+   "FORCE_PROMPT_CACHING_5M",
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/zadoli-claude-mods-prompt-cache-control/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/zadoli-claude-mods-prompt-cache-control/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/zadoli-claude-mods-prompt-cache-control/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./prompt-cache-control.tsx hooks: session.start, session.end, session.measure, turn.step, command.run{command=cache}, ui.close, ui.press, ui.render{component=AbovePrompt}, ui.render{component=Pane}, prompt.submit, session.compact, turn.complete, command.run{command=keepwarm}",
+      "./prompt-cache-control.tsx answers its own command: command.run{command=keepwarm}",
+      "./prompt-cache-control.tsx gating hook without .catch: command.run{command=cache}",
+      "./prompt-cache-control.tsx gating hook without .catch: ui.close",
+      "./prompt-cache-control.tsx gating hook without .catch: prompt.submit",
+      "./prompt-cache-control.tsx gating hook without .catch: session.compact",
+      "./prompt-cache-control.tsx calls: $.clock.after (via arm), $.clock.every, $.command.register, $.env.get, $.fs.read (via readSetting), $.model.fork (via ping), $.session.cwd (via readSetting), $.session.id, $.session.surfaces, $.session.usage, $.store.delete (via calibrate, keepwarmStart, restoreSamples, startWindow, stop), $.store.get, $.store.keys (via calibrate, refreshActive, restoreSamples), $.store.set, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open (via openPane), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./prompt-cache-control.tsx env writes: nothing",
+      "./prompt-cache-control.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, DISABLE_PROMPT_CACHING, DISABLE_PROMPT_CACHING_HAIKU, DISABLE_PROMPT_CACHING_OPUS, DISABLE_PROMPT_CACHING_SONNET, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HOME"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./prompt-cache-control.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=cache}",
+       "hasCatch": false
+      },
+      {
+       "module": "./prompt-cache-control.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./prompt-cache-control.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./prompt-cache-control.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "34cedba87f07a447"
+}

@@ -1,6 +1,6 @@
 {
  "slug": "kihyun1998-skills-thegraph-panel",
- "generatedAt": "2026-10-07T15:23:28.463Z",
+ "generatedAt": "2026-10-08T15:54:17.203Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,18 @@
     "event": "turn.complete"
    },
    {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Spinner"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "TurnDuration"
+    }
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "AskUserQuestion"
@@ -31,6 +43,15 @@
       "NotebookEdit"
      ]
     }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call"
    },
    {
     "event": "ui.close"
@@ -58,8 +79,9 @@
   "rewrites": [],
   "apiCalls": {
    "$.clock.every": 1,
+   "$.state.get": 20,
+   "$.ui.panes": 1,
    "$.clock.now": 1,
-   "$.state.get": 7,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -72,16 +94,60 @@
    "AbovePrompt": {
     "ok": "engine"
    },
+   "Spinner": {
+    "ok": "engine"
+   },
+   "TurnDuration": {
+    "ok": "engine"
+   },
    "Pane": {
     "thegraph": {
      "ok": true,
      "tree": {
-      "type": "Text",
+      "type": "Box",
       "props": {
-       "dimColor": true
+       "flexDirection": "row",
+       "justifyContent": "space-between"
       },
       "children": [
-       "thegraph is not running."
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "thegraph is not running."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "flexShrink": 0
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "role": "dismiss",
+           "hotkey": "q",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           "close"
+          ]
+         }
+        ]
+       }
       ]
      },
      "title": "thegraph"
@@ -113,8 +179,12 @@
    "prompt.submit",
    "skill.prompt",
    "turn.complete",
+   "ui.render{component=Spinner}",
+   "ui.render{component=TurnDuration}",
    "tool.call{tool=AskUserQuestion}",
    "tool.call{tool=Edit|Write|NotebookEdit}",
+   "tool.call{tool=Bash}",
+   "tool.call",
    "ui.close",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=thegraph}"
@@ -123,22 +193,29 @@
    "$.clock.every",
    "$.clock.now",
    "$.fs.read (via readSheet)",
+   "$.fs.stat (via checkSheet)",
+   "$.process.run (via askTempDir)",
    "$.state.get",
    "$.state.set",
-   "$.ui.close (via closePane)",
+   "$.ui.close (via closePane",
+   "shutPane)",
    "$.ui.open (via togglePane)",
+   "$.ui.panes (via shutOrphanPane)",
    "$.ui.resolve",
+   "$.ui.scroll (via togglePane)",
    "$.ui.toast (via togglePane)"
   ],
   "stateReads": [
    "thegraph-panel.isPaneOpen",
    "thegraph-panel.now",
-   "thegraph-panel.run"
+   "thegraph-panel.run",
+   "thegraph-panel.turnLines"
   ],
   "stateWrites": [
    "thegraph-panel.isPaneOpen",
    "thegraph-panel.now",
-   "thegraph-panel.run"
+   "thegraph-panel.run",
+   "thegraph-panel.turnLines"
   ],
   "envReads": [],
   "raw": {
@@ -152,7 +229,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: thegraph-panel.run, thegraph-panel.isPaneOpen, thegraph-panel.now"
+     "types ./types/index.d.ts declares state: thegraph-panel.run, thegraph-panel.isPaneOpen, thegraph-panel.now, thegraph-panel.turnLines"
     ],
     "gatingHooks": []
    },
@@ -163,14 +240,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, skill.prompt, turn.complete, tool.call{tool=AskUserQuestion}, tool.call{tool=Edit|Write|NotebookEdit}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=thegraph}",
+      "./register.tsx hooks: session.start, prompt.submit, skill.prompt, turn.complete, ui.render{component=Spinner}, ui.render{component=TurnDuration}, tool.call{tool=AskUserQuestion}, tool.call{tool=Edit|Write|NotebookEdit}, tool.call{tool=Bash}, tool.call, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=thegraph}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call{tool=AskUserQuestion}",
       "./register.tsx gating hook with .catch: tool.call{tool=Edit|Write|NotebookEdit}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: ui.close",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.fs.read (via readSheet), $.state.get, $.state.set, $.ui.close (via closePane), $.ui.open (via togglePane), $.ui.resolve, $.ui.toast (via togglePane)",
-      "./register.tsx state writes: thegraph-panel.isPaneOpen, thegraph-panel.now, thegraph-panel.run",
-      "./register.tsx state reads: thegraph-panel.isPaneOpen, thegraph-panel.now, thegraph-panel.run"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.fs.read (via readSheet), $.fs.stat (via checkSheet), $.process.run (via askTempDir), $.state.get, $.state.set, $.ui.close (via closePane, shutPane), $.ui.open (via togglePane), $.ui.panes (via shutOrphanPane), $.ui.resolve, $.ui.scroll (via togglePane), $.ui.toast (via togglePane)",
+      "./register.tsx state writes: thegraph-panel.isPaneOpen, thegraph-panel.now, thegraph-panel.run, thegraph-panel.turnLines",
+      "./register.tsx state reads: thegraph-panel.isPaneOpen, thegraph-panel.now, thegraph-panel.run, thegraph-panel.turnLines"
      ],
      "gatingHooks": [
       {
@@ -193,6 +272,18 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "ui.close",
        "hook": "ui.close",
        "hasCatch": true
@@ -202,5 +293,5 @@
    ]
   }
  },
- "sourceHash": "ee706129b78d7002"
+ "sourceHash": "3c7492625e377aeb"
 }

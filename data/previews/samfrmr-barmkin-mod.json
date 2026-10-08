@@ -1,6 +1,6 @@
 {
  "slug": "samfrmr-barmkin-mod",
- "generatedAt": "2026-10-07T15:22:35.994Z",
+ "generatedAt": "2026-10-08T15:53:37.604Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "tool.describe",
@@ -121,6 +127,12 @@
     "matcher": {
      "command": "barmkin-mod-status"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "barmkin-mod-clear-taint"
+    }
    }
   ],
   "commands": [
@@ -131,7 +143,12 @@
    {
     "name": "barmkin-mod-status",
     "description": "Show barmkin-mod taint, breaker, and last classifier verdict",
-    "output": "barmkin-mod status\ntaint: off\nsensitive access: ON (a Bash call named a credential path)\negress: open\nclassifier breaker: closed\nlast verdict: none yet"
+    "output": "barmkin-mod status\ntaint clear posture: human-origin\ntaint: off\nsensitive access: ON (a Bash call named a credential path)\negress: open\nclassifier breaker: closed\nlast verdict: none yet"
+   },
+   {
+    "name": "barmkin-mod-clear-taint",
+    "description": "Clear the barmkin-mod taint and sensitive-access flags and re-enable egress",
+    "output": "barmkin-mod: taint posture was human-origin; cleared sensitive access (a Bash call named a credential path); egress is re-enabled."
    }
   ],
   "tools": [],
@@ -154,48 +171,18 @@
    "$.session.version": 1,
    "$.settings.read": 2,
    "$.ui.status": 1,
-   "$.command.register": 2,
-   "$.state.get": 53,
-   "$.state.set": 11,
+   "$.command.register": 3,
+   "$.state.get": 64,
+   "$.state.set": 15,
    "$.session.cwd": 1,
    "$.process.run": 5,
    "$.ui.open": 1,
-   "$.ui.resolve": 2
+   "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
-    "ok": true,
-    "tree": {
-     "type": "Box",
-     "props": {
-      "flexDirection": "column"
-     },
-     "children": [
-      {
-       "type": "engine",
-       "ref": 1,
-       "props": {
-        "hasSurvey": false,
-        "isWorking": false,
-        "maxRows": 8,
-        "bodyColumns": 100,
-        "scroll": {
-         "offset": 0,
-         "bodyRows": 8
-        },
-        "view": {}
-       }
-      },
-      {
-       "type": "Text",
-       "props": {},
-       "children": [
-        "barmkin-mod · taint:off · sensitive:ON · classifier:ok"
-       ]
-      }
-     ]
-    }
+    "ok": "engine"
    },
    "Pane": {
     "barmkin-mod-findings": {
@@ -238,7 +225,8 @@
    "turn.complete",
    "$.ui.open(barmkin-mod-findings)",
    "/barmkin-mod-findings → ",
-   "/barmkin-mod-status → barmkin-mod status\ntaint: off\nsensitive access: ON (a Bash call named a credenti…"
+   "/barmkin-mod-status → barmkin-mod status\ntaint clear posture: human-origin\ntaint: off\nsensitive access…",
+   "/barmkin-mod-clear-taint → barmkin-mod: taint posture was human-origin; cleared sensitive access (a Bash ca…"
   ],
   "console": [],
   "status": "barmkin-mod posture: barmkin-mod is not seated in managed prependPlugins: skill text, CLAUDE.md and other prompt-assembly content stay out of its reach (README \"Seat requirements\"). | barmkin-mod posture: the Bash sandbox is off (sandbox.enabled is not true): no OS-level egress floor backs this mod's taint-gated denies. | barmkin-mod posture: disableSkillShellExecution is unset: a skill's inline shell (`!`command``) still bypasses every tool.call-based guard this mod has. | barmkin-mod posture: mcp_server_allowlist is empty: every MCP server is allowed to run tools (audit-only, not enforced).",
@@ -251,6 +239,8 @@
   "hooks": [
    "session.start",
    "prompt.submit",
+   "session.compact",
+   "session.end",
    "tool.describe{tool=/\"^mcp__\"/}",
    "tool.call",
    "tool.call{tool=/\"^mcp__\"/}",
@@ -268,7 +258,8 @@
    "ui.render{component=Pane}",
    "ui.render{component=AbovePrompt}",
    "command.run{command=barmkin-mod-findings}",
-   "command.run{command=barmkin-mod-status}"
+   "command.run{command=barmkin-mod-status}",
+   "command.run{command=barmkin-mod-clear-taint}"
   ],
   "calls": [
    "$.clock.after (via callJevSystemOne)",
@@ -334,10 +325,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.submit, tool.describe{tool=/\"^mcp__\"/}, tool.call, tool.call{tool=/\"^mcp__\"/}, tool.call{tool=Bash|PowerShell|WebFetch|Edit|Write|MultiEdit|NotebookEdit}, tool.call{tool=WebFetch|WebSearch}, tool.call{tool=Read}, tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}, tool.call{tool=Skill}, tool.check{tool=Bash|PowerShell}, skill.prompt, prompt.attachment{type=skill_listing}, session.receive, session.send, agent.spawn, ui.render{component=Pane}, ui.render{component=AbovePrompt}, command.run{command=barmkin-mod-findings}, command.run{command=barmkin-mod-status}",
+      "./register.ts hooks: session.start, prompt.submit, session.compact, session.end, tool.describe{tool=/\"^mcp__\"/}, tool.call, tool.call{tool=/\"^mcp__\"/}, tool.call{tool=Bash|PowerShell|WebFetch|Edit|Write|MultiEdit|NotebookEdit}, tool.call{tool=WebFetch|WebSearch}, tool.call{tool=Read}, tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}, tool.call{tool=Skill}, tool.check{tool=Bash|PowerShell}, skill.prompt, prompt.attachment{type=skill_listing}, session.receive, session.send, agent.spawn, ui.render{component=Pane}, ui.render{component=AbovePrompt}, command.run{command=barmkin-mod-findings}, command.run{command=barmkin-mod-status}, command.run{command=barmkin-mod-clear-taint}",
       "./register.ts answers its own command: command.run{command=barmkin-mod-findings}",
       "./register.ts answers its own command: command.run{command=barmkin-mod-status}",
+      "./register.ts answers its own command: command.run{command=barmkin-mod-clear-taint}",
       "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: session.compact",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.call{tool=/\"^mcp__\"/}",
       "./register.ts gating hook with .catch: tool.call{tool=Bash|PowerShell|WebFetch|Edit|Write|MultiEdit|NotebookEdit}",
@@ -358,6 +351,12 @@
        "module": "./register.ts",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
        "hasCatch": false
       },
       {
@@ -431,5 +430,5 @@
    ]
   }
  },
- "sourceHash": "4ff18e16d433ecb8"
+ "sourceHash": "48dc83ecc765d06e"
 }

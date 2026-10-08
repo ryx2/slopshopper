@@ -1,6 +1,6 @@
 {
  "slug": "etiennep-26-noctia-noctia-mods",
- "generatedAt": "2026-10-07T15:22:18.268Z",
+ "generatedAt": "2026-10-08T15:53:26.463Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -28,6 +28,35 @@
     "matcher": {
      "component": "ToolUse"
     }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TodoWrite"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "noctia-tasks"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__noctia-mods__mentor_progress"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "noctia-mentor"
+    }
    }
   ],
   "commands": [
@@ -37,7 +66,12 @@
     "output": "Team panel opened."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "mentor_progress",
+    "description": "Mentor mode only. Send the full list of steps with their status and the hint level used (0 to 3). Shows the progress in a side panel."
+   }
+  ],
   "panes": [
    {
     "id": "noctia-team",
@@ -50,9 +84,10 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.tool.register": 1,
    "$.ui.open": 1,
-   "$.ui.resolve": 1,
-   "$.state.get": 1
+   "$.ui.resolve": 3,
+   "$.state.get": 3
   },
   "timers": [],
   "sites": {
@@ -80,6 +115,53 @@
       ]
      },
      "title": "Team"
+    },
+    "noctia-tasks": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "░░░░░░░░░░",
+         " ",
+         "0",
+         "/",
+         "0"
+        ]
+       }
+      ]
+     },
+     "title": "noctia-tasks"
+    },
+    "noctia-mentor": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Hints ",
+         "○○○"
+        ]
+       }
+      ]
+     },
+     "title": "noctia-mentor"
     }
    }
   },
@@ -110,20 +192,31 @@
    "command.run{command=team}",
    "agent.spawn",
    "ui.render{component=Pane, requestId=noctia-team}",
-   "ui.render{component=ToolUse}"
+   "ui.render{component=ToolUse}",
+   "tool.call{tool=TodoWrite}",
+   "ui.render{component=Pane, requestId=noctia-tasks}",
+   "tool.call",
+   "tool.call{tool=mcp__noctia-mods__mentor_progress}",
+   "ui.render{component=Pane, requestId=noctia-mentor}"
   ],
   "calls": [
    "$.command.register",
    "$.state.get",
    "$.state.set",
+   "$.tool.register",
    "$.ui.open",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
-   "noctia-mods.agents"
+   "noctia-mods.agents",
+   "noctia-mods.mentor",
+   "noctia-mods.todos"
   ],
   "stateWrites": [
-   "noctia-mods.agents"
+   "noctia-mods.agents",
+   "noctia-mods.mentor",
+   "noctia-mods.todos"
   ],
   "envReads": [],
   "raw": {
@@ -137,7 +230,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: noctia-mods.agents"
+     "types ./types/index.d.ts declares state: noctia-mods.agents, noctia-mods.todos, noctia-mods.mentor"
     ],
     "gatingHooks": []
    },
@@ -148,18 +241,45 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=team}, agent.spawn, ui.render{component=Pane, requestId=noctia-team}, ui.render{component=ToolUse}",
-      "./register.tsx answers its own command: command.run{command=team}",
+      "./register.tsx hooks: session.start, command.run{command=team}, agent.spawn, ui.render{component=Pane, requestId=noctia-team}, ui.render{component=ToolUse}, tool.call{tool=TodoWrite}, ui.render{component=Pane, requestId=noctia-tasks}, tool.call, tool.call{tool=mcp__noctia-mods__mentor_progress}, ui.render{component=Pane, requestId=noctia-mentor}",
+      "./register.tsx gating hook without .catch: command.run{command=team}",
       "./register.tsx gating hook without .catch: agent.spawn",
-      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.ui.open, $.ui.resolve",
-      "./register.tsx state writes: noctia-mods.agents",
-      "./register.tsx state reads: noctia-mods.agents"
+      "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__noctia-mods__mentor_progress}",
+      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: noctia-mods.agents, noctia-mods.mentor, noctia-mods.todos",
+      "./register.tsx state reads: noctia-mods.agents, noctia-mods.mentor, noctia-mods.todos"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=team}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TodoWrite}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__noctia-mods__mentor_progress}",
        "hasCatch": false
       }
      ]
@@ -167,5 +287,5 @@
    ]
   }
  },
- "sourceHash": "e482395be5e19052"
+ "sourceHash": "8cfb0dee89d3cdaa"
 }

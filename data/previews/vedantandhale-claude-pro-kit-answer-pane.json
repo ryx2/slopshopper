@@ -1,6 +1,6 @@
 {
  "slug": "vedantandhale-claude-pro-kit-answer-pane",
- "generatedAt": "2026-10-06T05:28:18.760Z",
+ "generatedAt": "2026-10-08T15:53:07.173Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -26,6 +26,18 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "eli5"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "plan-page"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -36,13 +48,21 @@
   "commands": [
    {
     "name": "pages",
-    "description": "Answer pane: /pages lists the pages of this session · /pages auto on|off"
+    "description": "Answer pane: /pages · /pages auto on|off · /pages style off|80|strict"
+   },
+   {
+    "name": "eli5",
+    "description": "Answer pane: explain a topic simply, as a page in the side pane"
+   },
+   {
+    "name": "plan-page",
+    "description": "Answer pane: a plan with decisions in the side pane before Claude builds"
    }
   ],
   "tools": [
    {
     "name": "show_page",
-    "description": "Show an explanation as a visual page in a pane beside the chat. Use it when an answer has 3+ linked concepts, a process or protocol (branches, several parties), a comparison over 3+ dimensions, a hierarchy, or stages over time, or when the user asks to explain visually. Not for short answers, commands to copy, or plain code edits.\nWrite content only, as Markdown: `---` frontmatter with `title:` (optional `subtitle:`), one-line lead, then 3-8 panels as `## A Panel title`, each answering one sub-question. Inside panels use paragraphs, lists, tables (cells may start with ok / no / warn) and fenced blocks:\n```flow LR` lines `A -> B: label` (`-->` dashed, `(Round)` node, `*Highlight` node); ```sequence` with `participants: A, B` then `A -> B: message` and `note A: text`; ```callout warn|note|tip Title` then text; ```tree` indented lines; ```timeline` lines `when | what`; ```limits` lines `label | value / max | unit`; ```kv` lines `key | value`.\nNo HTML, CSS or coordinates. If the result reports an error, fix that line as its example shows and call again. Then reply in 2-3 lines: the conclusion, and that the page is in the pane."
+    "description": "Show an answer as a visual page in a pane beside the chat. Set `kind:` in the frontmatter:\n- explain: an answer with 3+ linked concepts, a process or protocol, a comparison over 3+ dimensions, a hierarchy, or stages over time.\n- plan: before building anything that touches more than a couple of files. Panels are what someone can now do or see, split by behaviour (at most 5); inside, `### How` / `### Where` with one exhibit each (a diagram, or code with `path:line`). Put 2-5 decisions on the panels they change as ```decision Question? with `- option` lines, the default ending in ` *`. End with a panel `Not changing`. After showing it, stop and wait: the user answers in the pane and sends the response; build only after that.\n- eli5: for someone who knows nothing about the topic. At most 5 panels, a diagram in each, sentences under 15 words, no jargon.\nFormat: `---` frontmatter with `kind:` and `title:` (optional `subtitle:`), a one-line lead, then panels `## A Panel title`. Inside: paragraphs, lists, tables (cells may start with ok / no / warn), and fenced blocks: ```flow LR lines `A -> B: label` (`-->` dashed, `(Round)`, `*Highlight`); ```sequence `participants: A, B` then `A -> B: msg`, `note A: text`; ```callout warn|note|tip Title; ```tree indented lines; ```timeline `when | what`; ```limits `label | value / max | unit`; ```kv `key | value`.\nWrite plainly: short sentences, active voice, one idea each. No HTML or CSS. If the result reports an error, fix that line as shown and call again; style warnings are optional to fix, once. Then reply in 2-3 lines."
    }
   ],
   "panes": [
@@ -51,17 +71,21 @@
     "title": "Pages"
    }
   ],
-  "toasts": [],
+  "toasts": [
+   "Usage: /eli5 <topic>",
+   "Usage: /plan-page <what to build>"
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.tool.register": 1,
-   "$.command.register": 1,
+   "$.command.register": 3,
    "$.state.get": 4,
    "$.state.set": 1,
    "$.ui.open": 1,
-   "$.ui.resolve": 1
+   "$.ui.toast": 2,
+   "$.ui.resolve": 2
   },
   "timers": [],
   "sites": {
@@ -89,7 +113,7 @@
          "dimColor": true
         },
         "children": [
-         "No pages yet. Ask Claude to explain something visually."
+         "No pages yet. Try /eli5 <topic> or /plan-page <task>."
         ]
        }
       ]
@@ -111,7 +135,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(answer-pane)",
-   "/pages → "
+   "/pages → ",
+   "/eli5 → ",
+   "/plan-page → "
   ],
   "console": [],
   "warnings": []
@@ -125,9 +151,12 @@
    "tool.describe{tool=mcp__answer-pane__show_page}",
    "tool.call{tool=mcp__answer-pane__show_page}",
    "command.run{command=pages}",
+   "command.run{command=eli5}",
+   "command.run{command=plan-page}",
    "ui.render{component=Pane, requestId=answer-pane}"
   ],
   "calls": [
+   "$.clock.after (via ask)",
    "$.clock.now (via render)",
    "$.command.register",
    "$.env.get (via openInBrowser",
@@ -136,6 +165,8 @@
    "$.fs.write (via render)",
    "$.process.run (via openInBrowser",
    "render)",
+   "$.prompt.fill",
+   "$.prompt.submit (via ask)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
@@ -148,11 +179,13 @@
   "stateReads": [
    "answer-pane.currentId",
    "answer-pane.pages",
+   "answer-pane.replies",
    "answer-pane.view"
   ],
   "stateWrites": [
    "answer-pane.currentId",
    "answer-pane.pages",
+   "answer-pane.replies",
    "answer-pane.view"
   ],
   "envReads": [
@@ -164,34 +197,47 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/vedantandhale-claude-pro-kit-answer-pane/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/vedantandhale-claude-pro-kit-answer-pane/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vedantandhale-claude-pro-kit-answer-pane/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vedantandhale-claude-pro-kit-answer-pane/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: answer-pane.pages, answer-pane.currentId, answer-pane.view"
-    ]
+     "types ./types/index.d.ts declares state: answer-pane.pages, answer-pane.currentId, answer-pane.view, answer-pane.replies"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vedantandhale-claude-pro-kit-answer-pane/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vedantandhale-claude-pro-kit-answer-pane/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.describe{tool=mcp__answer-pane__show_page}, tool.call{tool=mcp__answer-pane__show_page}, command.run{command=pages}, ui.render{component=Pane, requestId=answer-pane}",
-      "./register.tsx calls: $.clock.now (via render), $.command.register, $.env.get (via openInBrowser, pagesDir), $.fs.read (via render), $.fs.write (via render), $.process.run (via openInBrowser, render), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx hooks: session.start, tool.describe{tool=mcp__answer-pane__show_page}, tool.call{tool=mcp__answer-pane__show_page}, command.run{command=pages}, command.run{command=eli5}, command.run{command=plan-page}, ui.render{component=Pane, requestId=answer-pane}",
+      "./register.tsx answers its own command: command.run{command=pages}",
+      "./register.tsx answers its own command: command.run{command=eli5}",
+      "./register.tsx answers its own command: command.run{command=plan-page}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__answer-pane__show_page}",
+      "./register.tsx calls: $.clock.after (via ask), $.clock.now (via render), $.command.register, $.env.get (via openInBrowser, pagesDir), $.fs.read (via render), $.fs.write (via render), $.process.run (via openInBrowser, render), $.prompt.fill, $.prompt.submit (via ask), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE, XDG_CURRENT_DESKTOP",
-      "./register.tsx state writes: answer-pane.currentId, answer-pane.pages, answer-pane.view",
-      "./register.tsx state reads: answer-pane.currentId, answer-pane.pages, answer-pane.view"
+      "./register.tsx state writes: answer-pane.currentId, answer-pane.pages, answer-pane.replies, answer-pane.view",
+      "./register.tsx state reads: answer-pane.currentId, answer-pane.pages, answer-pane.replies, answer-pane.view"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__answer-pane__show_page}",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "12add9adf3bd5237"
+ "sourceHash": "8d1c1fa11d2a68d2"
 }

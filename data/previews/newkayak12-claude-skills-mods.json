@@ -1,17 +1,11 @@
 {
  "slug": "newkayak12-claude-skills-mods",
- "generatedAt": "2026-10-07T15:21:52.402Z",
+ "generatedAt": "2026-10-08T15:53:12.515Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
-   },
-   {
-    "event": "ui.render",
-    "matcher": {
-     "component": "AbovePrompt"
-    }
    },
    {
     "event": "tool.call",
@@ -38,10 +32,19 @@
     "event": "turn.complete"
    },
    {
-    "event": "session.end"
+    "event": "command.run",
+    "matcher": {
+     "command": "reap"
+    }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "reap",
+    "description": "Stop this session's unfinished agents and claude -p children (asks first)",
+    "output": "nothing to reap.\nclaude -p not checked: engine pid unknown"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -49,27 +52,16 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.surfaces": 2,
-   "$.session.root": 1,
-   "$.clock.every": 1,
-   "$.process.run": 3,
+   "$.session.surfaces": 3,
+   "$.command.register": 1,
    "$.session.repo": 5,
-   "$.state.get": 2,
+   "$.process.run": 4,
+   "$.agent.list": 2,
    "$.ui.status": 1
   },
-  "timers": [
-   {
-    "kind": "every",
-    "ms": 5000
-   }
-  ],
-  "sites": {
-   "AbovePrompt": {
-    "ok": "engine"
-   }
-  },
+  "timers": [],
+  "sites": {},
   "script": [
-   "$.process.run(node /plugins/mods/hooks/runs.mjs /work/app) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -82,7 +74,10 @@
    "tool.call Bash cat .env",
    "$.process.run(sh -c echo $PPID) → exit 0",
    "$.process.run(ps -A -o pid=,ppid=,command=) → exit 0",
-   "turn.complete"
+   "turn.complete",
+   "$.process.run(sh -c echo $PPID) → exit 0",
+   "$.process.run(ps -A -o pid=,ppid=,command=) → exit 0",
+   "/reap → nothing to reap.\nclaude -p not checked: engine pid unknown"
   ],
   "console": [],
   "warnings": []
@@ -95,35 +90,28 @@
   ],
   "hooks": [
    "session.start",
-   "ui.render{component=AbovePrompt}",
    "tool.call{tool=Skill}",
    "tool.call{tool=Agent}",
    "tool.call",
    "tool.call{tool=Bash}",
    "turn.complete",
-   "session.end"
+   "command.run{command=reap}"
   ],
   "calls": [
-   "$.clock.every",
+   "$.agent.list",
+   "$.command.register",
    "$.fs.read",
    "$.process.run",
    "$.session.cwd",
    "$.session.repo",
-   "$.session.root",
    "$.session.surfaces",
-   "$.state.get",
-   "$.state.set",
+   "$.tool.call",
    "$.ui.ask",
-   "$.ui.resolve",
    "$.ui.status",
    "$.ui.toast"
   ],
-  "stateReads": [
-   "mods.runs"
-  ],
-  "stateWrites": [
-   "mods.runs"
-  ],
+  "stateReads": [],
+  "stateWrites": [],
   "envReads": [],
   "raw": {
    "success": true,
@@ -140,10 +128,7 @@
       "code": null
      }
     ],
-    "notes": [
-     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: mods.runs"
-    ],
+    "notes": [],
     "gatingHooks": []
    },
    "contents": [
@@ -153,14 +138,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mod.tsx hooks: session.start, ui.render{component=AbovePrompt}, tool.call{tool=Skill}, tool.call{tool=Agent}, tool.call, tool.call{tool=Bash}, turn.complete, session.end",
+      "./mod.tsx hooks: session.start, tool.call{tool=Skill}, tool.call{tool=Agent}, tool.call, tool.call{tool=Bash}, turn.complete, command.run{command=reap}",
+      "./mod.tsx answers its own command: command.run{command=reap}",
       "./mod.tsx gating hook with .catch: tool.call{tool=Skill}",
       "./mod.tsx gating hook with .catch: tool.call{tool=Agent}",
       "./mod.tsx gating hook with .catch: tool.call",
       "./mod.tsx gating hook with .catch: tool.call{tool=Bash}",
-      "./mod.tsx calls: $.clock.every, $.fs.read, $.process.run, $.session.cwd, $.session.repo, $.session.root, $.session.surfaces, $.state.get, $.state.set, $.ui.ask, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./mod.tsx state writes: mods.runs",
-      "./mod.tsx state reads: mods.runs"
+      "./mod.tsx calls: $.agent.list, $.command.register, $.fs.read, $.process.run, $.session.cwd, $.session.repo, $.session.surfaces, $.tool.call, $.ui.ask, $.ui.status, $.ui.toast"
      ],
      "gatingHooks": [
       {
@@ -192,5 +176,5 @@
    ]
   }
  },
- "sourceHash": "e2269af0a27ab2d7"
+ "sourceHash": "c9b4f255ebb90560"
 }

@@ -1,11 +1,20 @@
 {
  "slug": "schalkneethling-claude-chef",
- "generatedAt": "2026-10-07T15:23:52.032Z",
+ "generatedAt": "2026-10-08T15:54:41.304Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "turn.start"
@@ -33,7 +42,7 @@
    {
     "name": "chef",
     "description": "Show a station of the chef tray, or rescan your Claude Code history with backfill.",
-    "argumentHint": "[usage|trend|breakdown|activity|backfill]",
+    "argumentHint": "[usage|trend|breakdown|activity|context|backfill]",
     "immediate": true,
     "output": "Chef tray: trend"
    }
@@ -45,11 +54,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.usage": 2,
+   "$.session.usage": 4,
    "$.session.root": 1,
    "$.session.model": 2,
    "$.store.get": 5,
-   "$.state.get": 22,
+   "$.state.get": 25,
    "$.state.set": 13,
    "$.clock.now": 6,
    "$.store.keys": 2,
@@ -58,6 +67,7 @@
    "$.clock.after": 1,
    "$.session.id": 1,
    "$.store.set": 2,
+   "$.fs.stat": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -150,6 +160,17 @@
           "key": "station-activity",
           "label": "Activity",
           "hotkey": "4",
+          "variant": "secondary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "station-context",
+          "label": "Context",
+          "hotkey": "5",
           "variant": "secondary",
           "onPress": "[fn]"
          },
@@ -1126,6 +1147,9 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "turn.step",
+   "classic.Stop",
+   "session.end",
    "turn.start",
    "session.measure",
    "turn.complete",
@@ -1137,10 +1161,15 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
+   "$.command.run (via runContextAction)",
    "$.env.get (via projectsDirectory)",
    "$.fs.list (via listTranscripts)",
-   "$.fs.read (via scanWithFs)",
-   "$.process.run (via scanWithNode)",
+   "$.fs.read (via readTranscriptTail",
+   "scanWithFs)",
+   "$.fs.stat (via readTranscriptTail)",
+   "$.process.run (via readTranscriptTail",
+   "scanWithNode)",
+   "$.session.compact (via runContextAction)",
    "$.session.id",
    "$.session.model",
    "$.session.root",
@@ -1155,6 +1184,9 @@
   ],
   "stateReads": [
    "chef-station.backfillStatus",
+   "chef-station.cache",
+   "chef-station.context",
+   "chef-station.contextAction",
    "chef-station.ledger",
    "chef-station.live",
    "chef-station.now",
@@ -1163,6 +1195,9 @@
   ],
   "stateWrites": [
    "chef-station.backfillStatus",
+   "chef-station.cache",
+   "chef-station.context",
+   "chef-station.contextAction",
    "chef-station.ledger",
    "chef-station.live",
    "chef-station.now",
@@ -1185,7 +1220,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: chef-station.station, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.backfillStatus"
+     "types ./types/index.d.ts declares state: chef-station.station, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.backfillStatus"
     ],
     "gatingHooks": []
    },
@@ -1196,18 +1231,26 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, session.measure, turn.complete, command.run{command=chef}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, turn.step, classic.Stop, session.end, turn.start, session.measure, turn.complete, command.run{command=chef}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=chef}",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via projectsDirectory), $.fs.list (via listTranscripts), $.fs.read (via scanWithFs), $.process.run (via scanWithNode), $.session.id, $.session.model, $.session.root, $.session.usage, $.state.get, $.state.set, $.store.delete (via loadLedger), $.store.get, $.store.keys (via loadLedger), $.store.set, $.ui.resolve",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via runContextAction), $.env.get (via projectsDirectory), $.fs.list (via listTranscripts), $.fs.read (via readTranscriptTail, scanWithFs), $.fs.stat (via readTranscriptTail), $.process.run (via readTranscriptTail, scanWithNode), $.session.compact (via runContextAction), $.session.id, $.session.model, $.session.root, $.session.usage, $.state.get, $.state.set, $.store.delete (via loadLedger), $.store.get, $.store.keys (via loadLedger), $.store.set, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./register.tsx state writes: chef-station.backfillStatus, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station",
-      "./register.tsx state reads: chef-station.backfillStatus, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station"
+      "./register.tsx state writes: chef-station.backfillStatus, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station",
+      "./register.tsx state reads: chef-station.backfillStatus, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      }
+     ]
     }
    ]
   }
  },
- "sourceHash": "e8aeaf7fde41791e"
+ "sourceHash": "f2e4fbb662565744"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "madjagstudios-grounded-engineering-grounded-engineering",
- "generatedAt": "2026-10-07T15:22:27.836Z",
+ "generatedAt": "2026-10-08T15:53:31.823Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,6 +20,21 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "grounded-link"
+    }
+   },
+   {
+    "event": "command.describe",
+    "matcher": {
+     "command": "grounded-link"
+    }
+   },
+   {
+    "event": "ui.message"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -37,6 +52,13 @@
     "name": "grounded-skills",
     "description": "Open Grounded Engineering: reviewed skill repos",
     "output": "Grounded Engineering opened on Skill repos."
+   },
+   {
+    "name": "grounded-link",
+    "description": "Print a Grounded Engineering link",
+    "argumentHint": "[url]",
+    "immediate": true,
+    "output": "Not a link the Grounded pane shows."
    }
   ],
   "tools": [],
@@ -51,12 +73,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
+   "$.command.register": 3,
    "$.fs.list": 9,
-   "$.fs.read": 10,
+   "$.fs.read": 11,
    "$.fs.exists": 39,
-   "$.state.get": 21,
-   "$.state.set": 12,
+   "$.state.get": 24,
+   "$.state.set": 14,
    "$.ui.open": 2,
    "$.ui.resolve": 1
   },
@@ -68,13 +90,14 @@
      "tree": {
       "type": "Box",
       "props": {
-       "key": "catalog-error"
+       "key": "catalog-error",
+       "flexDirection": "column"
       },
       "children": [
        {
         "type": "Text",
         "props": {
-         "color": "red"
+         "color": "error"
         },
         "children": [
          "catalog missing or invalid: Error: ENOENT: no such file /plugins/grounded-engineering/catalog.json. Reinstall the plugin: /plugin install grounded-engineering@grounded-engineering"
@@ -101,7 +124,8 @@
    "$.ui.open(grounded)",
    "/grounded → Grounded Engineering opened on Practices.",
    "$.ui.open(grounded)",
-   "/grounded-skills → Grounded Engineering opened on Skill repos."
+   "/grounded-skills → Grounded Engineering opened on Skill repos.",
+   "/grounded-link → Not a link the Grounded pane shows."
   ],
   "console": [],
   "warnings": []
@@ -116,11 +140,15 @@
    "session.start",
    "command.run{command=grounded}",
    "command.run{command=grounded-skills}",
+   "command.run{command=grounded-link}",
+   "command.describe{command=grounded-link}",
+   "ui.message",
    "ui.render{component=Pane, requestId=grounded}"
   ],
   "calls": [
    "$.command.register",
-   "$.command.run",
+   "$.command.run (via runSkill",
+   "showLink)",
    "$.fs.exists (via hostOf)",
    "$.fs.list (via hostOf)",
    "$.fs.read (via hostOf)",
@@ -128,11 +156,13 @@
    "$.state.set",
    "$.ui.open (via openOn)",
    "$.ui.resolve",
-   "$.ui.toast"
+   "$.ui.toast (via runSkill",
+   "showLink)"
   ],
   "stateReads": [
    "grounded-engineering.adoption",
    "grounded-engineering.category",
+   "grounded-engineering.collapsed",
    "grounded-engineering.query",
    "grounded-engineering.screen",
    "grounded-engineering.selected",
@@ -144,6 +174,7 @@
   "stateWrites": [
    "grounded-engineering.adoption",
    "grounded-engineering.category",
+   "grounded-engineering.collapsed",
    "grounded-engineering.query",
    "grounded-engineering.screen",
    "grounded-engineering.selected",
@@ -164,7 +195,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: grounded-engineering.screen, grounded-engineering.selected, grounded-engineering.query, grounded-engineering.category, grounded-engineering.tag, grounded-engineering.sort, grounded-engineering.showSignals, grounded-engineering.signals, grounded-engineering.adoption"
+     "types ./types/index.d.ts declares state: grounded-engineering.screen, grounded-engineering.selected, grounded-engineering.query, grounded-engineering.category, grounded-engineering.tag, grounded-engineering.sort, grounded-engineering.showSignals, grounded-engineering.collapsed, grounded-engineering.signals, grounded-engineering.adoption"
     ],
     "gatingHooks": []
    },
@@ -175,17 +206,26 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=grounded}, command.run{command=grounded-skills}, ui.render{component=Pane, requestId=grounded}",
+      "./register.tsx hooks: session.start, command.run{command=grounded}, command.run{command=grounded-skills}, command.run{command=grounded-link}, command.describe{command=grounded-link}, ui.message, ui.render{component=Pane, requestId=grounded}",
       "./register.tsx answers its own command: command.run{command=grounded}",
       "./register.tsx answers its own command: command.run{command=grounded-skills}",
-      "./register.tsx calls: $.command.register, $.command.run, $.fs.exists (via hostOf), $.fs.list (via hostOf), $.fs.read (via hostOf), $.state.get, $.state.set, $.ui.open (via openOn), $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: grounded-engineering.adoption, grounded-engineering.category, grounded-engineering.query, grounded-engineering.screen, grounded-engineering.selected, grounded-engineering.showSignals, grounded-engineering.signals, grounded-engineering.sort, grounded-engineering.tag",
-      "./register.tsx state reads: grounded-engineering.adoption, grounded-engineering.category, grounded-engineering.query, grounded-engineering.screen, grounded-engineering.selected, grounded-engineering.showSignals, grounded-engineering.signals, grounded-engineering.sort, grounded-engineering.tag"
+      "./register.tsx gating hook without .catch: command.run{command=grounded-link}",
+      "./register.tsx calls: $.command.register, $.command.run (via runSkill, showLink), $.fs.exists (via hostOf), $.fs.list (via hostOf), $.fs.read (via hostOf), $.state.get, $.state.set, $.ui.open (via openOn), $.ui.resolve, $.ui.toast (via runSkill, showLink)",
+      "./register.tsx state writes: grounded-engineering.adoption, grounded-engineering.category, grounded-engineering.collapsed, grounded-engineering.query, grounded-engineering.screen, grounded-engineering.selected, grounded-engineering.showSignals, grounded-engineering.signals, grounded-engineering.sort, grounded-engineering.tag",
+      "./register.tsx state reads: grounded-engineering.adoption, grounded-engineering.category, grounded-engineering.collapsed, grounded-engineering.query, grounded-engineering.screen, grounded-engineering.selected, grounded-engineering.showSignals, grounded-engineering.signals, grounded-engineering.sort, grounded-engineering.tag",
+      "./register.tsx surface modules: hooks/client/app.tsx"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=grounded-link}",
+       "hasCatch": false
+      }
+     ]
     }
    ]
   }
  },
- "sourceHash": "75d86ccc561c4433"
+ "sourceHash": "43022e15cc2e7eb6"
 }

@@ -1,9 +1,51 @@
 {
  "slug": "flaviomartil-herdr-jev-harness",
- "generatedAt": "2026-10-07T15:22:19.090Z",
+ "generatedAt": "2026-10-08T15:53:27.033Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "Bash"
+     ]
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "answer"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt",
+     "surface": [
+      "terminal",
+      "desktop"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -30,6 +72,33 @@
     "matcher": {
      "agent": "harness:mechanic"
     }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "harness:consultant"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "harness:codex"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__harness__codex_progress$/"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "command.run",
@@ -68,6 +137,15 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Agent"
+    }
+   },
+   {
+    "event": "session.measure"
+   },
+   {
     "event": "tool.call"
    },
    {
@@ -90,18 +168,18 @@
   "commands": [
    {
     "name": "harness",
-    "description": "Show the Herdr-Jev harness plan and workers in a pane",
+    "description": "Show the Herdr-Jev harness plan and workers in a pane; /harness review runs the harness review",
     "output": "Harness pane opened. No plan yet: the advisor starts one with harness_plan."
    }
   ],
   "tools": [
    {
     "name": "harness_plan",
-    "description": "Plan an objective as bounded tasks. Herdr-Jev assigns each task a role and the models come from herdr-jev models list (reader or mechanic for small work, implementer for code, advisor for architectural work); implementer and mechanic tasks get an independent review by the reviewer from Herdr-Jev. Returns the plan with stable task ids. Main session only."
+    "description": "Plan an objective as bounded tasks. Herdr-Jev assigns each task a role and the models come from herdr-jev models list (reader or mechanic for small work, implementer for code, advisor for architectural work); implementer and mechanic tasks get an independent review by the reviewer from Herdr-Jev. When the AI Harness delegation plan returns a consult stage for the complexity of a task, a read-only consultant runs first and that task waits for you: read its recommendation with harness_status, then decide and start it with harness_run taskId. Returns the plan with stable task ids. Main session only."
    },
    {
     "name": "harness_run",
-    "description": "Start harness workers as background subagents. With taskId, run that task (an advisor task is marked done instead). Without it, run every proposed task whose dependencies are done, up to the worker limit. Safe to call twice: a running task returns its existing agent id. Main session only."
+    "description": "Start harness workers as background subagents. With taskId, run that task (an advisor task is marked done instead). Without it, run every proposed task whose dependencies are done and that has no consult, up to the worker limit. Safe to call twice: a running task returns its existing agent id. Main session only."
    },
    {
     "name": "harness_status",
@@ -124,13 +202,14 @@
    "$.command.register": 1,
    "$.tool.register": 3,
    "$.session.model": 1,
-   "$.state.get": 16,
-   "$.state.set": 3,
+   "$.state.get": 30,
+   "$.state.set": 11,
    "$.session.id": 1,
    "$.store.get": 1,
    "$.process.run": 3,
    "$.ui.log": 1,
    "$.session.cwd": 2,
+   "$.session.root": 3,
    "$.ui.open": 1,
    "$.ui.resolve": 1,
    "$.clock.now": 1
@@ -187,6 +266,46 @@
           "children": []
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "usage",
+           "flexDirection": "row",
+           "columnGap": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "context",
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "ctx █████░░░░░ 97k/200k"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "five_hour",
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "5h 31%"
+            ]
+           }
+          ]
+         }
+        ]
        }
       ]
      },
@@ -222,11 +341,23 @@
    "No author information provided. Consider adding author details for plugin attribution"
   ],
   "hooks": [
+   "tool.call{tool=Edit|Write|NotebookEdit|Bash}",
+   "turn.start",
+   "turn.complete{reason=answer}",
+   "ui.render{component=AbovePrompt, surface=terminal|desktop}",
+   "tool.call{tool=Bash}",
+   "tool.check{tool=Bash}",
    "session.start",
    "agent.offer{agent=harness:implementer}",
    "agent.offer{agent=harness:reviewer}",
    "agent.offer{agent=harness:reader}",
    "agent.offer{agent=harness:mechanic}",
+   "agent.offer{agent=harness:consultant}",
+   "agent.offer{agent=harness:codex}",
+   "tool.call{tool=/\"^mcp__harness__codex_progress$\"/}",
+   "agent.spawn",
+   "turn.step",
+   "session.end",
    "command.run{command=harness}",
    "classic.SessionStart",
    "prompt.attachment",
@@ -235,30 +366,57 @@
    "tool.call{tool=mcp__harness__harness_plan}",
    "tool.call{tool=mcp__harness__harness_run}",
    "tool.call{tool=mcp__harness__harness_status}",
+   "tool.call{tool=Agent}",
+   "session.measure",
    "tool.call",
    "turn.complete",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=harness}"
   ],
   "calls": [
-   "$.agent.list (via reconcile)",
-   "$.agent.register (via launchPorts)",
+   "$.agent.list (via externalPorts",
+   "reconcile)",
+   "$.agent.register (via launchPorts",
+   "registerCodexAgent)",
    "$.agent.spawn (via launchPorts)",
    "$.clock.after (via scheduleHide)",
    "$.clock.now",
+   "$.clock.sleep (via externalPorts)",
    "$.command.register",
-   "$.process.run (via launchPorts",
+   "$.env.get (via assess",
+   "externalPorts)",
+   "$.fs.exists (via externalPorts)",
+   "$.fs.read (via externalPorts)",
+   "$.process.run (via externalPorts",
+   "git",
+   "launchPorts",
+   "queryStatus",
    "runPort)",
    "$.session.cwd",
-   "$.session.id (via storeKey)",
+   "$.session.id (via codexPrefix",
+   "recordRun",
+   "refreshReview",
+   "storeKey",
+   "storedIds)",
+   "$.session.messages (via externalPorts)",
    "$.session.model",
+   "$.session.root (via mutates",
+   "record)",
    "$.session.surfaces",
-   "$.session.usage (via ownSkills)",
+   "$.session.usage (via liveUsage",
+   "ownSkills)",
    "$.state.get",
    "$.state.set",
-   "$.store.delete (via save)",
-   "$.store.get (via load)",
-   "$.store.set (via save)",
+   "$.store.delete (via externalPorts",
+   "save)",
+   "$.store.get (via externalPorts",
+   "load",
+   "storedIds)",
+   "$.store.keys (via externalPorts)",
+   "$.store.set (via externalPorts",
+   "recordRun",
+   "refreshReview",
+   "save)",
    "$.tool.register",
    "$.ui.close",
    "$.ui.log",
@@ -268,6 +426,10 @@
   ],
   "stateReads": [
    "harness.advisorModel",
+   "harness.claimLog",
+   "harness.claimWarnings",
+   "harness.costs",
+   "harness.external",
    "harness.folds",
    "harness.isExpanded",
    "harness.isHidden",
@@ -275,13 +437,19 @@
    "harness.needsYou",
    "harness.plan",
    "harness.review",
+   "harness.reviewIds",
    "harness.scope",
    "harness.stale",
    "harness.staleNote",
+   "harness.usage",
    "harness.workers"
   ],
   "stateWrites": [
    "harness.advisorModel",
+   "harness.claimLog",
+   "harness.claimWarnings",
+   "harness.costs",
+   "harness.external",
    "harness.folds",
    "harness.isExpanded",
    "harness.isHidden",
@@ -289,12 +457,22 @@
    "harness.needsYou",
    "harness.plan",
    "harness.review",
+   "harness.reviewIds",
    "harness.scope",
    "harness.stale",
    "harness.staleNote",
+   "harness.usage",
    "harness.workers"
   ],
-  "envReads": [],
+  "envReads": [
+   "AI_HARNESS_GENERATED_DIR",
+   "AI_HARNESS_TEST_GUARD",
+   "HERDR_JEV_STATE_DIR",
+   "HERDR_JEV_TEST_GUARD",
+   "HERDR_PLUGIN_ID",
+   "HERDR_PLUGIN_STATE_DIR",
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -312,7 +490,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: harness.plan, harness.workers, harness.needsYou, harness.stale, harness.staleNote, harness.isHidden, harness.advisorModel, harness.review, harness.isReviewRunning, harness.isExpanded, harness.folds, harness.scope"
+     "types ./types/index.d.ts declares state: harness.plan, harness.workers, harness.needsYou, harness.stale, harness.staleNote, harness.isHidden, harness.advisorModel, harness.review, harness.isReviewRunning, harness.isExpanded, harness.folds, harness.scope, harness.claimLog, harness.claimWarnings, harness.reviewIds, harness.usage, harness.external, harness.costs"
     ],
     "gatingHooks": []
    },
@@ -323,24 +501,52 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, agent.offer{agent=harness:implementer}, agent.offer{agent=harness:reviewer}, agent.offer{agent=harness:reader}, agent.offer{agent=harness:mechanic}, command.run{command=harness}, classic.SessionStart, prompt.attachment, agent.offer, prompt.submit, tool.call{tool=mcp__harness__harness_plan}, tool.call{tool=mcp__harness__harness_run}, tool.call{tool=mcp__harness__harness_status}, tool.call, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=harness}",
+      "./register.tsx hooks: tool.call{tool=Edit|Write|NotebookEdit|Bash}, turn.start, turn.complete{reason=answer}, ui.render{component=AbovePrompt, surface=terminal|desktop}, tool.call{tool=Bash}, tool.check{tool=Bash}, session.start, agent.offer{agent=harness:implementer}, agent.offer{agent=harness:reviewer}, agent.offer{agent=harness:reader}, agent.offer{agent=harness:mechanic}, agent.offer{agent=harness:consultant}, agent.offer{agent=harness:codex}, tool.call{tool=/\"^mcp__harness__codex_progress$\"/}, agent.spawn, turn.step, session.end, command.run{command=harness}, classic.SessionStart, prompt.attachment, agent.offer, prompt.submit, tool.call{tool=mcp__harness__harness_plan}, tool.call{tool=mcp__harness__harness_run}, tool.call{tool=mcp__harness__harness_status}, tool.call{tool=Agent}, session.measure, tool.call, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=harness}",
       "./register.tsx answers its own command: command.run{command=harness}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Edit|Write|NotebookEdit|Bash}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.check{tool=Bash}",
       "./register.tsx gating hook with .catch: agent.offer{agent=harness:implementer}",
       "./register.tsx gating hook with .catch: agent.offer{agent=harness:reviewer}",
       "./register.tsx gating hook with .catch: agent.offer{agent=harness:reader}",
       "./register.tsx gating hook with .catch: agent.offer{agent=harness:mechanic}",
+      "./register.tsx gating hook with .catch: agent.offer{agent=harness:consultant}",
+      "./register.tsx gating hook with .catch: agent.offer{agent=harness:codex}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^mcp__harness__codex_progress$\"/}",
+      "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: classic.SessionStart",
       "./register.tsx gating hook with .catch: agent.offer",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__harness__harness_plan}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__harness__harness_run}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__harness__harness_status}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Agent}",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via reconcile), $.agent.register (via launchPorts), $.agent.spawn (via launchPorts), $.clock.after (via scheduleHide), $.clock.now, $.command.register, $.process.run (via launchPorts, runPort), $.session.cwd, $.session.id (via storeKey), $.session.model, $.session.surfaces, $.session.usage (via ownSkills), $.state.get, $.state.set, $.store.delete (via save), $.store.get (via load), $.store.set (via save), $.tool.register, $.ui.close, $.ui.log, $.ui.open, $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: harness.advisorModel, harness.folds, harness.isExpanded, harness.isHidden, harness.isReviewRunning, harness.needsYou, harness.plan, harness.review, harness.scope, harness.stale, harness.staleNote, harness.workers",
-      "./register.tsx state reads: harness.advisorModel, harness.folds, harness.isExpanded, harness.isHidden, harness.isReviewRunning, harness.needsYou, harness.plan, harness.review, harness.scope, harness.stale, harness.staleNote, harness.workers"
+      "./register.tsx calls: $.agent.list (via externalPorts, reconcile), $.agent.register (via launchPorts, registerCodexAgent), $.agent.spawn (via launchPorts), $.clock.after (via scheduleHide), $.clock.now, $.clock.sleep (via externalPorts), $.command.register, $.env.get (via assess, externalPorts), $.fs.exists (via externalPorts), $.fs.read (via externalPorts), $.process.run (via externalPorts, git, launchPorts, queryStatus, runPort), $.session.cwd, $.session.id (via codexPrefix, recordRun, refreshReview, storeKey, storedIds), $.session.messages (via externalPorts), $.session.model, $.session.root (via mutates, record), $.session.surfaces, $.session.usage (via liveUsage, ownSkills), $.state.get, $.state.set, $.store.delete (via externalPorts, save), $.store.get (via externalPorts, load, storedIds), $.store.keys (via externalPorts), $.store.set (via externalPorts, recordRun, refreshReview, save), $.tool.register, $.ui.close, $.ui.log, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: AI_HARNESS_GENERATED_DIR, AI_HARNESS_TEST_GUARD, HERDR_JEV_STATE_DIR, HERDR_JEV_TEST_GUARD, HERDR_PLUGIN_ID, HERDR_PLUGIN_STATE_DIR, HOME",
+      "./register.tsx state writes: harness.advisorModel, harness.claimLog, harness.claimWarnings, harness.costs, harness.external, harness.folds, harness.isExpanded, harness.isHidden, harness.isReviewRunning, harness.needsYou, harness.plan, harness.review, harness.reviewIds, harness.scope, harness.stale, harness.staleNote, harness.usage, harness.workers",
+      "./register.tsx state reads: harness.advisorModel, harness.claimLog, harness.claimWarnings, harness.costs, harness.external, harness.folds, harness.isExpanded, harness.isHidden, harness.isReviewRunning, harness.needsYou, harness.plan, harness.review, harness.reviewIds, harness.scope, harness.stale, harness.staleNote, harness.usage, harness.workers"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit|Write|NotebookEdit|Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Bash}",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "agent.offer",
@@ -364,6 +570,30 @@
        "pattern": "agent.offer",
        "hook": "agent.offer{agent=harness:mechanic}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=harness:consultant}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=harness:codex}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__harness__codex_progress$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
       },
       {
        "module": "./register.tsx",
@@ -404,6 +634,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": true
       }
@@ -412,5 +648,5 @@
    ]
   }
  },
- "sourceHash": "44d992bf498ca5d6"
+ "sourceHash": "909bdc4786ef8ed1"
 }

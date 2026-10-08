@@ -1,11 +1,14 @@
 {
  "slug": "cablate-ctx-handoff-mod",
- "generatedAt": "2026-10-07T15:21:31.518Z",
+ "generatedAt": "2026-10-08T15:52:53.986Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "config.set"
@@ -48,13 +51,13 @@
    {
     "name": "handoff",
     "description": "ctx-handoff: status; now / dry / distill / resume / continue / resend / refresh on|off / distill on|off",
-    "output": "context 97400 / threshold 160000 (window 200000)\nCache refresh on, refreshed 0/3 this idle period, timer waiting\nAway handoff: none\nLatest handoff: none\nBackground (last Stop): 0 tasks, 0 one-off schedules, 0 recurring schedules\nBackground notes on (idle refresh, away, before handoff, every 30 messages)\n  Next: in 29 messages, after 55 min idle, or before a handoff\n  Last: none\n  Workspace notes: /Users/dev/.claude/projects/-work-app/memory/ctx-handoff.md (0 memories, 0 rules, 0 rules carried into new conversations)\n  Memories carried in: 0 preferences and corrections in full, 0 facts and locations as titles only, 0 archived (not confirmed for over 30 days, not carried in)\nGuards: 0 on, 0 draft, 0 off\n\nUsage:\n  /handoff                  status\n  /handoff now              create a handoff and /clear now\n  /handoff dry              trial handoff, no /clear\n  /handoff distill          update this workspace's notes now\n  /handoff resume           continue from the away handoff in a new conversation (does /clear)\n  /handoff continue         drop the away handoff and send the held message in the old conversation\n  /handoff resend           resend a handoff that did not arrive (no /clear)\n  /handoff refresh on|off   turn the idle cache refresh on or off\n  /handoff distill on|off   turn background notes on or off\n  /handoff panel            toggle the panel above the input: latest notes changes, delete wrong notes, approve guards\n  /handoff guard           list guards; suggest drafts them from repeated rules; on|off|drop N; mode N deny|remind"
+    "output": "context 97400 / threshold 160000 (window 200000)\nCache refresh on, refreshed 0/3 this idle period, timer waiting\nAway handoff: none\nLatest handoff: none\nBackground (last Stop): 0 tasks, 0 one-off schedules, 0 recurring schedules\nBackground notes on (idle refresh, away, before handoff, every 30 messages)\n  Next: in 29 messages, after 55 min idle, or before a handoff\n  Last: none\n  Workspace notes: /Users/dev/.claude/projects/-work-app/memory/ctx-handoff.md (0 memories, 0 rules, 0 rules carried into new conversations)\n  Memories carried in: 0 preferences and corrections in full, 0 facts and locations as titles only, 0 archived (not confirmed for over 30 days, not carried in)\nGuards: 0 on, 0 draft, 0 off\nNudges: repeated failure on, verify before done on, reply language auto → off\n\nUsage:\n  /handoff                  status\n  /handoff now              create a handoff and /clear now\n  /handoff dry              trial handoff, no /clear\n  /handoff distill          update this workspace's notes now\n  /handoff resume           continue from the away handoff in a new conversation (does /clear)\n  /handoff continue         drop the away handoff and send the held message in the old conversation\n  /handoff resend           resend a handoff that did not arrive (no /clear)\n  /handoff refresh on|off   turn the idle cache refresh on or off\n  /handoff distill on|off   turn background notes on or off\n  /handoff panel            toggle the panel above the input: latest notes changes, delete wrong notes, approve guards, settings\n  /handoff guard           list guards; suggest drafts them from repeated rules; on|off|drop N; mode N deny|remind"
    }
   ],
   "tools": [
    {
     "name": "mark_in_project",
-    "description": "Record where a ctx-handoff rule or guard now lives in this repo (after you wrote it into AGENTS.md, CLAUDE.md or a project hook), or that the user declined. ctx-handoff then stops loading its own copy."
+    "description": "Record where a ctx-handoff rule, procedure or guard now lives in this repo (after you wrote it into AGENTS.md, CLAUDE.md, a project skill or a project hook), or that the user declined. ctx-handoff then stops loading its own copy."
    }
   ],
   "panes": [],
@@ -65,12 +68,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.config.list": 1,
-   "$.settings.read": 2,
+   "$.settings.read": 4,
+   "$.store.get": 32,
    "$.command.register": 1,
    "$.tool.register": 1,
    "$.ui.log": 1,
-   "$.store.get": 29,
    "$.session.id": 7,
    "$.session.turns": 4,
    "$.ui.status": 2,
@@ -79,9 +81,9 @@
    "$.store.keys": 1,
    "$.state.set": 2,
    "$.store.set": 2,
-   "$.env.get": 15,
-   "$.session.root": 5,
-   "$.fs.read": 7,
+   "$.env.get": 18,
+   "$.session.root": 6,
+   "$.fs.read": 8,
    "$.clock.after": 1,
    "$.session.usage": 3
   },
@@ -120,6 +122,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "turn.step",
    "config.set",
    "prompt.context",
    "tool.call",
@@ -135,7 +138,6 @@
    "$.clock.now",
    "$.command.register",
    "$.command.run (via clearAndSubmit)",
-   "$.config.list (via loadConfig)",
    "$.env.get (via claudeDir)",
    "$.fs.exists (via promoteBlock)",
    "$.fs.read (via readText)",
@@ -158,7 +160,8 @@
    "sinceDistill)",
    "$.session.usage",
    "$.settings.read (via detectLang",
-   "loadConfig)",
+   "readSettings",
+   "replyTarget)",
    "$.state.get",
    "$.state.set",
    "$.store.delete",
@@ -209,13 +212,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, config.set, prompt.context, tool.call, ui.render{component=AbovePrompt}, turn.complete, classic.Stop, prompt.submit, command.run{command=handoff|ctx-handoff}",
+      "./register.ts hooks: session.start, turn.step, config.set, prompt.context, tool.call, ui.render{component=AbovePrompt}, turn.complete, classic.Stop, prompt.submit, command.run{command=handoff|ctx-handoff}",
       "./register.ts gating hook without .catch: config.set",
       "./register.ts gating hook without .catch: tool.call",
       "./register.ts gating hook without .catch: classic.Stop",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: command.run{command=handoff|ctx-handoff}",
-      "./register.ts calls: $.agent.list (via onStop), $.clock.after, $.clock.now, $.command.register, $.command.run (via clearAndSubmit), $.config.list (via loadConfig), $.env.get (via claudeDir), $.fs.exists (via promoteBlock), $.fs.read (via readText), $.fs.write (via distill, dropNote, keepNote, markInProject), $.model.complete (via distill, suggestGuards), $.model.fork (via forkWithin), $.prompt.submit (via submitText), $.session.id, $.session.messages (via distill, suggestGuards), $.session.root (via promoteBlock, workspace), $.session.turns (via distill, onStop, recordFailure, sinceDistill), $.session.usage, $.settings.read (via detectLang, loadConfig), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys (via prune), $.store.set, $.tool.register, $.ui.log, $.ui.resolve, $.ui.status (via onStop, showDistillStatus), $.ui.toast",
+      "./register.ts calls: $.agent.list (via onStop), $.clock.after, $.clock.now, $.command.register, $.command.run (via clearAndSubmit), $.env.get (via claudeDir), $.fs.exists (via promoteBlock), $.fs.read (via readText), $.fs.write (via distill, dropNote, keepNote, markInProject), $.model.complete (via distill, suggestGuards), $.model.fork (via forkWithin), $.prompt.submit (via submitText), $.session.id, $.session.messages (via distill, suggestGuards), $.session.root (via promoteBlock, workspace), $.session.turns (via distill, onStop, recordFailure, sinceDistill), $.session.usage, $.settings.read (via detectLang, readSettings, replyTarget), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys (via prune), $.store.set, $.tool.register, $.ui.log, $.ui.resolve, $.ui.status (via onStop, showDistillStatus), $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
       "./register.ts state writes: ctx-handoff.idle, ctx-handoff.panelData, ctx-handoff.panelUi",
@@ -257,5 +260,5 @@
    ]
   }
  },
- "sourceHash": "c42e2d86f757412"
+ "sourceHash": "37e01200e6aa242a"
 }

@@ -1,0 +1,8 @@
+{
+ "slug": "zgeoff-nixie-nixie-hold-http",
+ "files": {
+  "hooks/register.js": "// Holds MARK_HOLD calls on one long-poll to the owner's decision service.\n// The wait sits inside $.http.fetch, a mods API call, so it does not count against the hook's limit.\nasync function readDecision($, url, started) {\n  try {\n    const response = await $.http.fetch(url);\n    return JSON.parse(response.text).decision;\n  } catch (error) {\n    await $.ui.log(`nixie fetch failed after ${Date.now() - started} ms: ${error.message}`, {\n      to: 'debug',\n    });\n    throw error;\n  }\n}\n\nasync function handleToolCall($, e, next) {\n  if (!e.command.includes('MARK_HOLD')) {\n    return next(e);\n  }\n  const base = await $.env.get('NIXIE_DECIDER_URL'),\n    started = Date.now();\n  await $.ui.log(`nixie hold start budget=${JSON.stringify(next.budget)}`, { to: 'debug' });\n  if ((await readDecision($, `${base}/decide?tool_use_id=${e.tool_use_id}`, started)) === 'allow') {\n    return next(e);\n  }\n  return {\n    deny: `nixie-hold-http: the owner refused this command after ${Date.now() - started} ms.`,\n  };\n}\n\nexport function register(on) {\n  on('tool.call', { tool: 'Bash' }, handleToolCall);\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"The nixie-hold-http hooks module\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"nixie-hold-http\",\n  \"version\": \"0.0.0\",\n  \"description\": \"Spike: a tool.call hook that holds a call on a long-poll through the mods API\"\n}"
+ }
+}

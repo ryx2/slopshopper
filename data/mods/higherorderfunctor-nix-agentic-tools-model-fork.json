@@ -1,0 +1,8 @@
+{
+ "slug": "higherorderfunctor-nix-agentic-tools-model-fork",
+ "files": {
+  "hooks/register.ts": "import type { Register } from \"claude-code\";\n\n// Probe mod for the delegate map (claude:dmu_plugin_model). After the main\n// turn completes it calls $.model.fork and $.model.complete once each; the\n// mock sees PLUGIN_FORK_PROBE_5151 / PLUGIN_COMPLETE_PROBE_5252 and records\n// each request's model, effort and tools. Results go to the debug log.\nlet done = false;\nexport const register: Register = (on) => {\n  on(\"turn.complete\", async ($, e, next) => {\n    if (!done && e.agentId === undefined) {\n      done = true;\n      const f = await $.model.fork({\n        prompt: \"PLUGIN_FORK_PROBE_5151 one line\",\n      });\n      $.ui.log(\n        `DMU_FORK ${JSON.stringify({ ok: f.isAnswered, r: f.isAnswered ? f.text : f.reason })}`,\n      );\n      const c = await $.model.complete({\n        model: \"haiku\",\n        prompt: \"PLUGIN_COMPLETE_PROBE_5252 one line\",\n        effort: \"low\",\n        timeoutMs: 20000,\n      });\n      $.ui.log(\n        `DMU_COMPLETE ${JSON.stringify({ ok: c.isAnswered, r: c.isAnswered ? c.text : c.reason })}`,\n      );\n    }\n    return next(e);\n  });\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"model-fork\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Probe: calls $.model.fork and $.model.complete once after the main turn\"\n}"
+ }
+}

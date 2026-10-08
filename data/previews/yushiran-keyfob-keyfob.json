@@ -1,6 +1,6 @@
 {
  "slug": "yushiran-keyfob-keyfob",
- "generatedAt": "2026-10-07T15:24:13.140Z",
+ "generatedAt": "2026-10-08T15:54:57.390Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,9 +17,18 @@
     }
    },
    {
+    "event": "ui.close"
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__keyfob__keyfob_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__keyfob__keyfob_request"
     }
    },
    {
@@ -39,7 +48,11 @@
   "tools": [
    {
     "name": "keyfob_status",
-    "description": "keyfob holds the API tokens (names only, never values). Returns the storage in use, every secret stored or declared by a plugin, each declared group and whether it is complete, and with live=true whether each service still accepts its secrets. Call it before running a command that needs an API token, or when one fails with 401/403. Run such commands as `keyfob run <group|name> -- <command>`; the user adds a token by pasting `keyfob: <name> <token>` into the chat."
+    "description": "keyfob holds the API tokens (names only, never values). Returns the storage in use, every secret stored or declared by a plugin, each declared group and whether it is complete, and with live=true whether each service still accepts its secrets. Call it before running a command that needs an API token, or when one fails with 401/403. Run such commands as `keyfob run <group|name> -- <command>`; to get a missing one, call keyfob_request."
+   },
+   {
+    "name": "keyfob_request",
+    "description": "Ask the person for an API key, token or password without it entering the conversation. Opens the /keyfob panel on that secret with a masked field; returns at once. If it answers `opened`, say in one line what to paste, then end your turn: when the person stores it (or puts it off) a prompt from keyfob says so and you go on. `stored` means it is already there: run the command as `keyfob run <name>=<VAR> -- <command>`. Never ask for a secret in chat. Name it `<service>-<kind>` (openreview-password, github-token, openalex-key) and reuse a name keyfob_status already lists."
    }
   ],
   "panes": [
@@ -54,7 +67,7 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.tool.register": 1,
+   "$.tool.register": 2,
    "$.process.run": 4,
    "$.ui.open": 1,
    "$.ui.invalidate": 2,
@@ -72,45 +85,62 @@
       },
       "children": [
        {
+        "type": "Box",
+        "props": {
+         "key": "head",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end",
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "🔑 keyfob"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end",
+           "color": "subtle"
+          },
+          "children": [
+           ""
+          ]
+         }
+        ]
+       },
+       {
         "type": "Text",
         "props": {
-         "color": "red"
+         "wrap": "truncate-end",
+         "color": "error"
         },
         "children": [
          "✗ exit 0"
         ]
        },
        {
-        "type": "Text",
-        "props": {},
-        "children": [
-         ""
-        ]
-       },
-       {
-        "type": "Input",
-        "props": {
-         "key": "name",
-         "label": "new secret name: ",
-         "placeholder": "e.g. openai-key, then Enter",
-         "submitLabel": "next",
-         "onSubmit": "[fn]"
-        },
-        "children": []
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         ""
-        ]
-       },
-       {
         "type": "Box",
         "props": {
-         "gap": 1
+         "key": "bar",
+         "gap": 1,
+         "marginTop": 1
         },
         "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "new",
+           "label": "+ new",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
          {
           "type": "Button",
           "props": {
@@ -143,10 +173,11 @@
        {
         "type": "Text",
         "props": {
-         "dimColor": true
+         "wrap": "truncate-end",
+         "color": "subtle"
         },
         "children": [
-         "In chat: paste `keyfob: <name> <token>`. Commands: keyfob run <group|name> -- <command>."
+         "Values never leave this panel · keyfob run <name> -- <command>"
         ]
        }
       ]
@@ -185,12 +216,15 @@
    "session.start",
    "prompt.submit",
    "command.run{command=keyfob}",
+   "ui.close",
    "tool.call{tool=mcp__keyfob__keyfob_status}",
+   "tool.call{tool=mcp__keyfob__keyfob_request}",
    "ui.render{component=Pane, requestId=keyfob}"
   ],
   "calls": [
    "$.command.register",
    "$.process.run (via kf)",
+   "$.prompt.submit (via tell)",
    "$.tool.register",
    "$.ui.close",
    "$.ui.invalidate",
@@ -220,11 +254,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, prompt.submit, command.run{command=keyfob}, tool.call{tool=mcp__keyfob__keyfob_status}, ui.render{component=Pane, requestId=keyfob}",
+      "./register.js hooks: session.start, prompt.submit, command.run{command=keyfob}, ui.close, tool.call{tool=mcp__keyfob__keyfob_status}, tool.call{tool=mcp__keyfob__keyfob_request}, ui.render{component=Pane, requestId=keyfob}",
       "./register.js answers its own command: command.run{command=keyfob}",
       "./register.js gating hook with .catch: prompt.submit",
+      "./register.js gating hook with .catch: ui.close",
       "./register.js gating hook with .catch: tool.call{tool=mcp__keyfob__keyfob_status}",
-      "./register.js calls: $.command.register, $.process.run (via kf), $.tool.register, $.ui.close, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast"
+      "./register.js gating hook with .catch: tool.call{tool=mcp__keyfob__keyfob_request}",
+      "./register.js calls: $.command.register, $.process.run (via kf), $.prompt.submit (via tell), $.tool.register, $.ui.close, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast"
      ],
      "gatingHooks": [
       {
@@ -235,8 +271,20 @@
       },
       {
        "module": "./register.js",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.js",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__keyfob__keyfob_status}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__keyfob__keyfob_request}",
        "hasCatch": true
       }
      ]
@@ -244,5 +292,5 @@
    ]
   }
  },
- "sourceHash": "c9062fd932bd58f0"
+ "sourceHash": "24211f220625d59"
 }

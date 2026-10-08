@@ -1,6 +1,6 @@
 {
  "slug": "herman925-925-cc-plugins-team-orchestrator",
- "generatedAt": "2026-10-07T15:22:21.258Z",
+ "generatedAt": "2026-10-08T15:53:27.944Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -56,7 +56,37 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "SendMessage"
+    }
+   },
+   {
     "event": "turn.complete"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "SendMessage"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__team-orchestrator__team_message"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__team-orchestrator__team_message"
+    }
    },
    {
     "event": "tool.call",
@@ -110,6 +140,10 @@
     "description": "Put ALREADY RUNNING sessions into the roster without launching anything. members ordered boss-first; handle is the Orca terminal handle (may be empty: it is then found by tab title); address is the session name SendMessage uses (default: name); sessionId optional (empty: found from the transcript whose title is the name; needed for restart-based rename/model/effort); boss is a member name or \"user\"."
    },
    {
+    "name": "team_message",
+    "description": "Send a message to a teammate on the roster, starting it first when it has not started yet or was closed (it is then briefed before the message arrives). Use this, not SendMessage, for messages to your direct reports. to is the member name."
+   },
+   {
     "name": "team_remove",
     "description": "Take a whole team off the roster (memory and the roster file). Closes no terminal and stops no session."
    },
@@ -129,19 +163,23 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.tool.register": 5,
+   "$.tool.register": 6,
    "$.ui.close": 2,
-   "$.state.get": 32,
-   "$.session.root": 4,
-   "$.fs.exists": 4,
-   "$.clock.every": 2,
+   "$.state.get": 40,
+   "$.session.root": 21,
+   "$.fs.exists": 21,
+   "$.clock.every": 3,
    "$.state.set": 1,
    "$.ui.resolve": 2
   },
   "timers": [
    {
     "kind": "every",
-    "ms": 15000
+    "ms": 30000
+   },
+   {
+    "kind": "every",
+    "ms": 60000
    },
    {
     "kind": "every",
@@ -1127,7 +1165,13 @@
    "tool.call{tool=mcp__team-orchestrator__member_remove}",
    "tool.call{tool=mcp__team-orchestrator__member_move}",
    "tool.call{tool=?}",
+   "tool.call{tool=SendMessage}",
    "turn.complete",
+   "turn.start",
+   "tool.call",
+   "tool.describe{tool=SendMessage}",
+   "tool.describe{tool=mcp__team-orchestrator__team_message}",
+   "tool.call{tool=mcp__team-orchestrator__team_message}",
    "tool.call{tool=mcp__team-orchestrator__team_launch}",
    "command.run{command=team}",
    "prompt.submit",
@@ -1137,28 +1181,45 @@
   ],
   "calls": [
    "$.clock.every",
+   "$.clock.sleep (via launch)",
    "$.command.register",
    "$.env.get (via claudeDirs",
    "transcripts)",
    "$.fs.exists (via exclude",
+   "migrate",
    "pull",
-   "share)",
+   "readQueue",
+   "readStatus",
+   "readTeamSettings",
+   "share",
+   "writeRoles)",
    "$.fs.list (via transcripts)",
    "$.fs.read (via exclude",
+   "migrate",
    "pull",
-   "share)",
+   "readQueue",
+   "readStatus",
+   "readTeamSettings",
+   "share",
+   "writeRoles)",
    "$.fs.write (via exclude",
-   "share)",
-   "$.process.run (via exclude",
+   "migrate",
+   "share",
+   "writeQueue",
+   "writeRoles",
+   "writeStatusOf",
+   "writeTeamSettings)",
+   "$.process.run (via countLeftovers",
+   "exclude",
    "orca",
    "rosterView",
    "tails)",
    "$.prompt.submit (via emptyState",
    "formView)",
-   "$.session.id (via whoAmI)",
+   "$.session.id",
    "$.session.root (via exclude",
    "refresh",
-   "teamFile)",
+   "rootOf)",
    "$.state.get",
    "$.state.set",
    "$.tool.call",
@@ -1167,7 +1228,8 @@
    "$.ui.open",
    "$.ui.panes (via docked)",
    "$.ui.resolve",
-   "$.ui.toast (via guard)"
+   "$.ui.toast (via deliver",
+   "guard)"
   ],
   "stateReads": [
    "team-orchestrator.act",
@@ -1178,6 +1240,7 @@
    "team-orchestrator.menu",
    "team-orchestrator.note",
    "team-orchestrator.settings",
+   "team-orchestrator.spawn",
    "team-orchestrator.teamName",
    "team-orchestrator.view"
   ],
@@ -1190,6 +1253,7 @@
    "team-orchestrator.menu",
    "team-orchestrator.note",
    "team-orchestrator.settings",
+   "team-orchestrator.spawn",
    "team-orchestrator.view"
   ],
   "envReads": [
@@ -1214,7 +1278,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: team-orchestrator.form, team-orchestrator.members, team-orchestrator.note, team-orchestrator.bulk, team-orchestrator.view, team-orchestrator.teamName, team-orchestrator.frame, team-orchestrator.menu, team-orchestrator.settings, team-orchestrator.act"
+     "types ./types/index.d.ts declares state: team-orchestrator.form, team-orchestrator.members, team-orchestrator.note, team-orchestrator.bulk, team-orchestrator.view, team-orchestrator.teamName, team-orchestrator.frame, team-orchestrator.menu, team-orchestrator.settings, team-orchestrator.act, team-orchestrator.spawn"
     ],
     "gatingHooks": []
    },
@@ -1225,21 +1289,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=mcp__team-orchestrator__team_adopt}, tool.call{tool=mcp__team-orchestrator__team_remove}, tool.call{tool=mcp__team-orchestrator__member_remove}, tool.call{tool=mcp__team-orchestrator__member_move}, tool.call{tool=?}, turn.complete, tool.call{tool=mcp__team-orchestrator__team_launch}, command.run{command=team}, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=team-dock}, ui.close{id=team-dock}",
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__team-orchestrator__team_adopt}, tool.call{tool=mcp__team-orchestrator__team_remove}, tool.call{tool=mcp__team-orchestrator__member_remove}, tool.call{tool=mcp__team-orchestrator__member_move}, tool.call{tool=?}, tool.call{tool=SendMessage}, turn.complete, turn.start, tool.call, tool.describe{tool=SendMessage}, tool.describe{tool=mcp__team-orchestrator__team_message}, tool.call{tool=mcp__team-orchestrator__team_message}, tool.call{tool=mcp__team-orchestrator__team_launch}, command.run{command=team}, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=team-dock}, ui.close{id=team-dock}",
       "./register.tsx answers its own command: command.run{command=team}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_adopt}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_remove}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__member_remove}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__member_move}",
       "./register.tsx gating hook without .catch: tool.call{tool=?}",
+      "./register.tsx gating hook without .catch: tool.call{tool=SendMessage}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_message}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_launch}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: ui.close{id=team-dock}",
-      "./register.tsx calls: $.clock.every, $.command.register, $.env.get (via claudeDirs, transcripts), $.fs.exists (via exclude, pull, share), $.fs.list (via transcripts), $.fs.read (via exclude, pull, share), $.fs.write (via exclude, share), $.process.run (via exclude, orca, rosterView, tails), $.prompt.submit (via emptyState, formView), $.session.id (via whoAmI), $.session.root (via exclude, refresh, teamFile), $.state.get, $.state.set, $.tool.call, $.tool.register, $.ui.close, $.ui.open, $.ui.panes (via docked), $.ui.resolve, $.ui.toast (via guard)",
+      "./register.tsx calls: $.clock.every, $.clock.sleep (via launch), $.command.register, $.env.get (via claudeDirs, transcripts), $.fs.exists (via exclude, migrate, pull, readQueue, readStatus, readTeamSettings, share, writeRoles), $.fs.list (via transcripts), $.fs.read (via exclude, migrate, pull, readQueue, readStatus, readTeamSettings, share, writeRoles), $.fs.write (via exclude, migrate, share, writeQueue, writeRoles, writeStatusOf, writeTeamSettings), $.process.run (via countLeftovers, exclude, orca, rosterView, tails), $.prompt.submit (via emptyState, formView), $.session.id, $.session.root (via exclude, refresh, rootOf), $.state.get, $.state.set, $.tool.call, $.tool.register, $.ui.close, $.ui.open, $.ui.panes (via docked), $.ui.resolve, $.ui.toast (via deliver, guard)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./register.tsx state writes: team-orchestrator.act, team-orchestrator.bulk, team-orchestrator.form, team-orchestrator.frame, team-orchestrator.members, team-orchestrator.menu, team-orchestrator.note, team-orchestrator.settings, team-orchestrator.view",
-      "./register.tsx state reads: team-orchestrator.act, team-orchestrator.bulk, team-orchestrator.form, team-orchestrator.frame, team-orchestrator.members, team-orchestrator.menu, team-orchestrator.note, team-orchestrator.settings, team-orchestrator.teamName, team-orchestrator.view"
+      "./register.tsx state writes: team-orchestrator.act, team-orchestrator.bulk, team-orchestrator.form, team-orchestrator.frame, team-orchestrator.members, team-orchestrator.menu, team-orchestrator.note, team-orchestrator.settings, team-orchestrator.spawn, team-orchestrator.view",
+      "./register.tsx state reads: team-orchestrator.act, team-orchestrator.bulk, team-orchestrator.form, team-orchestrator.frame, team-orchestrator.members, team-orchestrator.menu, team-orchestrator.note, team-orchestrator.settings, team-orchestrator.spawn, team-orchestrator.teamName, team-orchestrator.view"
      ],
      "gatingHooks": [
       {
@@ -1275,6 +1342,24 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=SendMessage}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team-orchestrator__team_message}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__team-orchestrator__team_launch}",
        "hasCatch": false
       },
@@ -1295,5 +1380,5 @@
    ]
   }
  },
- "sourceHash": "b0cd3984ddd7fead"
+ "sourceHash": "a556bdf12924a1b4"
 }

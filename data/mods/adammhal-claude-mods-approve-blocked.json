@@ -1,0 +1,8 @@
+{
+ "slug": "adammhal-claude-mods-approve-blocked",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst BLOCKED = /denied by the Claude Code auto mode classifier/i\nconst TRIES = 3\n\nconst blockedBy = (r: { deny?: string; isError?: boolean; text?: string }) => {\n  const why = r.deny ?? (r.isError === true ? r.text : undefined)\n  return typeof why === 'string' && BLOCKED.test(why)\n}\n\nexport const register: Register = on => {\n  // Claude Code falls back to its own permission prompt after 3 blocks in a row,\n  // and that prompt is the one Moshi answers. Agents stop at the first block, so\n  // the same call is retried here until the third, which is the one that asks.\n  on('tool.call', async ($, e, next) => {\n    let ran = await next(e)\n    if (!blockedBy(ran) || e.tool === 'AskUserQuestion') return ran\n\n    const { tool, tool_use_id: _id, agentId: _agent, ...input } = e\n    for (let i = 1; i < TRIES && blockedBy(ran); i++) {\n      ran = await $.tool.call({ tool, ...input } as never)\n    }\n\n    return ran\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"approve-blocked\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Retries an auto-mode-blocked call up to three times so Claude Code's own permission prompt (and Moshi) can ask you.\"\n}"
+ }
+}

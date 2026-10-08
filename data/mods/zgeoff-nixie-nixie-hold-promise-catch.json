@@ -1,0 +1,8 @@
+{
+ "slug": "zgeoff-nixie-nixie-hold-promise-catch",
+ "files": {
+  "hooks/register.js": "// A hooks module imports only its own files, so the timer comes from setTimeout.\nfunction waitMs(ms) {\n  // oxlint-disable-next-line promise/avoid-new\n  return new Promise((resolve) => {\n    setTimeout(resolve, ms);\n  });\n}\n\n// Holds MARK_HOLD calls for 15 s on a timer of the hook's own. The .catch handler denies on failure.\nasync function handleToolCall($, e, next) {\n  if (!e.command.includes('MARK_HOLD')) {\n    return next(e);\n  }\n  await waitMs(15_000);\n  return { deny: 'nixie-hold-promise-catch: the owner refused this command.' };\n}\n\nfunction handleFailure($, e, next) {\n  return {\n    deny: `nixie policy failed (${next.error.kind}: ${next.error.message}), so the command did not run.`,\n  };\n}\n\nexport function register(on) {\n  // `.catch` here is the mods API's error handler on a registration, not a promise method.\n  // oxlint-disable-next-line promise/prefer-await-to-then\n  on('tool.call', { tool: 'Bash' }, handleToolCall).catch(handleFailure);\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"The nixie-hold-promise-catch hooks module\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"nixie-hold-promise-catch\",\n  \"version\": \"0.0.0\",\n  \"description\": \"Spike: a tool.call hook that holds a call on a promise of its own, with a .catch handler\"\n}"
+ }
+}

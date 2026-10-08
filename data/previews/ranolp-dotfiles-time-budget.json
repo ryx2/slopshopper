@@ -1,9 +1,15 @@
 {
  "slug": "ranolp-dotfiles-time-budget",
- "generatedAt": "2026-10-07T15:22:31.915Z",
+ "generatedAt": "2026-10-08T15:53:37.038Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__time-budget__stay_awake"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -12,6 +18,15 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "budget-unlimited"
+    }
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "ui.render",
@@ -32,7 +47,14 @@
     "event": "turn.step"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "budget-unlimited",
+    "description": "on|off: unattended mode. No time budget stops the work, and a turn that ends with clm tasks open is resumed automatically, up to 50 times in a row until you type a prompt. CLAUDE_TIME_BUDGET_UNLIMITED=1 in the environment turns it on too.",
+    "immediate": true,
+    "output": "Unlimited mode is off: the time budget stops the work as usual."
+   }
+  ],
   "tools": [
    {
     "name": "estimate",
@@ -45,6 +67,10 @@
    {
     "name": "grant",
     "description": "Give a running subagent more minutes from now on its time budget, after reading its report."
+   },
+   {
+    "name": "stay_awake",
+    "description": "Keep the Mac awake with the lid closed for the next N minutes (max 240 per call; 0 lets it sleep again). Call it again before the deadline to extend. A root daemon applies it within a minute, and only while the battery is at 20% or more or on AC power."
    }
   ],
   "panes": [],
@@ -53,8 +79,10 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 2,
-   "$.tool.register": 3,
+   "$.state.get": 4,
+   "$.env.get": 1,
+   "$.command.register": 1,
+   "$.tool.register": 4,
    "$.clock.every": 1,
    "$.ui.status": 1,
    "$.clock.now": 10
@@ -81,7 +109,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/budget-unlimited → Unlimited mode is off: the time budget stops the work as usual."
   ],
   "console": [],
   "warnings": []
@@ -91,9 +120,12 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "tool.call{tool=mcp__time-budget__stay_awake}",
    "session.start",
    "session.end",
    "turn.start",
+   "command.run{command=budget-unlimited}",
+   "prompt.submit",
    "ui.render{component=AbovePrompt}",
    "turn.complete",
    "agent.spawn",
@@ -101,22 +133,25 @@
    "turn.step"
   ],
   "calls": [
-   "$.clm.issues (via syncMainTask)",
+   "$.clm.issues (via autoResume",
+   "syncMainTask)",
    "$.clm.track",
    "$.clock.after (via arm",
    "armAbort)",
    "$.clock.every",
    "$.clock.now",
-   "$.env.get (via calibrationFile)",
+   "$.command.register",
+   "$.env.get",
    "$.fs.exists (via loadPairs",
    "logPair)",
    "$.fs.read (via loadPairs",
    "logPair)",
-   "$.fs.write (via logPair)",
-   "$.process.run (via logPair)",
+   "$.fs.write",
+   "$.process.run",
    "$.prompt.submit",
    "$.state.get",
-   "$.state.set (via save)",
+   "$.state.set (via save",
+   "saveLoop)",
    "$.tool.register",
    "$.turn.abort (via armAbort)",
    "$.ui.log (via log)",
@@ -125,13 +160,18 @@
   ],
   "stateReads": [
    "time-budget.parked",
-   "time-budget.units"
+   "time-budget.resumes",
+   "time-budget.units",
+   "time-budget.unlimited"
   ],
   "stateWrites": [
    "time-budget.parked",
-   "time-budget.units"
+   "time-budget.resumes",
+   "time-budget.units",
+   "time-budget.unlimited"
   ],
   "envReads": [
+   "CLAUDE_TIME_BUDGET_UNLIMITED",
    "HOME",
    "TIME_BUDGET_DIR"
   ],
@@ -146,7 +186,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: time-budget.units, time-budget.parked"
+     "types ./types/index.d.ts declares state: time-budget.units, time-budget.parked, time-budget.unlimited, time-budget.resumes"
     ],
     "gatingHooks": []
    },
@@ -157,16 +197,37 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.end, turn.start, ui.render{component=AbovePrompt}, turn.complete, agent.spawn, tool.call, turn.step",
+      "./register.ts hooks: tool.call{tool=mcp__time-budget__stay_awake}, session.start, session.end, turn.start, command.run{command=budget-unlimited}, prompt.submit, ui.render{component=AbovePrompt}, turn.complete, agent.spawn, tool.call, turn.step",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__time-budget__stay_awake}",
+      "./register.ts gating hook without .catch: command.run{command=budget-unlimited}",
+      "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: agent.spawn",
       "./register.ts gating hook without .catch: tool.call",
-      "./register.ts calls: $.clm.issues (via syncMainTask), $.clm.track, $.clock.after (via arm, armAbort), $.clock.every, $.clock.now, $.env.get (via calibrationFile), $.fs.exists (via loadPairs, logPair), $.fs.read (via loadPairs, logPair), $.fs.write (via logPair), $.process.run (via logPair), $.prompt.submit, $.state.get, $.state.set (via save), $.tool.register, $.turn.abort (via armAbort), $.ui.log (via log), $.ui.resolve, $.ui.status (via showStatus)",
+      "./register.ts calls: $.clm.issues (via autoResume, syncMainTask), $.clm.track, $.clock.after (via arm, armAbort), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via loadPairs, logPair), $.fs.read (via loadPairs, logPair), $.fs.write, $.process.run, $.prompt.submit, $.state.get, $.state.set (via save, saveLoop), $.tool.register, $.turn.abort (via armAbort), $.ui.log (via log), $.ui.resolve, $.ui.status (via showStatus)",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME, TIME_BUDGET_DIR",
-      "./register.ts state writes: time-budget.parked, time-budget.units",
-      "./register.ts state reads: time-budget.parked, time-budget.units"
+      "./register.ts env reads: CLAUDE_TIME_BUDGET_UNLIMITED, HOME, TIME_BUDGET_DIR",
+      "./register.ts state writes: time-budget.parked, time-budget.resumes, time-budget.units, time-budget.unlimited",
+      "./register.ts state reads: time-budget.parked, time-budget.resumes, time-budget.units, time-budget.unlimited"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__time-budget__stay_awake}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=budget-unlimited}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "agent.spawn",
@@ -184,5 +245,5 @@
    ]
   }
  },
- "sourceHash": "6e85622587c1e52e"
+ "sourceHash": "b16eb15120fe2823"
 }

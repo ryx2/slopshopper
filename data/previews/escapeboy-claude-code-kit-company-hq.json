@@ -1,0 +1,322 @@
+{
+ "slug": "escapeboy-claude-code-kit-company-hq",
+ "generatedAt": "2026-10-08T15:52:52.644Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__company-hq__open_project"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__company-hq__hire"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__company-hq__set_phase"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__company-hq__ask_user"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__company-hq__answer_question"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__company-hq__record_decision"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__company-hq__close_project"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "company-status"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "company"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "company-status",
+    "description": "Show the /company pane (active company, other open ones, spend)",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "open_project",
+    "description": "company-hq: open a new /company company (every call is a separate company with its own id, org, cap and spend), or resume one by id. Sets the budget cap every subagent spawn is checked against and opens the status pane."
+   },
+   {
+    "name": "hire",
+    "description": "company-hq: hire a specialist for the active company: registers agent type company-hq:<name> with its own system prompt and model. Usable by Agent/Workflow agentType from the NEXT turn."
+   },
+   {
+    "name": "set_phase",
+    "description": "company-hq: record the current /company phase and a one-line note for the active company (or the one named by id)."
+   },
+   {
+    "name": "ask_user",
+    "description": "company-hq: record a question only the user can decide (decision-classify: User; or scope, budget, data, security, deploy, deletion). Returns its id. Then notify the user (PushNotification) and keep working on parts that do not depend on it; never guess the answer."
+   },
+   {
+    "name": "answer_question",
+    "description": "company-hq: record the user's answer to an open question (asked with ask_user)."
+   },
+   {
+    "name": "record_decision",
+    "description": "company-hq: log a non-critical choice (decision-classify: Mechanical/Taste) made without the user, with the options, the choice, who chose (agent or an external scorer) and the scorer's scores when there were any, so the user can review and reverse it."
+   },
+   {
+    "name": "close_project",
+    "description": "company-hq: close the active company (or the one named by id): returns its final spend and roster (with prompts) so the skill can record it and offer to keep specialists. Other open companies are not touched."
+   }
+  ],
+  "panes": [
+   {
+    "id": "company",
+    "title": "Company"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.usage": 2,
+   "$.tool.register": 7,
+   "$.command.register": 1,
+   "$.env.get": 1,
+   "$.session.id": 1,
+   "$.fs.read": 1,
+   "$.process.run": 1,
+   "$.fs.list": 1,
+   "$.store.get": 1,
+   "$.state.get": 5,
+   "$.state.set": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "company": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No open /company company."
+      ]
+     },
+     "title": "Company"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(hostname -s) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(company)",
+   "/company-status → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__company-hq__open_project}",
+   "tool.call{tool=mcp__company-hq__hire}",
+   "tool.call{tool=mcp__company-hq__set_phase}",
+   "tool.call{tool=mcp__company-hq__ask_user}",
+   "tool.call{tool=mcp__company-hq__answer_question}",
+   "tool.call{tool=mcp__company-hq__record_decision}",
+   "tool.call{tool=mcp__company-hq__close_project}",
+   "agent.spawn",
+   "turn.complete",
+   "command.run{command=company-status}",
+   "ui.render{component=Pane, requestId=company}"
+  ],
+  "calls": [
+   "$.agent.register (via registerHire)",
+   "$.clock.after (via scheduleFleet)",
+   "$.clock.sleep (via ensureServer)",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.list",
+   "$.fs.read (via collectDocs",
+   "readJson)",
+   "$.fs.stat (via collectDocs)",
+   "$.fs.write (via outbox",
+   "write",
+   "writeHires)",
+   "$.http.fetch (via ensureServer",
+   "sendFleet)",
+   "$.process.run",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.usage",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via migrate)",
+   "$.store.get (via migrate)",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "company-hq.activeId",
+   "company-hq.companies"
+  ],
+  "stateWrites": [
+   "company-hq.activeId",
+   "company-hq.companies"
+  ],
+  "envReads": [
+   "COMPANY_HQ_FLEETQ_TOKEN",
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/escapeboy-claude-code-kit-company-hq/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/escapeboy-claude-code-kit-company-hq/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: company-hq.companies, company-hq.activeId"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/escapeboy-claude-code-kit-company-hq/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__company-hq__open_project}, tool.call{tool=mcp__company-hq__hire}, tool.call{tool=mcp__company-hq__set_phase}, tool.call{tool=mcp__company-hq__ask_user}, tool.call{tool=mcp__company-hq__answer_question}, tool.call{tool=mcp__company-hq__record_decision}, tool.call{tool=mcp__company-hq__close_project}, agent.spawn, turn.complete, command.run{command=company-status}, ui.render{component=Pane, requestId=company}",
+      "./register.tsx answers its own command: command.run{command=company-status}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__company-hq__open_project}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__company-hq__hire}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__company-hq__set_phase}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__company-hq__ask_user}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__company-hq__answer_question}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__company-hq__record_decision}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__company-hq__close_project}",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx calls: $.agent.register (via registerHire), $.clock.after (via scheduleFleet), $.clock.sleep (via ensureServer), $.command.register, $.env.get, $.fs.list, $.fs.read (via collectDocs, readJson), $.fs.stat (via collectDocs), $.fs.write (via outbox, write, writeHires), $.http.fetch (via ensureServer, sendFleet), $.process.run, $.session.cwd, $.session.id, $.session.usage, $.state.get, $.state.set, $.store.delete (via migrate), $.store.get (via migrate), $.tool.register, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: COMPANY_HQ_FLEETQ_TOKEN, HOME",
+      "./register.tsx state writes: company-hq.activeId, company-hq.companies",
+      "./register.tsx state reads: company-hq.activeId, company-hq.companies"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__company-hq__open_project}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__company-hq__hire}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__company-hq__set_phase}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__company-hq__ask_user}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__company-hq__answer_question}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__company-hq__record_decision}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__company-hq__close_project}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "6f23ebe0a3e03b59"
+}

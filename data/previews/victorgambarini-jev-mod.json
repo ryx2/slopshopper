@@ -1,6 +1,6 @@
 {
  "slug": "victorgambarini-jev-mod",
- "generatedAt": "2026-10-07T15:24:08.255Z",
+ "generatedAt": "2026-10-08T15:54:54.275Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -23,10 +23,22 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "jev-status"
+    }
+   },
+   {
     "event": "session.compact"
    },
    {
     "event": "tool.call"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    }
   ],
   "commands": [
@@ -34,6 +46,11 @@
     "name": "compact-jev",
     "description": "Compact with no summary: keep only the turns Jev marks keep (plus the last few)",
     "output": "compact-jev: asking Jev which turns to keep; nothing will be summarised."
+   },
+   {
+    "name": "jev-status",
+    "description": "Show jev-mod's decision backend, where its key comes from, a live check, and its switches",
+    "output": "jev-mod 0.5.0\nbackend: none (no key found for TypeSafe, OpenRouter, Venice or OpenCode Zen)\nkey: none found\ncheck: failed (no_key): run `jev setup-key`. Set a key in jev-mod's settings: /plugin, or `claude plugin configure jev-mod@jev-mod --values-stdin` in your own terminal (README).\nswitches: routing on · skills on · screening on\ntoday: $0.0000 of the $1.00 daily budget"
    }
   ],
   "tools": [],
@@ -43,10 +60,19 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
+   "$.command.register": 2,
    "$.session.id": 1,
-   "$.store.get": 1,
-   "$.process.run": 2,
+   "$.store.get": 2,
+   "$.env.get": 82,
+   "$.fs.read": 33,
+   "$.session.root": 1,
+   "$.fs.list": 2,
+   "$.session.usage": 1,
+   "$.store.set": 1,
+   "$.process.run": 9,
+   "$.fs.write": 1,
+   "$.state.get": 2,
+   "$.state.set": 1,
    "$.clock.after": 1
   },
   "timers": [
@@ -55,11 +81,23 @@
     "ms": 0
    }
   ],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   }
+  },
   "script": [
    "session.start",
-   "$.process.run(/bin/sh -lc exec jev \"$@\" jev hook user-prompt) → exit 0",
-   "$.process.run(/bin/sh -lc exec jev \"$@\" jev lane classify --task - --host claude-code) → exit 0",
+   "$.process.run(printenv JEV_LIMITS) → exit 0",
+   "$.fs.write(/Users/dev/.config/jev/limits.state.json)",
+   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes TypeSafe API -a TYPESAFE_AP…) → exit 0",
+   "$.process.run(secret-tool lookup service Hermes TypeSafe API account TYPESAFE_API_KEY) → exit 0",
+   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes OpenRouter API -a OPENROUTE…) → exit 0",
+   "$.process.run(secret-tool lookup service Hermes OpenRouter API account OPENROUTER_API_KEY) → exit 0",
+   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes Venice API -a VENICE_API_KE…) → exit 0",
+   "$.process.run(secret-tool lookup service Hermes Venice API account VENICE_API_KEY) → exit 0",
+   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes OpenCode Zen API -a OPENCOD…) → exit 0",
+   "$.process.run(secret-tool lookup service Hermes OpenCode Zen API account OPENCODE_ZEN_API_KEY) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -70,7 +108,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/compact-jev → compact-jev: asking Jev which turns to keep; nothing will be summarised."
+   "/compact-jev → compact-jev: asking Jev which turns to keep; nothing will be summarised.",
+   "/jev-status → jev-mod 0.5.0\nbackend: none (no key found for TypeSafe, OpenRouter, Venice or Op…"
   ],
   "console": [],
   "warnings": []
@@ -85,29 +124,57 @@
    "turn.start",
    "turn.step",
    "command.run{command=compact-jev}",
+   "command.run{command=jev-status}",
    "session.compact",
-   "tool.call"
+   "tool.call",
+   "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.clock.after (via ioOf)",
+   "$.clock.sleep (via ioOf)",
    "$.command.register",
    "$.command.run (via ioOf)",
-   "$.env.get (via ioOf)",
+   "$.env.get (via envOf",
+   "ioOf)",
+   "$.fs.list (via ioOf)",
    "$.fs.read (via ioOf)",
+   "$.fs.stat (via ioOf)",
    "$.fs.write (via ioOf)",
    "$.http.fetch (via ioOf)",
-   "$.process.run (via ioOf)",
+   "$.process.run (via envOf",
+   "ioOf)",
    "$.session.id (via ioOf)",
+   "$.session.root (via ioOf)",
    "$.session.usage (via ioOf)",
+   "$.state.get",
+   "$.state.set",
    "$.store.get (via ioOf)",
    "$.store.set (via ioOf)",
+   "$.ui.resolve",
    "$.ui.status (via ioOf)",
    "$.ui.toast (via ioOf)"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "jev-mod.band"
+  ],
+  "stateWrites": [
+   "jev-mod.band"
+  ],
   "envReads": [
-   "HOME"
+   "HOME",
+   "JEV_BACKEND",
+   "JEV_BACKENDS",
+   "JEV_HOME",
+   "JEV_MODEL",
+   "JEV_PROVIDER",
+   "JEV_PROXY_API_KEY",
+   "OPENCODE_ZEN_API_KEY",
+   "OPENROUTER_API_KEY",
+   "TYPESAFE_API_KEY",
+   "TYPESAFE_BASE_URL",
+   "TYPESAFE_MODEL",
+   "VENICE_API_KEY",
+   "XDG_CONFIG_HOME"
   ],
   "raw": {
    "success": true,
@@ -118,7 +185,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: jev-mod.band"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -128,36 +198,45 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "../src/register.ts hooks: session.start, prompt.submit, turn.start, turn.step, command.run{command=compact-jev}, session.compact, tool.call",
-      "../src/register.ts gating hook without .catch: prompt.submit",
-      "../src/register.ts gating hook without .catch: command.run{command=compact-jev}",
-      "../src/register.ts gating hook without .catch: session.compact",
-      "../src/register.ts gating hook without .catch: tool.call",
-      "../src/register.ts calls: $.clock.after (via ioOf), $.command.register, $.command.run (via ioOf), $.env.get (via ioOf), $.fs.read (via ioOf), $.fs.write (via ioOf), $.http.fetch (via ioOf), $.process.run (via ioOf), $.session.id (via ioOf), $.session.usage (via ioOf), $.store.get (via ioOf), $.store.set (via ioOf), $.ui.status (via ioOf), $.ui.toast (via ioOf)",
-      "../src/register.ts env writes: nothing",
-      "../src/register.ts env reads: HOME"
+      "../src/register.tsx hooks: session.start, prompt.submit, turn.start, turn.step, command.run{command=compact-jev}, command.run{command=jev-status}, session.compact, tool.call, ui.render{component=AbovePrompt}",
+      "../src/register.tsx gating hook without .catch: prompt.submit",
+      "../src/register.tsx gating hook without .catch: command.run{command=compact-jev}",
+      "../src/register.tsx gating hook without .catch: command.run{command=jev-status}",
+      "../src/register.tsx gating hook without .catch: session.compact",
+      "../src/register.tsx gating hook without .catch: tool.call",
+      "../src/register.tsx calls: $.clock.after (via ioOf), $.clock.sleep (via ioOf), $.command.register, $.command.run (via ioOf), $.env.get (via envOf, ioOf), $.fs.list (via ioOf), $.fs.read (via ioOf), $.fs.stat (via ioOf), $.fs.write (via ioOf), $.http.fetch (via ioOf), $.process.run (via envOf, ioOf), $.session.id (via ioOf), $.session.root (via ioOf), $.session.usage (via ioOf), $.state.get, $.state.set, $.store.get (via ioOf), $.store.set (via ioOf), $.ui.resolve, $.ui.status (via ioOf), $.ui.toast (via ioOf)",
+      "../src/register.tsx env writes: nothing",
+      "../src/register.tsx env reads: HOME, JEV_BACKEND, JEV_BACKENDS, JEV_HOME, JEV_MODEL, JEV_PROVIDER, JEV_PROXY_API_KEY, OPENCODE_ZEN_API_KEY, OPENROUTER_API_KEY, TYPESAFE_API_KEY, TYPESAFE_BASE_URL, TYPESAFE_MODEL, VENICE_API_KEY, XDG_CONFIG_HOME",
+      "../src/register.tsx state writes: jev-mod.band",
+      "../src/register.tsx state reads: jev-mod.band"
      ],
      "gatingHooks": [
       {
-       "module": "../src/register.ts",
+       "module": "../src/register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
       },
       {
-       "module": "../src/register.ts",
+       "module": "../src/register.tsx",
        "pattern": "command.run",
        "hook": "command.run{command=compact-jev}",
        "hasCatch": false
       },
       {
-       "module": "../src/register.ts",
+       "module": "../src/register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=jev-status}",
+       "hasCatch": false
+      },
+      {
+       "module": "../src/register.tsx",
        "pattern": "session.compact",
        "hook": "session.compact",
        "hasCatch": false
       },
       {
-       "module": "../src/register.ts",
+       "module": "../src/register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": false
@@ -167,5 +246,5 @@
    ]
   }
  },
- "sourceHash": "f05d490190e5441"
+ "sourceHash": "6480be805e26019e"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "malanjp-skills-dev-mods",
- "generatedAt": "2026-10-07T15:22:27.365Z",
+ "generatedAt": "2026-10-08T15:53:31.471Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -25,6 +25,25 @@
      "component": "Pane",
      "requestId": "pr-status"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "dev-servers"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskStop"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "dev-servers"
+    }
    }
   ],
   "commands": [
@@ -32,6 +51,11 @@
     "name": "pr-status",
     "description": "PR と CI 状態のパネルを開いて更新する",
     "output": "取得失敗: undefined is not an object (evaluating 's.replace')"
+   },
+   {
+    "name": "dev-servers",
+    "description": "このセッションで起動した開発サーバの一覧を開く",
+    "output": "取得失敗: エンジンの PID を取得できません"
    }
   ],
   "tools": [],
@@ -39,6 +63,10 @@
    {
     "id": "pr-status",
     "title": "PR / CI"
+   },
+   {
+    "id": "dev-servers",
+    "title": "開発サーバ"
    }
   ],
   "toasts": [],
@@ -46,15 +74,20 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.ui.open": 2,
-   "$.process.run": 6,
-   "$.clock.every": 1,
-   "$.state.get": 4,
-   "$.state.set": 3,
-   "$.ui.resolve": 1
+   "$.command.register": 2,
+   "$.ui.open": 3,
+   "$.process.run": 8,
+   "$.clock.every": 2,
+   "$.state.get": 7,
+   "$.state.set": 5,
+   "$.ui.status": 2,
+   "$.ui.resolve": 2
   },
   "timers": [
+   {
+    "kind": "every",
+    "ms": 10000
+   },
    {
     "kind": "every",
     "ms": 10000
@@ -97,12 +130,44 @@
         },
         "children": [
          "更新 ",
-         "15:22:26"
+         "15:53:31"
         ]
        }
       ]
      },
      "title": "PR / CI"
+    },
+    "dev-servers": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "color": "red"
+        },
+        "children": [
+         "エラー: ",
+         "エンジンの PID を取得できません"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "更新 ",
+         "15:53:31"
+        ]
+       }
+      ]
+     },
+     "title": "開発サーバ"
     }
    }
   },
@@ -110,6 +175,7 @@
    "$.ui.open(pr-status)",
    "$.process.run(git branch --show-current) → exit 0",
    "$.process.run(gh pr view --json number,title,state,url,body,statusCheckRollup,closingIssuesRef…) → exit 0",
+   "$.process.run(sh -c echo $PPID) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -126,7 +192,10 @@
    "$.ui.open(pr-status)",
    "$.process.run(git branch --show-current) → exit 0",
    "$.process.run(gh pr view --json number,title,state,url,body,statusCheckRollup,closingIssuesRef…) → exit 0",
-   "/pr-status → 取得失敗: undefined is not an object (evaluating 's.replace')"
+   "/pr-status → 取得失敗: undefined is not an object (evaluating 's.replace')",
+   "$.ui.open(dev-servers)",
+   "$.process.run(sh -c echo $PPID) → exit 0",
+   "/dev-servers → 取得失敗: エンジンの PID を取得できません"
   ],
   "console": [],
   "warnings": []
@@ -139,23 +208,32 @@
    "session.start",
    "command.run{command=pr-status}",
    "tool.call{tool=Bash}",
-   "ui.render{component=Pane, requestId=pr-status}"
+   "ui.render{component=Pane, requestId=pr-status}",
+   "command.run{command=dev-servers}",
+   "tool.call{tool=TaskStop}",
+   "ui.render{component=Pane, requestId=dev-servers}"
   ],
   "calls": [
+   "$.clock.after",
    "$.clock.every",
    "$.command.register",
    "$.mcp.call (via enrichLinear)",
-   "$.process.run (via fetchInfo)",
+   "$.process.run (via fetchInfo",
+   "fetchServers",
+   "getEnginePid)",
    "$.state.get",
    "$.state.set",
    "$.ui.open",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.status (via fetchServers)"
   ],
   "stateReads": [
-   "dev-mods.info"
+   "dev-mods.info",
+   "dev-mods.servers"
   ],
   "stateWrites": [
-   "dev-mods.info"
+   "dev-mods.info",
+   "dev-mods.servers"
   ],
   "envReads": [],
   "raw": {
@@ -169,7 +247,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: dev-mods.info"
+     "types ./types/index.d.ts declares state: dev-mods.info, dev-mods.servers"
     ],
     "gatingHooks": []
    },
@@ -180,12 +258,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=pr-status}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=pr-status}",
+      "./register.tsx hooks: session.start, command.run{command=pr-status}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=pr-status}, command.run{command=dev-servers}, tool.call{tool=TaskStop}, ui.render{component=Pane, requestId=dev-servers}",
       "./register.tsx answers its own command: command.run{command=pr-status}",
+      "./register.tsx answers its own command: command.run{command=dev-servers}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.every, $.command.register, $.mcp.call (via enrichLinear), $.process.run (via fetchInfo), $.state.get, $.state.set, $.ui.open, $.ui.resolve",
-      "./register.tsx state writes: dev-mods.info",
-      "./register.tsx state reads: dev-mods.info"
+      "./register.tsx gating hook without .catch: tool.call{tool=TaskStop}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.command.register, $.mcp.call (via enrichLinear), $.process.run (via fetchInfo, fetchServers, getEnginePid), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status (via fetchServers)",
+      "./register.tsx state writes: dev-mods.info, dev-mods.servers",
+      "./register.tsx state reads: dev-mods.info, dev-mods.servers"
      ],
      "gatingHooks": [
       {
@@ -193,11 +273,17 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskStop}",
+       "hasCatch": false
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "9edf0217679f24dc"
+ "sourceHash": "21ca31bf297f96a"
 }

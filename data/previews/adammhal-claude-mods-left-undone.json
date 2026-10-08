@@ -1,6 +1,6 @@
 {
  "slug": "adammhal-claude-mods-left-undone",
- "generatedAt": "2026-10-07T15:22:45.288Z",
+ "generatedAt": "2026-10-08T15:53:43.442Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,18 @@
     "event": "command.run",
     "matcher": {
      "command": "left-undone"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "left-undone-export"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "left-undone-import"
     }
    },
    {
@@ -35,6 +47,16 @@
     "name": "left-undone",
     "description": "Show the list of todos Claude left undone",
     "output": "Left undone pane opened."
+   },
+   {
+    "name": "left-undone-export",
+    "description": "Export the left-undone list to a Markdown file",
+    "output": "Nothing to export."
+   },
+   {
+    "name": "left-undone-import",
+    "description": "Import a left-undone Markdown export (default: the latest)",
+    "output": "No export found at /.claude/left-undone/latest.md"
    }
   ],
   "tools": [],
@@ -49,11 +71,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.store.get": 1,
+   "$.command.register": 3,
    "$.ui.open": 2,
-   "$.ui.resolve": 1,
-   "$.state.get": 1
+   "$.state.get": 2,
+   "$.process.run": 1,
+   "$.fs.exists": 1,
+   "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
@@ -76,12 +99,32 @@
         ]
        },
        {
+        "type": "Button",
+        "props": {
+         "key": "export",
+         "hotkey": "3",
+         "label": "Export to Markdown",
+         "onPress": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "import",
+         "hotkey": "4",
+         "label": "Import latest export",
+         "onPress": "[fn]"
+        },
+        "children": []
+       },
+       {
         "type": "Text",
         "props": {
          "dimColor": true
         },
         "children": [
-         "letter = flag, 1 = send to Claude, 2 = mark done"
+         "letter = flag, 1 = send, 2 = done, 3 = export, 4 = import"
         ]
        }
       ]
@@ -104,7 +147,10 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(left-undone)",
-   "/left-undone → Left undone pane opened."
+   "/left-undone → Left undone pane opened.",
+   "/left-undone-export → Nothing to export.",
+   "$.process.run(printenv HOME) → exit 0",
+   "/left-undone-import → No export found at /.claude/left-undone/latest.md"
   ],
   "console": [],
   "warnings": []
@@ -118,18 +164,23 @@
   "hooks": [
    "session.start",
    "command.run{command=left-undone}",
+   "command.run{command=left-undone-export}",
+   "command.run{command=left-undone-import}",
    "tool.call{tool=TodoWrite}",
    "turn.complete",
    "ui.render{component=Pane, requestId=left-undone}"
   ],
   "calls": [
    "$.command.register",
+   "$.fs.exists (via importList)",
+   "$.fs.read (via importList)",
+   "$.fs.write (via exportList)",
    "$.model.complete",
+   "$.process.run (via exportList",
+   "home)",
    "$.prompt.submit",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
-   "$.store.set (via change)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
@@ -169,10 +220,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=left-undone}, tool.call{tool=TodoWrite}, turn.complete, ui.render{component=Pane, requestId=left-undone}",
+      "./register.tsx hooks: session.start, command.run{command=left-undone}, command.run{command=left-undone-export}, command.run{command=left-undone-import}, tool.call{tool=TodoWrite}, turn.complete, ui.render{component=Pane, requestId=left-undone}",
       "./register.tsx answers its own command: command.run{command=left-undone}",
+      "./register.tsx answers its own command: command.run{command=left-undone-export}",
+      "./register.tsx answers its own command: command.run{command=left-undone-import}",
       "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite}",
-      "./register.tsx calls: $.command.register, $.model.complete, $.prompt.submit, $.state.get, $.state.set, $.store.get, $.store.set (via change), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.command.register, $.fs.exists (via importList), $.fs.read (via importList), $.fs.write (via exportList), $.model.complete, $.process.run (via exportList, home), $.prompt.submit, $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx state writes: left-undone.items",
       "./register.tsx state reads: left-undone.items"
      ],
@@ -188,5 +241,5 @@
    ]
   }
  },
- "sourceHash": "91eac2dff035969e"
+ "sourceHash": "482de9ff25b142a1"
 }

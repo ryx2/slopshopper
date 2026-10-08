@@ -1,0 +1,1468 @@
+{
+ "slug": "stephen-taipei-deckhand-deckhand",
+ "generatedAt": "2026-10-08T15:54:48.232Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "watch-deploy"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__deckhand__watch_deploy"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "deckhand"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "deckhand-settings"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "deckhand-recap"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handoff-in"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handoff"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "codex"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "codex-latest"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "deckhand-codex"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__deckhand__translate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__deckhand__search"
+    }
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "model"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "usage-raw"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "sub5"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "delegate"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   }
+  ],
+  "commands": [
+   {
+    "name": "watch-deploy",
+    "description": "Watch a PR / CI run / deployed URL in the background (no tokens; stops itself after 3 identical results in a row and no change for 10 min)",
+    "argumentHint": "<#PR | run:ID | sha:COMMIT | URL> [expect=text] | stop [id|all] | clear",
+    "output": "No watches. Usage: /watch-deploy #128, /watch-deploy https://example.com expect=abc1234"
+   },
+   {
+    "name": "handoff",
+    "description": "Write a handoff document for Codex and copy the takeover instruction",
+    "argumentHint": "[note]",
+    "output": "Writing the handoff failed: dev"
+   },
+   {
+    "name": "codex",
+    "description": "Open the Codex inbox: recent Codex threads of this project",
+    "argumentHint": "[all]",
+    "output": "Opened the Codex inbox."
+   },
+   {
+    "name": "codex-latest",
+    "description": "Put the latest Codex reply of this project into the prompt box",
+    "output": "No Codex thread in this project in the last 7 days. JSON Parse error: Unexpected identifier \"dev\""
+   },
+   {
+    "name": "handoff-in",
+    "description": "Read the latest handoff from Codex to Claude into the prompt box",
+    "output": "The handoff check failed: dev"
+   },
+   {
+    "name": "sub5",
+    "description": "Split the current task into up to 5 independent items, run them in parallel sub agents, integrate, clean up (same as the Sub5 button)",
+    "argumentHint": "[note]",
+    "output": "Sub5 is about to start."
+   },
+   {
+    "name": "delegate",
+    "description": "Hand a task to another AI model (cL/cS/cA/cR/gF, same as the buttons), read-only; Claude integrates and summarizes",
+    "argumentHint": "<cL|cS|cA|cR|gF> [task]",
+    "output": "Usage: /delegate <target> [task]\n  cL  Codex (GPT-6 Luna, effort max)\n  cS  Codex (GPT-6.1 Sol, effort medium)\n  cA  Codex (GPT-6 Astra, effort medium)\n  cR  Cursor agent (Grok 4.7, effort high)\n  gF  agy (Gemini 3.8 Flash, effort high)\nWithout a task, the latest unfinished work of this conversation goes. Delegated models are read-only; Claude integrates and summarizes."
+   },
+   {
+    "name": "usage-raw",
+    "description": "List the raw sources of the usage readout (engine and account), to compare with the usage card",
+    "output": "Engine report ($.session.usage, last response; only five_hour is used, seven_day depends on the model that answered):\n  five_hour  31%  resets 1760003600000\n\nAccount usage (/api/oauth/usage): no-credential, 0 s ago\n\nThe bar shows: 5h 31% · 7d – · ctx 49%"
+   },
+   {
+    "name": "deckhand",
+    "description": "Open the Deckhand settings",
+    "output": "Deckhand settings"
+   }
+  ],
+  "tools": [
+   {
+    "name": "watch_deploy",
+    "description": "Watch a GitHub PR, an Actions run, all CI runs of a commit, or a deployed URL in the background, without spending tokens. Use this INSTEAD of sleep/poll loops, `gh run watch`, `gh pr checks --watch` or repeated gh/curl status checks. target: \"#128\", \"run:123\", \"sha:<commit>\", a GitHub PR or Actions run URL, or an https URL. expect (URL only, strongly recommended): text whose appearance means the new version is live (a commit sha, a version string). Without it the watch compares the page itself and needs two checks to confirm a change. Returns the current state at once. When the watch finishes, or stops after repeated identical results, the user gets a toast and a [deckhand] note is added to this conversation. A merged PR automatically continues as a watch of its merge commit's CI runs. After calling it, end your turn instead of polling."
+   }
+  ],
+  "panes": [
+   {
+    "id": "deckhand-codex",
+    "title": "Codex inbox"
+   },
+   {
+    "id": "deckhand-settings",
+    "title": "Deckhand settings"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.settings.read": 1,
+   "$.store.get": 2,
+   "$.state.get": 105,
+   "$.state.set": 24,
+   "$.command.register": 9,
+   "$.agent.register": 1,
+   "$.tool.register": 1,
+   "$.ui.status": 1,
+   "$.env.get": 2,
+   "$.process.run": 9,
+   "$.fs.exists": 6,
+   "$.clock.now": 8,
+   "$.session.usage": 2,
+   "$.session.model": 2,
+   "$.session.authorize": 2,
+   "$.model.fork": 1,
+   "$.session.cwd": 2,
+   "$.ui.open": 2,
+   "$.session.root": 2,
+   "$.clock.after": 1,
+   "$.ui.resolve": 4
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 10
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "gap": 1,
+        "flexWrap": "wrap"
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "key": "u-fiveHour",
+          "dimColor": true,
+          "hover": {
+           "scope": "deckhand-tip-usage"
+          }
+         },
+         "children": [
+          "5h 31%",
+          " ·"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "key": "u-weekly",
+          "dimColor": true,
+          "hover": {
+           "scope": "deckhand-tip-usage"
+          }
+         },
+         "children": [
+          "7d –",
+          " ·"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "key": "u-context",
+          "dimColor": true,
+          "hover": {
+           "scope": "deckhand-tip-usage"
+          }
+         },
+         "children": [
+          "ctx 49%",
+          ""
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "m-O",
+          "label": "O",
+          "variant": "primary",
+          "dimColor": false,
+          "hover": {
+           "scope": "deckhand-tip-m-O"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "m-F",
+          "label": "F",
+          "variant": "secondary",
+          "dimColor": true,
+          "hover": {
+           "scope": "deckhand-tip-m-F"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "m-S",
+          "label": "S",
+          "variant": "secondary",
+          "dimColor": true,
+          "hover": {
+           "scope": "deckhand-tip-m-S"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "m-H",
+          "label": "H",
+          "variant": "secondary",
+          "dimColor": true,
+          "hover": {
+           "scope": "deckhand-tip-m-H"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "sub5",
+          "label": "Sub5",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-sub5"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "d-cL",
+          "label": "cL",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-d-cL"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "d-cS",
+          "label": "cS",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-d-cS"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "d-cA",
+          "label": "cA",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-d-cA"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "d-cR",
+          "label": "cR",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-d-cR"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "d-gF",
+          "label": "gF",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-d-gF"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "recap",
+          "label": "Recap",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-recap"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "tips",
+          "flexGrow": 1,
+          "minWidth": 1
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-usage",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-usage"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-usage",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "5h, per-model weekly, all-models weekly and context window, as the usage card shows them"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-m-O",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-m-O"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-m-O",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Switch the main model to Opus; effort stays"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-m-F",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-m-F"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-m-F",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Switch the main model to Fable; effort stays"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-m-S",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-m-S"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-m-S",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Switch the main model to Sonnet; effort stays"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-m-H",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-m-H"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-m-H",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Switch the main model to Haiku; effort stays"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-sub5",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-sub5"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-sub5",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Split the work into up to 5 independent items, run them in parallel sub agents, integrate, clean up"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-d-cL",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-d-cL"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-d-cL",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Hand one task to Codex (GPT-6 Luna, effort max), read-only; Claude reviews and integrates the answer"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-d-cS",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-d-cS"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-d-cS",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Hand one task to Codex (GPT-6.1 Sol, effort medium), read-only; Claude reviews and integrates the answer"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-d-cA",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-d-cA"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-d-cA",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Hand one task to Codex (GPT-6 Astra, effort medium), read-only; Claude reviews and integrates the answer"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-d-cR",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-d-cR"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-d-cR",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Hand one task to Cursor agent (Grok 4.7, effort high), read-only; Claude reviews and integrates the answer"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-d-gF",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-d-gF"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-d-gF",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Hand one task to agy (Gemini 3.8 Flash, effort high), read-only; Claude reviews and integrates the answer"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-recap",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-recap"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-recap",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Explain the whole context in plain words and analogies, in a side pane"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip-gear",
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "display": "none",
+            "hover": {
+             "display": "flex",
+             "scope": "deckhand-tip-gear"
+            }
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "tip-text-gear",
+              "dimColor": true,
+              "wrap": "truncate"
+             },
+             "children": [
+              "Deckhand settings"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "gear",
+          "label": "⚙",
+          "variant": "secondary",
+          "hover": {
+           "scope": "deckhand-tip-gear"
+          },
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "deckhand-codex": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "This project",
+           " · ",
+           "last 7 days"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "Refresh",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "scope",
+           "label": "All projects",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "red"
+        },
+        "children": [
+         "Failed to read: JSON Parse error: Unexpected identifier \"dev\""
+        ]
+       }
+      ]
+     },
+     "title": "Codex inbox"
+    },
+    "deckhand-settings": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "tabs",
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-general",
+           "label": "General",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-delegates",
+           "label": "Delegates",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-assist",
+           "label": "Translate & search",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-sub5",
+           "label": "Sub5",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-advanced",
+           "label": "Advanced",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "general",
+         "flexDirection": "column",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "r-language",
+           "flexDirection": "column",
+           "columnGap": 2,
+           "alignItems": "flex-start"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Display language"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Select",
+            "props": {
+             "key": "s-language",
+             "value": "auto",
+             "options": [
+              {
+               "value": "auto",
+               "label": "Auto (Claude Code's language)"
+              },
+              {
+               "value": "en",
+               "label": "English"
+              },
+              {
+               "value": "zh-TW",
+               "label": "臺灣繁體中文"
+              },
+              {
+               "value": "zh-CN",
+               "label": "简体中文"
+              },
+              {
+               "value": "ja",
+               "label": "日本語"
+              },
+              {
+               "value": "ko",
+               "label": "한국어"
+              }
+             ],
+             "onSelect": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "h-buttons",
+           "flexDirection": "column",
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Band buttons"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "Which parts of the band above the prompt show."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1,
+           "flexWrap": "wrap"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "t-show.usage",
+             "label": "☑ Usage",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "t-show.models",
+             "label": "☑ Model buttons",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "t-show.sub5",
+             "label": "☑ Sub5",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "t-show.delegates",
+             "label": "☑ Delegates",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "t-show.recap",
+             "label": "☑ Recap",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "r-usage.warnPercent",
+           "flexDirection": "column",
+           "columnGap": 2,
+           "alignItems": "flex-start"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Usage warning (%)"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Input",
+            "props": {
+             "key": "i-usage.warnPercent",
+             "value": "80",
+             "submitLabel": "Save",
+             "onSubmit": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "Close",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Deckhand settings"
+    },
+    "deckhand-recap": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "again",
+           "label": "Again",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "Close",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "deckhand-recap"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(mkdir -p -m 700 /Users/dev/.agent-handoff) → exit 0",
+   "$.process.run(mkdir -p /Users/dev/.agent-handoff/bin) → exit 0",
+   "session.start",
+   "$.process.run(python3 /plugins/deckhand/bin/delegate.py check --tool codex --format json) → exit 0",
+   "$.process.run(python3 /plugins/deckhand/bin/delegate.py check --tool agent --format json) → exit 0",
+   "$.process.run(python3 /plugins/deckhand/bin/delegate.py check --tool agy --format json) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/watch-deploy → No watches. Usage: /watch-deploy #128, /watch-deploy https://example.com expect=…",
+   "$.process.run(python3 /plugins/deckhand/bin/handoff-state.py write --from claude --to codex --…) → exit 0",
+   "/handoff → Writing the handoff failed: dev",
+   "$.ui.open(deckhand-codex)",
+   "/codex → Opened the Codex inbox.",
+   "$.process.run(python3 /plugins/deckhand/bin/codex-threads.py --days 7 --limit 12 --cwd /work/a…) → exit 0",
+   "$.process.run(python3 /plugins/deckhand/bin/codex-threads.py --days 7 --limit 12 --cwd /work/a…) → exit 0",
+   "/codex-latest → No Codex thread in this project in the last 7 days. JSON Parse error: Unexpected…",
+   "$.process.run(python3 /plugins/deckhand/bin/handoff-state.py check --from codex --to claude --…) → exit 0",
+   "/handoff-in → The handoff check failed: dev",
+   "/sub5 → Sub5 is about to start.",
+   "/delegate → Usage: /delegate <target> [task]\n  cL  Codex (GPT-6 Luna, effort max)\n  cS  Code…",
+   "/usage-raw → Engine report ($.session.usage, last response; only five_hour is used, seven_day…",
+   "$.ui.open(deckhand-settings)",
+   "/deckhand → Deckhand settings"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=watch-deploy}",
+   "tool.call{tool=mcp__deckhand__watch_deploy}",
+   "ui.render{component=AbovePrompt}",
+   "command.run{command=deckhand}",
+   "ui.render{component=Pane, requestId=deckhand-settings}",
+   "ui.render{component=Pane, requestId=deckhand-recap}",
+   "command.run{command=handoff-in}",
+   "command.run{command=handoff}",
+   "command.run{command=codex}",
+   "command.run{command=codex-latest}",
+   "ui.render{component=Pane, requestId=deckhand-codex}",
+   "prompt.submit",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=mcp__deckhand__translate}",
+   "tool.call{tool=mcp__deckhand__search}",
+   "session.measure",
+   "classic.Stop",
+   "command.run{command=model}",
+   "command.run{command=usage-raw}",
+   "command.run{command=sub5}",
+   "command.run{command=delegate}",
+   "prompt.compose"
+  ],
+  "calls": [
+   "$.agent.register (via registerWorker)",
+   "$.clock.after",
+   "$.clock.now",
+   "$.command.list (via restoreEffort)",
+   "$.command.register (via registerCommands)",
+   "$.command.run (via pressModel",
+   "restoreEffort)",
+   "$.env.get (via resolveBin",
+   "syncSharedTool)",
+   "$.fs.exists (via resolveBin",
+   "syncSharedTool)",
+   "$.fs.read (via syncSharedTool)",
+   "$.fs.write (via syncSharedTool)",
+   "$.http.fetch (via checkWatch",
+   "refreshAccountUsage)",
+   "$.model.fork",
+   "$.process.run (via checkBins",
+   "checkWatch",
+   "handoffTool",
+   "loadCodexThreads",
+   "runAssist",
+   "syncSharedTool)",
+   "$.prompt.fill",
+   "$.prompt.read (via pressModel",
+   "startDelegate)",
+   "$.prompt.submit (via startDelegate",
+   "startSub5)",
+   "$.session.append (via runCheck)",
+   "$.session.authorize (via refreshAccountUsage)",
+   "$.session.cwd (via handoffTool",
+   "startWatch)",
+   "$.session.model (via pressModel",
+   "refreshModel)",
+   "$.session.root (via loadCodexThreads)",
+   "$.session.usage (via loadUsage)",
+   "$.settings.read",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via loadSettings)",
+   "$.store.set (via commitSettings",
+   "… [+173 chars]"
+  ],
+  "stateReads": [
+   "deckhand.accountLimits",
+   "deckhand.bins",
+   "deckhand.codexAllProjects",
+   "deckhand.codexError",
+   "deckhand.codexThreads",
+   "deckhand.contextPercent",
+   "deckhand.contextTokens",
+   "deckhand.effort",
+   "deckhand.engineLimits",
+   "deckhand.isBandHidden",
+   "deckhand.isCodexLoading",
+   "deckhand.knownScoped",
+   "deckhand.locale",
+   "deckhand.model",
+   "deckhand.recap",
+   "deckhand.settings",
+   "deckhand.settingsView",
+   "deckhand.watches"
+  ],
+  "stateWrites": [
+   "deckhand.accountLimits",
+   "deckhand.bins",
+   "deckhand.codexAllProjects",
+   "deckhand.codexError",
+   "deckhand.codexThreads",
+   "deckhand.contextPercent",
+   "deckhand.contextTokens",
+   "deckhand.effort",
+   "deckhand.engineLimits",
+   "deckhand.isBandHidden",
+   "deckhand.isCodexLoading",
+   "deckhand.knownScoped",
+   "deckhand.locale",
+   "deckhand.model",
+   "deckhand.recap",
+   "deckhand.settings",
+   "deckhand.settingsView",
+   "deckhand.watches"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/stephen-taipei-deckhand-deckhand/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/stephen-taipei-deckhand-deckhand/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: deckhand.watches, deckhand.isBandHidden, deckhand.codexThreads, deckhand.codexError, deckhand.isCodexLoading, deckhand.codexAllProjects, deckhand.engineLimits, deckhand.accountLimits, deckhand.contextPercent, deckhand.contextTokens, deckhand.model, deckhand.effort, deckhand.settings, deckhand.locale, deckhand.recap, deckhand.settingsView, deckhand.bins, deckhand.knownScoped"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/stephen-taipei-deckhand-deckhand/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=watch-deploy}, tool.call{tool=mcp__deckhand__watch_deploy}, ui.render{component=AbovePrompt}, command.run{command=deckhand}, ui.render{component=Pane, requestId=deckhand-settings}, ui.render{component=Pane, requestId=deckhand-recap}, command.run{command=handoff-in}, command.run{command=handoff}, command.run{command=codex}, command.run{command=codex-latest}, ui.render{component=Pane, requestId=deckhand-codex}, prompt.submit, tool.call{tool=Bash}, tool.call{tool=mcp__deckhand__translate}, tool.call{tool=mcp__deckhand__search}, session.measure, classic.Stop, command.run{command=model}, command.run{command=usage-raw}, command.run{command=sub5}, command.run{command=delegate}, prompt.compose",
+      "./register.tsx answers its own command: command.run{command=watch-deploy}",
+      "./register.tsx answers its own command: command.run{command=deckhand}",
+      "./register.tsx answers its own command: command.run{command=handoff-in}",
+      "./register.tsx answers its own command: command.run{command=handoff}",
+      "./register.tsx answers its own command: command.run{command=codex}",
+      "./register.tsx answers its own command: command.run{command=codex-latest}",
+      "./register.tsx answers its own command: command.run{command=usage-raw}",
+      "./register.tsx answers its own command: command.run{command=sub5}",
+      "./register.tsx answers its own command: command.run{command=delegate}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__deckhand__watch_deploy}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__deckhand__translate}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__deckhand__search}",
+      "./register.tsx gating hook with .catch: classic.Stop",
+      "./register.tsx gating hook with .catch: command.run{command=model}",
+      "./register.tsx calls: $.agent.register (via registerWorker), $.clock.after, $.clock.now, $.command.list (via restoreEffort), $.command.register (via registerCommands), $.command.run (via pressModel, restoreEffort), $.env.get (via resolveBin, syncSharedTool), $.fs.exists (via resolveBin, syncSharedTool), $.fs.read (via syncSharedTool), $.fs.write (via syncSharedTool), $.http.fetch (via checkWatch, refreshAccountUsage), $.model.fork, $.process.run (via checkBins, checkWatch, handoffTool, loadCodexThreads, runAssist, syncSharedTool), $.prompt.fill, $.prompt.read (via pressModel, startDelegate), $.prompt.submit (via startDelegate, startSub5), $.session.append (via runCheck), $.session.authorize (via refreshAccountUsage), $.session.cwd (via handoffTool, startWatch), $.session.model (via pressModel, refreshModel), $.session.root (via loadCodexThreads), $.session.usage (via loadUsage), $.settings.read, $.state.get, $.state.set, $.store.get (via loadSettings), $.store.set (via commitSettings, … [+173 chars]",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches",
+      "./register.tsx state reads: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__deckhand__watch_deploy}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__deckhand__translate}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__deckhand__search}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=model}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "ec17723bf96d2ccf"
+}

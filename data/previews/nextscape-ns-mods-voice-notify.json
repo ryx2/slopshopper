@@ -1,31 +1,63 @@
 {
  "slug": "nextscape-ns-mods-voice-notify",
- "generatedAt": "2026-10-07T15:22:30.181Z",
+ "generatedAt": "2026-10-08T15:53:19.259Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "voice-notify"
+    }
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
     "event": "turn.complete"
+   },
+   {
+    "event": "classic.PermissionRequest"
+   },
+   {
+    "event": "classic.Notification"
+   },
+   {
+    "event": "classic.TaskCompleted"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "voice-notify",
+    "description": "音声通知のミュート切替（on / off / status）と、導入・診断・撤去（setup [force] / doctor / remove）",
+    "argumentHint": "[on|off|status|setup|doctor|remove]",
+    "output": "config.json を読めません。/voice-notify doctor で確かめてください。"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
-  "logs": [
-   "voice-notify: /Users/dev/.claude/voice-notify/config.json を読めないので要約しない (Error: ENOENT: no such file /Users/dev/.claude/voice-notify/config.json)"
-  ],
+  "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 3,
-   "$.fs.read": 1,
-   "$.ui.log": 1
+   "$.command.register": 1,
+   "$.env.get": 9,
+   "$.fs.read": 4,
+   "$.clock.now": 1,
+   "$.fs.write": 1
   },
   "timers": [],
   "sites": {},
   "script": [
    "session.start",
+   "$.fs.write(/Users/dev/.claude/voice-notify/notify.log)",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -35,7 +67,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/voice-notify → config.json を読めません。/voice-notify doctor で確かめてください。"
   ],
   "console": [],
   "warnings": []
@@ -45,29 +78,79 @@
   "errors": [],
   "warnings": [],
   "hooks": [
-   "turn.complete"
+   "session.start",
+   "command.run{command=voice-notify}",
+   "session.compact",
+   "turn.start",
+   "turn.complete",
+   "classic.PermissionRequest",
+   "classic.Notification",
+   "classic.TaskCompleted"
   ],
   "calls": [
-   "$.clock.now (via begin",
-   "summarize)",
-   "$.env.get (via begin)",
-   "$.fs.exists (via begin)",
-   "$.fs.list (via countRunningAgents)",
-   "$.fs.read (via countRunningAgents",
-   "loadConfig)",
-   "$.fs.write (via save)",
+   "$.agent.list (via onAgentTurn",
+   "runningAgents)",
+   "$.clock.now (via claimSpeech",
+   "phraseState",
+   "runVoice",
+   "summarize",
+   "writeLog)",
+   "$.clock.sleep (via startEngine)",
+   "$.command.register",
+   "$.env.get (via detectOs",
+   "findEngine",
+   "homeDir",
+   "homeRoot",
+   "silence)",
+   "$.fs.exists (via autostartStatus",
+   "findEngine",
+   "generatePhrases",
+   "isMuted",
+   "legacyFiles",
+   "loadConfig",
+   "phraseState",
+   "synthesize)",
+   "$.fs.list (via findEngine",
+   "legacyFiles",
+   "phraseFolderWavs",
+   "pickPhrase",
+   "pruneCache)",
+   "$.fs.read (via doctor",
+   "generatePhrases",
+   "installAutostartAndHotkey",
+   "loadConfig",
+   "phraseState",
+   "pickPhrase",
+   "readProgress",
+   "shippedDefaults",
+   "writeLog)",
+   "$.fs.stat (via claimSpeech",
+   "readProgress)",
+   "$.fs.write (via claimSpeech",
+   "generatePhrases",
+   "installAutostartAndHotkey",
+   "loadConfig",
+   "pickPhrase",
+   "runVoice",
+   "synthesize",
+   "writeLog)",
+   "$.http.fetch (via engineVersion",
+   "synthesize)",
    "$.model.complete (via summarize)",
-   "$.session.id (via begin)",
-   "$.ui.log (via begin",
-   "fail",
-   "loadConfig)"
+   "$.process.run (via run)",
+   "$.ui.log (via logFailure",
+   "writeLog)"
   ],
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
    "HOME",
+   "LOCALAPPDATA",
+   "OS",
+   "ProgramFiles",
    "USERPROFILE",
-   "VOICE_NOTIFY_HOME"
+   "VOICE_NOTIFY_HOME",
+   "VOICE_NOTIFY_SUPPRESS"
   ],
   "raw": {
    "success": true,
@@ -88,15 +171,45 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: turn.complete",
-      "./register.ts calls: $.clock.now (via begin, summarize), $.env.get (via begin), $.fs.exists (via begin), $.fs.list (via countRunningAgents), $.fs.read (via countRunningAgents, loadConfig), $.fs.write (via save), $.model.complete (via summarize), $.session.id (via begin), $.ui.log (via begin, fail, loadConfig)",
+      "./register.ts hooks: session.start, command.run{command=voice-notify}, session.compact, turn.start, turn.complete, classic.PermissionRequest, classic.Notification, classic.TaskCompleted",
+      "./register.ts answers its own command: command.run{command=voice-notify}",
+      "./register.ts gating hook with .catch: session.compact",
+      "./register.ts gating hook with .catch: classic.PermissionRequest",
+      "./register.ts gating hook with .catch: classic.Notification",
+      "./register.ts gating hook with .catch: classic.TaskCompleted",
+      "./register.ts calls: $.agent.list (via onAgentTurn, runningAgents), $.clock.now (via claimSpeech, phraseState, runVoice, summarize, writeLog), $.clock.sleep (via startEngine), $.command.register, $.env.get (via detectOs, findEngine, homeDir, homeRoot, silence), $.fs.exists (via autostartStatus, findEngine, generatePhrases, isMuted, legacyFiles, loadConfig, phraseState, synthesize), $.fs.list (via findEngine, legacyFiles, phraseFolderWavs, pickPhrase, pruneCache), $.fs.read (via doctor, generatePhrases, installAutostartAndHotkey, loadConfig, phraseState, pickPhrase, readProgress, shippedDefaults, writeLog), $.fs.stat (via claimSpeech, readProgress), $.fs.write (via claimSpeech, generatePhrases, installAutostartAndHotkey, loadConfig, pickPhrase, runVoice, synthesize, writeLog), $.http.fetch (via engineVersion, synthesize), $.model.complete (via summarize), $.process.run (via run), $.ui.log (via logFailure, writeLog)",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME, USERPROFILE, VOICE_NOTIFY_HOME"
+      "./register.ts env reads: HOME, LOCALAPPDATA, OS, ProgramFiles, USERPROFILE, VOICE_NOTIFY_HOME, VOICE_NOTIFY_SUPPRESS"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.PermissionRequest",
+       "hook": "classic.PermissionRequest",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.Notification",
+       "hook": "classic.Notification",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.TaskCompleted",
+       "hook": "classic.TaskCompleted",
+       "hasCatch": true
+      }
+     ]
     }
    ]
   }
  },
- "sourceHash": "e8c33f14e54105d6"
+ "sourceHash": "8df0653afe610d83"
 }

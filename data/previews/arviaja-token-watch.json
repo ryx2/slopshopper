@@ -1,6 +1,6 @@
 {
  "slug": "arviaja-token-watch",
- "generatedAt": "2026-10-07T15:22:14.502Z",
+ "generatedAt": "2026-10-08T15:53:22.578Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -44,6 +44,12 @@
    {
     "event": "ui.close",
     "matcher": {
+     "id": "token-watch"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
      "id": "token-watch-recommend"
     }
    },
@@ -66,7 +72,7 @@
    {
     "name": "token-watch",
     "description": "Show token use, plan limits and cache temperature",
-    "argumentHint": "[recommend]",
+    "argumentHint": "[recommend | band on | band off]",
     "immediate": true
    }
   ],
@@ -82,18 +88,21 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 24,
+   "$.state.get": 44,
    "$.session.id": 1,
-   "$.clock.now": 5,
+   "$.clock.now": 7,
    "$.session.root": 1,
-   "$.state.set": 10,
+   "$.state.set": 12,
    "$.session.usage": 1,
+   "$.store.get": 1,
+   "$.ui.panes": 2,
    "$.clock.after": 1,
    "$.clock.every": 2,
    "$.command.register": 1,
    "$.store.keys": 1,
    "$.ui.open": 1,
-   "$.ui.resolve": 3
+   "$.ui.invalidate": 1,
+   "$.ui.resolve": 5
   },
   "timers": [
    {
@@ -119,16 +128,81 @@
      },
      "children": [
       {
-       "type": "Text",
+       "type": "Box",
        "props": {
-        "wrap": "truncate-end"
+        "flexDirection": "row"
        },
        "children": [
         {
-         "type": "Text",
-         "props": {},
+         "type": "Box",
+         "props": {
+          "flexShrink": 1
+         },
          "children": [
-          "5h 31%"
+          {
+           "type": "Text",
+           "props": {
+            "wrap": "truncate-end"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              "5h 31%"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexGrow": 1
+         },
+         "children": []
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexShrink": 0,
+          "marginLeft": 2
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "pane",
+            "label": "close",
+            "hotkey": "t",
+            "autoFocus": true,
+            "dimColor": true,
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexShrink": 0,
+          "marginLeft": 2
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "band-hide",
+            "label": "×",
+            "role": "dismiss",
+            "plain": true,
+            "dimColor": true,
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
          ]
         }
        ]
@@ -433,6 +507,7 @@
    "session.measure",
    "command.run{command=token-watch}",
    "ui.render{component=AbovePrompt}",
+   "ui.close{id=token-watch}",
    "ui.close{id=token-watch-recommend}",
    "ui.render{component=Pane, requestId=token-watch-recommend}",
    "ui.render{component=Pane, requestId=token-watch}"
@@ -454,21 +529,32 @@
    "$.state.set",
    "$.store.delete (via prune)",
    "$.store.get (via loadOthers",
-   "prune)",
+   "loadSettings",
+   "prune",
+   "setBand)",
    "$.store.keys (via loadOthers",
    "prune)",
-   "$.store.set (via flush)",
-   "$.ui.close (via closeRecommend)",
+   "$.store.set (via flush",
+   "setBand)",
+   "$.ui.close (via closeRecommend",
+   "togglePane)",
    "$.ui.invalidate",
-   "$.ui.open",
-   "$.ui.panes (via isOthersShown)",
-   "$.ui.resolve"
+   "$.ui.open (via askRecommend",
+   "openPane",
+   "openRecommend)",
+   "$.ui.panes (via isPaneShown",
+   "isPaneUp)",
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
    "token-watch.agents",
    "token-watch.breakdown",
    "token-watch.causes",
    "token-watch.hours",
+   "token-watch.isBandHidden",
+   "token-watch.isBandOn",
+   "token-watch.isPaneOpen",
    "token-watch.limits",
    "token-watch.limitsAt",
    "token-watch.main",
@@ -485,6 +571,9 @@
    "token-watch.breakdown",
    "token-watch.causes",
    "token-watch.hours",
+   "token-watch.isBandHidden",
+   "token-watch.isBandOn",
+   "token-watch.isPaneOpen",
    "token-watch.limits",
    "token-watch.limitsAt",
    "token-watch.main",
@@ -508,7 +597,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: token-watch.run, token-watch.totals, token-watch.causes, token-watch.main, token-watch.limits, token-watch.limitsAt, token-watch.readings, token-watch.agents, token-watch.threads, token-watch.hours, token-watch.tab, token-watch.breakdown, token-watch.others, token-watch.recommend"
+     "types ./types/index.d.ts declares state: token-watch.run, token-watch.totals, token-watch.causes, token-watch.main, token-watch.limits, token-watch.limitsAt, token-watch.readings, token-watch.agents, token-watch.threads, token-watch.hours, token-watch.tab, token-watch.breakdown, token-watch.others, token-watch.recommend, token-watch.isBandOn, token-watch.isPaneOpen, token-watch.isBandHidden"
     ],
     "gatingHooks": []
    },
@@ -519,19 +608,26 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, session.end, turn.step, turn.complete, session.measure, command.run{command=token-watch}, ui.render{component=AbovePrompt}, ui.close{id=token-watch-recommend}, ui.render{component=Pane, requestId=token-watch-recommend}, ui.render{component=Pane, requestId=token-watch}",
+      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, session.end, turn.step, turn.complete, session.measure, command.run{command=token-watch}, ui.render{component=AbovePrompt}, ui.close{id=token-watch}, ui.close{id=token-watch-recommend}, ui.render{component=Pane, requestId=token-watch-recommend}, ui.render{component=Pane, requestId=token-watch}",
       "./register.ts answers its own command: command.run{command=token-watch}",
       "./register.ts gating hook with .catch: classic.SessionStart{source=clear|resume|fork}",
+      "./register.ts gating hook with .catch: ui.close{id=token-watch}",
       "./register.ts gating hook with .catch: ui.close{id=token-watch-recommend}",
-      "./register.ts calls: $.agent.list (via agentTypeOf), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.model.complete (via askRecommend), $.session.id (via newRun), $.session.model (via seedResumed), $.session.root (via newRun), $.session.usage (via loadBreakdown, loadLimits, sessionCost), $.state.get, $.state.set, $.store.delete (via prune), $.store.get (via loadOthers, prune), $.store.keys (via loadOthers, prune), $.store.set (via flush), $.ui.close (via closeRecommend), $.ui.invalidate, $.ui.open, $.ui.panes (via isOthersShown), $.ui.resolve",
-      "./register.ts state writes: token-watch.agents, token-watch.breakdown, token-watch.causes, token-watch.hours, token-watch.limits, token-watch.limitsAt, token-watch.main, token-watch.others, token-watch.readings, token-watch.recommend, token-watch.run, token-watch.tab, token-watch.threads, token-watch.totals",
-      "./register.ts state reads: token-watch.agents, token-watch.breakdown, token-watch.causes, token-watch.hours, token-watch.limits, token-watch.limitsAt, token-watch.main, token-watch.others, token-watch.readings, token-watch.recommend, token-watch.run, token-watch.tab, token-watch.threads, token-watch.totals"
+      "./register.ts calls: $.agent.list (via agentTypeOf), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.model.complete (via askRecommend), $.session.id (via newRun), $.session.model (via seedResumed), $.session.root (via newRun), $.session.usage (via loadBreakdown, loadLimits, sessionCost), $.state.get, $.state.set, $.store.delete (via prune), $.store.get (via loadOthers, loadSettings, prune, setBand), $.store.keys (via loadOthers, prune), $.store.set (via flush, setBand), $.ui.close (via closeRecommend, togglePane), $.ui.invalidate, $.ui.open (via askRecommend, openPane, openRecommend), $.ui.panes (via isPaneShown, isPaneUp), $.ui.resolve, $.ui.toast",
+      "./register.ts state writes: token-watch.agents, token-watch.breakdown, token-watch.causes, token-watch.hours, token-watch.isBandHidden, token-watch.isBandOn, token-watch.isPaneOpen, token-watch.limits, token-watch.limitsAt, token-watch.main, token-watch.others, token-watch.readings, token-watch.recommend, token-watch.run, token-watch.tab, token-watch.threads, token-watch.totals",
+      "./register.ts state reads: token-watch.agents, token-watch.breakdown, token-watch.causes, token-watch.hours, token-watch.isBandHidden, token-watch.isBandOn, token-watch.isPaneOpen, token-watch.limits, token-watch.limitsAt, token-watch.main, token-watch.others, token-watch.readings, token-watch.recommend, token-watch.run, token-watch.tab, token-watch.threads, token-watch.totals"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart{source=clear|resume|fork}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=token-watch}",
        "hasCatch": true
       },
       {
@@ -545,5 +641,5 @@
    ]
   }
  },
- "sourceHash": "7f46a34aeec106a7"
+ "sourceHash": "ca85543dca578d2b"
 }

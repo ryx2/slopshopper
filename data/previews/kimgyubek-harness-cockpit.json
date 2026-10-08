@@ -1,0 +1,962 @@
+{
+ "slug": "kimgyubek-harness-cockpit",
+ "generatedAt": "2026-10-08T15:54:17.847Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.attach"
+   },
+   {
+    "event": "session.detach"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__harness-cockpit__phase"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__harness-cockpit__phase"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "leftovers"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "now"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "clawd"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "fx"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cockpit"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "UserMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Spinner"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "TurnDuration"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "leftovers",
+    "description": "이 세션이 띄운 것 목록 (세션을 닫기 전 확인)",
+    "immediate": true,
+    "output": "띄운 것 없음 — 세션을 닫아도 된다"
+   },
+   {
+    "name": "cockpit",
+    "description": "콕핏 패널 열기 (워커 · 서브 · 감시 세로 목록)",
+    "immediate": true,
+    "output": "콕핏 패널을 열었다 — 이제 110칸 이상이면 저절로 열린다(손으로 닫으면 다시 /cockpit)"
+   },
+   {
+    "name": "fx",
+    "description": "새 세션 시작 효과 — 미리 보기 /fx 1 3 · 고르기 /fx use 1 3 · 끄기 /fx off",
+    "argumentHint": "[번호…|use 번호…|off]",
+    "immediate": true,
+    "output": "지금 새 세션 시작 효과: 1. 부팅 스윕\n/fx 1  부팅 스윕 — 띠가 왼쪽부터 켜지고 한도 게이지가 0 에서 차오른다 · 2줄\n/fx 2  브리핑 카드 — 작업 대장 · 최근 작업 · 가동 시간대(설정했을 때) · 한도를 한 장으로 · 첫 프롬프트에 접힘\n/fx 3  캐릭터 인사 — 샘플 캐릭터가 통통 튀며 인사 · 3초 뒤 사라짐\n/fx 4  워드마크 — 레포 이름을 큰 글자로 · 빛이 한 번 지나감 · 레포 색(파랑 / 빨강)\n/fx 1 3  함께 미리 보기 · /fx use 1 3  새 세션에 쓸 효과 고르기 · /fx off  끄기"
+   },
+   {
+    "name": "clawd",
+    "description": "띠의 Clawd 켜기 · 끄기 (/clawd on|off, 인자 없으면 뒤집기)",
+    "argumentHint": "[on|off]",
+    "immediate": true,
+    "output": "Clawd 를 띠에서 껐다 — 다시 켜려면 /clawd on"
+   },
+   {
+    "name": "now",
+    "description": "지금까지 한 일 한눈에 — 모델을 부르지 않는다(토큰 0)",
+    "immediate": true,
+    "output": "이슈 없음 · 단계 구현 · 쉬는 중\n이번 턴: 도구 9 · 고친 파일 3 · 실패 1\n서브 0 · 감시 0 · 남은 것 없음\n한도: ctx 49% · 5h 31% · 7d —%\n보낸 프롬프트(최근 1개):\n  #1 · 15:54  fix the failing auth test and add an audit log call"
+   }
+  ],
+  "tools": [
+   {
+    "name": "phase",
+    "description": "하네스 콕핏 띠에 지금 작업 단계를 알린다. 단계를 넘길 때 한 번 부른다. step: plan(플랜) · code(코드 범위) · impl(구현) · verify(검증) · done(완료) · research(조사) · organize(정리) · report(보고). detail 은 칩에 보일 짧은 진행 표시(예: E2E 3/8). state 는 active(기본) · wait(사용자 결정 대기) · fail(막힘)."
+   }
+  ],
+  "panes": [
+   {
+    "id": "cockpit",
+    "title": "콕핏"
+   }
+  ],
+  "toasts": [],
+  "logs": [
+   "cockpit: 최근 한도 값 읽기 실패 Error: ENOENT: no such file /tmp/.claude-usage/current.json"
+  ],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 1,
+   "$.fs.exists": 6,
+   "$.store.get": 4,
+   "$.session.usage": 2,
+   "$.ui.invalidate": 11,
+   "$.ui.resolve": 10,
+   "$.session.id": 1,
+   "$.session.cwd": 1,
+   "$.session.model": 1,
+   "$.tool.register": 1,
+   "$.command.register": 5,
+   "$.clock.every": 1,
+   "$.fs.list": 3,
+   "$.fs.write": 3,
+   "$.process.run": 8,
+   "$.session.surfaces": 3,
+   "$.fs.read": 1,
+   "$.ui.log": 1,
+   "$.ui.open": 1,
+   "$.store.set": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 150
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column",
+      "borderStyle": "bold",
+      "borderColor": "#4D9BFF",
+      "paddingX": 1
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+        "columnGap": 2
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "flexGrow": 1,
+          "flexShrink": 1
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "wrap": "truncate-end"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "success"
+             },
+             "children": [
+              "✓"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success",
+              "bold": false
+             },
+             "children": [
+              " 플랜"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success"
+             },
+             "children": [
+              " ── "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success"
+             },
+             "children": [
+              "✓"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success",
+              "bold": false
+             },
+             "children": [
+              " 코드"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success"
+             },
+             "children": [
+              " ── "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#4D9BFF"
+             },
+             "children": [
+              "●"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#4D9BFF",
+              "bold": true
+             },
+             "children": [
+              " 구현"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              "  "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#4D9BFF"
+             },
+             "children": [
+              "●"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              " "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#4D9BFF",
+              "bold": true
+             },
+             "children": [
+              "코드 수정 3"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              " ── "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              "○"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive",
+              "bold": false
+             },
+             "children": [
+              " 검증"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              " ── "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              "○"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive",
+              "bold": false
+             },
+             "children": [
+              " 완료"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexShrink": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "wrap": "truncate-end"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "success",
+              "bold": true
+             },
+             "children": [
+              "✔ 완료"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              " 42s"
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+        "columnGap": 2
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "flexGrow": 1,
+          "flexShrink": 1
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "wrap": "truncate-end"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              "● "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "app"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success"
+             },
+             "children": [
+              "  ⎇ feat/auth-refresh"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "warning"
+             },
+             "children": [
+              " *2"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              "  │  "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#4D9BFF"
+             },
+             "children": [
+              "◆ Opus 5.5"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexShrink": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "wrap": "truncate-end"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              "목"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive"
+             },
+             "children": [
+              " 퇴근 "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3fae58",
+              "bold": true
+             },
+             "children": [
+              "2h06m"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              "   "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "#74ad2c",
+              "color": "#15171c",
+              "bold": false
+             },
+             "children": [
+              " ctx"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "subtle",
+              "color": "text",
+              "bold": false
+             },
+             "children": [
+              " "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "subtle",
+              "color": "text",
+              "bold": true
+             },
+             "children": [
+              "49% "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              " "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "#74ad2c",
+              "color": "#15171c",
+              "bold": false
+             },
+             "children": [
+              " 5h"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "subtle",
+              "color": "text",
+              "bold": false
+             },
+             "children": [
+              "  "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "subtle",
+              "color": "text",
+              "bold": true
+             },
+             "children": [
+              "31% "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              " "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "subtle",
+              "color": "text",
+              "bold": false
+             },
+             "children": [
+              " 7d  "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "subtle",
+              "color": "text",
+              "bold": true
+             },
+             "children": [
+              " —  "
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "Spinner": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine"
+   },
+   "TurnDuration": {
+    "ok": true,
+    "tree": {
+     "type": "Text",
+     "props": {
+      "color": "inactive",
+      "wrap": "truncate-end"
+     },
+     "children": [
+      "✻ Worked for 42s · 15:54 · 도구 9 · 고친 파일 3 · 실패 1"
+     ]
+    }
+   },
+   "UserMessage": {
+    "ok": "engine"
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "cockpit": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "color": "inactive",
+         "bold": true
+        },
+        "children": [
+         "표시할 것 없음"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "inactive"
+          },
+          "children": [
+           "워커 · 서브 · 감시가"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "inactive"
+          },
+          "children": [
+           "생기면 여기에 쌓인다"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "콕핏"
+    }
+   }
+  },
+  "script": [
+   "$.fs.write(/tmp/.claude-cockpit/preview-session)",
+   "$.process.run(/bin/sh -c /usr/sbin/iostat -c 2 -w 1 | /usr/bin/tail -1; /usr/bin/memory_pressu…) → exit 0",
+   "$.process.run(/usr/bin/pmset -g assertions) → exit 0",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.fs.write(/tmp/.claude-cockpit/preview-session.active)",
+   "$.fs.write(/tmp/.claude-cockpit/awake.json)",
+   "$.process.run(git status --porcelain) → exit 0",
+   "$.process.run(git rev-list --count @{u}..HEAD) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git status --porcelain) → exit 0",
+   "$.process.run(git rev-list --count @{u}..HEAD) → exit 0",
+   "turn.complete",
+   "/leftovers → 띄운 것 없음 — 세션을 닫아도 된다",
+   "$.ui.open(cockpit)",
+   "/cockpit → 콕핏 패널을 열었다 — 이제 110칸 이상이면 저절로 열린다(손으로 닫으면 다시 /cockpit)",
+   "/fx → 지금 새 세션 시작 효과: 1. 부팅 스윕\n/fx 1  부팅 스윕 — 띠가 왼쪽부터 켜지고 한도 게이지가 0 에서 차오른다 · 2줄\n/fx 2 …",
+   "/clawd → Clawd 를 띠에서 껐다 — 다시 켜려면 /clawd on",
+   "/now → 이슈 없음 · 단계 구현 · 쉬는 중\n이번 턴: 도구 9 · 고친 파일 3 · 실패 1\n서브 0 · 감시 0 · 남은 것 없음\n한도: ctx 4…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.attach",
+   "session.detach",
+   "turn.start",
+   "turn.step",
+   "turn.complete",
+   "session.measure",
+   "agent.spawn",
+   "tool.call",
+   "tool.call{tool=mcp__harness-cockpit__phase}",
+   "tool.describe{tool=mcp__harness-cockpit__phase}",
+   "prompt.submit",
+   "classic.Stop",
+   "classic.UserPromptSubmit",
+   "command.run{command=leftovers}",
+   "command.run{command=now}",
+   "command.run{command=clawd}",
+   "command.run{command=fx}",
+   "command.run{command=cockpit}",
+   "ui.close",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane}",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=UserMessage}",
+   "ui.render{component=Spinner}",
+   "ui.render{component=TurnDuration}",
+   "ui.render{component=PromptHint}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.exists",
+   "$.fs.list (via bridgeOn",
+   "refreshFleet)",
+   "$.fs.read",
+   "$.fs.write (via saveOwned",
+   "tickAwake",
+   "tickSys",
+   "touchMarker)",
+   "$.mcp.call (via refreshLinear)",
+   "$.process.run (via readBoard",
+   "refreshDockers",
+   "refreshGit",
+   "tickAwake",
+   "tickSys)",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.model",
+   "$.session.surfaces (via refreshSurfaces)",
+   "$.session.usage",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.blit",
+   "$.ui.close (via syncPane)",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.toast (via checkToasts",
+   "refreshFlags)"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "FLEET_ROOT",
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/kimgyubek-harness-cockpit/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kimgyubek-harness-cockpit/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kimgyubek-harness-cockpit/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.js hooks: session.start, session.attach, session.detach, turn.start, turn.step, turn.complete, session.measure, agent.spawn, tool.call, tool.call{tool=mcp__harness-cockpit__phase}, tool.describe{tool=mcp__harness-cockpit__phase}, prompt.submit, classic.Stop, classic.UserPromptSubmit, command.run{command=leftovers}, command.run{command=now}, command.run{command=clawd}, command.run{command=fx}, command.run{command=cockpit}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane}, ui.render{component=ToolUse}, ui.render{component=UserMessage}, ui.render{component=Spinner}, ui.render{component=TurnDuration}, ui.render{component=PromptHint}",
+      "./register.js answers its own command: command.run{command=leftovers}",
+      "./register.js answers its own command: command.run{command=now}",
+      "./register.js answers its own command: command.run{command=clawd}",
+      "./register.js answers its own command: command.run{command=fx}",
+      "./register.js answers its own command: command.run{command=cockpit}",
+      "./register.js gating hook without .catch: agent.spawn",
+      "./register.js gating hook without .catch: tool.call",
+      "./register.js gating hook without .catch: tool.call{tool=mcp__harness-cockpit__phase}",
+      "./register.js gating hook without .catch: prompt.submit",
+      "./register.js gating hook without .catch: classic.Stop",
+      "./register.js gating hook without .catch: classic.UserPromptSubmit",
+      "./register.js gating hook without .catch: ui.close",
+      "./register.js calls: $.clock.every, $.command.register, $.env.get, $.fs.exists, $.fs.list (via bridgeOn, refreshFleet), $.fs.read, $.fs.write (via saveOwned, tickAwake, tickSys, touchMarker), $.mcp.call (via refreshLinear), $.process.run (via readBoard, refreshDockers, refreshGit, tickAwake, tickSys), $.session.cwd, $.session.id, $.session.model, $.session.surfaces (via refreshSurfaces), $.session.usage, $.store.get, $.store.set, $.tool.register, $.ui.blit, $.ui.close (via syncPane), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.toast (via checkToasts, refreshFlags)",
+      "./register.js env writes: nothing",
+      "./register.js env reads: FLEET_ROOT, HOME"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.js",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__harness-cockpit__phase}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "d86f0ec01d003cb0"
+}

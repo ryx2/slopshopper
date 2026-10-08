@@ -1,6 +1,6 @@
 {
  "slug": "markbovee-agent-skills-kit",
- "generatedAt": "2026-10-06T14:51:10.660Z",
+ "generatedAt": "2026-10-08T15:53:32.652Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -28,34 +28,27 @@
    {
     "event": "ui.render",
     "matcher": {
-     "component": "Pane",
-     "requestId": "ask-flow"
+     "component": "AbovePrompt"
     }
    }
   ],
   "commands": [
    {
     "name": "ask-flow",
-    "description": "Show the ASK workflow pane",
-    "output": "ASK flow pane opened."
+    "description": "Expand or collapse the ASK status band"
    }
   ],
   "tools": [],
-  "panes": [
-   {
-    "id": "ask-flow",
-    "title": "ASK flow"
-   }
-  ],
+  "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.ui.open": 1,
+   "$.state.get": 4,
+   "$.state.set": 1,
    "$.ui.resolve": 1,
-   "$.state.get": 2,
    "$.session.id": 1,
    "$.env.get": 2,
    "$.fs.list": 1,
@@ -63,73 +56,94 @@
   },
   "timers": [],
   "sites": {
-   "Pane": {
-    "ask-flow": {
-     "ok": true,
-     "tree": {
-      "type": "Box",
-      "props": {
-       "flexDirection": "column"
-      },
-      "children": [
-       {
-        "type": "Text",
-        "props": {
-         "bold": true
-        },
-        "children": [
-         "Workflow ",
-         ""
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "no workflow announced yet"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "bold": true
-        },
-        "children": [
-         "Skills"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "none loaded yet"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "bold": true
-        },
-        "children": [
-         "Subagents"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "none yet"
-        ]
-       }
-      ]
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
      },
-     "title": "ASK flow"
+     "children": [
+      {
+       "type": "Button",
+       "props": {
+        "key": "ask-flow-toggle",
+        "label": "▾ ASK",
+        "plain": true,
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Text",
+       "props": {
+        "bold": true
+       },
+       "children": [
+        "Workflow"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "no workflow announced yet"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "bold": true
+       },
+       "children": [
+        "Skills"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "none loaded yet"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "bold": true
+       },
+       "children": [
+        "Subagents"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "none yet"
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
     }
    }
   },
@@ -145,8 +159,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.ui.open(ask-flow)",
-   "/ask-flow → ASK flow pane opened."
+   "/ask-flow → "
   ],
   "console": [],
   "warnings": []
@@ -162,7 +175,7 @@
    "command.run{command=ask-flow}",
    "tool.call{tool=Read}",
    "tool.call{tool=Agent}",
-   "ui.render{component=Pane, requestId=ask-flow}"
+   "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.command.register",
@@ -172,14 +185,15 @@
    "$.session.id (via loadWorkflow)",
    "$.state.get",
    "$.state.set",
-   "$.ui.open",
    "$.ui.resolve"
   ],
   "stateReads": [
+   "agent-skills-kit.expanded",
    "agent-skills-kit.runs",
    "agent-skills-kit.skills"
   ],
   "stateWrites": [
+   "agent-skills-kit.expanded",
    "agent-skills-kit.runs",
    "agent-skills-kit.skills"
   ],
@@ -198,7 +212,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: agent-skills-kit.skills, agent-skills-kit.runs"
+     "types ./types/index.d.ts declares state: agent-skills-kit.skills, agent-skills-kit.runs, agent-skills-kit.expanded"
     ],
     "gatingHooks": []
    },
@@ -209,14 +223,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./flow-pane.tsx hooks: session.start, command.run{command=ask-flow}, tool.call{tool=Read}, tool.call{tool=Agent}, ui.render{component=Pane, requestId=ask-flow}",
+      "./flow-pane.tsx hooks: session.start, command.run{command=ask-flow}, tool.call{tool=Read}, tool.call{tool=Agent}, ui.render{component=AbovePrompt}",
+      "./flow-pane.tsx answers its own command: command.run{command=ask-flow}",
       "./flow-pane.tsx gating hook without .catch: tool.call{tool=Read}",
       "./flow-pane.tsx gating hook without .catch: tool.call{tool=Agent}",
-      "./flow-pane.tsx calls: $.command.register, $.env.get (via sessionDirs), $.fs.list (via sessionDirs), $.fs.read (via loadWorkflow), $.session.id (via loadWorkflow), $.state.get, $.state.set, $.ui.open, $.ui.resolve",
+      "./flow-pane.tsx calls: $.command.register, $.env.get (via sessionDirs), $.fs.list (via sessionDirs), $.fs.read (via loadWorkflow), $.session.id (via loadWorkflow), $.state.get, $.state.set, $.ui.resolve",
       "./flow-pane.tsx env writes: nothing",
       "./flow-pane.tsx env reads: CLAUDE_PLUGIN_DATA, HOME",
-      "./flow-pane.tsx state writes: agent-skills-kit.runs, agent-skills-kit.skills",
-      "./flow-pane.tsx state reads: agent-skills-kit.runs, agent-skills-kit.skills"
+      "./flow-pane.tsx state writes: agent-skills-kit.expanded, agent-skills-kit.runs, agent-skills-kit.skills",
+      "./flow-pane.tsx state reads: agent-skills-kit.expanded, agent-skills-kit.runs, agent-skills-kit.skills"
      ],
      "gatingHooks": [
       {
@@ -236,5 +251,5 @@
    ]
   }
  },
- "sourceHash": "8f3973fd6ff51038"
+ "sourceHash": "83568bb78f267cda"
 }

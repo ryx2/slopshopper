@@ -1,0 +1,8 @@
+{
+ "slug": "zgeoff-nixie-nixie-hold-promise",
+ "files": {
+  "hooks/register.js": "// A hooks module imports only its own files, so the timer comes from setTimeout.\nfunction waitMs(ms) {\n  // oxlint-disable-next-line promise/avoid-new\n  return new Promise((resolve) => {\n    setTimeout(resolve, ms);\n  });\n}\n\n// Holds MARK_HOLD calls for 15 s on a timer of the hook's own, then denies them.\nasync function handleToolCall($, e, next) {\n  if (!e.command.includes('MARK_HOLD')) {\n    return next(e);\n  }\n  await $.ui.log(`nixie hold start budget=${JSON.stringify(next.budget)}`, { to: 'debug' });\n  await waitMs(15_000);\n  await $.ui.log('nixie hold end', { to: 'debug' });\n  return { deny: 'nixie-hold-promise: the owner refused this command.' };\n}\n\nexport function register(on) {\n  on('tool.call', { tool: 'Bash' }, handleToolCall);\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"The nixie-hold-promise hooks module\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"nixie-hold-promise\",\n  \"version\": \"0.0.0\",\n  \"description\": \"Spike: a tool.call hook that holds a call on a promise of its own\"\n}"
+ }
+}

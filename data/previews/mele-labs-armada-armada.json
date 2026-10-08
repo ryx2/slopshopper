@@ -1,6 +1,6 @@
 {
  "slug": "mele-labs-armada-armada",
- "generatedAt": "2026-10-07T15:22:28.811Z",
+ "generatedAt": "2026-10-08T15:53:34.640Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -47,6 +47,36 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Artifact"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__claude_ai_Claude_Docs__create"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__claude_ai_Claude_Docs__batch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__claude_ai_Claude_Docs__update"
+    }
+   },
+   {
     "event": "agent.spawn"
    },
    {
@@ -57,6 +87,12 @@
    },
    {
     "event": "session.measure"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "classic.Stop"
    },
    {
     "event": "turn.complete"
@@ -73,18 +109,26 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.id": 7,
+   "$.env.get": 3,
+   "$.clock.every": 1,
+   "$.session.id": 9,
    "$.process.run": 2,
-   "$.clock.now": 6,
-   "$.env.get": 1,
+   "$.session.model": 3,
+   "$.clock.now": 7,
+   "$.command.list": 1,
    "$.fs.read": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 2000
+   }
+  ],
   "sites": {},
   "script": [
    "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
-   "$.process.run(gh pr view --json number,url,state) → exit 0",
    "session.start",
+   "$.process.run(gh pr view --json number,url,state,title,headRefName,isDraft) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -109,33 +153,43 @@
    "command.run{command=rename}",
    "tool.call{tool=Bash}",
    "tool.call{tool=?}",
+   "tool.call{tool=?}",
    "agent.spawn",
    "session.send",
    "session.receive",
    "session.measure",
+   "classic.UserPromptSubmit",
+   "classic.Stop",
    "turn.complete",
    "session.end"
   ],
   "calls": [
+   "$.clock.every",
    "$.clock.now (via deliver",
-   "measured)",
+   "measured",
+   "submitHeld)",
    "$.clock.sleep (via flush",
    "post)",
-   "$.env.get (via post",
+   "$.command.list (via tuned)",
+   "$.command.run (via submitHeld)",
+   "$.env.get",
+   "$.fs.read (via portOf",
    "renamed)",
-   "$.fs.read (via post",
-   "renamed)",
-   "$.http.fetch (via post)",
+   "$.http.fetch (via post",
+   "submitHeld)",
    "$.process.run (via branchOf",
    "pullRequestOn)",
+   "$.prompt.submit (via submitHeld)",
    "$.session.cwd (via afterBash",
    "begin",
    "renamed)",
-   "$.session.id"
+   "$.session.id",
+   "$.session.model (via tuned)"
   ],
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "ARMADA_DRONE",
    "HOME"
   ],
   "raw": {
@@ -157,17 +211,20 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.submit, command.run{command=rename}, tool.call{tool=Bash}, tool.call{tool=?}, agent.spawn, session.send, session.receive, session.measure, turn.complete, session.end",
+      "./register.ts hooks: session.start, prompt.submit, command.run{command=rename}, tool.call{tool=Bash}, tool.call{tool=?}, tool.call{tool=?}, agent.spawn, session.send, session.receive, session.measure, classic.UserPromptSubmit, classic.Stop, turn.complete, session.end",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: command.run{command=rename}",
       "./register.ts gating hook without .catch: tool.call{tool=Bash}",
       "./register.ts gating hook without .catch: tool.call{tool=?}",
+      "./register.ts gating hook without .catch: tool.call{tool=?}",
       "./register.ts gating hook without .catch: agent.spawn",
       "./register.ts gating hook without .catch: session.send",
       "./register.ts gating hook without .catch: session.receive",
-      "./register.ts calls: $.clock.now (via deliver, measured), $.clock.sleep (via flush, post), $.env.get (via post, renamed), $.fs.read (via post, renamed), $.http.fetch (via post), $.process.run (via branchOf, pullRequestOn), $.session.cwd (via afterBash, begin, renamed), $.session.id",
+      "./register.ts gating hook without .catch: classic.UserPromptSubmit",
+      "./register.ts gating hook without .catch: classic.Stop",
+      "./register.ts calls: $.clock.every, $.clock.now (via deliver, measured, submitHeld), $.clock.sleep (via flush, post), $.command.list (via tuned), $.command.run (via submitHeld), $.env.get, $.fs.read (via portOf, renamed), $.http.fetch (via post, submitHeld), $.process.run (via branchOf, pullRequestOn), $.prompt.submit (via submitHeld), $.session.cwd (via afterBash, begin, renamed), $.session.id, $.session.model (via tuned)",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME"
+      "./register.ts env reads: ARMADA_DRONE, HOME"
      ],
      "gatingHooks": [
       {
@@ -196,6 +253,12 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
        "hasCatch": false
@@ -211,11 +274,23 @@
        "pattern": "session.receive",
        "hook": "session.receive",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
       }
      ]
     }
    ]
   }
  },
- "sourceHash": "7ce16c35d87a461f"
+ "sourceHash": "e6ea8e086b065ff8"
 }

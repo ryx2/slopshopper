@@ -1,6 +1,6 @@
 {
  "slug": "chrisluo5311-squad-chat-squad-chat",
- "generatedAt": "2026-10-07T15:22:15.617Z",
+ "generatedAt": "2026-10-08T15:53:24.225Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -40,6 +40,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "chat-share"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "chat-name"
     }
    },
@@ -62,6 +68,21 @@
     }
    },
    {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
     "event": "ui.close"
    },
    {
@@ -77,8 +98,8 @@
   "commands": [
    {
     "name": "chat",
-    "description": "squad-chat: open the chat pane (/chat notify on|off: toast @mentions)",
-    "argumentHint": "[notify on|off]",
+    "description": "squad-chat: open the pane: chat, or the Usage, Git and Agents rooms (notify, dnd, rooms: settings)",
+    "argumentHint": "[usage|git|agents | rooms <list> | notify on|off | dnd on|off|auto]",
     "immediate": true
    },
    {
@@ -102,6 +123,12 @@
     "name": "chat-login",
     "description": "squad-chat: sign in with an emailed code",
     "argumentHint": "<email> | <code>",
+    "immediate": true
+   },
+   {
+    "name": "chat-share",
+    "description": "squad-chat: share the selected text, Claude's last code block, your diff, or a Usage/Git/Agents snapshot to the room",
+    "argumentHint": "[diff [path] | usage | git | agents] [#room] | send | cancel",
     "immediate": true
    },
    {
@@ -129,17 +156,24 @@
    "could not run `node --version`",
    "Sign in with your email (/chat-login you@example.com) or a name of 1-24 letters, digits, - or _.",
    "could not run `node --version`",
+   "could not run `node --version`",
    "Not signed in."
   ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 7,
-   "$.store.get": 1,
-   "$.process.run": 1,
-   "$.ui.invalidate": 1,
+   "$.command.register": 8,
+   "$.store.get": 4,
+   "$.session.id": 1,
+   "$.session.cwd": 3,
+   "$.session.model": 1,
+   "$.session.usage": 2,
+   "$.process.run": 19,
+   "$.clock.sleep": 168,
+   "$.ui.invalidate": 28,
+   "$.ui.status": 5,
    "$.ui.open": 2,
-   "$.ui.log": 5,
+   "$.ui.log": 6,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -201,6 +235,72 @@
        {
         "type": "Box",
         "props": {
+         "key": "tabs",
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "sys-usage",
+           "plain": true,
+           "label": " ◔ Usage",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "sys-git",
+           "plain": true,
+           "label": " ⎇ Git",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "sys-agents",
+           "plain": true,
+           "label": " ⟡ Agents",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "rule",
+           "color": "subtle"
+          },
+          "children": [
+           "│"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "tab-chat",
+           "bold": true,
+           "color": "#1F1E1D",
+           "backgroundColor": "#D97757"
+          },
+          "children": [
+           " # chat "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
          "key": "setup",
          "flexDirection": "column",
          "borderStyle": "round",
@@ -254,7 +354,16 @@
   },
   "script": [
    "$.process.run(node --version) → exit 0",
+   "$.process.run(git status --porcelain=v2 --branch) → exit 0",
+   "$.process.run(gh repo view --json nameWithOwner,url) → exit 0",
+   "$.process.run(gh api user --jq .login) → exit 0",
    "session.start",
+   "$.process.run(gh pr view --json number,title,state,isDraft,url,author,headRefName,reviewDecisi…) → exit 0",
+   "$.process.run(gh pr list --state open --limit 8 --json number,title,state,isDraft,url,author,h…) → exit 0",
+   "$.process.run(gh pr list --state open --search review-requested:@me --json number) → exit 0",
+   "$.process.run(gh run list --limit 12 --json databaseId,name,workflowName,headBranch,status,con…) → exit 0",
+   "$.process.run(gh issue list --state open --assignee @me --limit 6 --json number,title,url,labe…) → exit 0",
+   "$.process.run(gh api repos/{owner}/{repo}/dependabot/alerts?state=open&per_page=5) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -262,7 +371,16 @@
    "tool.call Write",
    "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
+   "$.process.run(git status --porcelain=v2 --branch) → exit 0",
+   "$.process.run(gh repo view --json nameWithOwner,url) → exit 0",
+   "$.process.run(gh api user --jq .login) → exit 0",
    "tool.call Bash rm -rf build && git push --force origin main",
+   "$.process.run(gh pr view --json number,title,state,isDraft,url,author,headRefName,reviewDecisi…) → exit 0",
+   "$.process.run(gh pr list --state open --limit 8 --json number,title,state,isDraft,url,author,h…) → exit 0",
+   "$.process.run(gh pr list --state open --search review-requested:@me --json number) → exit 0",
+   "$.process.run(gh run list --limit 12 --json databaseId,name,workflowName,headBranch,status,con…) → exit 0",
+   "$.process.run(gh issue list --state open --assignee @me --limit 6 --json number,title,url,labe…) → exit 0",
+   "$.process.run(gh api repos/{owner}/{repo}/dependabot/alerts?state=open&per_page=5) → exit 0",
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(squad-chat)",
@@ -272,6 +390,7 @@
    "/who → ",
    "$.ui.open(squad-chat)",
    "/chat-login → ",
+   "/chat-share → ",
    "/chat-name → ",
    "/chat-logout → "
   ],
@@ -289,36 +408,51 @@
    "command.run{command=room}",
    "command.run{command=who}",
    "command.run{command=chat-login}",
+   "command.run{command=chat-share}",
    "command.run{command=chat-name}",
    "command.run{command=chat-logout}",
    "ui.render{component=Pane}",
    "ui.render{component=AbovePrompt}",
+   "turn.start",
+   "turn.complete",
+   "session.measure",
+   "tool.call",
+   "agent.spawn",
    "ui.close",
    "session.append{door=command}",
    "session.end"
   ],
   "calls": [
+   "$.agent.list (via tick)",
    "$.clock.now (via runBridge)",
-   "$.clock.sleep (via keepFocusAcrossRoomChange",
-   "runBridge)",
+   "$.clock.sleep",
    "$.command.register",
    "$.http.fetch (via callBridge)",
-   "$.process.run (via nodeProblem)",
+   "$.process.run (via nodeProblem",
+   "refreshGit",
+   "shareSources)",
    "$.process.spawn (via runBridge)",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.messages (via shareSources)",
+   "$.session.model",
+   "$.session.usage (via refreshUsage)",
    "$.store.get",
    "$.store.set",
+   "$.ui.copy (via copySnippet)",
    "$.ui.focus (via keepFocusAcrossRoomChange)",
    "$.ui.invalidate",
-   "$.ui.log (via answer",
-   "markRead",
-   "runBridge)",
+   "$.ui.log",
    "$.ui.open (via keepFocusAcrossRoomChange",
    "openPane)",
    "$.ui.panes",
    "$.ui.resolve",
+   "$.ui.selection (via shareSources)",
    "$.ui.status (via afterChange)",
    "$.ui.toast (via afterChange",
-   "openPane)"
+   "openPane",
+   "quietChanged",
+   "refreshGit)"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -342,19 +476,82 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./squad-chat.mjs hooks: session.start, command.run{command=chat}, command.run{command=say}, command.run{command=room}, command.run{command=who}, command.run{command=chat-login}, command.run{command=chat-name}, command.run{command=chat-logout}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, ui.close, session.append{door=command}, session.end",
-      "./squad-chat.mjs answers its own command: command.run{command=chat}",
-      "./squad-chat.mjs answers its own command: command.run{command=say}",
-      "./squad-chat.mjs answers its own command: command.run{command=room}",
-      "./squad-chat.mjs answers its own command: command.run{command=who}",
-      "./squad-chat.mjs answers its own command: command.run{command=chat-login}",
-      "./squad-chat.mjs answers its own command: command.run{command=chat-name}",
-      "./squad-chat.mjs answers its own command: command.run{command=chat-logout}",
+      "./squad-chat.mjs hooks: session.start, command.run{command=chat}, command.run{command=say}, command.run{command=room}, command.run{command=who}, command.run{command=chat-login}, command.run{command=chat-share}, command.run{command=chat-name}, command.run{command=chat-logout}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, turn.start, turn.complete, session.measure, tool.call, agent.spawn, ui.close, session.append{door=command}, session.end",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=chat}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=say}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=room}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=who}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=chat-login}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=chat-share}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=chat-name}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=chat-logout}",
+      "./squad-chat.mjs gating hook with .catch: tool.call",
+      "./squad-chat.mjs gating hook with .catch: agent.spawn",
       "./squad-chat.mjs gating hook without .catch: ui.close",
       "./squad-chat.mjs gating hook with .catch: session.append{door=command}",
-      "./squad-chat.mjs calls: $.clock.now (via runBridge), $.clock.sleep (via keepFocusAcrossRoomChange, runBridge), $.command.register, $.http.fetch (via callBridge), $.process.run (via nodeProblem), $.process.spawn (via runBridge), $.store.get, $.store.set, $.ui.focus (via keepFocusAcrossRoomChange), $.ui.invalidate, $.ui.log (via answer, markRead, runBridge), $.ui.open (via keepFocusAcrossRoomChange, openPane), $.ui.panes, $.ui.resolve, $.ui.status (via afterChange), $.ui.toast (via afterChange, openPane)"
+      "./squad-chat.mjs calls: $.agent.list (via tick), $.clock.now (via runBridge), $.clock.sleep, $.command.register, $.http.fetch (via callBridge), $.process.run (via nodeProblem, refreshGit, shareSources), $.process.spawn (via runBridge), $.session.cwd, $.session.id, $.session.messages (via shareSources), $.session.model, $.session.usage (via refreshUsage), $.store.get, $.store.set, $.ui.copy (via copySnippet), $.ui.focus (via keepFocusAcrossRoomChange), $.ui.invalidate, $.ui.log, $.ui.open (via keepFocusAcrossRoomChange, openPane), $.ui.panes, $.ui.resolve, $.ui.selection (via shareSources), $.ui.status (via afterChange), $.ui.toast (via afterChange, openPane, quietChanged, refreshGit)"
      ],
      "gatingHooks": [
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=chat}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=say}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=room}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=who}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=chat-login}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=chat-share}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=chat-name}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=chat-logout}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
       {
        "module": "./squad-chat.mjs",
        "pattern": "ui.close",
@@ -372,5 +569,5 @@
    ]
   }
  },
- "sourceHash": "89e3604484b93438"
+ "sourceHash": "cdb12f9a6767fb9d"
 }

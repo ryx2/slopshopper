@@ -1,0 +1,8 @@
+{
+ "slug": "alexatennea-claude-mods-coding-agents",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst CODER = 'coding-agents:coder'\n\nconst GUIDANCE = `# Delegating coding work\nFor implementation work, split it into focused tasks (or follow the current plan's steps) and hand each one to the ${CODER} agent, one task per call, with the files involved and how to check it. Leave the Agent tool's model parameter unset: a router picks the model per task. Make one-line edits yourself. Review each coder's report before starting the next dependent task.`\n\nexport const register: Register = on => {\n  const running = new Map<string, string>()\n  const label = () => (running.size === 0 ? undefined : `coders: ${running.size} running`)\n\n  on('prompt.compose', async ($, e, next) => {\n    const composed = await next(e)\n\n    return {\n      sections: [...composed.sections, { id: 'coding-agents:guidance', text: GUIDANCE, scope: 'session' }],\n    }\n  })\n\n  on('agent.spawn', async ($, e, next) => {\n    const started = await next(e)\n    if (e.subagentType === CODER && started.agentId) {\n      running.set(started.agentId, e.description)\n      $.ui.status(label())\n    }\n\n    return started\n  }).catch(($, e, next) => next(e))\n\n  on('turn.complete', async ($, e, next) => {\n    if (e.agentId && running.delete(e.agentId)) $.ui.status(label())\n\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"coding-agents\",\n  \"version\": \"0.1.0\",\n  \"description\": \"A coder subagent the main session delegates focused coding tasks to\",\n  \"author\": {\n    \"name\": \"alexatennea\"\n  }\n}"
+ }
+}

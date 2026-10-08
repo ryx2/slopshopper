@@ -1,11 +1,14 @@
 {
  "slug": "noash-xrc-claude-tools-context-meter",
- "generatedAt": "2026-10-07T15:21:52.974Z",
+ "generatedAt": "2026-10-08T15:53:13.204Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "session.measure"
@@ -15,6 +18,13 @@
    },
    {
     "event": "session.compact"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "cold-cache"
+    }
    },
    {
     "event": "ui.render",
@@ -34,11 +44,15 @@
    "$.ui.status": 1,
    "$.session.model": 1,
    "$.settings.read": 1,
-   "$.state.get": 5,
+   "$.state.get": 8,
    "$.state.set": 3,
-   "$.session.usage": 1,
    "$.clock.every": 1,
-   "$.ui.resolve": 1
+   "$.session.usage": 1,
+   "$.session.id": 1,
+   "$.env.get": 3,
+   "$.session.cwd": 1,
+   "$.fs.read": 1,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -181,6 +195,21 @@
       }
      ]
     }
+   },
+   "Pane": {
+    "cold-cache": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "The cache is warm again."
+      ]
+     },
+     "title": "cold-cache"
+    }
    }
   },
   "script": [
@@ -205,31 +234,51 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "prompt.submit",
    "session.measure",
    "turn.step",
    "session.compact",
+   "ui.render{component=Pane, requestId=cold-cache}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.clock.after",
    "$.clock.every",
+   "$.clock.now",
+   "$.env.get (via lastReplyAt)",
+   "$.fs.read (via lastReplyAt)",
+   "$.session.compact",
+   "$.session.cwd (via lastReplyAt)",
+   "$.session.id",
    "$.session.model",
    "$.session.usage (via refresh)",
    "$.settings.read (via effortFromSettings)",
    "$.state.get",
    "$.state.set",
+   "$.ui.close",
+   "$.ui.open (via checkCold)",
    "$.ui.resolve",
-   "$.ui.status"
+   "$.ui.status",
+   "$.ui.toast"
   ],
   "stateReads": [
+   "auto-effort.effort",
+   "context-meter.cache",
+   "context-meter.cold",
    "context-meter.model",
    "context-meter.usage"
   ],
   "stateWrites": [
+   "context-meter.cache",
+   "context-meter.cold",
    "context-meter.model",
    "context-meter.usage"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -241,7 +290,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: context-meter.usage, context-meter.model"
+     "types ./types/index.d.ts declares state: context-meter.usage, context-meter.model, context-meter.cache, context-meter.cold, auto-effort.effort"
     ],
     "gatingHooks": []
    },
@@ -252,13 +301,23 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, turn.step, session.compact, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, prompt.submit, session.measure, turn.step, session.compact, ui.render{component=Pane, requestId=cold-cache}, ui.render{component=AbovePrompt}",
+      "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.session.model, $.session.usage (via refresh), $.settings.read (via effortFromSettings), $.state.get, $.state.set, $.ui.resolve, $.ui.status",
-      "./register.tsx state writes: context-meter.model, context-meter.usage",
-      "./register.tsx state reads: context-meter.model, context-meter.usage"
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.env.get (via lastReplyAt), $.fs.read (via lastReplyAt), $.session.compact, $.session.cwd (via lastReplyAt), $.session.id, $.session.model, $.session.usage (via refresh), $.settings.read (via effortFromSettings), $.state.get, $.state.set, $.ui.close, $.ui.open (via checkCold), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
+      "./register.tsx state writes: context-meter.cache, context-meter.cold, context-meter.model, context-meter.usage",
+      "./register.tsx state reads: auto-effort.effort, context-meter.cache, context-meter.cold, context-meter.model, context-meter.usage",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): auto-effort.effort"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "session.compact",
@@ -270,5 +329,5 @@
    ]
   }
  },
- "sourceHash": "e1e50d4f9a030c4e"
+ "sourceHash": "d73f2315a7b98dff"
 }

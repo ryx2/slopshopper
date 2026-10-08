@@ -1,6 +1,6 @@
 {
  "slug": "sam-runtime-claude-console-console-status",
- "generatedAt": "2026-10-07T15:22:36.200Z",
+ "generatedAt": "2026-10-08T15:52:58.511Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -18,6 +18,9 @@
    },
    {
     "event": "turn.step"
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "classic.Stop"
@@ -67,9 +70,9 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 21,
+   "$.state.get": 22,
    "$.state.set": 12,
-   "$.store.get": 3,
+   "$.store.get": 4,
    "$.command.register": 1,
    "$.session.id": 3,
    "$.ui.ask": 1,
@@ -149,6 +152,7 @@
    "prompt.submit",
    "turn.start",
    "turn.step",
+   "session.compact",
    "classic.Stop",
    "tool.call",
    "turn.complete",
@@ -159,6 +163,7 @@
   ],
   "calls": [
    "$.clock.after (via confirmed",
+   "digestBlock",
    "runUpdate)",
    "$.clock.every (via scheduleFastTick",
    "startConsole",
@@ -168,31 +173,38 @@
    "$.command.run (via runUpdate)",
    "$.env.get (via openPullRequest",
    "paths",
+   "projectDigest",
    "refresh",
    "startConsole",
    "transcriptTail",
    "triggerAction)",
-   "$.fs.list (via refresh",
+   "$.fs.exists (via projectDigest)",
+   "$.fs.list (via projectDigest",
+   "refresh",
    "triggerAction)",
    "$.fs.read (via checkUpdate",
    "installUpdate",
+   "projectDigest",
    "readDispatch",
    "refresh",
    "transcriptTail",
    "triggerAction)",
-   "$.fs.stat (via refresh",
+   "$.fs.stat (via projectDigest",
+   "refresh",
    "transcriptTail)",
    "$.fs.write (via changeProjectDispatch",
    "refresh",
    "saveDispatch",
    "triggerAction)",
    "$.http.fetch (via checkUpdate)",
-   "$.process.run (via openPullRequest",
+   "$.process.run (via loadGitDetail",
+   "openPullRequest",
+   "projectDigest",
    "refresh",
    "runQuiet",
    "transcriptTail",
    "triggerAction)",
-   "$.prompt.fill (via triggerAction)",
+   "$.prompt.fill",
    "$.prompt.submit (via triggerAction)",
    "$.session.id",
    "$.session.usage (via refresh)",
@@ -202,14 +214,7 @@
    "autoSync",
    "cacheTtlFor",
    "checkUpdate",
-   "loadTrust)",
-   "$.store.set (via autoSync",
-   "cacheTtlFor",
-   "checkUpdate",
-   "rememberSession",
-   "syncCacheFromTranscript",
-   "triggerAction)",
-   "… [+57 chars]"
+   "loadDis… [+233 chars]"
   ],
   "stateReads": [
    "console-status.actionPulse",
@@ -217,10 +222,14 @@
    "console-status.cacheTick",
    "console-status.continueConfirmations",
    "console-status.cursor",
+   "console-status.decisionPicks",
    "console-status.dispatchPicker",
    "console-status.dispatchRevision",
+   "console-status.executorDigests",
    "console-status.fallbackOffers",
    "console-status.feed",
+   "console-status.gitOpen",
+   "console-status.gitViews",
    "console-status.hovered",
    "console-status.isBandHidden",
    "console-status.isDemo",
@@ -246,10 +255,14 @@
    "console-status.cacheTick",
    "console-status.continueConfirmations",
    "console-status.cursor",
+   "console-status.decisionPicks",
    "console-status.dispatchPicker",
    "console-status.dispatchRevision",
+   "console-status.executorDigests",
    "console-status.fallbackOffers",
    "console-status.feed",
+   "console-status.gitOpen",
+   "console-status.gitViews",
    "console-status.hovered",
    "console-status.isBandHidden",
    "console-status.isDemo",
@@ -289,7 +302,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: console-status.snapshot, console-status.isDemo, console-status.isPaneOpen, console-status.isBandHidden, console-status.isDetail, console-status.isPlain, console-status.isRefreshing, console-status.hovered, console-status.menuFor, console-status.dispatchPicker, console-status.selected, console-status.cursor, console-status.feed, console-status.dispatchRevision, console-status.pendingActions, console-status.continueConfirmations, console-status.verificationResults, console-status.trustedVerify, console-status.modeOverride, console-status.actionPulse, console-status.reviewRequests, console-status.fallbackOffers, console-status.cacheClock, console-status.cacheTick, console-status.isTurnRunning, console-status.updateInfo, console-status.syncProgress"
+     "types ./types/index.d.ts declares state: console-status.snapshot, console-status.isDemo, console-status.isPaneOpen, console-status.isBandHidden, console-status.isDetail, console-status.isPlain, console-status.isRefreshing, console-status.hovered, console-status.menuFor, console-status.gitOpen, console-status.gitViews, console-status.decisionPicks, console-status.dispatchPicker, console-status.selected, console-status.cursor, console-status.feed, console-status.dispatchRevision, console-status.pendingActions, console-status.continueConfirmations, console-status.verificationResults, console-status.trustedVerify, console-status.modeOverride, console-status.actionPulse, console-status.reviewRequests, console-status.fallbackOffers, console-status.cacheClock, console-status.cacheTick, console-status.isTurnRunning, console-status.updateInfo, console-status.syncProgress, console-status.executorDigests"
     ],
     "gatingHooks": []
    },
@@ -300,16 +313,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.compose, prompt.submit, turn.start, turn.step, classic.Stop, tool.call, turn.complete, command.run, ui.render{component=AbovePrompt}, ui.message, ui.render{component=Pane, requestId=console-status}",
+      "./register.tsx hooks: session.start, prompt.compose, prompt.submit, turn.start, turn.step, session.compact, classic.Stop, tool.call, turn.complete, command.run, ui.render{component=AbovePrompt}, ui.message, ui.render{component=Pane, requestId=console-status}",
       "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.compact",
       "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: command.run",
-      "./register.tsx calls: $.clock.after (via confirmed, runUpdate), $.clock.every (via scheduleFastTick, startConsole, triggerAction), $.clock.now, $.command.register, $.command.run (via runUpdate), $.env.get (via openPullRequest, paths, refresh, startConsole, transcriptTail, triggerAction), $.fs.list (via refresh, triggerAction), $.fs.read (via checkUpdate, installUpdate, readDispatch, refresh, transcriptTail, triggerAction), $.fs.stat (via refresh, transcriptTail), $.fs.write (via changeProjectDispatch, refresh, saveDispatch, triggerAction), $.http.fetch (via checkUpdate), $.process.run (via openPullRequest, refresh, runQuiet, transcriptTail, triggerAction), $.prompt.fill (via triggerAction), $.prompt.submit (via triggerAction), $.session.id, $.session.usage (via refresh), $.state.get, $.state.set, $.store.get (via activeSessions, autoSync, cacheTtlFor, checkUpdate, loadTrust), $.store.set (via autoSync, cacheTtlFor, checkUpdate, rememberSession, syncCacheFromTranscript, triggerAction), … [+57 chars]",
+      "./register.tsx calls: $.clock.after (via confirmed, digestBlock, runUpdate), $.clock.every (via scheduleFastTick, startConsole, triggerAction), $.clock.now, $.command.register, $.command.run (via runUpdate), $.env.get (via openPullRequest, paths, projectDigest, refresh, startConsole, transcriptTail, triggerAction), $.fs.exists (via projectDigest), $.fs.list (via projectDigest, refresh, triggerAction), $.fs.read (via checkUpdate, installUpdate, projectDigest, readDispatch, refresh, transcriptTail, triggerAction), $.fs.stat (via projectDigest, refresh, transcriptTail), $.fs.write (via changeProjectDispatch, refresh, saveDispatch, triggerAction), $.http.fetch (via checkUpdate), $.process.run (via loadGitDetail, openPullRequest, projectDigest, refresh, runQuiet, transcriptTail, triggerAction), $.prompt.fill, $.prompt.submit (via triggerAction), $.session.id, $.session.usage (via refresh), $.state.get, $.state.set, $.store.get (via activeSessions, autoSync, cacheTtlFor, checkUpdate, loadDis… [+233 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, LOCALAPPDATA, OS, TEMP, TMPDIR, USERPROFILE",
-      "./register.tsx state writes: console-status.actionPulse, console-status.cacheClock, console-status.cacheTick, console-status.continueConfirmations, console-status.cursor, console-status.dispatchPicker, console-status.dispatchRevision, console-status.fallbackOffers, console-status.feed, console-status.hovered, console-status.isBandHidden, console-status.isDemo, console-status.isDetail, console-status.isPaneOpen, console-status.isPlain, console-status.isRefreshing, console-status.isTurnRunning, console-status.menuFor, console-status.modeOverride, console-status.pendingActions, console-status.reviewRequests, console-status.selected, console-status.snapshot, console-status.syncProgress, console-status.trustedVerify, console-status.updateInfo, console-status.verificationResults",
-      "./register.tsx state reads: console-status.actionPulse, console-status.cacheClock, console-status.cacheTick, console-status.continueConfirmations, console-status.cursor, console-status.dispatchPicker, console-status.dispatchRevision, console-status.fallbackOffers, console-status.feed, console-status.hovered, console-status.isBandHidden, console-status.isDemo, console-status.isDetail, console-status.isPaneOpen, console-status.isPlain, console-status.isRefreshing, console-status.isTurnRunning, console-status.menuFor, console-status.modeOverride, console-status.pendingActions, console-status.reviewRequests, console-status.selected, console-status.snapshot, console-status.syncProgress, console-status.trustedVerify, console-status.updateInfo, console-status.verificationResults",
+      "./register.tsx state writes: console-status.actionPulse, console-status.cacheClock, console-status.cacheTick, console-status.continueConfirmations, console-status.cursor, console-status.decisionPicks, console-status.dispatchPicker, console-status.dispatchRevision, console-status.executorDigests, console-status.fallbackOffers, console-status.feed, console-status.gitOpen, console-status.gitViews, console-status.hovered, console-status.isBandHidden, console-status.isDemo, console-status.isDetail, console-status.isPaneOpen, console-status.isPlain, console-status.isRefreshing, console-status.isTurnRunning, console-status.menuFor, console-status.modeOverride, console-status.pendingActions, console-status.reviewRequests, console-status.selected, console-status.snapshot, console-status.syncProgress, console-status.trustedVerify, console-status.updateInfo, console-status.verificationResults",
+      "./register.tsx state reads: console-status.actionPulse, console-status.cacheClock, console-status.cacheTick, console-status.continueConfirmations, console-status.cursor, console-status.decisionPicks, console-status.dispatchPicker, console-status.dispatchRevision, console-status.executorDigests, console-status.fallbackOffers, console-status.feed, console-status.gitOpen, console-status.gitViews, console-status.hovered, console-status.isBandHidden, console-status.isDemo, console-status.isDetail, console-status.isPaneOpen, console-status.isPlain, console-status.isRefreshing, console-status.isTurnRunning, console-status.menuFor, console-status.modeOverride, console-status.pendingActions, console-status.reviewRequests, console-status.selected, console-status.snapshot, console-status.syncProgress, console-status.trustedVerify, console-status.updateInfo, console-status.verificationResults",
       "./register.tsx surface modules: hooks/battery.tsx, hooks/feed.tsx, hooks/rows.tsx, hooks/spinner.tsx"
      ],
      "gatingHooks": [
@@ -317,6 +331,12 @@
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
        "hasCatch": false
       },
       {
@@ -342,5 +362,5 @@
    ]
   }
  },
- "sourceHash": "578d1f0ee923b573"
+ "sourceHash": "ce7f04b9e9ca4fbc"
 }

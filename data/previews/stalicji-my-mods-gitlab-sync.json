@@ -1,0 +1,295 @@
+{
+ "slug": "stalicji-my-mods-gitlab-sync",
+ "generatedAt": "2026-10-08T15:54:47.097Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "gitlab"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "github"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "gitlab",
+    "description": "立即檢查分支與 GitLab，列出 issue／MR 的未讀動態並標為已讀，以及自己開的或指派給自己、還開著的 issue（在 repo 裡都只列這個專案的）",
+    "output": "分支 （比對 origin/）：✓ 已同步，沒有未提交的檔案\nGitLab：這台電腦還沒設定 GitLab 網址，不檢查 GitLab（用 /plugin configure gitlab-sync 設定 gitlabUrl）。"
+   },
+   {
+    "name": "github",
+    "description": "立即檢查分支與 GitHub，列出 issue／PR 的未讀動態並標為已讀，以及自己開的或指派給自己、還開著的 issue（在 repo 裡都只列這個專案的）",
+    "output": "分支 （比對 origin/）：✓ 已同步，沒有未提交的檔案\nGitHub：這台電腦沒有登入 gh，不檢查 GitHub（在終端機執行 gh auth login 後，下一輪就會開始）。"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.clock.every": 1,
+   "$.clock.now": 6,
+   "$.session.cwd": 4,
+   "$.process.run": 37,
+   "$.fs.stat": 3,
+   "$.state.get": 52,
+   "$.state.set": 1,
+   "$.store.get": 28,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "gitlab-band",
+        "paddingX": 2
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "wrap": "truncate-end"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "key": "segment-0-0",
+            "dimColor": true
+           },
+           "children": [
+            "本機"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "key": "segment-1-0",
+            "dimColor": true
+           },
+           "children": [
+            "  ·  ⎇ "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "key": "segment-2-0",
+            "color": "success"
+           },
+           "children": [
+            "  ·  ✓ 已同步"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git --no-optional-locks -C /work/app rev-parse --show-toplevel) → exit 0",
+   "session.start",
+   "$.process.run(git --no-optional-locks -C  symbolic-ref --quiet --short HEAD) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --abbrev-ref --symbolic-full-name @{upstre…) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --verify --quiet refs/remotes/origin/) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --path-format=absolute --git-path FETCH_HE…) → exit 0",
+   "$.process.run(git --no-optional-locks -C  fetch --quiet origin ) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-list --left-right --count HEAD...origin/) → exit 0",
+   "tool.call Read",
+   "$.process.run(git --no-optional-locks -C  status --porcelain) → exit 0",
+   "$.process.run(git --no-optional-locks -C  remote get-url origin) → exit 0",
+   "tool.call Grep",
+   "tool.call Edit",
+   "$.process.run(gh auth token) → exit 0",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "$.process.run(git --no-optional-locks -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git --no-optional-locks -C  symbolic-ref --quiet --short HEAD) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --abbrev-ref --symbolic-full-name @{upstre…) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --verify --quiet refs/remotes/origin/) → exit 0",
+   "turn.complete",
+   "$.process.run(git --no-optional-locks -C  rev-list --left-right --count HEAD...origin/) → exit 0",
+   "$.process.run(git --no-optional-locks -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git --no-optional-locks -C  status --porcelain) → exit 0",
+   "$.process.run(git --no-optional-locks -C  symbolic-ref --quiet --short HEAD) → exit 0",
+   "$.process.run(git --no-optional-locks -C  remote get-url origin) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --abbrev-ref --symbolic-full-name @{upstre…) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --verify --quiet refs/remotes/origin/) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --path-format=absolute --git-path FETCH_HE…) → exit 0",
+   "$.process.run(git --no-optional-locks -C  fetch --quiet origin ) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-list --left-right --count HEAD...origin/) → exit 0",
+   "$.process.run(git --no-optional-locks -C  status --porcelain) → exit 0",
+   "$.process.run(git --no-optional-locks -C  remote get-url origin) → exit 0",
+   "$.process.run(gh auth token) → exit 0",
+   "/gitlab → 分支 （比對 origin/）：✓ 已同步，沒有未提交的檔案\nGitLab：這台電腦還沒設定 GitLab 網址，不檢查 GitLab（用 /plugin co…",
+   "$.process.run(git --no-optional-locks -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git --no-optional-locks -C  symbolic-ref --quiet --short HEAD) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --abbrev-ref --symbolic-full-name @{upstre…) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --verify --quiet refs/remotes/origin/) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-parse --path-format=absolute --git-path FETCH_HE…) → exit 0",
+   "$.process.run(git --no-optional-locks -C  fetch --quiet origin ) → exit 0",
+   "$.process.run(git --no-optional-locks -C  rev-list --left-right --count HEAD...origin/) → exit 0",
+   "$.process.run(git --no-optional-locks -C  status --porcelain) → exit 0",
+   "$.process.run(git --no-optional-locks -C  remote get-url origin) → exit 0",
+   "$.process.run(gh auth token) → exit 0",
+   "/github → 分支 （比對 origin/）：✓ 已同步，沒有未提交的檔案\nGitHub：這台電腦沒有登入 gh，不檢查 GitHub（在終端機執行 gh auth logi…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "session.start",
+   "command.run{command=gitlab}",
+   "command.run{command=github}",
+   "turn.complete",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.after (via withTimeout)",
+   "$.clock.every (via startTicking)",
+   "$.clock.now (via checkNow",
+   "refreshAfterTurn",
+   "tick)",
+   "$.command.register",
+   "$.env.get (via readEnv)",
+   "$.fs.stat (via fetchUpstream)",
+   "$.http.fetch (via fetchWithTimeout)",
+   "$.process.run (via git",
+   "runCommand)",
+   "$.session.cwd (via refreshRepo)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via checkNow",
+   "markRead",
+   "pollForge",
+   "recordEvents",
+   "syncCounts",
+   "syncInbox)",
+   "$.store.set (via markRead",
+   "pollForge",
+   "recordEvents)",
+   "$.ui.resolve",
+   "$.ui.toast (via toast)"
+  ],
+  "stateReads": [
+   "gitlab-sync.githubInbox",
+   "gitlab-sync.inbox",
+   "gitlab-sync.repo"
+  ],
+  "stateWrites": [
+   "gitlab-sync.githubInbox",
+   "gitlab-sync.inbox",
+   "gitlab-sync.repo"
+  ],
+  "envReads": [
+   "GITLAB_TOKEN",
+   "USER"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/stalicji-my-mods-gitlab-sync/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/stalicji-my-mods-gitlab-sync/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: gitlab-sync.repo, gitlab-sync.inbox, gitlab-sync.githubInbox"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/stalicji-my-mods-gitlab-sync/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=gitlab}, command.run{command=github}, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=gitlab}",
+      "./register.tsx answers its own command: command.run{command=github}",
+      "./register.tsx calls: $.clock.after (via withTimeout), $.clock.every (via startTicking), $.clock.now (via checkNow, refreshAfterTurn, tick), $.command.register, $.env.get (via readEnv), $.fs.stat (via fetchUpstream), $.http.fetch (via fetchWithTimeout), $.process.run (via git, runCommand), $.session.cwd (via refreshRepo), $.state.get, $.state.set, $.store.get (via checkNow, markRead, pollForge, recordEvents, syncCounts, syncInbox), $.store.set (via markRead, pollForge, recordEvents), $.ui.resolve, $.ui.toast (via toast)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: GITLAB_TOKEN, USER",
+      "./register.tsx state writes: gitlab-sync.githubInbox, gitlab-sync.inbox, gitlab-sync.repo",
+      "./register.tsx state reads: gitlab-sync.githubInbox, gitlab-sync.inbox, gitlab-sync.repo"
+     ],
+     "gatingHooks": []
+    }
+   ]
+  }
+ },
+ "sourceHash": "eea2865af406f7d"
+}

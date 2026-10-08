@@ -1,6 +1,6 @@
 {
  "slug": "joshpocock-claude-buddy-buddy",
- "generatedAt": "2026-10-07T15:23:24.491Z",
+ "generatedAt": "2026-10-08T15:54:13.377Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -114,6 +114,18 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Skill"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "buddy-skills"
+    }
+   },
+   {
     "event": "session.start"
    },
    {
@@ -157,12 +169,17 @@
    {
     "name": "handoff",
     "description": "Buddy writes a handoff note for continuing in a fresh chat",
-    "output": "Handoff saved to handoff-2026-10-07T15-23-23.md. Start a new chat and say: \"Read handoff-2026-10-07T15-23-23.md and continue.\""
+    "output": "Handoff saved to handoff-2026-10-08T15-54-12.md. Start a new chat and say: \"Read handoff-2026-10-08T15-54-12.md and continue.\""
    },
    {
     "name": "codex",
     "description": "Ask Codex (read-only) for a second opinion: /codex <task>",
     "output": "Usage: /codex <task>"
+   },
+   {
+    "name": "buddy-skills",
+    "description": "Buddy: scan, copy, move or delete skills (the Skills tab uses this)",
+    "output": "Buddy found 0 skills."
    },
    {
     "name": "thread",
@@ -199,12 +216,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 4,
+   "$.command.register": 5,
    "$.store.get": 34,
    "$.tool.register": 4,
-   "$.env.get": 11,
-   "$.state.get": 40,
-   "$.state.set": 13,
+   "$.env.get": 13,
+   "$.state.get": 42,
+   "$.state.set": 15,
    "$.session.usage": 2,
    "$.clock.every": 2,
    "$.session.id": 5,
@@ -214,8 +231,9 @@
    "$.store.set": 1,
    "$.ui.open": 1,
    "$.model.fork": 1,
-   "$.ui.resolve": 5,
-   "$.fs.exists": 1
+   "$.session.cwd": 1,
+   "$.fs.exists": 4,
+   "$.ui.resolve": 5
   },
   "timers": [
    {
@@ -378,6 +396,16 @@
              "key": "tab-threads",
              "variant": "secondary",
              "label": "Threads",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "tab-skills",
+             "variant": "secondary",
+             "label": "Skills",
              "onPress": "[fn]"
             },
             "children": []
@@ -604,12 +632,30 @@
             ]
            },
            {
-            "type": "Text",
+            "type": "Box",
             "props": {
-             "color": "green"
+             "gap": 2
             },
             "children": [
-             "Cache warm: 4:59 left"
+             {
+              "type": "Text",
+              "props": {
+               "color": "green"
+              },
+              "children": [
+               "Cache warm: 4:59 left"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "cache-toggle",
+               "variant": "primary",
+               "label": "Price check ON",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
             ]
            },
            {
@@ -1139,9 +1185,10 @@
    "turn.complete",
    "$.ui.open(buddy)",
    "/buddy → Buddy is back. Try /buddy pet cat, /buddy name Rex, or /buddy hatch.",
-   "$.fs.write(handoff-2026-10-07T15-23-23.md)",
-   "/handoff → Handoff saved to handoff-2026-10-07T15-23-23.md. Start a new chat and say: \"Read…",
+   "$.fs.write(handoff-2026-10-08T15-54-12.md)",
+   "/handoff → Handoff saved to handoff-2026-10-08T15-54-12.md. Start a new chat and say: \"Read…",
    "/codex → Usage: /codex <task>",
+   "/buddy-skills → Buddy found 0 skills.",
    "/thread → Usage: /thread <task>  ·  /thread msg <id> <text>"
   ],
   "console": [],
@@ -1173,6 +1220,8 @@
    "tool.call{tool=mcp__buddy__message_chat}",
    "command.run{command=thread}",
    "tool.call{tool=mcp__buddy__start_chat}",
+   "tool.call{tool=Skill}",
+   "command.run{command=buddy-skills}",
    "session.start",
    "command.run{command=buddy}",
    "session.end",
@@ -1189,19 +1238,26 @@
    "$.command.register",
    "$.command.run",
    "$.env.get",
-   "$.fs.exists (via listBoard",
-   "readChats)",
-   "$.fs.list (via listBoard",
-   "readChats)",
+   "$.fs.exists",
+   "$.fs.list (via hasLink",
+   "listBoard",
+   "readChats",
+   "scanDir",
+   "scanSkillDir)",
    "$.fs.read",
+   "$.fs.stat (via hasLink)",
    "$.fs.write",
    "$.model.fork",
+   "$.process.run (via copyDir",
+   "removeDir)",
    "$.process.spawn (via runChatThread",
    "runCodex)",
    "$.prompt.fill",
    "$.prompt.submit",
    "$.session.compact",
-   "$.session.cwd (via runChatThread)",
+   "$.session.cwd (via runChatThread",
+   "runScan",
+   "scanAllSkills)",
    "$.session.id",
    "$.session.messages",
    "$.session.model",
@@ -1235,6 +1291,8 @@
    "buddy.peek",
    "buddy.recOn",
    "buddy.receipt",
+   "buddy.skillScan",
+   "buddy.skillView",
    "buddy.tab",
    "buddy.threadKind",
    "buddy.threadModel",
@@ -1257,6 +1315,8 @@
    "buddy.peek",
    "buddy.recOn",
    "buddy.receipt",
+   "buddy.skillScan",
+   "buddy.skillView",
    "buddy.tab",
    "buddy.threadKind",
    "buddy.threadModel",
@@ -1265,6 +1325,7 @@
   "envReads": [
    "BUDDY_CHILD",
    "HOME",
+   "OS",
    "USERPROFILE"
   ],
   "raw": {
@@ -1278,7 +1339,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: buddy.mood, buddy.memory, buddy.agents, buddy.tick, buddy.lastHeld, buddy.caught, buddy.limits, buddy.cost, buddy.editing, buddy.receipt, buddy.codexLog, buddy.codexStatus, buddy.tab, buddy.agentLive, buddy.chatThreads, buddy.threadModel, buddy.threadKind, buddy.peek, buddy.recOn, buddy.lastTurnAt"
+     "types ./types/index.d.ts declares state: buddy.mood, buddy.memory, buddy.agents, buddy.tick, buddy.lastHeld, buddy.caught, buddy.limits, buddy.cost, buddy.editing, buddy.receipt, buddy.codexLog, buddy.codexStatus, buddy.tab, buddy.skillScan, buddy.skillView, buddy.agentLive, buddy.chatThreads, buddy.threadModel, buddy.threadKind, buddy.peek, buddy.recOn, buddy.lastTurnAt"
     ],
     "gatingHooks": []
    },
@@ -1289,10 +1350,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.call, prompt.submit, turn.complete, agent.spawn, tool.call{tool=Edit|Write|NotebookEdit}, session.measure, prompt.context, command.run{command=handoff}, tool.call{tool=mcp__buddy__codex}, command.run{command=codex}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=CommandOutput}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__buddy__todo_for_you}, turn.step, tool.call{tool=mcp__buddy__list_chats}, tool.call{tool=mcp__buddy__message_chat}, command.run{command=thread}, tool.call{tool=mcp__buddy__start_chat}, session.start, command.run{command=buddy}, session.end, tool.call{tool=AskUserQuestion}, ui.message, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=buddy}",
+      "./register.tsx hooks: tool.call, prompt.submit, turn.complete, agent.spawn, tool.call{tool=Edit|Write|NotebookEdit}, session.measure, prompt.context, command.run{command=handoff}, tool.call{tool=mcp__buddy__codex}, command.run{command=codex}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=CommandOutput}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__buddy__todo_for_you}, turn.step, tool.call{tool=mcp__buddy__list_chats}, tool.call{tool=mcp__buddy__message_chat}, command.run{command=thread}, tool.call{tool=mcp__buddy__start_chat}, tool.call{tool=Skill}, command.run{command=buddy-skills}, session.start, command.run{command=buddy}, session.end, tool.call{tool=AskUserQuestion}, ui.message, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=buddy}",
       "./register.tsx answers its own command: command.run{command=handoff}",
       "./register.tsx answers its own command: command.run{command=codex}",
       "./register.tsx answers its own command: command.run{command=thread}",
+      "./register.tsx answers its own command: command.run{command=buddy-skills}",
       "./register.tsx answers its own command: command.run{command=buddy}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook without .catch: prompt.submit",
@@ -1303,12 +1365,13 @@
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__list_chats}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__message_chat}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__start_chat}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Skill}",
       "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
-      "./register.tsx calls: $.agent.list, $.agent.spawn, $.clock.every, $.clock.now, $.command.register, $.command.run, $.env.get, $.fs.exists (via listBoard, readChats), $.fs.list (via listBoard, readChats), $.fs.read, $.fs.write, $.model.fork, $.process.spawn (via runChatThread, runCodex), $.prompt.fill, $.prompt.submit, $.session.compact, $.session.cwd (via runChatThread), $.session.id, $.session.messages, $.session.model, $.session.send, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.call, $.tool.register, $.ui.ask, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.agent.list, $.agent.spawn, $.clock.every, $.clock.now, $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.list (via hasLink, listBoard, readChats, scanDir, scanSkillDir), $.fs.read, $.fs.stat (via hasLink), $.fs.write, $.model.fork, $.process.run (via copyDir, removeDir), $.process.spawn (via runChatThread, runCodex), $.prompt.fill, $.prompt.submit, $.session.compact, $.session.cwd (via runChatThread, runScan, scanAllSkills), $.session.id, $.session.messages, $.session.model, $.session.send, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.call, $.tool.register, $.ui.ask, $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: BUDDY_CHILD, HOME, USERPROFILE",
-      "./register.tsx state writes: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.editing, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
-      "./register.tsx state reads: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.editing, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
+      "./register.tsx env reads: BUDDY_CHILD, HOME, OS, USERPROFILE",
+      "./register.tsx state writes: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.editing, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.skillScan, buddy.skillView, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
+      "./register.tsx state reads: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.editing, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.skillScan, buddy.skillView, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
       "./register.tsx surface modules: hooks/pet.tsx"
      ],
      "gatingHooks": [
@@ -1369,6 +1432,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=Skill}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=AskUserQuestion}",
        "hasCatch": false
       }
@@ -1377,5 +1446,5 @@
    ]
   }
  },
- "sourceHash": "31a07b015b7e0fa5"
+ "sourceHash": "ed7513e9b06541e9"
 }

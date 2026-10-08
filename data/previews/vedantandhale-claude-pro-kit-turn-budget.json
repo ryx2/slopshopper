@@ -1,11 +1,20 @@
 {
  "slug": "vedantandhale-claude-pro-kit-turn-budget",
- "generatedAt": "2026-10-06T05:28:20.674Z",
+ "generatedAt": "2026-10-08T15:53:08.925Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handoff"
+    }
    },
    {
     "event": "session.measure"
@@ -29,24 +38,40 @@
   "commands": [
    {
     "name": "turn-budget",
-    "description": "Turn budget: /turn-budget · /turn-budget <points> · /turn-budget tokens <n> · /turn-budget off|on"
+    "description": "Turn budget: /turn-budget · <points> · tokens <n> · handoff|ask · off|on"
+   },
+   {
+    "name": "handoff",
+    "description": "Write a handoff from this session (no model call) and continue in a fresh session"
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [
-   "Turn budget: asks at +5 session points or 500,000 uncached input tokens per turn. /turn-budget <points> · /turn-budget tokens <n> · /turn-budget off"
+   "Turn budget: at +5 session points or 500,000 uncached input tokens in one turn, it hands off to a fresh session by itself. /turn-budget <points> · tokens <n> · handoff|ask · off"
   ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
+   "$.command.register": 2,
    "$.store.get": 2,
-   "$.ui.status": 2,
-   "$.ui.toast": 1
+   "$.ui.status": 3,
+   "$.ui.toast": 1,
+   "$.session.cwd": 1,
+   "$.session.messages": 1,
+   "$.clock.now": 1,
+   "$.process.run": 2,
+   "$.env.get": 3,
+   "$.fs.write": 1,
+   "$.clock.after": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 300
+   }
+  ],
   "sites": {},
   "script": [
    "session.start",
@@ -60,7 +85,11 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/turn-budget → "
+   "/turn-budget → ",
+   "$.process.run(git status --short) → exit 0",
+   "$.process.run(git diff --stat) → exit 0",
+   "$.fs.write(/Users/dev/.claude/handoffs/2025-10-09T08-53-20-020Z.md)",
+   "/handoff → "
   ],
   "console": [],
   "warnings": []
@@ -71,6 +100,8 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "tool.call",
+   "command.run{command=handoff}",
    "session.measure",
    "turn.start",
    "turn.complete",
@@ -78,42 +109,71 @@
    "command.run{command=turn-budget}"
   ],
   "calls": [
+   "$.clock.after (via handOff)",
+   "$.clock.now (via handOff)",
    "$.command.register",
+   "$.command.run (via handOff)",
+   "$.env.get (via handOff)",
+   "$.fs.write (via handOff)",
+   "$.process.run (via gitOut)",
+   "$.prompt.fill (via handOff)",
+   "$.prompt.submit (via handOff)",
    "$.session.append (via check)",
+   "$.session.cwd (via handOff)",
+   "$.session.messages (via handOff)",
    "$.store.get (via limitsOf)",
    "$.store.set",
-   "$.turn.abort (via check)",
+   "$.turn.abort (via check",
+   "handOff)",
    "$.ui.ask (via check)",
    "$.ui.status",
    "$.ui.toast"
   ],
   "stateReads": [],
   "stateWrites": [],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/vedantandhale-claude-pro-kit-turn-budget/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/vedantandhale-claude-pro-kit-turn-budget/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vedantandhale-claude-pro-kit-turn-budget/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vedantandhale-claude-pro-kit-turn-budget/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vedantandhale-claude-pro-kit-turn-budget/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vedantandhale-claude-pro-kit-turn-budget/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.measure, turn.start, turn.complete, turn.step, command.run{command=turn-budget}",
-      "./register.ts calls: $.command.register, $.session.append (via check), $.store.get (via limitsOf), $.store.set, $.turn.abort (via check), $.ui.ask (via check), $.ui.status, $.ui.toast"
+      "./register.ts hooks: session.start, tool.call, command.run{command=handoff}, session.measure, turn.start, turn.complete, turn.step, command.run{command=turn-budget}",
+      "./register.ts answers its own command: command.run{command=handoff}",
+      "./register.ts answers its own command: command.run{command=turn-budget}",
+      "./register.ts gating hook without .catch: tool.call",
+      "./register.ts calls: $.clock.after (via handOff), $.clock.now (via handOff), $.command.register, $.command.run (via handOff), $.env.get (via handOff), $.fs.write (via handOff), $.process.run (via gitOut), $.prompt.fill (via handOff), $.prompt.submit (via handOff), $.session.append (via check), $.session.cwd (via handOff), $.session.messages (via handOff), $.store.get (via limitsOf), $.store.set, $.turn.abort (via check, handOff), $.ui.ask (via check), $.ui.status, $.ui.toast",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
      ]
     }
    ]
   }
  },
- "sourceHash": "a17c762226a5728e"
+ "sourceHash": "e3010daf0934eaec"
 }

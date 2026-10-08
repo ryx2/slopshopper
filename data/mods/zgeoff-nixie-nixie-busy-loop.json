@@ -1,0 +1,8 @@
+{
+ "slug": "zgeoff-nixie-nixie-busy-loop",
+ "files": {
+  "hooks/register.js": "// The MARK_BLOCK hook never yields, so the hooks worker stops answering.\n// /nixie-alive answers only while the module is loaded, so a host can probe for it.\nasync function handleSessionStart($, e, next) {\n  await $.command.register({\n    description: 'Report that the nixie policy mod is loaded',\n    immediate: true,\n    name: 'nixie-alive',\n  });\n  return next(e);\n}\n\nfunction handleAliveCommand() {\n  return { text: 'nixie-policy alive' };\n}\n\nfunction runForever() {\n  while (true) {\n    // Spin without awaiting.\n  }\n}\n\nfunction checkBash($, e, next) {\n  if (e.command.includes('MARK_BLOCK')) {\n    runForever();\n  }\n  if (e.command.includes('MARK_DENY')) {\n    return { deny: 'nixie-busy-loop denied this command.' };\n  }\n  return next(e);\n}\n\nexport function register(on) {\n  on('session.start', handleSessionStart);\n  on('command.run', { command: 'nixie-alive' }, handleAliveCommand);\n  on('tool.call', { tool: 'Bash' }, checkBash);\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"The nixie-busy-loop hooks module\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"nixie-busy-loop\",\n  \"version\": \"0.0.0\",\n  \"description\": \"Spike: a policy mod whose tool.call hook blocks the hooks worker\"\n}"
+ }
+}

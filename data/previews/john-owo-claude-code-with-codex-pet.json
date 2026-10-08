@@ -1,6 +1,6 @@
 {
  "slug": "john-owo-claude-code-with-codex-pet",
- "generatedAt": "2026-10-07T15:23:22.888Z",
+ "generatedAt": "2026-10-08T15:54:11.894Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -38,6 +38,30 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "pet-size"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "codex-pet:pet-size"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "pet-mode"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "codex-pet:pet-mode"
+    }
+   },
+   {
     "event": "session.end"
    },
    {
@@ -63,7 +87,7 @@
    {
     "name": "pet",
     "description": "Codex pet: /pet [list | <id> | codex | hide | show | reload]",
-    "output": "Codex 寵物（~/.codex/pets）：\n  (沒有找到)\n\n/pet <id> 切換 · /pet codex 跟隨 Codex 的選擇 · /pet-on · /pet-off 開關桌寵 · /pet hide|show · /pet reload"
+    "output": "Codex 寵物（~/.codex/pets）：\n  (沒有找到)\n\n/pet <id> 切換 · /pet codex 跟隨 Codex 的選擇 · /pet-on · /pet-off 開關桌寵 · /pet-size 大小 · /pet-mode 懸停|物理 · /pet hide|show · /pet reload"
    },
    {
     "name": "pet-on",
@@ -74,6 +98,18 @@
     "name": "pet-off",
     "description": "Codex pet: 關掉桌寵",
     "output": "已通知桌寵關閉。之後開新的 CC 對話會再自動打開，/pet-on 可以手動叫回來。"
+   },
+   {
+    "name": "pet-size",
+    "description": "Codex pet: 設定桌寵大小",
+    "argumentHint": "<30～300 | 小 | 中 | 大>",
+    "output": "桌寵現在是 100%。\n用 /pet-size <30～300> 設定，例如 /pet-size 150；也可以用 小（75%）/ 中（100%）/ 大（130%）。"
+   },
+   {
+    "name": "pet-mode",
+    "description": "Codex pet: 懸停或物理模式",
+    "argumentHint": "<懸停 | 物理 | 切換>",
+    "output": "桌寵現在是懸停（拖到哪停到哪）模式。\n用 /pet-mode 懸停 或 /pet-mode 物理 切換，/pet-mode 切換 在兩者之間切換。"
    }
   ],
   "tools": [],
@@ -83,7 +119,7 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 3,
+   "$.command.register": 5,
    "$.store.get": 3,
    "$.state.get": 36,
    "$.state.set": 5,
@@ -92,7 +128,8 @@
    "$.process.run": 5,
    "$.fs.write": 15,
    "$.clock.after": 4,
-   "$.clock.every": 1
+   "$.clock.every": 1,
+   "$.fs.read": 4
   },
   "timers": [
    {
@@ -156,7 +193,9 @@
    "$.fs.write(/Users/dev/.codex-pet/sessions/cc-preview-session.json)",
    "/pet-on → 桌寵已開啟（已經開著就不會重複開）。/pet-off 可以關掉。",
    "$.fs.write(/Users/dev/.codex-pet/takeover)",
-   "/pet-off → 已通知桌寵關閉。之後開新的 CC 對話會再自動打開，/pet-on 可以手動叫回來。"
+   "/pet-off → 已通知桌寵關閉。之後開新的 CC 對話會再自動打開，/pet-on 可以手動叫回來。",
+   "/pet-size → 桌寵現在是 100%。\n用 /pet-size <30～300> 設定，例如 /pet-size 150；也可以用 小（75%）/ 中（100%）/ 大（130…",
+   "/pet-mode → 桌寵現在是懸停（拖到哪停到哪）模式。\n用 /pet-mode 懸停 或 /pet-mode 物理 切換，/pet-mode 切換 在兩者之間切換。"
   ],
   "console": [],
   "warnings": []
@@ -172,6 +211,10 @@
    "command.run{command=codex-pet:pet-on}",
    "command.run{command=pet-off}",
    "command.run{command=codex-pet:pet-off}",
+   "command.run{command=pet-size}",
+   "command.run{command=codex-pet:pet-size}",
+   "command.run{command=pet-mode}",
+   "command.run{command=codex-pet:pet-mode}",
    "session.end",
    "turn.start",
    "tool.call",
@@ -185,8 +228,10 @@
    "$.clock.every",
    "$.command.register",
    "$.env.get",
+   "$.fs.read (via readJson)",
    "$.fs.write (via overlayOff",
-   "publish)",
+   "publish",
+   "sendSetting)",
    "$.process.run (via bake",
    "launchOverlay)",
    "$.session.id",
@@ -241,15 +286,19 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=pet}, command.run{command=pet-on}, command.run{command=codex-pet:pet-on}, command.run{command=pet-off}, command.run{command=codex-pet:pet-off}, session.end, turn.start, tool.call, classic.PermissionRequest, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=pet}, command.run{command=pet-on}, command.run{command=codex-pet:pet-on}, command.run{command=pet-off}, command.run{command=codex-pet:pet-off}, command.run{command=pet-size}, command.run{command=codex-pet:pet-size}, command.run{command=pet-mode}, command.run{command=codex-pet:pet-mode}, session.end, turn.start, tool.call, classic.PermissionRequest, turn.complete, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=pet}",
       "./register.tsx answers its own command: command.run{command=pet-on}",
       "./register.tsx answers its own command: command.run{command=pet-off}",
+      "./register.tsx answers its own command: command.run{command=pet-size}",
+      "./register.tsx answers its own command: command.run{command=pet-mode}",
       "./register.tsx gating hook without .catch: command.run{command=codex-pet:pet-on}",
       "./register.tsx gating hook without .catch: command.run{command=codex-pet:pet-off}",
+      "./register.tsx gating hook without .catch: command.run{command=codex-pet:pet-size}",
+      "./register.tsx gating hook without .catch: command.run{command=codex-pet:pet-mode}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
-      "./register.tsx calls: $.clock.after (via flash, step), $.clock.every, $.command.register, $.env.get, $.fs.write (via overlayOff, publish), $.process.run (via bake, launchOverlay), $.session.id, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.ui.resolve, $.ui.toast (via bake, launchOverlay)",
+      "./register.tsx calls: $.clock.after (via flash, step), $.clock.every, $.command.register, $.env.get, $.fs.read (via readJson), $.fs.write (via overlayOff, publish, sendSetting), $.process.run (via bake, launchOverlay), $.session.id, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.ui.resolve, $.ui.toast (via bake, launchOverlay)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, USERPROFILE",
       "./register.tsx state writes: codex-pet.bakedAt, codex-pet.error, codex-pet.frame, codex-pet.isHidden, codex-pet.mood, codex-pet.pet",
@@ -270,6 +319,18 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=codex-pet:pet-size}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=codex-pet:pet-mode}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": false
@@ -285,5 +346,5 @@
    ]
   }
  },
- "sourceHash": "97a5707665b9e932"
+ "sourceHash": "785564e262bc547a"
 }

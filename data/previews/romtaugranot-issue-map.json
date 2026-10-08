@@ -1,6 +1,6 @@
 {
  "slug": "romtaugranot-issue-map",
- "generatedAt": "2026-10-06T05:30:14.770Z",
+ "generatedAt": "2026-10-08T15:54:40.301Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -15,13 +15,26 @@
     "matcher": {
      "command": "issue-map"
     }
+   },
+   {
+    "event": "ui.message",
+    "matcher": {
+     "requestId": "map"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "map"
+    }
    }
   ],
   "commands": [
    {
     "name": "issue-map",
-    "description": "Show the Map of this checkout's Home Project, or one of its views",
-    "argumentHint": "[group <n> | issue <ref> | back | …]"
+    "description": "Show the Map of this checkout's Home Project, or one of its views, or open the Issue Map pane",
+    "argumentHint": "[pane | group <n> | issue <ref> | back | …]"
    }
   ],
   "tools": [],
@@ -33,18 +46,68 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.session.cwd": 3,
-   "$.clock.every": 1,
+   "$.state.set": 1,
    "$.process.run": 3,
+   "$.clock.every": 2,
    "$.ui.status": 2,
-   "$.session.id": 1
+   "$.ui.panes": 1,
+   "$.session.id": 1,
+   "$.ui.resolve": 1,
+   "$.state.get": 2
   },
   "timers": [
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 120000
    }
   ],
-  "sites": {},
+  "sites": {
+   "Pane": {
+    "map": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "said-0",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Markdown",
+          "props": {
+           "key": "line-0",
+           "text": "No Map read yet."
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "again",
+         "label": "Read it again",
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "map"
+    }
+   }
+  },
   "script": [
    "$.process.run(/plugins/issue-map/bin/issue-map-status-line) → exit 0",
    "session.start",
@@ -72,45 +135,75 @@
   "hooks": [
    "session.start",
    "turn.complete",
-   "command.run{command=issue-map}"
+   "command.run{command=issue-map}",
+   "ui.message{requestId=map}",
+   "ui.render{component=Pane, requestId=map}"
   ],
   "calls": [
+   "$.clock.after (via readPane",
+   "refocus)",
    "$.clock.every",
+   "$.clock.now",
    "$.command.register",
-   "$.process.run (via answer",
-   "pin)",
-   "$.session.cwd (via answer",
-   "pin)",
-   "$.session.id (via answer)",
+   "$.process.run (via pin",
+   "run)",
+   "$.prompt.fill",
+   "$.prompt.submit",
+   "$.session.cwd (via pin",
+   "run)",
+   "$.session.id (via run)",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.open (via openPane",
+   "refocus)",
+   "$.ui.panes (via isOpen)",
+   "$.ui.resolve",
    "$.ui.status (via pin)"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "issue-map.read",
+   "issue-map.reading",
+   "issue-map.screen"
+  ],
+  "stateWrites": [
+   "issue-map.read",
+   "issue-map.reading",
+   "issue-map.screen"
+  ],
   "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/romtaugranot-issue-map/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/romtaugranot-issue-map/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/romtaugranot-issue-map/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/romtaugranot-issue-map/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: issue-map.screen, issue-map.read, issue-map.reading"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/romtaugranot-issue-map/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/romtaugranot-issue-map/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./plugin.ts hooks: session.start, turn.complete, command.run{command=issue-map}",
-      "./plugin.ts calls: $.clock.every, $.command.register, $.process.run (via answer, pin), $.session.cwd (via answer, pin), $.session.id (via answer), $.ui.status (via pin)"
-     ]
+      "./plugin.tsx hooks: session.start, turn.complete, command.run{command=issue-map}, ui.message{requestId=map}, ui.render{component=Pane, requestId=map}",
+      "./plugin.tsx answers its own command: command.run{command=issue-map}",
+      "./plugin.tsx calls: $.clock.after (via readPane, refocus), $.clock.every, $.clock.now, $.command.register, $.process.run (via pin, run), $.prompt.fill, $.prompt.submit, $.session.cwd (via pin, run), $.session.id (via run), $.state.get, $.state.set, $.ui.open (via openPane, refocus), $.ui.panes (via isOpen), $.ui.resolve, $.ui.status (via pin)",
+      "./plugin.tsx state writes: issue-map.read, issue-map.reading, issue-map.screen",
+      "./plugin.tsx state reads: issue-map.read, issue-map.reading, issue-map.screen",
+      "./plugin.tsx surface modules: hooks/link.tsx"
+     ],
+     "gatingHooks": []
     }
    ]
   }
  },
- "sourceHash": "e9c935c03698b5b"
+ "sourceHash": "b36926bb404428c8"
 }

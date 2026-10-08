@@ -1,0 +1,8 @@
+{
+ "slug": "liminal-ai-agent-comms-proof-probe",
+ "files": {
+  "hooks/register.ts": "// Records every tool.call's result as the model reads it, for the fix-pass 0.1 check.\nlet n = 0;\nexport function register(on: any) {\n  on(\"tool.call\", async ($: any, e: any, next: any) => {\n    const result = await next(e);\n    const row = { at: new Date().toISOString(), tool: e.tool, toolUseId: e.tool_use_id, agentId: e.agentId ?? null, background: e.run_in_background === true, textLength: typeof result?.text === \"string\" ? result.text.length : null, text: result?.text ?? null };\n    n += 1;\n    await $.fs.write(`/home/leemoore/.local/state/hazel-proof-probe/${Date.now()}-${n}.json`, JSON.stringify(row));\n    return result;\n  });\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"proof-probe\",\n  \"version\": \"0.0.1\",\n  \"description\": \"Records tool.call results (agentId, background, text) for the fix-pass proof check.\"\n}"
+ }
+}

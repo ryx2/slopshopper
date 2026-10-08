@@ -1,0 +1,399 @@
+{
+ "slug": "derekmwright-gotutor-gotutor",
+ "generatedAt": "2026-10-08T15:53:56.695Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__gotutor__start_lesson"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__gotutor__run_tests"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__gotutor__editor"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__gotutor__finish_lesson"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "learn"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "hint"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "review"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "check"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tutor"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "editor"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "gotutor"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "learn",
+    "description": "goTutor: start a lesson on a Go topic",
+    "argumentHint": "[topic]",
+    "output": "Picking a next topic…"
+   },
+   {
+    "name": "hint",
+    "description": "goTutor: next hint for the current lesson",
+    "output": "Asking for a hint…"
+   },
+   {
+    "name": "review",
+    "description": "goTutor: have the tutor review your code",
+    "output": "Asking for a review…"
+   },
+   {
+    "name": "check",
+    "description": "goTutor: run the lesson tests now",
+    "output": "No lesson is active (or tests are already running)."
+   },
+   {
+    "name": "tutor",
+    "description": "goTutor: show the lesson pane",
+    "output": "Lesson pane opened."
+   },
+   {
+    "name": "editor",
+    "description": "goTutor: open the editor on the lesson",
+    "argumentHint": "[zoom|focus|close|status]",
+    "output": "No lesson is active."
+   }
+  ],
+  "tools": [
+   {
+    "name": "start_lesson",
+    "description": "Begin a goTutor lesson after scaffolding its folder. Records the lesson, shows it in the student's lesson band, runs the baseline tests, and opens the student's editor (a tmux or Windows Terminal split beside Claude) on the files they will edit."
+   },
+   {
+    "name": "run_tests",
+    "description": "Run the current lesson's tests (go test -race -v, 20s timeout) and return the output. Also refreshes the student's lesson band. Tests re-run by themselves whenever the student saves."
+   },
+   {
+    "name": "editor",
+    "description": "Drive the student's editor. open: (re)open on the lesson files. goto: show file at line (use to point at code while explaining). reload: reload buffers after you edit files. resize: editor width percent. zoom: toggle full-window. focus: give the student the keyboard. close, status."
+   },
+   {
+    "name": "finish_lesson",
+    "description": "Close the current lesson once the student has it working and you have debriefed. Clears the band."
+   }
+  ],
+  "panes": [
+   {
+    "id": "gotutor",
+    "title": "goTutor"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.store.get": 1,
+   "$.command.register": 6,
+   "$.tool.register": 4,
+   "$.clock.every": 1,
+   "$.state.get": 5,
+   "$.clock.after": 3,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1500
+   },
+   {
+    "kind": "after",
+    "ms": 1
+   },
+   {
+    "kind": "after",
+    "ms": 1
+   },
+   {
+    "kind": "after",
+    "ms": 1
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "gotutor": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "goTutor"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No lesson yet. Try /learn concurrency fan-out fan-in"
+        ]
+       }
+      ]
+     },
+     "title": "goTutor"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/learn → Picking a next topic…",
+   "/hint → Asking for a hint…",
+   "/review → Asking for a review…",
+   "/check → No lesson is active (or tests are already running).",
+   "$.ui.open(gotutor)",
+   "/tutor → Lesson pane opened.",
+   "/editor → No lesson is active."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__gotutor__start_lesson}",
+   "tool.call{tool=mcp__gotutor__run_tests}",
+   "tool.call{tool=mcp__gotutor__editor}",
+   "tool.call{tool=mcp__gotutor__finish_lesson}",
+   "command.run{command=learn}",
+   "command.run{command=hint}",
+   "command.run{command=review}",
+   "command.run{command=check}",
+   "command.run{command=tutor}",
+   "command.run{command=editor}",
+   "prompt.submit",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=gotutor}"
+  ],
+  "calls": [
+   "$.clock.after (via ask)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.exists",
+   "$.fs.list (via sourceFiles)",
+   "$.fs.read (via runTests)",
+   "$.process.run (via editor",
+   "runTests)",
+   "$.prompt.submit (via ask)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "gotutor.lesson",
+   "gotutor.run"
+  ],
+  "stateWrites": [
+   "gotutor.lesson",
+   "gotutor.run"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/derekmwright-gotutor-gotutor/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/derekmwright-gotutor-gotutor/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: gotutor.lesson, gotutor.run"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/derekmwright-gotutor-gotutor/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__gotutor__start_lesson}, tool.call{tool=mcp__gotutor__run_tests}, tool.call{tool=mcp__gotutor__editor}, tool.call{tool=mcp__gotutor__finish_lesson}, command.run{command=learn}, command.run{command=hint}, command.run{command=review}, command.run{command=check}, command.run{command=tutor}, command.run{command=editor}, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=gotutor}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__gotutor__start_lesson}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__gotutor__run_tests}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__gotutor__editor}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__gotutor__finish_lesson}",
+      "./register.tsx gating hook without .catch: command.run{command=learn}",
+      "./register.tsx gating hook without .catch: command.run{command=hint}",
+      "./register.tsx gating hook without .catch: command.run{command=review}",
+      "./register.tsx gating hook without .catch: command.run{command=check}",
+      "./register.tsx gating hook without .catch: command.run{command=tutor}",
+      "./register.tsx gating hook without .catch: command.run{command=editor}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx calls: $.clock.after (via ask), $.clock.every, $.clock.now, $.command.register, $.fs.exists, $.fs.list (via sourceFiles), $.fs.read (via runTests), $.process.run (via editor, runTests), $.prompt.submit (via ask), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: gotutor.lesson, gotutor.run",
+      "./register.tsx state reads: gotutor.lesson, gotutor.run"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__gotutor__start_lesson}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__gotutor__run_tests}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__gotutor__editor}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__gotutor__finish_lesson}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=learn}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=hint}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=review}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=check}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=tutor}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=editor}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sourceHash": "7c8b49ec8911a04e"
+}

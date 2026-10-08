@@ -1,11 +1,30 @@
 {
  "slug": "nayanraj210401-flow-stack-flow-stack",
- "generatedAt": "2026-10-07T15:23:38.898Z",
+ "generatedAt": "2026-10-08T15:54:29.152Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "flow-pane"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "flow-pane"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "flow-pane"
+    }
    },
    {
     "event": "tool.call"
@@ -29,9 +48,19 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "flow-pane",
+    "description": "Open flow-stack's pane: slices, gates to approve, leads"
+   }
+  ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "flow-pane",
+    "title": "flow"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
@@ -39,17 +68,57 @@
   "apiCalls": {
    "$.env.get": 2,
    "$.fs.read": 1,
-   "$.session.cwd": 9,
-   "$.process.run": 9,
-   "$.ui.invalidate": 9
+   "$.command.register": 1,
+   "$.session.cwd": 10,
+   "$.process.run": 10,
+   "$.ui.invalidate": 10,
+   "$.ui.open": 1,
+   "$.clock.every": 1,
+   "$.ui.resolve": 2
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 100
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
    },
    "Spinner": {
     "ok": "engine"
+   },
+   "Pane": {
+    "flow-pane": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No active flow task. Start one with /flow-stack:flow."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "flow"
+    }
    }
   },
   "script": [
@@ -72,7 +141,10 @@
    "$.process.run(/plugins/flow-stack/skills/flow/scripts/status.sh /work/app) → exit 0",
    "tool.call Bash cat .env",
    "$.process.run(/plugins/flow-stack/skills/flow/scripts/status.sh /work/app) → exit 0",
-   "turn.complete"
+   "turn.complete",
+   "$.ui.open(flow-pane)",
+   "$.process.run(/plugins/flow-stack/skills/flow/scripts/status.sh --full /work/app) → exit 0",
+   "/flow-pane → "
   ],
   "console": [],
   "warnings": []
@@ -83,6 +155,9 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=flow-pane}",
+   "ui.close{id=flow-pane}",
+   "ui.render{component=Pane, requestId=flow-pane}",
    "tool.call",
    "turn.complete",
    "agent.spawn",
@@ -90,11 +165,19 @@
    "ui.render{component=Spinner}"
   ],
   "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
    "$.env.get",
    "$.fs.read",
-   "$.process.run (via refresh)",
-   "$.session.cwd (via refresh)",
-   "$.ui.invalidate (via refresh)",
+   "$.process.run (via decide",
+   "refresh)",
+   "$.prompt.submit (via decide)",
+   "$.session.cwd (via decide",
+   "refresh)",
+   "$.session.usage",
+   "$.ui.invalidate",
+   "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
@@ -123,14 +206,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call, turn.complete, agent.spawn, ui.render{component=AbovePrompt}, ui.render{component=Spinner}",
+      "./register.tsx hooks: session.start, command.run{command=flow-pane}, ui.close{id=flow-pane}, ui.render{component=Pane, requestId=flow-pane}, tool.call, turn.complete, agent.spawn, ui.render{component=AbovePrompt}, ui.render{component=Spinner}",
+      "./register.tsx answers its own command: command.run{command=flow-pane}",
+      "./register.tsx gating hook without .catch: ui.close{id=flow-pane}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: agent.spawn",
-      "./register.tsx calls: $.env.get, $.fs.read, $.process.run (via refresh), $.session.cwd (via refresh), $.ui.invalidate (via refresh), $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.read, $.process.run (via decide, refresh), $.prompt.submit (via decide), $.session.cwd (via decide, refresh), $.session.usage, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: FLOW_STACK_HOME, HOME"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=flow-pane}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -148,5 +239,5 @@
    ]
   }
  },
- "sourceHash": "c605d3ca893698e1"
+ "sourceHash": "bd79a26b71bcc714"
 }

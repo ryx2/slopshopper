@@ -1,6 +1,6 @@
 {
  "slug": "dvakatsiienko-frame-x-mod-stash",
- "generatedAt": "2026-10-07T15:23:06.467Z",
+ "generatedAt": "2026-10-08T15:54:00.049Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,18 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "response"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AssistantMessage"
+    }
    },
    {
     "event": "classic.Stop"
@@ -90,7 +102,7 @@
    }
   ],
   "apiCalls": {
-   "$.session.id": 12,
+   "$.session.id": 13,
    "$.session.repo": 1,
    "$.process.run": 8,
    "$.env.get": 7,
@@ -98,7 +110,7 @@
    "$.state.get": 4,
    "$.clock.now": 24,
    "$.store.keys": 17,
-   "$.store.get": 27,
+   "$.store.get": 28,
    "$.command.register": 1,
    "$.clock.after": 1,
    "$.fs.stat": 5,
@@ -310,6 +322,9 @@
      ]
     }
    },
+   "AssistantMessage": {
+    "ok": "engine"
+   },
    "Pane": {
     "fleet-board": {
      "ok": true,
@@ -361,6 +376,8 @@
   "hooks": [
    "session.start",
    "prompt.submit",
+   "session.append{door=response}",
+   "ui.render{component=AssistantMessage}",
    "classic.Stop",
    "turn.complete",
    "session.measure",
@@ -382,6 +399,7 @@
    "$.env.get (via adoptOldStore",
    "bashGuard",
    "guardLines",
+   "queueAfter",
    "registry",
    "sessionName)",
    "$.fs.list (via adoptOldStore",
@@ -389,9 +407,11 @@
    "registry)",
    "$.fs.read (via adoptOldStore",
    "guardLines",
+   "queueAfter",
    "registry",
    "sessionName)",
    "$.fs.stat (via realPath)",
+   "$.fs.write (via queueAfter)",
    "$.process.run (via isClean",
    "isGone",
    "pressDoor",
@@ -412,7 +432,7 @@
    "dropAll",
    "load",
    "pruneEnded",
-   "settle",
+   "releaseClean",
    "sweep)",
    "$.store.set",
    "$.ui.close",
@@ -464,16 +484,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, classic.Stop, turn.complete, session.measure, turn.step, command.run{command=board}, ui.close, ui.render{component=Pane, requestId=fleet-board}, session.end, command.run, tool.call{tool=/\"^(Edit|Write|NotebookEdit)$\"/}, tool.call{tool=Bash}, tool.call, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, prompt.submit, session.append{door=response}, ui.render{component=AssistantMessage}, classic.Stop, turn.complete, session.measure, turn.step, command.run{command=board}, ui.close, ui.render{component=Pane, requestId=fleet-board}, session.end, command.run, tool.call{tool=/\"^(Edit|Write|NotebookEdit)$\"/}, tool.call{tool=Bash}, tool.call, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=board}",
       "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.append{door=response}",
       "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: command.run",
       "./register.tsx gating hook without .catch: tool.call{tool=/\"^(Edit|Write|NotebookEdit)$\"/}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.env.get (via adoptOldStore, bashGuard, guardLines, registry, sessionName), $.fs.list (via adoptOldStore, guardLines, registry), $.fs.read (via adoptOldStore, guardLines, registry, sessionName), $.fs.stat (via realPath), $.process.run (via isClean, isGone, pressDoor, procOf, registry, topOf), $.prompt.submit (via armHot), $.session.cwd (via bashGuard), $.session.id, $.session.repo, $.state.get (via keptState), $.state.set, $.store.delete, $.store.get, $.store.keys (via awayDigest, chip, claimsOn, dropAll, load, pruneEnded, settle, sweep), $.store.set, $.ui.close, $.ui.copy, $.ui.invalidate, $.ui.log, $.ui.open (via openBoard), $.ui.panes (via isBoardOpen), $.ui.resolve",
+      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.env.get (via adoptOldStore, bashGuard, guardLines, queueAfter, registry, sessionName), $.fs.list (via adoptOldStore, guardLines, registry), $.fs.read (via adoptOldStore, guardLines, queueAfter, registry, sessionName), $.fs.stat (via realPath), $.fs.write (via queueAfter), $.process.run (via isClean, isGone, pressDoor, procOf, registry, topOf), $.prompt.submit (via armHot), $.session.cwd (via bashGuard), $.session.id, $.session.repo, $.state.get (via keptState), $.state.set, $.store.delete, $.store.get, $.store.keys (via awayDigest, chip, claimsOn, dropAll, load, pruneEnded, releaseClean, sweep), $.store.set, $.ui.close, $.ui.copy, $.ui.invalidate, $.ui.log, $.ui.open (via openBoard), $.ui.panes (via isBoardOpen), $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
       "./register.tsx state writes: x-mod-stash.fiveHour, x-mod-stash.open",
@@ -485,6 +506,12 @@
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=response}",
        "hasCatch": false
       },
       {
@@ -528,5 +555,5 @@
    ]
   }
  },
- "sourceHash": "e58899189afc7585"
+ "sourceHash": "6c57ed39a07b045a"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "coopers98-final-commit",
- "generatedAt": "2026-10-07T15:22:59.868Z",
+ "generatedAt": "2026-10-08T15:53:54.171Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -85,6 +85,25 @@
     "matcher": {
      "component": "Pane",
      "requestId": "fc-scan"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "setup"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "fc-setup"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "fc-setup"
     }
    },
    {
@@ -188,7 +207,7 @@
    {
     "name": "mission",
     "description": "Start or complete a mission",
-    "argumentHint": "<KEY> | complete [anyway]",
+    "argumentHint": "<KEY> | complete [anyway] | reopen <KEY>",
     "output": "Usage: /mission <KEY>, for example /mission NOVA-12."
    },
    {
@@ -215,6 +234,11 @@
     "output": "No active epic. /scan <KEY> scans a charted one."
    },
    {
+    "name": "setup",
+    "description": "Choose and set up the work sources the game reads: plans, GitHub, Jira",
+    "output": "Opened the setup pane."
+   },
+   {
     "name": "bridge",
     "description": "Open the bridge: system, mission, hull, shields, fuel",
     "output": "Opened the bridge."
@@ -236,6 +260,10 @@
     "title": "Specimen Bay"
    },
    {
+    "id": "fc-setup",
+    "title": "Set up work sources"
+   },
+   {
     "id": "fc-bridge",
     "title": "Bridge"
    }
@@ -250,18 +278,19 @@
    "$.clock.now": 22,
    "$.store.get": 33,
    "$.store.set": 2,
-   "$.state.get": 71,
-   "$.state.set": 16,
+   "$.state.get": 73,
+   "$.state.set": 17,
    "$.ui.status": 6,
-   "$.command.register": 8,
+   "$.command.register": 9,
    "$.agent.register": 3,
    "$.clock.every": 2,
    "$.env.get": 5,
-   "$.ui.open": 3,
+   "$.ui.open": 4,
    "$.store.keys": 2,
+   "$.process.run": 1,
    "$.model.fork": 1,
    "$.ui.toast": 1,
-   "$.ui.resolve": 8,
+   "$.ui.resolve": 9,
    "$.session.usage": 1
   },
   "timers": [
@@ -354,6 +383,60 @@
       ]
      },
      "title": "Specimen Bay"
+    },
+    "fc-setup": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": false,
+         "dimColor": true
+        },
+        "children": [
+         "Which work sources to read, comma-separated: plans,"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": false,
+         "dimColor": true
+        },
+        "children": [
+         "  github, jira. Leave empty for none."
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "setup-sources",
+         "autoFocus": true,
+         "label": "Sources",
+         "value": "plans",
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": false,
+         "dimColor": true
+        },
+        "children": [
+         "Enter: next  Esc: cancel, nothing saved"
+        ]
+       }
+      ]
+     },
+     "title": "Set up work sources"
     },
     "fc-bridge": {
      "ok": true,
@@ -624,6 +707,9 @@
    "$.ui.open(fc-bay)",
    "/bay → Opened the specimen bay (0 specimens).",
    "/scan → No active epic. /scan <KEY> scans a charted one.",
+   "$.process.run(gh repo view --json nameWithOwner -q .nameWithOwner) → exit 0",
+   "$.ui.open(fc-setup)",
+   "/setup → Opened the setup pane.",
    "$.ui.open(fc-bridge)",
    "/bridge → Opened the bridge.",
    "/captains-log → Writing a session summary to the captain's log."
@@ -649,6 +735,9 @@
    "ui.render{component=Pane, requestId=fc-bay}",
    "command.run{command=scan}",
    "ui.render{component=Pane, requestId=fc-scan}",
+   "command.run{command=setup}",
+   "ui.close{id=fc-setup}",
+   "ui.render{component=Pane, requestId=fc-setup}",
    "command.run{command=bridge}",
    "ui.close{id=fc-bridge}",
    "ui.render{component=Pane, requestId=fc-bridge}",
@@ -663,9 +752,8 @@
    "ui.close{id=fc-epic}",
    "ui.close{id=fc-confirm}",
    "ui.render{component=Pane, requestId=fc-confirm}",
-   "ui.render{component=Pane, requestId=fc-epic}",
-   "tool.call{tool=Bash}",
-   "tool.call"
+   "ui.render{component=Pane",
+   "requ… [+47 chars]"
   ],
   "calls": [
    "$.agent.register (via registerCrew)",
@@ -678,16 +766,19 @@
    "startSync)",
    "$.clock.now",
    "$.command.register (via startSession)",
+   "$.config.set (via save)",
    "$.env.get (via clientKeyOf",
    "rngOf)",
    "$.fs.exists (via backendsOf)",
    "$.fs.list (via backendsOf)",
    "$.fs.read (via backendsOf)",
+   "$.http.fetch (via backendsOf)",
    "$.model.complete (via completeVia)",
    "$.model.fork (via writeLog)",
    "$.process.run (via backendsOf",
    "clientKeyOf",
-   "observeBash)",
+   "observeBash",
+   "repoHere)",
    "$.session.cwd (via backendsOf)",
    "$.session.usage (via fuelOf)",
    "$.state.get",
@@ -700,7 +791,8 @@
    "storeOf)",
    "$.store.set (via repoOf",
    "storeOf)",
-   "$.ui.close (via confirmComplete",
+   "$.ui.close (via close",
+   "confirmComplete",
    "dismiss",
    "dismissReport",
    "submitForm)",
@@ -713,10 +805,10 @@
    "open",
    "reopen",
    "scan",
+   "setup",
    "showReport)",
    "$.ui.resolve",
-   "$.ui.status (via refresh)",
-   "$.ui.toast"
+   "$.ui.status (via ref… [+17 chars]"
   ],
   "stateReads": [
    "final-commit.alert",
@@ -736,7 +828,8 @@
    "final-commit.queuedMission",
    "final-commit.ready",
    "final-commit.report",
-   "final-commit.scan"
+   "final-commit.scan",
+   "final-commit.setup"
   ],
   "stateWrites": [
    "final-commit.alert",
@@ -756,7 +849,8 @@
    "final-commit.queuedMission",
    "final-commit.ready",
    "final-commit.report",
-   "final-commit.scan"
+   "final-commit.scan",
+   "final-commit.setup"
   ],
   "envReads": [
    "FINAL_COMMIT_SEED",
@@ -775,7 +869,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: final-commit.ready, final-commit.charting, final-commit.chartFailures, final-commit.epicForm, final-commit.report, final-commit.confirm, final-commit.queuedMission, final-commit.scan, final-commit.mood, final-commit.lattice, final-commit.band, final-commit.alert, final-commit.crew, final-commit.bridgeInput, final-commit.bridgeOpen, final-commit.gauges, final-commit.calibration, final-commit.bay"
+     "types ./types/index.d.ts declares state: final-commit.ready, final-commit.charting, final-commit.chartFailures, final-commit.epicForm, final-commit.report, final-commit.confirm, final-commit.queuedMission, final-commit.scan, final-commit.setup, final-commit.mood, final-commit.lattice, final-commit.band, final-commit.alert, final-commit.crew, final-commit.bridgeInput, final-commit.bridgeOpen, final-commit.gauges, final-commit.calibration, final-commit.bay"
     ],
     "gatingHooks": []
    },
@@ -786,11 +880,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: ui.render{component=AbovePrompt}, ui.close{id=fc-report}, ui.render{component=Pane, requestId=fc-report}, command.run{command=contain}, ui.close{id=fc-lattice}, ui.render{component=Pane, requestId=fc-lattice}, command.run{command=calibrate}, ui.close{id=fc-calibrate}, ui.render{component=Pane, requestId=fc-calibrate}, command.run{command=bay}, ui.render{component=Pane, requestId=fc-bay}, command.run{command=scan}, ui.render{component=Pane, requestId=fc-scan}, command.run{command=bridge}, ui.close{id=fc-bridge}, ui.render{component=Pane, requestId=fc-bridge}, agent.spawn, turn.complete, session.start, classic.SessionStart, command.run{command=epic}, command.run{command=mission}, command.run{command=encounter}, command.run{command=captains-log}, ui.close{id=fc-epic}, ui.close{id=fc-confirm}, ui.render{component=Pane, requestId=fc-confirm}, ui.render{component=Pane, requestId=fc-epic}, tool.call{tool=Bash}, tool.call",
+      "./register.tsx hooks: ui.render{component=AbovePrompt}, ui.close{id=fc-report}, ui.render{component=Pane, requestId=fc-report}, command.run{command=contain}, ui.close{id=fc-lattice}, ui.render{component=Pane, requestId=fc-lattice}, command.run{command=calibrate}, ui.close{id=fc-calibrate}, ui.render{component=Pane, requestId=fc-calibrate}, command.run{command=bay}, ui.render{component=Pane, requestId=fc-bay}, command.run{command=scan}, ui.render{component=Pane, requestId=fc-scan}, command.run{command=setup}, ui.close{id=fc-setup}, ui.render{component=Pane, requestId=fc-setup}, command.run{command=bridge}, ui.close{id=fc-bridge}, ui.render{component=Pane, requestId=fc-bridge}, agent.spawn, turn.complete, session.start, classic.SessionStart, command.run{command=epic}, command.run{command=mission}, command.run{command=encounter}, command.run{command=captains-log}, ui.close{id=fc-epic}, ui.close{id=fc-confirm}, ui.render{component=Pane, requestId=fc-confirm}, ui.render{component=Pane, requ… [+47 chars]",
       "./register.tsx answers its own command: command.run{command=contain}",
       "./register.tsx answers its own command: command.run{command=calibrate}",
       "./register.tsx answers its own command: command.run{command=bay}",
       "./register.tsx answers its own command: command.run{command=scan}",
+      "./register.tsx answers its own command: command.run{command=setup}",
       "./register.tsx answers its own command: command.run{command=bridge}",
       "./register.tsx answers its own command: command.run{command=epic}",
       "./register.tsx answers its own command: command.run{command=mission}",
@@ -799,6 +894,7 @@
       "./register.tsx gating hook without .catch: ui.close{id=fc-report}",
       "./register.tsx gating hook without .catch: ui.close{id=fc-lattice}",
       "./register.tsx gating hook without .catch: ui.close{id=fc-calibrate}",
+      "./register.tsx gating hook without .catch: ui.close{id=fc-setup}",
       "./register.tsx gating hook without .catch: ui.close{id=fc-bridge}",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: classic.SessionStart",
@@ -806,11 +902,11 @@
       "./register.tsx gating hook without .catch: ui.close{id=fc-confirm}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.agent.register (via registerCrew), $.agent.spawn (via launch), $.clock.after (via raiseAlert, startSession), $.clock.every (via chart, open, startSession, startSync), $.clock.now, $.command.register (via startSession), $.env.get (via clientKeyOf, rngOf), $.fs.exists (via backendsOf), $.fs.list (via backendsOf), $.fs.read (via backendsOf), $.model.complete (via completeVia), $.model.fork (via writeLog), $.process.run (via backendsOf, clientKeyOf, observeBash), $.session.cwd (via backendsOf), $.session.usage (via fuelOf), $.state.get, $.state.set, $.store.delete (via repoOf, storeOf), $.store.get (via repoOf, storeOf), $.store.keys (via repoOf, storeOf), $.store.set (via repoOf, storeOf), $.ui.close (via confirmComplete, dismiss, dismissReport, submitForm), $.ui.log, $.ui.open (via announce, bay, bridge, epic, mission, open, reopen, scan, showReport), $.ui.resolve, $.ui.status (via refresh), $.ui.toast",
+      "./register.tsx calls: $.agent.register (via registerCrew), $.agent.spawn (via launch), $.clock.after (via raiseAlert, startSession), $.clock.every (via chart, open, startSession, startSync), $.clock.now, $.command.register (via startSession), $.config.set (via save), $.env.get (via clientKeyOf, rngOf), $.fs.exists (via backendsOf), $.fs.list (via backendsOf), $.fs.read (via backendsOf), $.http.fetch (via backendsOf), $.model.complete (via completeVia), $.model.fork (via writeLog), $.process.run (via backendsOf, clientKeyOf, observeBash, repoHere), $.session.cwd (via backendsOf), $.session.usage (via fuelOf), $.state.get, $.state.set, $.store.delete (via repoOf, storeOf), $.store.get (via repoOf, storeOf), $.store.keys (via repoOf, storeOf), $.store.set (via repoOf, storeOf), $.ui.close (via close, confirmComplete, dismiss, dismissReport, submitForm), $.ui.log, $.ui.open (via announce, bay, bridge, epic, mission, open, reopen, scan, setup, showReport), $.ui.resolve, $.ui.status (via ref… [+17 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: FINAL_COMMIT_SEED, SSH_CONNECTION, TERM, TMUX",
-      "./register.tsx state writes: final-commit.alert, final-commit.band, final-commit.bay, final-commit.bridgeInput, final-commit.bridgeOpen, final-commit.calibration, final-commit.chartFailures, final-commit.charting, final-commit.confirm, final-commit.crew, final-commit.epicForm, final-commit.gauges, final-commit.lattice, final-commit.mood, final-commit.queuedMission, final-commit.ready, final-commit.report, final-commit.scan",
-      "./register.tsx state reads: final-commit.alert, final-commit.band, final-commit.bay, final-commit.bridgeInput, final-commit.bridgeOpen, final-commit.calibration, final-commit.chartFailures, final-commit.charting, final-commit.confirm, final-commit.crew, final-commit.epicForm, final-commit.gauges, final-commit.lattice, final-commit.mood, final-commit.queuedMission, final-commit.ready, final-commit.report, final-commit.scan"
+      "./register.tsx state writes: final-commit.alert, final-commit.band, final-commit.bay, final-commit.bridgeInput, final-commit.bridgeOpen, final-commit.calibration, final-commit.chartFailures, final-commit.charting, final-commit.confirm, final-commit.crew, final-commit.epicForm, final-commit.gauges, final-commit.lattice, final-commit.mood, final-commit.queuedMission, final-commit.ready, final-commit.report, final-commit.scan, final-commit.setup",
+      "./register.tsx state reads: final-commit.alert, final-commit.band, final-commit.bay, final-commit.bridgeInput, final-commit.bridgeOpen, final-commit.calibration, final-commit.chartFailures, final-commit.charting, final-commit.confirm, final-commit.crew, final-commit.epicForm, final-commit.gauges, final-commit.lattice, final-commit.mood, final-commit.queuedMission, final-commit.ready, final-commit.report, final-commit.scan, final-commit.setup"
      ],
      "gatingHooks": [
       {
@@ -829,6 +925,12 @@
        "module": "./register.tsx",
        "pattern": "ui.close",
        "hook": "ui.close{id=fc-calibrate}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=fc-setup}",
        "hasCatch": false
       },
       {
@@ -878,5 +980,5 @@
    ]
   }
  },
- "sourceHash": "cc6c378932721b81"
+ "sourceHash": "178881aa7f393f15"
 }

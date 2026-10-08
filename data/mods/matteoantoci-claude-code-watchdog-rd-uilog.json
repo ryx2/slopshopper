@@ -1,0 +1,8 @@
+{
+ "slug": "matteoantoci-claude-code-watchdog-rd-uilog",
+ "files": {
+  "hooks/uilog.mjs": "// §13.2 / §16.5: one 5000-character row and one 10000-character row. 2.1.289 refused past 4096;\n// 2.1.290 accepts any length. The status file is the reject signal; the rows themselves are the calls.\nconst FILE = '__LOG__/rd-uilog.json';\n\nconst row = (prefix, len) => prefix + 'x'.repeat(len - prefix.length);\n\nconst call = async ($, text) => {\n  try {\n    await Promise.resolve($.ui.log(text));\n    return 'ok';\n  } catch (error) {\n    return `throw ${String(error?.message ?? error).slice(0, 180)}`;\n  }\n};\n\nexport const register = (on) => {\n  on('session.start', { cwd: /./u }, async ($, e, next) => {\n    const rows = [\n      { len: 5000, text: row('RDLOG5 ', 5000) },\n      { len: 10000, text: row('RDLOGA ', 10000) },\n    ];\n    const results = [];\n    for (const item of rows) {\n      const outcome = await call($, item.text);\n      results.push({ len: item.len, outcome });\n      await $.ui.log(`RDLOG status ${item.len} ${outcome}`);\n    }\n    await $.fs.write(FILE, `${JSON.stringify({ rows: results })}\\n`).catch(() => undefined);\n    return next(e);\n  });\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./uilog.mjs\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"rd-uilog\",\n  \"version\": \"0.0.1\",\n  \"description\": \"Watchdog test fixture, not a mod to install. release-delivery probe: $.ui.log rows of 5000 and 10000 characters\",\n  \"author\": {\n    \"name\": \"watchdog live probe\"\n  }\n}"
+ }
+}

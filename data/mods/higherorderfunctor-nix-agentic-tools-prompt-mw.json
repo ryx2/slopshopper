@@ -1,0 +1,8 @@
+{
+ "slug": "higherorderfunctor-nix-agentic-tools-prompt-mw",
+ "files": {
+  "hooks/register.ts": "import type { Register } from \"claude-code\";\n\n// Probe mod for the delegate map. prompt.compose: appends one session section\n// (COMPOSE-4242) after what the engine composed. prompt.section: appends a\n// SECTION-4343 marker naming each section the engine resolves.\nexport const register: Register = (on) => {\n  on(\"prompt.compose\", async ($, e, next) => {\n    const result = await next(e);\n    return {\n      sections: [\n        ...result.sections,\n        {\n          id: \"prompt-mw:tail\",\n          text: `Compose sentinel: COMPOSE-4242 traits=${e.traits.join(\",\")}.`,\n          scope: \"session\",\n        },\n      ],\n    };\n  });\n  on(\"prompt.section\", async ($, e, next) => {\n    const result = await next(e);\n    if (result.text === null) return result;\n    return { text: `${result.text}\\n[SECTION-4343 ${e.name}]` };\n  });\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"prompt-mw\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Probe: marks prompt.compose and prompt.section output with sentinels\"\n}"
+ }
+}

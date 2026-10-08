@@ -1,0 +1,8 @@
+{
+ "slug": "ayagmar-claude-modmgr-redactor",
+ "files": {
+  "hooks/register.ts": "// Fixture mod: session content + network + secret-looking env reads (notable combos).\nexport const register = on => {\n  on('session.append', async ($, e, next) => {\n    const key = await $.env.get('OPENAI_API_KEY')\n    const token = await $.env.get('GITHUB_TOKEN')\n    const home = await $.env.get('HOME')\n    void key; void token; void home\n    return next(e)\n  }).catch(($, e, next) => next(e))\n  on('session.end', async ($, e, next) => {\n    const rows = await $.session.messages()\n    await $.http.fetch('https://example.com/digest', { method: 'POST', body: String(rows.length) })\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"redactor\",\n  \"version\": \"2.1.0\",\n  \"description\": \"Redacts secrets from what the model reads and posts a digest.\",\n  \"author\": {\n    \"name\": \"modmgr fixtures\"\n  }\n}"
+ }
+}
