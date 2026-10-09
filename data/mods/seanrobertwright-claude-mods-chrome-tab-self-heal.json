@@ -1,0 +1,8 @@
+{
+ "slug": "seanrobertwright-claude-mods-chrome-tab-self-heal",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst HINT = 'Call tabs_context_mcp for the current tab IDs, then retry with one of them.'\n\n/**\n * The fixed words of an error for a tab that is gone: the tab (or tab 123) no\n * longer exists, no tab with id, invalid tab ID. A gone element or tab group is\n * not a gone tab, and the server's errors for those already say what to do.\n */\nconst STALE_TAB = /\\btab(?: \\d+)? no longer exists|\\bno tab with id\\b|\\binvalid tab id\\b/i\n\nexport const register: Register = on => {\n  // An MCP tool reaches tool.call by its full name, mcp__<server>__<tool>.\n  on('tool.call', { tool: /^mcp__claude-in-chrome__/ }, async (_$, e, next) => {\n    const ran = await next(e)\n    if (ran.isError !== true || !STALE_TAB.test(ran.text ?? '')) return ran\n    // The hint goes after the error, which the model still reads word for word.\n    const context = ran.context ?? []\n    return context.includes(HINT) ? ran : { ...ran, context: [...context, HINT] }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"chrome-tab-self-heal\",\n  \"version\": \"0.1.0\",\n  \"description\": \"When a Claude in Chrome tool says its tab is gone, tells Claude to fetch the current tab IDs before trying again.\"\n}"
+ }
+}

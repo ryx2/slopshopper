@@ -1,6 +1,6 @@
 {
  "slug": "jidhra-claude-mods-pinboard",
- "generatedAt": "2026-10-08T15:54:09.491Z",
+ "generatedAt": "2026-10-09T15:33:37.407Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,6 +14,18 @@
     }
    },
    {
+    "event": "ui.open",
+    "matcher": {
+     "id": "pinboard"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "pinboard"
+    }
+   },
+   {
     "event": "prompt.compose"
    },
    {
@@ -21,6 +33,9 @@
     "matcher": {
      "tool": "mcp__pinboard__update"
     }
+   },
+   {
+    "event": "classic.Stop"
    },
    {
     "event": "tool.call"
@@ -54,14 +69,15 @@
   "commands": [
    {
     "name": "pinboard",
-    "description": "Open the pane of open decisions, todos and links",
+    "description": "Open the pane of open decisions, todos and links; `close` hides it",
+    "argumentHint": "[close]",
     "immediate": true
    }
   ],
   "tools": [
    {
     "name": "update",
-    "description": "Keep the session's task list and open decisions on the user's Pinboard, a sidebar that stays in view while the transcript scrolls. Use it in place of writing task lists or decision lists in your reply, whenever the work takes 2+ distinct steps or the user gives new instructions. add_todos: one action per item. start_todo: the todo id you are working on now; exactly one is in progress at a time. done_todos / remove_todos: todo ids. Update in real time; do not batch completions. Mark a todo done only after the work is actually done, including any verification it needs, never based on intent. If blocked or partly done, leave it in progress and add a follow-up todo describing the blocker. open_decisions: questions that need the user to choose. decide: close a decision by id once the user has answered. The current board, with ids, is at the end of your system prompt."
+    "description": "Keep the session's task list and open decisions on the user's Pinboard, a sidebar that stays in view while the transcript scrolls. Any question you end a reply on that needs the user to answer goes in open_decisions, however small the task, even a single yes/no. Use it in place of writing task lists or decision lists in your reply, whenever the work takes 2+ distinct steps or the user gives new instructions. add_todos: one action per item. start_todo: the todo id you are working on now; exactly one is in progress at a time. done_todos / remove_todos: todo ids. Update in real time; do not batch completions. Mark a todo done only after the work is actually done, including any verification it needs, never based on intent. If blocked or partly done, leave it in progress and add a follow-up todo describing the blocker. open_decisions: questions that need the user to choose. decide: close a decision by id once the user has answered. The current board, with ids, is at the end of your system prompt. It is session-only: work that must outlive the session goes to a durable tracker (kindex task_add) instead."
    }
   ],
   "panes": [
@@ -77,9 +93,10 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.tool.register": 1,
-   "$.state.get": 4,
-   "$.state.set": 1,
-   "$.ui.open": 2,
+   "$.state.get": 5,
+   "$.state.set": 2,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -289,7 +306,6 @@
    }
   },
   "script": [
-   "$.ui.open(pinboard)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -314,8 +330,11 @@
   "hooks": [
    "session.start",
    "command.run{command=pinboard}",
+   "ui.open{id=pinboard}",
+   "ui.close{id=pinboard}",
    "prompt.compose",
    "tool.call{tool=mcp__pinboard__update}",
+   "classic.Stop",
    "tool.call",
    "ui.render{component=ToolUse",
    "props has {tool=mcp__pinboard__update}}",
@@ -328,17 +347,21 @@
    "$.state.get",
    "$.state.set",
    "$.tool.register",
+   "$.ui.close",
    "$.ui.open",
+   "$.ui.panes",
    "$.ui.resolve"
   ],
   "stateReads": [
    "pinboard.decisions",
    "pinboard.links",
+   "pinboard.paneOpen",
    "pinboard.todos"
   ],
   "stateWrites": [
    "pinboard.decisions",
    "pinboard.links",
+   "pinboard.paneOpen",
    "pinboard.todos"
   ],
   "envReads": [],
@@ -353,7 +376,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: pinboard.decisions, pinboard.todos, pinboard.links"
+     "types ./types/index.d.ts declares state: pinboard.decisions, pinboard.todos, pinboard.links, pinboard.paneOpen"
     ],
     "gatingHooks": []
    },
@@ -364,19 +387,40 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=pinboard}, prompt.compose, tool.call{tool=mcp__pinboard__update}, tool.call, ui.render{component=ToolUse, props has {tool=mcp__pinboard__update}}, ui.render{component=ToolResult, props has {tool=mcp__pinboard__update}}, ui.render{component=Pane, requestId=pinboard}",
+      "./register.tsx hooks: session.start, command.run{command=pinboard}, ui.open{id=pinboard}, ui.close{id=pinboard}, prompt.compose, tool.call{tool=mcp__pinboard__update}, classic.Stop, tool.call, ui.render{component=ToolUse, props has {tool=mcp__pinboard__update}}, ui.render{component=ToolResult, props has {tool=mcp__pinboard__update}}, ui.render{component=Pane, requestId=pinboard}",
       "./register.tsx answers its own command: command.run{command=pinboard}",
+      "./register.tsx gating hook with .catch: ui.open{id=pinboard}",
+      "./register.tsx gating hook with .catch: ui.close{id=pinboard}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__pinboard__update}",
+      "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.tool.register, $.ui.open, $.ui.resolve",
-      "./register.tsx state writes: pinboard.decisions, pinboard.links, pinboard.todos",
-      "./register.tsx state reads: pinboard.decisions, pinboard.links, pinboard.todos"
+      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.tool.register, $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve",
+      "./register.tsx state writes: pinboard.decisions, pinboard.links, pinboard.paneOpen, pinboard.todos",
+      "./register.tsx state reads: pinboard.decisions, pinboard.links, pinboard.paneOpen, pinboard.todos"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
+       "pattern": "ui.open",
+       "hook": "ui.open{id=pinboard}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=pinboard}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__pinboard__update}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
        "hasCatch": false
       },
       {
@@ -387,8 +431,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "5f581389169a38dd"
+ "sourceHash": "ff60a9a7d5aa4c7f"
 }

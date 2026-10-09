@@ -1,6 +1,6 @@
 {
  "slug": "alexandremendoncaalvaro-agentic-development-agentic-session",
- "generatedAt": "2026-10-07T15:21:55.288Z",
+ "generatedAt": "2026-10-09T15:32:13.944Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,27 +17,80 @@
     "event": "session.end"
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "agentic-briefing"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "agentic-briefing"
+    }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "agentic-briefing",
+    "description": "Show the work-in-progress briefing in a pane",
+    "output": "Briefing pane opened."
+   }
+  ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "agentic-briefing",
+    "title": "Briefing"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.command.register": 1,
    "$.session.usage": 2,
-   "$.ui.invalidate": 2
+   "$.session.root": 2,
+   "$.env.get": 2,
+   "$.fs.stat": 4,
+   "$.ui.invalidate": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
+   },
+   "Pane": {
+    "agentic-briefing": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "padding": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No briefing: the kit script is not installed or did not run."
+        ]
+       }
+      ]
+     },
+     "title": "Briefing"
+    }
    }
   },
   "script": [
@@ -51,7 +104,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.ui.open(agentic-briefing)",
+   "/agentic-briefing → Briefing pane opened."
   ],
   "console": [],
   "warnings": []
@@ -67,19 +122,31 @@
    "turn.complete",
    "session.compact",
    "session.end",
-   "ui.render{component=AbovePrompt}"
+   "command.run{command=agentic-briefing}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=agentic-briefing}"
   ],
   "calls": [
+   "$.command.register (via registerCommand)",
+   "$.env.get (via takeBriefing)",
+   "$.fs.stat (via firstInstalled)",
+   "$.process.run (via takeBriefing)",
    "$.prompt.submit (via submitHandoff)",
+   "$.session.id (via takeBriefing)",
+   "$.session.root (via takeBriefing)",
    "$.session.usage (via takeReading)",
-   "$.ui.invalidate (via clearReading",
-   "takeReading)",
+   "$.ui.invalidate (via clearReadings",
+   "refresh)",
    "$.ui.log (via logFailure)",
+   "$.ui.open",
    "$.ui.resolve"
   ],
   "stateReads": [],
   "stateWrites": [],
-  "envReads": [],
+  "envReads": [
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -105,9 +172,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.mjs hooks: session.start, turn.complete, session.compact, session.end, ui.render{component=AbovePrompt}",
+      "./register.mjs hooks: session.start, turn.complete, session.compact, session.end, command.run{command=agentic-briefing}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agentic-briefing}",
       "./register.mjs gating hook without .catch: session.compact",
-      "./register.mjs calls: $.prompt.submit (via submitHandoff), $.session.usage (via takeReading), $.ui.invalidate (via clearReading, takeReading), $.ui.log (via logFailure), $.ui.resolve"
+      "./register.mjs gating hook without .catch: command.run{command=agentic-briefing}",
+      "./register.mjs calls: $.command.register (via registerCommand), $.env.get (via takeBriefing), $.fs.stat (via firstInstalled), $.process.run (via takeBriefing), $.prompt.submit (via submitHandoff), $.session.id (via takeBriefing), $.session.root (via takeBriefing), $.session.usage (via takeReading), $.ui.invalidate (via clearReadings, refresh), $.ui.log (via logFailure), $.ui.open, $.ui.resolve",
+      "./register.mjs env writes: nothing",
+      "./register.mjs env reads: HOME, USERPROFILE"
      ],
      "gatingHooks": [
       {
@@ -115,11 +185,18 @@
        "pattern": "session.compact",
        "hook": "session.compact",
        "hasCatch": false
+      },
+      {
+       "module": "./register.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=agentic-briefing}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "af55ae480eba6721"
+ "sourceHash": "a0a645902fafb490"
 }

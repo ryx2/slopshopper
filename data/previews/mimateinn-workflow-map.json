@@ -1,6 +1,6 @@
 {
  "slug": "mimateinn-workflow-map",
- "generatedAt": "2026-10-08T15:53:35.267Z",
+ "generatedAt": "2026-10-09T15:32:41.046Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -18,6 +18,28 @@
    },
    {
     "event": "prompt.compose"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "TodoWrite",
+      "TaskCreate",
+      "TaskUpdate"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "Bash",
+      "PowerShell"
+     ]
+    }
    },
    {
     "event": "prompt.submit"
@@ -75,7 +97,7 @@
   "tools": [
    {
     "name": "workflow_map",
-    "description": "Live dependency graph of the current work, shown to the user and saved to .claude/workflow-map.json. ops: new_plan {title,nodes} starts an unrelated task (the current plan is archived to history); set_plan {nodes} replaces this plan's steps; upsert {nodes} changes only the given fields; status {id,status,note?}; insert {nodes,note,before?} records work the USER interjected mid-plan (note = their words; deps = what it waits for; before = existing ids that must now wait for it); remove {ids}; show returns the full graph. Node: {id, title, status: todo|doing|done|blocked|dropped, deps: [ids it waits for], owner?, note?}. Steps sharing no deps path run in parallel. Cycles and unknown deps are rejected. Other ops return a one-line summary plus the changed steps and their neighbours. Titles and notes: in the user's own language (its written form), concise, plain words, no jargon or file names; titles at most 8 CJK characters or 20 Latin characters; notes at most 20 CJK or 60 Latin characters."
+    "description": "Live dependency graph of this session's work (each session has its own plan; files under .claude/workflow-map/plans/), shown to the user. ops: new_plan {title,nodes} starts an unrelated task (the current plan is archived to history); set_plan {nodes} replaces this plan's steps; upsert {nodes} changes only the given fields; status {id,status,note?}; insert {nodes,note,before?} records work the USER interjected mid-plan (note = their words; deps = what it waits for; before = existing ids that must now wait for it); remove {ids}; show returns the full graph. Node: {id, title, status: todo|doing|done|blocked|dropped, deps: [ids it waits for], owner?, note?, lane?, kind?, edgeLabel?}. lane groups steps into one box in the diagram view; kind: step (default), decision (a question) or note (a warning, not a step); edgeLabel: a short label for what leads into this step (shown as \"via …\"). Steps sharing no deps path run in parallel. Cycles and unknown deps are rejected. Other ops return a one-line summary plus the changed steps and their neighbours. join {plan} binds this session to an existing plan of the project (to share it); leave unbinds. Titles and notes: in the user's own language (its written form), concise, plain words, no jargon or file names; titles at most 8 CJK characters or 20 Latin characters; notes at most 20 CJK or 60 Latin characters."
    }
   ],
   "panes": [
@@ -91,19 +113,19 @@
   "apiCalls": {
    "$.tool.register": 1,
    "$.config.list": 1,
-   "$.state.get": 61,
+   "$.state.get": 88,
    "$.store.get": 3,
-   "$.state.set": 8,
-   "$.session.root": 3,
-   "$.fs.exists": 1,
-   "$.clock.now": 8,
-   "$.store.set": 2,
+   "$.state.set": 18,
+   "$.session.id": 2,
+   "$.clock.now": 9,
    "$.command.register": 2,
    "$.clock.every": 1,
+   "$.store.set": 1,
    "$.command.list": 1,
    "$.model.fork": 1,
    "$.ui.open": 1,
-   "$.ui.resolve": 2
+   "$.ui.resolve": 2,
+   "$.session.root": 1
   },
   "timers": [
    {
@@ -147,26 +169,157 @@
          "props": {
           "key": "title",
           "flexDirection": "row",
-          "gap": 1
+          "alignItems": "center"
          },
          "children": [
           {
            "type": "Box",
            "props": {
             "flexShrink": 1,
-            "flexGrow": 1
+            "overflow": "hidden"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "key": "lead",
+              "flexDirection": "row",
+              "flexShrink": 0
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "color": "claude"
+               },
+               "children": [
+                "◉"
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {},
+               "children": [
+                " "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": true
+               },
+               "children": [
+                "Card layout"
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " +2"
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                "  Next: Tests"
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexGrow": 1,
+            "minWidth": 2
+           },
+           "children": []
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "meter",
+            "flexDirection": "row",
+            "flexShrink": 0
            },
            "children": [
             {
              "type": "Text",
              "props": {
-              "wrap": "truncate-end"
+              "color": "success"
              },
              "children": [
-              "Progress 5/12 | In progress: Card layout, Connectors, Dark theme | Added 1"
+              "━━━━━━━━━"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "claude"
+             },
+             "children": [
+              "━━━━━━"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "warning"
+             },
+             "children": [
+              "━━"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "subtle"
+             },
+             "children": [
+              "━━━━━"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              " "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "5/12"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              " rough 1h28m–2h28m"
              ]
             }
            ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "width": 2,
+            "flexShrink": 0
+           },
+           "children": []
           },
           {
            "type": "Box",
@@ -184,6 +337,7 @@
               "key": "toggle",
               "plain": true,
               "dimColor": true,
+              "hotkey": "e",
               "label": "Expand",
               "onPress": "[fn]"
              },
@@ -195,6 +349,7 @@
               "key": "open",
               "plain": true,
               "dimColor": true,
+              "hotkey": "f",
               "label": "Full view",
               "onPress": "[fn]"
              },
@@ -232,9 +387,63 @@
          {
           "type": "Box",
           "props": {
-           "flexGrow": 1,
+           "flexGrow": 0,
            "flexShrink": 1,
            "overflow": "hidden"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "bar",
+             "flexDirection": "row",
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "success"
+              },
+              "children": [
+               "━━━━━━━━━━━"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "claude"
+              },
+              "children": [
+               "━━━━━━"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "warning"
+              },
+              "children": [
+               "━━━"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               "━━━━━━"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexGrow": 1
           },
           "children": []
          },
@@ -267,7 +476,7 @@
              "dimColor": true
             },
             "children": [
-             "≈ 1h 48m"
+             "rough 1h 28m–2h 28m"
             ]
            }
           ]
@@ -279,6 +488,8 @@
         "props": {
          "key": "tools",
          "flexDirection": "row",
+         "flexWrap": "wrap",
+         "justifyContent": "flex-end",
          "alignItems": "center",
          "gap": 1
         },
@@ -286,64 +497,162 @@
          {
           "type": "Box",
           "props": {
-           "flexGrow": 1
+           "key": "tb-diagram",
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "diagram",
+             "plain": true,
+             "dimColor": true,
+             "label": "Diagram",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
          },
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "key": "undo",
-           "plain": true,
-           "dimColor": true,
-           "label": "Undo",
-           "onPress": "[fn]"
+           "key": "tb-timeline",
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "timeline",
+             "plain": true,
+             "dimColor": true,
+             "label": "Timeline",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
          },
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "key": "export",
-           "plain": true,
-           "dimColor": true,
-           "label": "Export",
-           "onPress": "[fn]"
+           "key": "tb-undo",
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "undo",
+             "plain": true,
+             "dimColor": true,
+             "label": "Undo",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
          },
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "key": "history",
-           "plain": true,
-           "dimColor": true,
-           "label": "History",
-           "onPress": "[fn]"
+           "key": "tb-export",
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "export",
+             "plain": true,
+             "dimColor": true,
+             "label": "Export",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
          },
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "key": "projects",
-           "plain": true,
-           "dimColor": true,
-           "label": "Projects",
-           "onPress": "[fn]"
+           "key": "tb-history",
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "history",
+             "plain": true,
+             "dimColor": true,
+             "label": "History",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
          },
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "key": "help",
-           "plain": true,
-           "dimColor": true,
-           "label": "Help",
-           "onPress": "[fn]"
+           "key": "tb-plans",
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "plans",
+             "plain": true,
+             "dimColor": true,
+             "label": "Plans",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "tb-projects",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "projects",
+             "plain": true,
+             "dimColor": true,
+             "label": "Projects",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "tb-help",
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "help",
+             "plain": true,
+             "dimColor": true,
+             "label": "Help",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
          }
         ]
        },
@@ -352,7 +661,8 @@
         "props": {
          "key": "sec:now",
          "marginTop": 1,
-         "flexDirection": "row"
+         "flexDirection": "row",
+         "alignItems": "center"
         },
         "children": [
          {
@@ -374,7 +684,8 @@
          "marginTop": 0.5,
          "borderStyle": "round",
          "borderColor": "subtle",
-         "padding": 1
+         "paddingX": 1,
+         "paddingY": 0
         },
         "children": [
          {
@@ -394,13 +705,24 @@
             ]
            },
            {
-            "type": "Text",
+            "type": "Box",
             "props": {
-             "bold": true,
-             "wrap": "truncate-end"
+             "key": "head-t",
+             "flexShrink": 1,
+             "minWidth": 0,
+             "overflow": "hidden"
             },
             "children": [
-             "Stage 1 · 3 parallel"
+             {
+              "type": "Text",
+              "props": {
+               "bold": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "Stage 1 · 3 parallel"
+              ]
+             }
             ]
            }
           ]
@@ -427,13 +749,16 @@
                "color": "claude"
               },
               "children": [
-               "●"
+               "◉"
               ]
              },
              {
               "type": "Box",
               "props": {
-               "flexShrink": 1
+               "key": "title",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
                {
@@ -456,46 +781,85 @@
               "children": []
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "dimColor": true
+               "key": "info",
+               "flexShrink": 0
               },
               "children": [
-               "Builder · 25m"
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Builder · 25m"
+                ]
+               }
               ]
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "color": "claude",
-               "dimColor": false
+               "key": "status",
+               "flexShrink": 0
               },
               "children": [
-               "In progress"
+               {
+                "type": "Text",
+                "props": {
+                 "color": "claude",
+                 "dimColor": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "In progress"
+                ]
+               }
               ]
              },
              {
-              "type": "Button",
+              "type": "Box",
               "props": {
-               "key": "detail:cards",
-               "plain": true,
-               "dimColor": true,
-               "label": "Details",
-               "onPress": "[fn]"
+               "key": "detail-btn",
+               "flexShrink": 0
               },
-              "children": []
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "detail:cards",
+                 "plain": true,
+                 "dimColor": true,
+                 "label": "Details",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
              }
             ]
            }
           ]
          },
          {
-          "type": "Markdown",
+          "type": "Box",
           "props": {
            "key": "div:wires",
-           "text": "---"
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "subtle"
+            },
+            "children": [
+             "───────────────────────────────────────────────────"
+            ]
+           }
+          ]
          },
          {
           "type": "Box",
@@ -519,13 +883,16 @@
                "color": "warning"
               },
               "children": [
-               "●"
+               "◉"
               ]
              },
              {
               "type": "Box",
               "props": {
-               "flexShrink": 1
+               "key": "title",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
                {
@@ -548,46 +915,85 @@
               "children": []
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "dimColor": true
+               "key": "info",
+               "flexShrink": 0
               },
               "children": [
-               "Grok · 52m"
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Grok · 52m"
+                ]
+               }
               ]
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "color": "warning",
-               "dimColor": false
+               "key": "status",
+               "flexShrink": 0
               },
               "children": [
-               "no update"
+               {
+                "type": "Text",
+                "props": {
+                 "color": "warning",
+                 "dimColor": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "no update"
+                ]
+               }
               ]
              },
              {
-              "type": "Button",
+              "type": "Box",
               "props": {
-               "key": "detail:wires",
-               "plain": true,
-               "dimColor": true,
-               "label": "Details",
-               "onPress": "[fn]"
+               "key": "detail-btn",
+               "flexShrink": 0
               },
-              "children": []
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "detail:wires",
+                 "plain": true,
+                 "dimColor": true,
+                 "label": "Details",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
              }
             ]
            }
           ]
          },
          {
-          "type": "Markdown",
+          "type": "Box",
           "props": {
            "key": "div:dark",
-           "text": "---"
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "subtle"
+            },
+            "children": [
+             "───────────────────────────────────────────────────"
+            ]
+           }
+          ]
          },
          {
           "type": "Box",
@@ -617,7 +1023,10 @@
              {
               "type": "Box",
               "props": {
-               "flexShrink": 1
+               "key": "title",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
                {
@@ -640,34 +1049,63 @@
               "children": []
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "dimColor": true
+               "key": "info",
+               "flexShrink": 0
               },
               "children": [
-               "Astra · 12m"
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Astra · 12m"
+                ]
+               }
               ]
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "color": "claude",
-               "dimColor": false
+               "key": "status",
+               "flexShrink": 0
               },
               "children": [
-               "In progress"
+               {
+                "type": "Text",
+                "props": {
+                 "color": "claude",
+                 "dimColor": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "In progress"
+                ]
+               }
               ]
              },
              {
-              "type": "Button",
+              "type": "Box",
               "props": {
-               "key": "detail:dark",
-               "plain": true,
-               "dimColor": true,
-               "label": "Details",
-               "onPress": "[fn]"
+               "key": "detail-btn",
+               "flexShrink": 0
               },
-              "children": []
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "detail:dark",
+                 "plain": true,
+                 "dimColor": true,
+                 "label": "Details",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
              }
             ]
            },
@@ -688,14 +1126,25 @@
               ]
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "dimColor": false,
-               "color": "#a78bfa",
-               "wrap": "truncate-end"
+               "key": "sub-t",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
-               "10-09 08:39 · Follow the system light/dark"
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": false,
+                 "color": "merged",
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "10-09 08:39 · Follow the system light/dark"
+                ]
+               }
               ]
              }
             ]
@@ -709,7 +1158,8 @@
         "props": {
          "key": "sec:next",
          "marginTop": 1,
-         "flexDirection": "row"
+         "flexDirection": "row",
+         "alignItems": "center"
         },
         "children": [
          {
@@ -731,7 +1181,8 @@
          "marginTop": 0.5,
          "borderStyle": "round",
          "borderColor": "subtle",
-         "padding": 1
+         "paddingX": 1,
+         "paddingY": 0
         },
         "children": [
          {
@@ -751,13 +1202,24 @@
             ]
            },
            {
-            "type": "Text",
+            "type": "Box",
             "props": {
-             "bold": true,
-             "wrap": "truncate-end"
+             "key": "head-t",
+             "flexShrink": 1,
+             "minWidth": 0,
+             "overflow": "hidden"
             },
             "children": [
-             "Stage 2 · 2 parallel"
+             {
+              "type": "Text",
+              "props": {
+               "bold": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "Stage 2 · 2 parallel"
+              ]
+             }
             ]
            }
           ]
@@ -781,7 +1243,8 @@
              {
               "type": "Text",
               "props": {
-               "color": "warning"
+               "color": "warning",
+               "bold": true
               },
               "children": [
                "!"
@@ -790,7 +1253,10 @@
              {
               "type": "Box",
               "props": {
-               "flexShrink": 1
+               "key": "title",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
                {
@@ -813,25 +1279,44 @@
               "children": []
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "color": "warning",
-               "dimColor": false
+               "key": "status",
+               "flexShrink": 0
               },
               "children": [
-               "Blocked"
+               {
+                "type": "Text",
+                "props": {
+                 "color": "warning",
+                 "dimColor": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Blocked"
+                ]
+               }
               ]
              },
              {
-              "type": "Button",
+              "type": "Box",
               "props": {
-               "key": "detail:shots",
-               "plain": true,
-               "dimColor": true,
-               "label": "Details",
-               "onPress": "[fn]"
+               "key": "detail-btn",
+               "flexShrink": 0
               },
-              "children": []
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "detail:shots",
+                 "plain": true,
+                 "dimColor": true,
+                 "label": "Details",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
              }
             ]
            },
@@ -852,13 +1337,24 @@
               ]
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "dimColor": true,
-               "wrap": "truncate-end"
+               "key": "sub-t",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
-               "← waits for Dark theme"
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "← waits for Dark theme"
+                ]
+               }
               ]
              }
             ]
@@ -866,12 +1362,22 @@
           ]
          },
          {
-          "type": "Markdown",
+          "type": "Box",
           "props": {
            "key": "div:test",
-           "text": "---"
+           "flexShrink": 0
           },
-          "children": []
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "subtle"
+            },
+            "children": [
+             "───────────────────────────────────────────────────"
+            ]
+           }
+          ]
          },
          {
           "type": "Box",
@@ -891,7 +1397,9 @@
             "children": [
              {
               "type": "Text",
-              "props": {},
+              "props": {
+               "dimColor": true
+              },
               "children": [
                "○"
               ]
@@ -899,7 +1407,10 @@
              {
               "type": "Box",
               "props": {
-               "flexShrink": 1
+               "key": "title",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
                {
@@ -922,15 +1433,24 @@
               "children": []
              },
              {
-              "type": "Button",
+              "type": "Box",
               "props": {
-               "key": "detail:test",
-               "plain": true,
-               "dimColor": true,
-               "label": "Details",
-               "onPress": "[fn]"
+               "key": "detail-btn",
+               "flexShrink": 0
               },
-              "children": []
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "detail:test",
+                 "plain": true,
+                 "dimColor": true,
+                 "label": "Details",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
              }
             ]
            },
@@ -951,13 +1471,24 @@
               ]
              },
              {
-              "type": "Text",
+              "type": "Box",
               "props": {
-               "dimColor": true,
-               "wrap": "truncate-end"
+               "key": "sub-t",
+               "flexShrink": 1,
+               "minWidth": 0,
+               "overflow": "hidden"
               },
               "children": [
-               "← waits for Card layout, Connectors"
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "← waits for Card layout, Connectors"
+                ]
+               }
               ]
              }
             ]
@@ -971,7 +1502,8 @@
         "props": {
          "key": "sec:done",
          "marginTop": 1,
-         "flexDirection": "row"
+         "flexDirection": "row",
+         "alignItems": "center"
         },
         "children": [
          {
@@ -980,7 +1512,7 @@
            "key": "fold-done",
            "plain": true,
            "dimColor": true,
-           "label": "Done 5 ⌄",
+           "label": "▸ Done 5",
            "onPress": "[fn]"
           },
           "children": []
@@ -992,7 +1524,8 @@
         "props": {
          "key": "sec:later",
          "marginTop": 1,
-         "flexDirection": "row"
+         "flexDirection": "row",
+         "alignItems": "center"
         },
         "children": [
          {
@@ -1001,7 +1534,7 @@
            "key": "fold-future",
            "plain": true,
            "dimColor": true,
-           "label": "Later 2 ⌄",
+           "label": "▸ Later 2",
            "onPress": "[fn]"
           },
           "children": []
@@ -1042,6 +1575,8 @@
    "tool.call{tool=mcp__workflow-map__workflow_map}",
    "config.set",
    "prompt.compose",
+   "tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}",
+   "tool.call{tool=Edit|Write|NotebookEdit|Bash|PowerShell}",
    "prompt.submit",
    "turn.start",
    "agent.spawn",
@@ -1058,27 +1593,35 @@
    "$.command.list (via computeSuggestions)",
    "$.command.register",
    "$.config.list (via refreshTheme)",
-   "$.fs.exists (via loadMap)",
-   "$.fs.list (via readHistory)",
+   "$.fs.exists (via listPlans",
+   "loadMap",
+   "recordSessions",
+   "snapshotOf)",
+   "$.fs.list (via listPlans",
+   "readHistory)",
    "$.fs.read",
    "$.fs.stat",
    "$.fs.write (via applyAndWrite",
    "exportPlan",
    "loadMap",
+   "recordSessions",
    "saveUndo",
    "writeMerged)",
    "$.model.fork (via computeSuggestions)",
    "$.prompt.fill",
    "$.prompt.suggest",
+   "$.session.id (via sessionIdOf)",
    "$.session.root (via exportPlan",
-   "filePath",
    "historyPath",
+   "planPathOf",
    "readHistory",
    "rootOf",
    "undoPath)",
    "$.state.get",
    "$.state.set",
+   "$.store.delete (via bindPlan)",
    "$.store.get",
+   "$.store.keys (via sessionsOn)",
    "$.store.set",
    "$.tool.register",
    "$.ui.copy (via exportPlan)",
@@ -1089,7 +1632,12 @@
   ],
   "stateReads": [
    "workflow-map.agents",
+   "workflow-map.asked",
+   "workflow-map.before",
+   "workflow-map.bound",
+   "workflow-map.changes",
    "workflow-map.demo",
+   "workflow-map.diagram",
    "workflow-map.doneOpen",
    "workflow-map.doneTurns",
    "workflow-map.expanded",
@@ -1100,17 +1648,28 @@
    "workflow-map.lang",
    "workflow-map.light",
    "workflow-map.map",
+   "workflow-map.nudge",
    "workflow-map.pending",
+   "workflow-map.plansOpen",
    "workflow-map.projectsOpen",
    "workflow-map.selected",
    "workflow-map.suggest",
    "workflow-map.tick",
+   "workflow-map.timelineOpen",
+   "workflow-map.todos",
    "workflow-map.turnAt",
-   "workflow-map.viewRoot"
+   "workflow-map.unrecorded",
+   "workflow-map.viewRoot",
+   "workflow-map.work"
   ],
   "stateWrites": [
    "workflow-map.agents",
+   "workflow-map.asked",
+   "workflow-map.before",
+   "workflow-map.bound",
+   "workflow-map.changes",
    "workflow-map.demo",
+   "workflow-map.diagram",
    "workflow-map.doneOpen",
    "workflow-map.doneTurns",
    "workflow-map.expanded",
@@ -1121,13 +1680,19 @@
    "workflow-map.lang",
    "workflow-map.light",
    "workflow-map.map",
+   "workflow-map.nudge",
    "workflow-map.pending",
+   "workflow-map.plansOpen",
    "workflow-map.projectsOpen",
    "workflow-map.selected",
    "workflow-map.suggest",
    "workflow-map.tick",
+   "workflow-map.timelineOpen",
+   "workflow-map.todos",
    "workflow-map.turnAt",
-   "workflow-map.viewRoot"
+   "workflow-map.unrecorded",
+   "workflow-map.viewRoot",
+   "workflow-map.work"
   ],
   "envReads": [],
   "raw": {
@@ -1141,7 +1706,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: workflow-map.map, workflow-map.expanded, workflow-map.pending, workflow-map.doneTurns, workflow-map.demo, workflow-map.doneOpen, workflow-map.futureOpen, workflow-map.historyOpen, workflow-map.projectsOpen, workflow-map.viewRoot, workflow-map.helpLang, workflow-map.suggest, workflow-map.helpOpen, workflow-map.selected, workflow-map.agents, workflow-map.tick, workflow-map.turnAt, workflow-map.lang, workflow-map.light"
+     "types ./types/index.d.ts declares state: workflow-map.map, workflow-map.expanded, workflow-map.pending, workflow-map.doneTurns, workflow-map.demo, workflow-map.diagram, workflow-map.before, workflow-map.timelineOpen, workflow-map.changes, workflow-map.asked, workflow-map.unrecorded, workflow-map.doneOpen, workflow-map.futureOpen, workflow-map.historyOpen, workflow-map.bound, workflow-map.plansOpen, workflow-map.projectsOpen, workflow-map.viewRoot, workflow-map.helpLang, workflow-map.suggest, workflow-map.helpOpen, workflow-map.selected, workflow-map.agents, workflow-map.tick, workflow-map.turnAt, workflow-map.lang, workflow-map.light, workflow-map.todos, workflow-map.work, workflow-map.nudge"
     ],
     "gatingHooks": []
    },
@@ -1152,16 +1717,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=mcp__workflow-map__workflow_map}, config.set, prompt.compose, prompt.submit, turn.start, agent.spawn, turn.complete, command.run{command=workflow-demo}, command.run{command=workflow|workflow-map}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=workflow-map}",
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__workflow-map__workflow_map}, config.set, prompt.compose, tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}, tool.call{tool=Edit|Write|NotebookEdit|Bash|PowerShell}, prompt.submit, turn.start, agent.spawn, turn.complete, command.run{command=workflow-demo}, command.run{command=workflow|workflow-map}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=workflow-map}",
       "./register.tsx answers its own command: command.run{command=workflow-demo}",
       "./register.tsx answers its own command: command.run{command=workflow|workflow-map}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__workflow-map__workflow_map}",
       "./register.tsx gating hook without .catch: config.set",
+      "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Edit|Write|NotebookEdit|Bash|PowerShell}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: agent.spawn",
-      "./register.tsx calls: $.clock.after (via notify), $.clock.every, $.clock.now, $.command.list (via computeSuggestions), $.command.register, $.config.list (via refreshTheme), $.fs.exists (via loadMap), $.fs.list (via readHistory), $.fs.read, $.fs.stat, $.fs.write (via applyAndWrite, exportPlan, loadMap, saveUndo, writeMerged), $.model.fork (via computeSuggestions), $.prompt.fill, $.prompt.suggest, $.session.root (via exportPlan, filePath, historyPath, readHistory, rootOf, undoPath), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.copy (via exportPlan), $.ui.log (via computeSuggestions), $.ui.open (via openPane), $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: workflow-map.agents, workflow-map.demo, workflow-map.doneOpen, workflow-map.doneTurns, workflow-map.expanded, workflow-map.futureOpen, workflow-map.helpLang, workflow-map.helpOpen, workflow-map.historyOpen, workflow-map.lang, workflow-map.light, workflow-map.map, workflow-map.pending, workflow-map.projectsOpen, workflow-map.selected, workflow-map.suggest, workflow-map.tick, workflow-map.turnAt, workflow-map.viewRoot",
-      "./register.tsx state reads: workflow-map.agents, workflow-map.demo, workflow-map.doneOpen, workflow-map.doneTurns, workflow-map.expanded, workflow-map.futureOpen, workflow-map.helpLang, workflow-map.helpOpen, workflow-map.historyOpen, workflow-map.lang, workflow-map.light, workflow-map.map, workflow-map.pending, workflow-map.projectsOpen, workflow-map.selected, workflow-map.suggest, workflow-map.tick, workflow-map.turnAt, workflow-map.viewRoot"
+      "./register.tsx calls: $.clock.after (via notify), $.clock.every, $.clock.now, $.command.list (via computeSuggestions), $.command.register, $.config.list (via refreshTheme), $.fs.exists (via listPlans, loadMap, recordSessions, snapshotOf), $.fs.list (via listPlans, readHistory), $.fs.read, $.fs.stat, $.fs.write (via applyAndWrite, exportPlan, loadMap, recordSessions, saveUndo, writeMerged), $.model.fork (via computeSuggestions), $.prompt.fill, $.prompt.suggest, $.session.id (via sessionIdOf), $.session.root (via exportPlan, historyPath, planPathOf, readHistory, rootOf, undoPath), $.state.get, $.state.set, $.store.delete (via bindPlan), $.store.get, $.store.keys (via sessionsOn), $.store.set, $.tool.register, $.ui.copy (via exportPlan), $.ui.log (via computeSuggestions), $.ui.open (via openPane), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: workflow-map.agents, workflow-map.asked, workflow-map.before, workflow-map.bound, workflow-map.changes, workflow-map.demo, workflow-map.diagram, workflow-map.doneOpen, workflow-map.doneTurns, workflow-map.expanded, workflow-map.futureOpen, workflow-map.helpLang, workflow-map.helpOpen, workflow-map.historyOpen, workflow-map.lang, workflow-map.light, workflow-map.map, workflow-map.nudge, workflow-map.pending, workflow-map.plansOpen, workflow-map.projectsOpen, workflow-map.selected, workflow-map.suggest, workflow-map.tick, workflow-map.timelineOpen, workflow-map.todos, workflow-map.turnAt, workflow-map.unrecorded, workflow-map.viewRoot, workflow-map.work",
+      "./register.tsx state reads: workflow-map.agents, workflow-map.asked, workflow-map.before, workflow-map.bound, workflow-map.changes, workflow-map.demo, workflow-map.diagram, workflow-map.doneOpen, workflow-map.doneTurns, workflow-map.expanded, workflow-map.futureOpen, workflow-map.helpLang, workflow-map.helpOpen, workflow-map.historyOpen, workflow-map.lang, workflow-map.light, workflow-map.map, workflow-map.nudge, workflow-map.pending, workflow-map.plansOpen, workflow-map.projectsOpen, workflow-map.selected, workflow-map.suggest, workflow-map.tick, workflow-map.timelineOpen, workflow-map.todos, workflow-map.turnAt, workflow-map.unrecorded, workflow-map.viewRoot, workflow-map.work"
      ],
      "gatingHooks": [
       {
@@ -1178,6 +1745,18 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TodoWrite|TaskCreate|TaskUpdate}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit|Write|NotebookEdit|Bash|PowerShell}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
@@ -1190,8 +1769,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "3b81c3fb2cdf3be1"
+ "sourceHash": "c5e078098dcffbff"
 }

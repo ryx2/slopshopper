@@ -1,0 +1,8 @@
+{
+ "slug": "milocosmopolitan-redacton-helper-counter",
+ "files": {
+  "hooks/register.js": "let calls = 0\nlet configured = false\nexport function register(on) {\n  on('process.run', ($, e, next) => { calls += 1;try{const request=JSON.parse(e.init?.stdin??'{}');if(request.operation==='sanitize')configured=request.config?.rules?.some(rule=>rule.kind==='token' && rule.id==='synthetic.rule' && rule.prefix==='syntheticcred_' && rule.run?.length===16)??false;}catch{} return next(e) })\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'helpercount', description: 'Return fixed helper dispatch count' })\n    return next(e)\n  })\n  on('command.run', { command: 'helpercount' }, () => ({ text: 'HELPER_CALLS_' + calls + ' CONFIG_EXPECTED_' + configured }))\n}\n",
+  "hooks/hooks.json": "{\"modules\":[\"./register.js\"]}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"helper-counter\",\n  \"version\": \"0.0.1\",\n  \"description\": \"Synthetic helper-dispatch counter\",\n  \"author\": {\n    \"name\": \"Redacton contributors\"\n  }\n}"
+ }
+}

@@ -1,6 +1,6 @@
 {
  "slug": "fundrivendev-claude-plugins-session-panel",
- "generatedAt": "2026-10-08T15:54:04.655Z",
+ "generatedAt": "2026-10-09T15:33:25.841Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -29,6 +29,12 @@
     "event": "tool.call"
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-panel__session_title"
+    }
+   },
+   {
     "event": "turn.complete"
    },
    {
@@ -49,7 +55,12 @@
     "output": "Session panel opened."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "session_title",
+    "description": "Sets this session's title: its overall topic in 3 to 7 words, in the language of the person's prompts. It heads the session panel and names the session (/resume, the terminal tab), so the person can tell sessions apart at a glance.\nCall it once the first task is clear, then only when what the session is about changes significantly (a new task, not a new step of the same one). Never call it every turn."
+   }
+  ],
   "panes": [
    {
     "id": "session-panel",
@@ -59,21 +70,27 @@
   "toasts": [],
   "logs": [],
   "denies": [],
-  "rewrites": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"This session has no title of its own yet (the terminal tab may still show the previous session's). Call session_title once the task is cle…"
+   }
+  ],
   "apiCalls": {
-   "$.state.get": 42,
-   "$.state.set": 21,
+   "$.state.get": 52,
+   "$.state.set": 24,
    "$.command.register": 1,
+   "$.tool.register": 1,
    "$.ui.open": 2,
    "$.clock.every": 1,
-   "$.process.run": 14,
-   "$.session.id": 1,
-   "$.clock.now": 2,
+   "$.process.run": 9,
+   "$.session.id": 3,
+   "$.clock.now": 3,
    "$.session.usage": 3,
-   "$.env.get": 3,
-   "$.settings.read": 2,
+   "$.env.get": 5,
+   "$.settings.read": 3,
    "$.session.model": 1,
-   "$.session.messages": 1,
+   "$.session.messages": 2,
    "$.clock.after": 7,
    "$.ui.scroll": 1,
    "$.ui.resolve": 1
@@ -126,50 +143,243 @@
        {
         "type": "Box",
         "props": {
-         "flexDirection": "row",
-         "justifyContent": "space-between",
-         "columnGap": 2,
+         "flexDirection": "column",
          "marginBottom": 1
         },
         "children": [
          {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude",
+           "wrap": "wrap"
+          },
+          "children": [
+           "Session"
+          ]
+         },
+         {
           "type": "Box",
           "props": {
-           "flexDirection": "column",
-           "flexShrink": 0
+           "flexDirection": "row",
+           "alignItems": "center",
+           "columnGap": 1
           },
           "children": [
            {
             "type": "Box",
             "props": {
-             "flexDirection": "row",
-             "columnGap": 1
+             "key": "tab:main:box",
+             "borderStyle": "round",
+             "borderColor": "#8caaee",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab:main",
+               "label": "Main",
+               "plain": true,
+               "dimColor": false,
+               "hover": {
+                "scope": "tab:main",
+                "color": "#8caaee"
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tab:misc:box",
+             "borderStyle": "round",
+             "borderColor": "#51576d",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab:misc",
+               "label": "Misc",
+               "plain": true,
+               "dimColor": true,
+               "hover": {
+                "scope": "tab:misc",
+                "color": "#8caaee"
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tab:config:box",
+             "borderStyle": "round",
+             "borderColor": "#51576d",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab:config",
+               "label": "Config",
+               "plain": true,
+               "dimColor": true,
+               "hover": {
+                "scope": "tab:config",
+                "color": "#8caaee"
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "tab:help:box",
+             "borderStyle": "round",
+             "borderColor": "#51576d",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab:help",
+               "label": "Help",
+               "plain": true,
+               "dimColor": true,
+               "hover": {
+                "scope": "tab:help",
+                "color": "#8caaee"
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1
+            },
+            "children": []
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "pick:model:pill",
+             "borderStyle": "round",
+             "borderColor": "#ef9f76",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "#ef9f76"
+              },
+              "children": [
+               "○ "
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "pick:model",
+               "label": "Opus 5.5",
+               "plain": true,
+               "hover": {
+                "scope": "pick:model",
+                "color": "#ef9f76"
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "pick:effort:pill",
+             "borderStyle": "round",
+             "borderColor": "#a5adce",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "#a5adce"
+              },
+              "children": [
+               "○ "
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "pick:effort",
+               "label": "default",
+               "plain": true,
+               "hover": {
+                "scope": "pick:effort",
+                "color": "#a5adce"
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "quotas:box",
+             "borderStyle": "round",
+             "borderColor": "#51576d",
+             "paddingX": 1,
+             "flexShrink": 0
             },
             "children": [
              {
               "type": "Box",
               "props": {
-               "key": "pick:model:pill",
-               "borderStyle": "round",
-               "borderColor": "#ef9f76",
-               "paddingX": 1
+               "key": "quotas:5h:row",
+               "flexDirection": "row"
               },
               "children": [
                {
                 "type": "Text",
                 "props": {
-                 "color": "#ef9f76"
+                 "color": "#a6d189"
                 },
                 "children": [
-                 "○ "
+                 "● "
                 ]
                },
                {
                 "type": "Button",
                 "props": {
-                 "key": "pick:model",
-                 "label": "Opus 5.5",
+                 "key": "quotas:5h",
+                 "label": "5h 31%",
                  "plain": true,
+                 "hover": {
+                  "color": "#a6d189"
+                 },
                  "onPress": "[fn]"
                 },
                 "children": []
@@ -177,40 +387,68 @@
               ]
              },
              {
-              "type": "Box",
+              "type": "Button",
               "props": {
-               "key": "pick:effort:pill",
-               "borderStyle": "round",
-               "borderColor": "#a5adce",
-               "paddingX": 1
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "color": "#a5adce"
-                },
-                "children": [
-                 "○ "
-                ]
+               "key": "quotas:fold",
+               "label": " 🔽 ",
+               "plain": true,
+               "hover": {
+                "scope": "quotas:fold",
+                "color": "#8caaee"
                },
-               {
-                "type": "Button",
-                "props": {
-                 "key": "pick:effort",
-                 "label": "default",
-                 "plain": true,
-                 "onPress": "[fn]"
-                },
-                "children": []
-               }
-              ]
+               "onPress": "[fn]"
+              },
+              "children": []
              }
             ]
            },
            {
+            "type": "Box",
+            "props": {
+             "key": "close:box",
+             "borderStyle": "round",
+             "borderColor": "#51576d",
+             "paddingX": 1,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "close",
+               "label": " ✕ ",
+               "plain": true,
+               "hover": {
+                "color": "#e78284"
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "tab:main:body",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "marginBottom": 1
+          },
+          "children": [
+           {
             "type": "Text",
-            "props": {},
+            "props": {
+             "wrap": "truncate-end"
+            },
             "children": [
              "⌛ ",
              {
@@ -240,13 +478,8 @@
               "children": [
                "no request yet"
               ]
-             }
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {},
-            "children": [
+             },
+             "   ",
              {
               "type": "Text",
               "props": {
@@ -274,11 +507,27 @@
          {
           "type": "Box",
           "props": {
-           "flexDirection": "column",
-           "alignItems": "flex-end",
-           "flexShrink": 1
+           "flexDirection": "row",
+           "marginBottom": 1
           },
           "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "Issue"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "  "
+            ]
+           },
            {
             "type": "Text",
             "props": {
@@ -287,14 +536,24 @@
             "children": [
              "no issue"
             ]
-           },
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "marginBottom": 1
+          },
+          "children": [
            {
             "type": "Text",
             "props": {
-             "dimColor": true
+             "bold": true,
+             "color": "claude"
             },
             "children": [
-             "no pull request"
+             "Git"
             ]
            },
            {
@@ -303,20 +562,68 @@
              "dimColor": true
             },
             "children": [
-             "main checkout"
+             "  no repository yet"
             ]
            }
           ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column",
-         "marginBottom": 1
-        },
-        "children": [
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "Documents"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginBottom": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "None written yet."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "Handover"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginTop": 1,
+           "marginBottom": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "The handover plugin is off in this session."
+            ]
+           }
+          ]
+         },
          {
           "type": "Box",
           "props": {
@@ -330,16 +637,30 @@
              "color": "claude"
             },
             "children": [
-             "Quotas "
+             "Last prompt "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "08:53",
+             " "
             ]
            },
            {
             "type": "Button",
             "props": {
-             "key": "quotas:layout",
-             "label": "⇄ one per line",
+             "key": "prompts",
+             "label": "(1 previous prompt)",
              "plain": true,
              "dimColor": true,
+             "hover": {
+              "scope": "prompts",
+              "color": "#8caaee"
+             },
              "onPress": "[fn]"
             },
             "children": []
@@ -347,277 +668,12 @@
           ]
          },
          {
-          "type": "Box",
-          "props": {
-           "flexDirection": "row",
-           "columnGap": 3
-          },
-          "children": [
-           {
-            "type": "Box",
-            "props": {
-             "key": "quota:5h",
-             "flexDirection": "column",
-             "width": 54
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "justifyContent": "space-between"
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {},
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "5h",
-                   " "
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": true,
-                   "color": "#a6d189"
-                  },
-                  "children": [
-                   "31",
-                   "%"
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {},
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "key": 0,
-                 "color": "#a6d189",
-                 "dimColor": false
-                },
-                "children": [
-                 "━━━━━━━━━━━━━━━━╸"
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "key": 1,
-                 "color": "#51576d"
-                },
-                "children": [
-                 "─────────────────────────────────────"
-                ]
-               }
-              ]
-             }
-            ]
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true,
-           "color": "claude"
-          },
-          "children": [
-           "Last prompt "
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "prompts",
-           "label": "(2)",
-           "plain": true,
-           "dimColor": true,
-           "onPress": "[fn]"
-          },
-          "children": []
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "marginBottom": 1
-        },
-        "children": [
-         {
           "type": "Text",
           "props": {
            "wrap": "wrap"
           },
           "children": [
            "fix the failing auth test and add an audit log call"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "bold": true,
-         "color": "claude"
-        },
-        "children": [
-         "Handover"
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column",
-         "marginBottom": 1
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "The handover plugin is off in this session."
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "bold": true,
-         "color": "claude"
-        },
-        "children": [
-         "Notes"
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column",
-         "marginBottom": 1
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "None written yet."
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true,
-           "color": "claude"
-          },
-          "children": [
-           "Steps "
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "none yet"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column",
-         "marginBottom": 1
-        },
-        "children": []
-       },
-       {
-        "type": "Text",
-        "props": {
-         "bold": true,
-         "color": "claude"
-        },
-        "children": [
-         "Sub-agents · 0 running · 0 done"
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "None yet."
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column",
-         "marginTop": 1
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true,
-           "color": "claude"
-          },
-          "children": [
-           "Git diff"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "No change."
           ]
          }
         ]
@@ -634,25 +690,20 @@
    "$.process.run(test -d /Applications/Linear.app) → exit 0",
    "$.process.run(sh -c d=\"$HOME/.claude/plugins/data/handover-fundrivendev\"\ntest -d \"$d\" || d=\"$H…) → exit 0",
    "$.process.run(defaults read -g AppleInterfaceStyle) → exit 0",
-   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git -C /work/app rev-parse --path-format=absolute --show-toplevel --git-dir --gi…) → exit 0",
+   "$.process.run(git -C /work/app/src rev-parse --path-format=absolute --show-toplevel --git-dir …) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
-   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
-   "$.process.run(sh -c printf \"%s\\n\" \"$HOME\"; cd \"$HOME/Notes\" 2>/dev/null && pwd -P) → exit 0",
+   "$.process.run(git -C /work/app/src rev-parse --path-format=absolute --show-toplevel --git-dir …) → exit 0",
    "tool.call Edit",
-   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
-   "$.process.run(sh -c printf \"%s\\n\" \"$HOME\"; cd \"$HOME/Notes\" 2>/dev/null && pwd -P) → exit 0",
+   "$.process.run(git -C /work/app/src rev-parse --path-format=absolute --show-toplevel --git-dir …) → exit 0",
    "tool.call Write",
-   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
-   "$.process.run(sh -c printf \"%s\\n\" \"$HOME\"; cd \"$HOME/Notes\" 2>/dev/null && pwd -P) → exit 0",
+   "$.process.run(git -C /work/app/src rev-parse --path-format=absolute --show-toplevel --git-dir …) → exit 0",
    "tool.call Write",
    "tool.call Bash bun test",
-   "$.process.run(sh -c printf \"%s\\n\" \"$HOME\"; cd \"$HOME/Notes\" 2>/dev/null && pwd -P) → exit 0",
    "tool.call Bash git status --porcelain",
-   "$.process.run(sh -c printf \"%s\\n\" \"$HOME\"; cd \"$HOME/Notes\" 2>/dev/null && pwd -P) → exit 0",
    "tool.call Bash rm -rf build && git push --force origin main",
-   "$.process.run(sh -c printf \"%s\\n\" \"$HOME\"; cd \"$HOME/Notes\" 2>/dev/null && pwd -P) → exit 0",
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(session-panel)",
@@ -673,6 +724,7 @@
    "turn.step",
    "agent.spawn",
    "tool.call",
+   "tool.call{tool=?}",
    "turn.complete",
    "classic.SubagentStop",
    "ui.render{component=Pane, requestId=session-panel}"
@@ -681,23 +733,26 @@
    "$.clock.after",
    "$.clock.every",
    "$.clock.now",
+   "$.command.list",
    "$.command.register",
    "$.command.run",
-   "$.env.get (via readLimit",
+   "$.env.get (via readConfig",
+   "readLimit",
    "seedModel)",
    "$.process.run",
    "$.prompt.fill (via startNext)",
    "$.prompt.submit (via startNext)",
-   "$.session.id (via readHandover",
-   "startNext",
-   "waitForLoad)",
+   "$.session.id",
    "$.session.messages",
    "$.session.model (via seedModel)",
    "$.session.usage",
-   "$.settings.read (via readLimit",
+   "$.settings.read (via readConfig",
+   "readLimit",
    "seedModel)",
    "$.state.get",
    "$.state.set",
+   "$.tool.register",
+   "$.ui.close",
    "$.ui.copy (via startNext)",
    "$.ui.invalidate",
    "$.ui.open",
@@ -708,38 +763,46 @@
   "stateReads": [
    "session-panel.agents",
    "session-panel.changes",
+   "session-panel.config",
+   "session-panel.documents",
    "session-panel.expanded",
    "session-panel.handover",
    "session-panel.home",
    "session-panel.info",
-   "session-panel.notes",
    "session-panel.picking",
    "session-panel.prompts",
-   "session-panel.quotaLayout",
+   "session-panel.quotasOpen",
+   "session-panel.repos",
    "session-panel.roots",
    "session-panel.steps",
    "session-panel.stepsOpen",
+   "session-panel.tab",
+   "session-panel.titled",
+   "session-panel.topic",
    "session-panel.tracker",
-   "session-panel.view",
-   "session-panel.worktree"
+   "session-panel.view"
   ],
   "stateWrites": [
    "session-panel.agents",
    "session-panel.changes",
+   "session-panel.config",
+   "session-panel.documents",
    "session-panel.expanded",
    "session-panel.handover",
    "session-panel.home",
    "session-panel.info",
-   "session-panel.notes",
    "session-panel.picking",
    "session-panel.prompts",
-   "session-panel.quotaLayout",
+   "session-panel.quotasOpen",
+   "session-panel.repos",
    "session-panel.roots",
    "session-panel.steps",
    "session-panel.stepsOpen",
+   "session-panel.tab",
+   "session-panel.titled",
+   "session-panel.topic",
    "session-panel.tracker",
-   "session-panel.view",
-   "session-panel.worktree"
+   "session-panel.view"
   ],
   "envReads": [
    "CC_TOKEN_LIMIT",
@@ -757,7 +820,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-panel.info, session-panel.agents, session-panel.steps, session-panel.expanded, session-panel.stepsOpen, session-panel.picking, session-panel.prompts, session-panel.view, session-panel.roots, session-panel.changes, session-panel.tracker, session-panel.home, session-panel.handover, session-panel.quotaLayout, session-panel.worktree, session-panel.notes"
+     "types ./types/index.d.ts declares state: session-panel.info, session-panel.agents, session-panel.steps, session-panel.expanded, session-panel.stepsOpen, session-panel.picking, session-panel.prompts, session-panel.view, session-panel.roots, session-panel.changes, session-panel.tracker, session-panel.home, session-panel.handover, session-panel.repos, session-panel.documents, session-panel.config, session-panel.tab, session-panel.quotasOpen, session-panel.topic, session-panel.titled"
     ],
     "gatingHooks": []
    },
@@ -768,18 +831,19 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=session-panel}, prompt.submit, classic.PreModelSwitch, turn.step, agent.spawn, tool.call, turn.complete, classic.SubagentStop, ui.render{component=Pane, requestId=session-panel}",
+      "./register.tsx hooks: session.start, command.run{command=session-panel}, prompt.submit, classic.PreModelSwitch, turn.step, agent.spawn, tool.call, tool.call{tool=?}, turn.complete, classic.SubagentStop, ui.render{component=Pane, requestId=session-panel}",
       "./register.tsx answers its own command: command.run{command=session-panel}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: classic.PreModelSwitch",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=?}",
       "./register.tsx gating hook without .catch: classic.SubagentStop",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run, $.env.get (via readLimit, seedModel), $.process.run, $.prompt.fill (via startNext), $.prompt.submit (via startNext), $.session.id (via readHandover, startNext, waitForLoad), $.session.messages, $.session.model (via seedModel), $.session.usage, $.settings.read (via readLimit, seedModel), $.state.get, $.state.set, $.ui.copy (via startNext), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.scroll, $.ui.toast (via startNext)",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.list, $.command.register, $.command.run, $.env.get (via readConfig, readLimit, seedModel), $.process.run, $.prompt.fill (via startNext), $.prompt.submit (via startNext), $.session.id, $.session.messages, $.session.model (via seedModel), $.session.usage, $.settings.read (via readConfig, readLimit, seedModel), $.state.get, $.state.set, $.tool.register, $.ui.close, $.ui.copy (via startNext), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.scroll, $.ui.toast (via startNext)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CC_TOKEN_LIMIT, CC_TOKEN_RESERVE, CLAUDE_CODE_EFFORT_LEVEL",
-      "./register.tsx state writes: session-panel.agents, session-panel.changes, session-panel.expanded, session-panel.handover, session-panel.home, session-panel.info, session-panel.notes, session-panel.picking, session-panel.prompts, session-panel.quotaLayout, session-panel.roots, session-panel.steps, session-panel.stepsOpen, session-panel.tracker, session-panel.view, session-panel.worktree",
-      "./register.tsx state reads: session-panel.agents, session-panel.changes, session-panel.expanded, session-panel.handover, session-panel.home, session-panel.info, session-panel.notes, session-panel.picking, session-panel.prompts, session-panel.quotaLayout, session-panel.roots, session-panel.steps, session-panel.stepsOpen, session-panel.tracker, session-panel.view, session-panel.worktree"
+      "./register.tsx state writes: session-panel.agents, session-panel.changes, session-panel.config, session-panel.documents, session-panel.expanded, session-panel.handover, session-panel.home, session-panel.info, session-panel.picking, session-panel.prompts, session-panel.quotasOpen, session-panel.repos, session-panel.roots, session-panel.steps, session-panel.stepsOpen, session-panel.tab, session-panel.titled, session-panel.topic, session-panel.tracker, session-panel.view",
+      "./register.tsx state reads: session-panel.agents, session-panel.changes, session-panel.config, session-panel.documents, session-panel.expanded, session-panel.handover, session-panel.home, session-panel.info, session-panel.picking, session-panel.prompts, session-panel.quotasOpen, session-panel.repos, session-panel.roots, session-panel.steps, session-panel.stepsOpen, session-panel.tab, session-panel.titled, session-panel.topic, session-panel.tracker, session-panel.view"
      ],
      "gatingHooks": [
       {
@@ -808,14 +872,21 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "classic.SubagentStop",
        "hook": "classic.SubagentStop",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "25393e95c2ce213f"
+ "sourceHash": "a419ead038a594ba"
 }

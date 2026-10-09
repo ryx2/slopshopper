@@ -1,6 +1,6 @@
 {
  "slug": "domaine-oleksandr-kever-claude-plugins-slim",
- "generatedAt": "2026-10-07T15:23:04.669Z",
+ "generatedAt": "2026-10-09T15:33:18.994Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,23 @@
     "event": "prompt.attachment",
     "matcher": {
      "type": "file"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^(?:Read|Bash|Grep)$/"
+    }
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": [
+       "composer",
+       "bridge"
+      ]
+     }
     }
    },
    {
@@ -26,6 +43,12 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__slim__view"
+    }
+   },
+   {
     "event": "tool.describe",
     "matcher": {
      "tool": "/^(?:Bash|WebFetch)$/"
@@ -38,7 +61,20 @@
     }
    },
    {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__slim__view"
+    }
+   },
+   {
     "event": "session.start"
+   },
+   {
+    "event": "state.set",
+    "matcher": {
+     "plugin": "slim",
+     "key": "events"
+    }
    },
    {
     "event": "ui.render",
@@ -58,6 +94,10 @@
    {
     "name": "lookup",
     "description": "Answer ONE question about a web page (url), a shell command's output (command) or a local file (path) without loading it into context: a page is asked through WebFetch, an output or a file is distilled by slim and asked of a small model. Returns a short answer with an evidence quote (at most 1 KB). Use it instead of curl/cat when you need one fact; use WebFetch or Read when you need the content itself."
+   },
+   {
+    "name": "view",
+    "description": "Show a big local file (path) or a shell command's output (command) compactly: slim picks the engine by content (JSON, JSON lines, logs, HTML, Figma REST nodes.json, Atlassian documents, plain-text windows) and returns a figure line and the compact text, whole up to 16 KB, else its head and a file to Read windowed. jq narrows JSON first (dot paths .a.b, .a[0], '[]' iteration, ',' multi-select, '| keys' / '| length'). out writes the compact text to a file under <project>/.claude/tasks/<id>/, reused while it is newer than the input. An image becomes a copy at most 1568 px on its long edge and a video a folder of frames, beside the input. Give exactly one of path or command; for a URL use WebFetch or mcp__slim__lookup."
    }
   ],
   "panes": [],
@@ -66,10 +106,13 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 7,
-   "$.tool.register": 1,
+   "$.env.get": 10,
+   "$.tool.register": 2,
    "$.fs.read": 1,
-   "$.state.set": 1
+   "$.state.set": 3,
+   "$.session.id": 1,
+   "$.state.get": 3,
+   "$.clock.now": 1
   },
   "timers": [],
   "sites": {},
@@ -96,11 +139,16 @@
   "hooks": [
    "tool.call",
    "prompt.attachment{type=file}",
+   "tool.call{tool=/\"^(?:Read|Bash|Grep)$\"/}",
+   "prompt.submit{origin has {kind=composer|bridge}}",
    "session.start{cwd=/\"^\"/}",
    "tool.call{tool=mcp__slim__lookup}",
+   "tool.call{tool=mcp__slim__view}",
    "tool.describe{tool=/\"^(?:Bash|WebFetch)$\"/}",
    "tool.describe{tool=mcp__slim__lookup}",
+   "tool.describe{tool=mcp__slim__view}",
    "session.start",
+   "state.set{plugin=slim, key=events}",
    "ui.render{component=ToolResult}",
    "ui.render{component=ToolGroup}"
   ],
@@ -108,33 +156,47 @@
    "$.agent.list (via agentType)",
    "$.clock.now",
    "$.env.get",
-   "$.fs.read (via version)",
+   "$.fs.read (via openSink",
+   "version)",
+   "$.fs.stat (via oversize)",
+   "$.fs.write (via logLine)",
    "$.model.complete (via ask)",
    "$.process.run",
    "$.session.cwd",
    "$.session.id",
+   "$.session.root",
    "$.state.get",
    "$.state.set",
    "$.tool.call (via answerCommand",
    "answerPath",
-   "answerUrl)",
+   "answerUrl",
+   "readProbe",
+   "viewCommand",
+   "writeOut)",
+   "$.tool.check (via check)",
    "$.tool.register",
+   "$.ui.ask (via confirmed)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
    "slim.events",
-   "slim.rows"
+   "slim.rows",
+   "slim.seen",
+   "slim.started"
   ],
   "stateWrites": [
    "slim.events",
    "slim.info",
-   "slim.rows"
+   "slim.rows",
+   "slim.seen",
+   "slim.started"
   ],
   "envReads": [
-   "FND_MCP_SLIM_DEBUG",
-   "FND_MCP_SLIM_STUB_BYTES",
+   "DOMAINE_LOG_DIR",
+   "HOME",
    "SLIM_AGENT",
+   "SLIM_ATTACH",
    "SLIM_BASH",
    "SLIM_CURL",
    "SLIM_DEBUG",
@@ -144,7 +206,9 @@
    "SLIM_LOOKUP_MODEL",
    "SLIM_MCP",
    "SLIM_PLAIN_BYTES",
+   "SLIM_PROMPT",
    "SLIM_READ",
+   "SLIM_SPILL_GUARD",
    "SLIM_STUB_BYTES",
    "SLIM_TOAST",
    "SLIM_TOAST_MS",
@@ -161,7 +225,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: slim.events, slim.rows, slim.info"
+     "types ./types/index.d.ts declares state: slim.events, slim.rows, slim.info, slim.seen, slim.started"
     ],
     "gatingHooks": []
    },
@@ -172,14 +236,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mods/register.ts hooks: tool.call, prompt.attachment{type=file}, session.start{cwd=/\"^\"/}, tool.call{tool=mcp__slim__lookup}, tool.describe{tool=/\"^(?:Bash|WebFetch)$\"/}, tool.describe{tool=mcp__slim__lookup}, session.start, ui.render{component=ToolResult}, ui.render{component=ToolGroup}",
+      "./mods/register.ts hooks: tool.call, prompt.attachment{type=file}, tool.call{tool=/\"^(?:Read|Bash|Grep)$\"/}, prompt.submit{origin has {kind=composer|bridge}}, session.start{cwd=/\"^\"/}, tool.call{tool=mcp__slim__lookup}, tool.call{tool=mcp__slim__view}, tool.describe{tool=/\"^(?:Bash|WebFetch)$\"/}, tool.describe{tool=mcp__slim__lookup}, tool.describe{tool=mcp__slim__view}, session.start, state.set{plugin=slim, key=events}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}",
       "./mods/register.ts gating hook without .catch: tool.call",
+      "./mods/register.ts gating hook without .catch: tool.call{tool=/\"^(?:Read|Bash|Grep)$\"/}",
+      "./mods/register.ts gating hook without .catch: prompt.submit{origin has {kind=composer|bridge}}",
       "./mods/register.ts gating hook without .catch: tool.call{tool=mcp__slim__lookup}",
-      "./mods/register.ts calls: $.agent.list (via agentType), $.clock.now, $.env.get, $.fs.read (via version), $.model.complete (via ask), $.process.run, $.session.cwd, $.session.id, $.state.get, $.state.set, $.tool.call (via answerCommand, answerPath, answerUrl), $.tool.register, $.ui.resolve, $.ui.toast",
+      "./mods/register.ts gating hook without .catch: tool.call{tool=mcp__slim__view}",
+      "./mods/register.ts gating hook without .catch: state.set{plugin=slim, key=events}",
+      "./mods/register.ts calls: $.agent.list (via agentType), $.clock.now, $.env.get, $.fs.read (via openSink, version), $.fs.stat (via oversize), $.fs.write (via logLine), $.model.complete (via ask), $.process.run, $.session.cwd, $.session.id, $.session.root, $.state.get, $.state.set, $.tool.call (via answerCommand, answerPath, answerUrl, readProbe, viewCommand, writeOut), $.tool.check (via check), $.tool.register, $.ui.ask (via confirmed), $.ui.resolve, $.ui.toast",
       "./mods/register.ts env writes: nothing",
-      "./mods/register.ts env reads: FND_MCP_SLIM_DEBUG, FND_MCP_SLIM_STUB_BYTES, SLIM_AGENT, SLIM_BASH, SLIM_CURL, SLIM_DEBUG, SLIM_EVENT_LOG, SLIM_GREP, SLIM_LOOKUP, SLIM_LOOKUP_MODEL, SLIM_MCP, SLIM_PLAIN_BYTES, SLIM_READ, SLIM_STUB_BYTES, SLIM_TOAST, SLIM_TOAST_MS, SLIM_WEB",
-      "./mods/register.ts state writes: slim.events, slim.info, slim.rows",
-      "./mods/register.ts state reads: slim.events, slim.rows"
+      "./mods/register.ts env reads: DOMAINE_LOG_DIR, HOME, SLIM_AGENT, SLIM_ATTACH, SLIM_BASH, SLIM_CURL, SLIM_DEBUG, SLIM_EVENT_LOG, SLIM_GREP, SLIM_LOOKUP, SLIM_LOOKUP_MODEL, SLIM_MCP, SLIM_PLAIN_BYTES, SLIM_PROMPT, SLIM_READ, SLIM_SPILL_GUARD, SLIM_STUB_BYTES, SLIM_TOAST, SLIM_TOAST_MS, SLIM_WEB",
+      "./mods/register.ts state writes: slim.events, slim.info, slim.rows, slim.seen, slim.started",
+      "./mods/register.ts state reads: slim.events, slim.rows, slim.seen, slim.started"
      ],
      "gatingHooks": [
       {
@@ -191,13 +259,38 @@
       {
        "module": "./mods/register.ts",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^(?:Read|Bash|Grep)$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=composer|bridge}}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.ts",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__slim__lookup}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__slim__view}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.ts",
+       "pattern": "state.set",
+       "hook": "state.set{plugin=slim, key=events}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "919ce07a9810c36b"
+ "sourceHash": "c98e62d151bab79b"
 }

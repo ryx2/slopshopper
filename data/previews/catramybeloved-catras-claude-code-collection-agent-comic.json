@@ -1,9 +1,45 @@
 {
  "slug": "catramybeloved-catras-claude-code-collection-agent-comic",
- "generatedAt": "2026-10-08T15:53:51.149Z",
+ "generatedAt": "2026-10-09T15:32:29.002Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "engine.create"
+   },
+   {
+    "event": "comic.addPlace"
+   },
+   {
+    "event": "comic.removePlace"
+   },
+   {
+    "event": "comic.places"
+   },
+   {
+    "event": "comic.route"
+   },
+   {
+    "event": "comic.go"
+   },
+   {
+    "event": "comic.step"
+   },
+   {
+    "event": "comic.alive"
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "element": "sign-left"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "element": "sign-right"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -35,12 +71,6 @@
     "event": "tool.call",
     "matcher": {
      "tool": "/^mcp__agent-comic__hub_add$/"
-    }
-   },
-   {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "/^mcp__agent-comic__world_change$/"
     }
    },
    {
@@ -112,7 +142,7 @@
    {
     "name": "comic-stats",
     "description": "Show the tokens the comic director has spent: this session and today",
-    "output": "Agent comic director (model: sonnet): tokens spent on staging scenes.\n\n| | calls | input | output | cache read | cache write |\n|---|---|---|---|---|---|\n| this session | 0 | 0 | 0 | 0 | 0 |\n| today (2026-10-08) | 0 | 0 | 0 | 0 | 0 |\n\nIdle time costs nothing: scenes are only requested while Claude works.\n\nLatency: no director scene has played yet this session."
+    "output": "Agent comic director (model: sonnet): tokens spent on staging scenes.\n\n| | calls | input | output | cache read | cache write |\n|---|---|---|---|---|---|\n| this session | 0 | 0 | 0 | 0 | 0 |\n| today (2026-10-09) | 0 | 0 | 0 | 0 | 0 |\n\nIdle time costs nothing: scenes are only requested while Claude works.\n\nLatency: no director scene has played yet this session."
    },
    {
     "name": "comic-feel",
@@ -134,10 +164,6 @@
    {
     "name": "hub_add",
     "description": "Add a small keepsake to the agent-comic hub, the little home scene shown above the prompt when Claude Code starts. Use it rarely: only to remember a real milestone the person would be glad to see again (a hard bug finally fixed, a feature shipped, a long refactor done, tests green after a struggle). At most one per session; never for routine work."
-   },
-   {
-    "name": "world_change",
-    "description": "Change the little comic world shown above the prompt (agent-comic). The session's first scene sets up a world, a setting and a few props, and it stays put; only you change it. \"look\" lists it. \"prop\" changes one prop into another kind: the little Claude lifts it and it transforms (e.g. a scroll becomes a computer when the work moves from reading to running tests). \"scenery\" moves to a new setting: he summons a door and walks through into it. Purely for fun, never needed for the task. Use it rarely, when the work really changes: at most 6 prop changes and 2 scenery changes per session."
    }
   ],
   "panes": [],
@@ -147,18 +173,22 @@
   "rewrites": [],
   "apiCalls": {
    "$.store.get": 3,
+   "$.state.get": 25,
+   "$.state.set": 7,
    "$.command.register": 6,
-   "$.tool.register": 2,
-   "$.clock.every": 2,
+   "$.tool.register": 1,
+   "$.clock.every": 3,
    "$.clock.after": 5,
-   "$.state.get": 5,
-   "$.state.set": 3,
    "$.store.set": 1
   },
   "timers": [
    {
     "kind": "every",
     "ms": 50
+   },
+   {
+    "kind": "every",
+    "ms": 1000
    },
    {
     "kind": "every",
@@ -217,12 +247,21 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "engine.create",
+   "comic.addPlace",
+   "comic.removePlace",
+   "comic.places",
+   "comic.route",
+   "comic.go",
+   "comic.step",
+   "comic.alive",
+   "ui.press{element=sign-left}",
+   "ui.press{element=sign-right}",
    "session.start",
    "command.run{command=comic}",
    "command.run{command=comic-demo}",
    "command.run{command=comic-stats}",
    "command.run{command=comic-hub}",
-   "tool.call{tool=?}",
    "tool.call{tool=?}",
    "session.end",
    "ui.press{element=pet}",
@@ -241,10 +280,11 @@
   "calls": [
    "$.clock.after",
    "$.clock.every",
+   "$.clock.now",
    "$.command.register",
    "$.model.complete (via direct)",
    "$.prompt.submit (via pat)",
-   "$.state.get",
+   "$.state.get (via syncState)",
    "$.state.set",
    "$.store.get",
    "$.store.set",
@@ -254,12 +294,20 @@
    "$.ui.resolve"
   ],
   "stateReads": [
+   "agent-comic.cameFrom",
    "agent-comic.enabled",
-   "agent-comic.lingering"
+   "agent-comic.here",
+   "agent-comic.lingering",
+   "agent-comic.places",
+   "agent-comic.state"
   ],
   "stateWrites": [
+   "agent-comic.cameFrom",
    "agent-comic.enabled",
-   "agent-comic.lingering"
+   "agent-comic.here",
+   "agent-comic.lingering",
+   "agent-comic.places",
+   "agent-comic.state"
   ],
   "envReads": [],
   "raw": {
@@ -272,8 +320,8 @@
     "errors": [],
     "warnings": [],
     "notes": [
-     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: agent-comic.enabled, agent-comic.lingering"
+     "types ./types/index.d.ts declares on $: $.comic",
+     "types ./types/index.d.ts declares state: agent-comic.enabled, agent-comic.lingering, agent-comic.state, agent-comic.here, agent-comic.cameFrom, agent-comic.places"
     ],
     "gatingHooks": []
    },
@@ -284,29 +332,71 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=comic}, command.run{command=comic-demo}, command.run{command=comic-stats}, command.run{command=comic-hub}, tool.call{tool=?}, tool.call{tool=?}, session.end, ui.press{element=pet}, command.run{command=comic-pet}, command.run{command=comic-feel}, prompt.submit, tool.call, classic.PermissionRequest, ui.render{component=ToolProgress}, classic.SubagentStop, session.append, turn.start, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: engine.create, comic.addPlace, comic.removePlace, comic.places, comic.route, comic.go, comic.step, comic.alive, ui.press{element=sign-left}, ui.press{element=sign-right}, session.start, command.run{command=comic}, command.run{command=comic-demo}, command.run{command=comic-stats}, command.run{command=comic-hub}, tool.call{tool=?}, session.end, ui.press{element=pet}, command.run{command=comic-pet}, command.run{command=comic-feel}, prompt.submit, tool.call, classic.PermissionRequest, ui.render{component=ToolProgress}, classic.SubagentStop, session.append, turn.start, turn.complete, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=comic}",
       "./register.tsx answers its own command: command.run{command=comic-demo}",
       "./register.tsx answers its own command: command.run{command=comic-stats}",
       "./register.tsx answers its own command: command.run{command=comic-hub}",
       "./register.tsx answers its own command: command.run{command=comic-pet}",
       "./register.tsx answers its own command: command.run{command=comic-feel}",
-      "./register.tsx gating hook without .catch: tool.call{tool=?}",
+      "./register.tsx gating hook without .catch: comic.addPlace",
+      "./register.tsx gating hook without .catch: comic.removePlace",
+      "./register.tsx gating hook without .catch: comic.places",
+      "./register.tsx gating hook without .catch: comic.route",
+      "./register.tsx gating hook without .catch: comic.go",
+      "./register.tsx gating hook without .catch: comic.step",
+      "./register.tsx gating hook without .catch: comic.alive",
       "./register.tsx gating hook without .catch: tool.call{tool=?}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
       "./register.tsx gating hook without .catch: classic.SubagentStop",
       "./register.tsx gating hook without .catch: session.append",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.command.register, $.model.complete (via direct), $.prompt.submit (via pat), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.blit (via drawFrame), $.ui.log (via logOnce), $.ui.resolve",
-      "./register.tsx state writes: agent-comic.enabled, agent-comic.lingering",
-      "./register.tsx state reads: agent-comic.enabled, agent-comic.lingering"
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.model.complete (via direct), $.prompt.submit (via pat), $.state.get (via syncState), $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.blit (via drawFrame), $.ui.log (via logOnce), $.ui.resolve",
+      "./register.tsx state writes: agent-comic.cameFrom, agent-comic.enabled, agent-comic.here, agent-comic.lingering, agent-comic.places, agent-comic.state",
+      "./register.tsx state reads: agent-comic.cameFrom, agent-comic.enabled, agent-comic.here, agent-comic.lingering, agent-comic.places, agent-comic.state"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
-       "pattern": "tool.call",
-       "hook": "tool.call{tool=?}",
+       "pattern": "comic.addPlace",
+       "hook": "comic.addPlace",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "comic.removePlace",
+       "hook": "comic.removePlace",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "comic.places",
+       "hook": "comic.places",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "comic.route",
+       "hook": "comic.route",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "comic.go",
+       "hook": "comic.go",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "comic.step",
+       "hook": "comic.step",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "comic.alive",
+       "hook": "comic.alive",
        "hasCatch": false
       },
       {
@@ -347,8 +437,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "a7a4c62f54a3b8fe"
+ "sourceHash": "1b7a827d7be38cad"
 }

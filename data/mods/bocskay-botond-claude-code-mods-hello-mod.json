@@ -1,0 +1,9 @@
+{
+ "slug": "bocskay-botond-claude-code-mods-hello-mod",
+ "files": {
+  "hooks/register.tsx": "import { atom, read, update } from 'claude-code'\nimport type { Register } from 'claude-code'\n\n// One value the band reads; update() redraws every reader.\nconst count = atom({ plugin: 'hello-mod', key: 'count' } as const, 0)\n\nexport const register: Register = on => {\n  // 1. Register a slash command when the session starts.\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'hello', description: 'Say hello from your first mod' })\n    return next(e)\n  })\n\n  // 2. Answer it: bump the counter and pop a toast.\n  on('command.run', { command: 'hello' }, async $ => {\n    const n = await update($, count, c => c + 1)\n    $.ui.toast(`Hello #${n} from hello-mod 👋`)\n    return { text: `Hello! You said hi ${n} time${n === 1 ? '' : 's'}.` }\n  })\n\n  // 3. Draw a one-line band above the prompt.\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {\n    if (e.props.hasSurvey) return next(e)\n    const below = await next(e)\n    const { Box, Text } = $.ui.resolve(e)\n    const n = await read($, count)\n    return (\n      <Box flexDirection=\"column\">\n        {below}\n        <Text>\n          <Text color=\"magenta\">◆ hello-mod</Text>\n          <Text dimColor> │ /hello pressed {n}×</Text>\n        </Text>\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"hello-mod\",\n  \"version\": \"1.0.0\",\n  \"author\": {\n    \"name\": \"Botond\"\n  },\n  \"description\": \"The smallest useful mod: a /hello command, a toast and a band above the prompt.\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "export type Count = number\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'hello-mod': { count: Count }\n  }\n}\n"
+ }
+}

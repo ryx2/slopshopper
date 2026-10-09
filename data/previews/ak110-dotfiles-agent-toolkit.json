@@ -1,6 +1,6 @@
 {
  "slug": "ak110-dotfiles-agent-toolkit",
- "generatedAt": "2026-10-08T15:53:44.102Z",
+ "generatedAt": "2026-10-09T15:32:56.318Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,18 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "/__compact_conversation$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/__compact_conversation$/"
+    }
    },
    {
     "event": "tool.check"
@@ -40,6 +52,10 @@
    {
     "name": "send_to_user",
     "description": "ユーザーへ届ける本文を、途中・末尾ともにユーザーの画面へそのまま表示する。質問への回答、確認結果、判明した事実や原因、成果物、進捗、作業完了報告と次の工程の予告に使う。ユーザーの判断を求める確認は、このツールではなく既存の質問手段を使う。推論は送らない。"
+   },
+   {
+    "name": "compact_conversation",
+    "description": "Claude Codeメインの会話圧縮を予約する。instructionsは任意の圧縮指示。受付は完了ではない。予約後は現在のターンを終え、ホストの圧縮結果を待つ。未完了の予約は重ねず、完了または失敗後は再予約できる。"
    }
   ],
   "panes": [],
@@ -48,9 +64,9 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 1,
+   "$.tool.register": 2,
+   "$.env.get": 5,
    "$.session.id": 2,
-   "$.env.get": 4,
    "$.fs.write": 2,
    "$.fs.read": 1
   },
@@ -85,6 +101,8 @@
   "hooks": [
    "session.start",
    "turn.complete",
+   "tool.check{tool=/\"__compact_conversation$\"/}",
+   "tool.call{tool=/\"__compact_conversation$\"/}",
    "tool.check",
    "tool.call",
    "ui.render{component=ToolUse}",
@@ -92,11 +110,13 @@
    "tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}"
   ],
   "calls": [
+   "$.clock.after",
    "$.command.run",
    "$.env.get",
    "$.fs.read",
    "$.fs.write",
    "$.process.run (via mount)",
+   "$.prompt.submit",
    "$.session.id",
    "$.tool.call (via deleteSessionCrons",
    "mount)",
@@ -108,6 +128,7 @@
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "AGENT_TOOLKIT_OWNER_SESSION",
    "CLAUDE_CONFIG_DIR",
    "HOME",
    "USERPROFILE"
@@ -131,15 +152,29 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.complete, tool.check, tool.call, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
+      "./register.ts hooks: session.start, turn.complete, tool.check{tool=/\"__compact_conversation$\"/}, tool.call{tool=/\"__compact_conversation$\"/}, tool.check, tool.call, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
+      "./register.ts gating hook without .catch: tool.check{tool=/\"__compact_conversation$\"/}",
+      "./register.ts gating hook without .catch: tool.call{tool=/\"__compact_conversation$\"/}",
       "./register.ts gating hook with .catch: tool.check",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
-      "./register.ts calls: $.command.run, $.env.get, $.fs.read, $.fs.write, $.process.run (via mount), $.session.id, $.tool.call (via deleteSessionCrons, mount), $.tool.check (via deleteSessionCrons, mount), $.tool.register, $.ui.resolve",
+      "./register.ts calls: $.clock.after, $.command.run, $.env.get, $.fs.read, $.fs.write, $.process.run (via mount), $.prompt.submit, $.session.id, $.tool.call (via deleteSessionCrons, mount), $.tool.check (via deleteSessionCrons, mount), $.tool.register, $.ui.resolve",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
+      "./register.ts env reads: AGENT_TOOLKIT_OWNER_SESSION, CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=/\"__compact_conversation$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"__compact_conversation$\"/}",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "tool.check",
@@ -160,8 +195,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "db5c96038a09c7e9"
+ "sourceHash": "4c27fae02bc41f24"
 }

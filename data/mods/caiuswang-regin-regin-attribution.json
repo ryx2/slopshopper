@@ -1,0 +1,8 @@
+{
+ "slug": "caiuswang-regin-regin-attribution",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst TRAILER = /^\\s*Claude-Session:/i\nconst SESSION_LINK = /[ \\t]*(?:(?<!\\S)Claude-Session:[ \\t]*|(?<!\\S))https:\\/\\/claude\\.ai\\/code\\/session_[\\w-]+(?:[/?#][^\\s.,;:)\\]]*)?/gi\n\nexport function dropSessionLinks(text: string): string {\n  const lines = text.split('\\n')\n  const kept: string[] = []\n  for (const line of lines) {\n    if (TRAILER.test(line)) continue\n    const stripped = line.replace(SESSION_LINK, '')\n    if (stripped === line) kept.push(line)\n    else if (stripped.trim()) kept.push(stripped)\n  }\n  if (kept.length === lines.length && kept.every((line, i) => line === lines[i])) return text\n  // A dropped closing line leaves the blank separator that preceded it.\n  const ending = /[\\r\\n]*$/.exec(text)?.[0] ?? ''\n  return kept.join('\\n').replace(/[\\r\\n]+$/, '') + ending\n}\n\nexport const register: Register = (on) => {\n  on('attribution.text', async (_$, e, next) => {\n    if (e.kind !== 'commit' && e.kind !== 'pr') return next(e)\n    const { text } = await next(e)\n    return { text: dropSessionLinks(text) }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"regin-attribution\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Drops the Claude-Session trailer and bare session links from the commit and PR attribution text\",\n  \"author\": {\n    \"name\": \"regin\"\n  }\n}"
+ }
+}

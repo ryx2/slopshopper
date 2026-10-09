@@ -1,6 +1,6 @@
 {
  "slug": "darkraise-darkraise-ai-plugins-dr-cockpit",
- "generatedAt": "2026-10-08T15:53:55.590Z",
+ "generatedAt": "2026-10-09T15:33:12.724Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,10 +17,37 @@
     "event": "session.measure"
    },
    {
+    "event": "session.end"
+   },
+   {
     "event": "session.compact"
    },
    {
     "event": "agent.spawn"
+   },
+   {
+    "event": "session.attach"
+   },
+   {
+    "event": "session.detach"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "tool.check"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolProgress"
+    }
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "turn.complete"
@@ -43,18 +70,6 @@
    {
     "event": "ui.render",
     "matcher": {
-     "component": "AbovePrompt"
-    }
-   },
-   {
-    "event": "ui.render",
-    "matcher": {
-     "component": "PromptHint"
-    }
-   },
-   {
-    "event": "ui.render",
-    "matcher": {
      "component": "Pane",
      "requestId": "dr-cockpit"
     }
@@ -64,6 +79,7 @@
    {
     "name": "cockpit",
     "description": "Show context, usage, subagents, the plan and the repo in a pane",
+    "argumentHint": "[settings]",
     "output": "Cockpit pane opened."
    }
   ],
@@ -80,56 +96,41 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.settings.read": 2,
-   "$.session.usage": 13,
-   "$.env.get": 11,
-   "$.state.get": 50,
-   "$.state.set": 3,
-   "$.clock.now": 2,
+   "$.settings.read": 4,
+   "$.session.usage": 14,
+   "$.env.get": 25,
+   "$.state.get": 139,
+   "$.state.set": 33,
+   "$.fs.read": 4,
+   "$.session.cwd": 3,
+   "$.session.repo": 3,
+   "$.session.model": 1,
+   "$.session.id": 1,
+   "$.process.run": 4,
+   "$.store.get": 2,
+   "$.fs.stat": 2,
+   "$.fs.list": 2,
+   "$.session.version": 1,
+   "$.config.list": 2,
+   "$.session.surfaces": 2,
+   "$.ui.open": 2,
+   "$.clock.now": 4,
+   "$.clock.every": 1,
+   "$.clock.after": 1,
    "$.ui.panes": 1,
-   "$.ui.open": 1,
-   "$.process.run": 1,
-   "$.ui.resolve": 2
+   "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1000
+   },
+   {
+    "kind": "after",
+    "ms": 500
+   }
+  ],
   "sites": {
-   "AbovePrompt": {
-    "ok": true,
-    "tree": {
-     "type": "Box",
-     "props": {
-      "key": "cockpit-band"
-     },
-     "children": [
-      {
-       "type": "Text",
-       "props": {
-        "color": "red",
-        "bold": true
-       },
-       "children": [
-        "Hand off: ",
-        "97k",
-        " of ",
-        "46k",
-        " (",
-        "212",
-        "%)",
-        " "
-       ]
-      }
-     ]
-    }
-   },
-   "PromptHint": {
-    "ok": "engine",
-    "props": {
-     "isDraft": false,
-     "isWorking": false,
-     "hint": "? for shortcuts",
-     "tail": "97k/46k handoff"
-    }
-   },
    "Pane": {
     "dr-cockpit": {
      "ok": true,
@@ -140,24 +141,136 @@
       },
       "children": [
        {
-        "type": "Box",
+        "type": "Text",
         "props": {
-         "key": "context",
-         "flexDirection": "column"
+         "key": "now",
+         "wrap": "truncate-end"
         },
         "children": [
          {
           "type": "Text",
           "props": {
-           "bold": true
+           "key": "now-0",
+           "dimColor": true
           },
           "children": [
-           "Context"
+           "○ idle"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "now-1",
+           "dimColor": true
+          },
+          "children": [
+           " · "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "now-2",
+           "dimColor": true
+          },
+          "children": [
+           "last turn "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "now-3"
+          },
+          "children": [
+           "42s"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "now-4",
+           "dimColor": true
+          },
+          "children": [
+           " · "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "now-5",
+           "dimColor": true
+          },
+          "children": [
+           "ended 0m ago"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "account",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "blue",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "account-head",
+           "flexDirection": "row",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "blue",
+             "bold": true
+            },
+            "children": [
+             "Account"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "account-head",
+             "dimColor": true
+            },
+            "children": [
+             ""
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "account-email",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "● ",
+             "not signed in"
+            ]
+           }
           ]
          },
          {
           "type": "Box",
           "props": {
+           "key": "account-rows",
            "flexDirection": "column",
            "paddingLeft": 2
           },
@@ -165,7 +278,27 @@
            {
             "type": "Text",
             "props": {
-             "key": "ctx"
+             "key": "account-model",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "cyan",
+               "bold": true
+              },
+              "children": [
+               "Opus 5.5"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "account-remote",
+             "wrap": "truncate-end"
             },
             "children": [
              {
@@ -174,18 +307,71 @@
                "dimColor": true
               },
               "children": [
-               "ctx "
+               "Remote "
               ]
              },
              {
               "type": "Text",
               "props": {
-               "color": "error"
+               "key": "account-remote-0",
+               "dimColor": true
               },
               "children": [
-               "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰"
+               "○ not connected"
               ]
-             },
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "account-dir",
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "config ",
+             "~/.claude"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "context",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "cyan",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "context-head",
+           "flexDirection": "row",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "cyan",
+             "bold": true
+            },
+            "children": [
+             "Context"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "ctx-head"
+            },
+            "children": [
              {
               "type": "Text",
               "props": {
@@ -193,50 +379,119 @@
                "bold": true
               },
               "children": [
-               " ",
                "212",
-               "%"
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "dimColor": true
-              },
-              "children": [
-               " · ",
-               "97k of 46k handoff"
+               "% of handoff"
               ]
              }
             ]
-           },
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "ctx-track"
+          },
+          "children": [
            {
-            "type": "Box",
+            "type": "Text",
             "props": {
-             "key": "ctx-details",
-             "flexDirection": "column",
-             "paddingLeft": 2
+             "key": "ctx-track-0",
+             "color": "error",
+             "dimColor": false
             },
             "children": [
-             {
-              "type": "Text",
-              "props": {
-               "key": "ctx-window",
-               "dimColor": true
-              },
-              "children": [
-               "window ",
-               "200k",
-               "",
-               ""
-              ]
-             }
+             "▰▰▰▰▰▰▰▰▰▰▰"
             ]
            },
            {
+            "type": "Text",
+            "props": {
+             "key": "ctx-track-1",
+             "color": "error",
+             "bold": true
+            },
+            "children": [
+             "┃"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "ctx-track-2",
+             "color": "error",
+             "dimColor": false
+            },
+            "children": [
+             "▰▰▰▰▰▰▰▰▰▰▰▰▰"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "ctx-track-3",
+             "dimColor": true
+            },
+            "children": [
+             "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "ctx-legend",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "97k"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " of ",
+             "200k"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "error"
+            },
+            "children": [
+             " ┃ handoff ",
+             "46k"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "actions",
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "columnGap": 1
+          },
+          "children": [
+           {
             "type": "Box",
             "props": {
-             "key": "actions"
+             "key": "pane-compact-box",
+             "borderStyle": "round",
+             "borderColor": "inactive",
+             "paddingX": 1
             },
             "children": [
              {
@@ -245,6 +500,35 @@
                "key": "pane-compact",
                "label": "Compact",
                "hotkey": "c",
+               "plain": true,
+               "hover": {
+                "bold": true
+               },
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "pane-settings-box",
+             "borderStyle": "round",
+             "borderColor": "inactive",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "pane-settings",
+               "label": "Settings",
+               "hotkey": "s",
+               "plain": true,
+               "hover": {
+                "bold": true
+               },
                "onPress": "[fn]"
               },
               "children": []
@@ -259,30 +543,61 @@
         "type": "Box",
         "props": {
          "key": "usage",
-         "flexDirection": "column"
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "blue",
+         "paddingX": 1
         },
         "children": [
          {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Usage"
-          ]
-         },
-         {
           "type": "Box",
           "props": {
-           "flexDirection": "column",
-           "paddingLeft": 2
+           "key": "usage-head",
+           "flexDirection": "row",
+           "justifyContent": "space-between"
           },
           "children": [
            {
             "type": "Text",
             "props": {
-             "key": "limit-five_hour"
+             "color": "blue",
+             "bold": true
             },
+            "children": [
+             "Usage"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "usage-head",
+             "bold": true
+            },
+            "children": [
+             "$0.42",
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               " · $0.84/h"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "limit-five_hour",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
             "children": [
              {
               "type": "Text",
@@ -296,10 +611,30 @@
              {
               "type": "Text",
               "props": {
-               "color": "success"
+               "key": "limit-five_hour-track"
               },
               "children": [
-               "▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱"
+               {
+                "type": "Text",
+                "props": {
+                 "key": "limit-five_hour-track-0",
+                 "color": "success",
+                 "dimColor": false
+                },
+                "children": [
+                 "▰▰▰▰▰▰▰▰▰▰▰▰"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "key": "limit-five_hour-track-1",
+                 "dimColor": true
+                },
+                "children": [
+                 "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱"
+                ]
+               }
               ]
              },
              {
@@ -310,20 +645,10 @@
               },
               "children": [
                " ",
-               "31",
+               " 31",
                "%"
               ]
              }
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "key": "cost",
-             "dimColor": false
-            },
-            "children": [
-             "$0.42 this session · $0.84/h"
             ]
            }
           ]
@@ -334,35 +659,47 @@
         "type": "Box",
         "props": {
          "key": "agents",
-         "flexDirection": "column"
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "magenta",
+         "paddingX": 1
         },
         "children": [
          {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Agents"
-          ]
-         },
-         {
           "type": "Box",
           "props": {
-           "flexDirection": "column",
-           "paddingLeft": 2
+           "key": "agents-head",
+           "flexDirection": "row",
+           "justifyContent": "space-between"
           },
           "children": [
            {
             "type": "Text",
             "props": {
-             "key": "agents-none",
-             "dimColor": true
+             "color": "magenta",
+             "bold": true
             },
             "children": [
-             "No subagents yet."
+             "Agents & shells"
             ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "agents-head"
+            },
+            "children": []
            }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "agents-none",
+           "dimColor": true
+          },
+          "children": [
+           "No subagents or background shells yet."
           ]
          }
         ]
@@ -374,6 +711,9 @@
    }
   },
   "script": [
+   "$.process.run(hostname) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.ui.open(dr-cockpit)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -384,6 +724,7 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(git --no-optional-locks -c core.fsmonitor=false status --porcelain=v2 --branch) → exit 0",
    "turn.complete",
    "$.ui.open(dr-cockpit)",
    "$.process.run(git --no-optional-locks -c core.fsmonitor=false status --porcelain=v2 --branch) → exit 0",
@@ -400,64 +741,125 @@
    "session.start",
    "command.run{command=cockpit}",
    "session.measure",
+   "session.end",
    "session.compact",
    "agent.spawn",
+   "session.attach",
+   "session.detach",
+   "prompt.submit",
+   "turn.start",
+   "tool.check",
+   "ui.render{component=ToolProgress}",
+   "turn.step",
    "turn.complete",
    "attribution.text{kind=commit}",
    "attribution.text{kind=pr}",
    "tool.call",
-   "ui.render{component=AbovePrompt}",
-   "ui.render{component=PromptHint}",
    "ui.render{component=Pane, requestId=dr-cockpit}"
   ],
   "calls": [
+   "$.clock.after (via scheduleState",
+   "startWait)",
+   "$.clock.every (via setActivity)",
    "$.clock.now",
+   "$.clock.sleep (via sendDiscord)",
    "$.command.register",
-   "$.env.get (via refresh)",
-   "$.process.run (via refreshDetail)",
+   "$.config.list (via readRemote)",
+   "$.config.set (via setOption)",
+   "$.env.get (via readAccount",
+   "readNotifier",
+   "readPlace",
+   "readWhere",
+   "refresh)",
+   "$.fs.list (via readRun)",
+   "$.fs.read (via readJson",
+   "readRun)",
+   "$.fs.stat (via readRun)",
+   "$.fs.write (via writeState)",
+   "$.http.fetch (via sendDiscord)",
+   "$.process.run (via readWhere",
+   "refreshDetail)",
    "$.prompt.submit",
    "$.session.append (via refresh)",
    "$.session.compact",
+   "$.session.cwd (via readPlace)",
+   "$.session.id (via readWhere)",
+   "$.session.model (via readEngine)",
+   "$.session.repo (via readPlace)",
+   "$.session.surfaces (via readRemote)",
    "$.session.usage",
-   "$.settings.read (via readCompactWindow)",
+   "$.session.version (via readVersion)",
+   "$.settings.read (via readCompactWindow",
+   "readEngine",
+   "readWhere)",
    "$.state.get",
    "$.state.set",
-   "$.ui.open",
-   "$.ui.panes (via isPaneUp)",
-   "$.ui.resolve",
-   "$.ui.toast (via alertLimits",
-   "refresh)"
+   "$.store.delete (via saveMention",
+   "saveWebhook)",
+   "$.store.get (via readNotifier)",
+   "$.store.set (via saveMention",
+   "saveWebhook)",
+   "$.ui.i… [+137 chars]"
   ],
   "stateReads": [
+   "dr-cockpit.account",
+   "dr-cockpit.activity",
    "dr-cockpit.alerted",
    "dr-cockpit.breakdown",
    "dr-cockpit.budget",
-   "dr-cockpit.isBandHidden",
+   "dr-cockpit.engine",
+   "dr-cockpit.handoffAt",
    "dr-cockpit.isNudged",
    "dr-cockpit.isPlanSession",
+   "dr-cockpit.notifier",
+   "dr-cockpit.place",
    "dr-cockpit.plan",
    "dr-cockpit.refusals",
+   "dr-cockpit.remote",
    "dr-cockpit.repo",
+   "dr-cockpit.run",
    "dr-cockpit.seats",
+   "dr-cockpit.shells",
    "dr-cockpit.spawns",
-   "dr-cockpit.usage"
+   "dr-cockpit.trend",
+   "dr-cockpit.turnTokens",
+   "dr-cockpit.usage",
+   "dr-cockpit.view"
   ],
   "stateWrites": [
+   "dr-cockpit.account",
+   "dr-cockpit.activity",
    "dr-cockpit.alerted",
    "dr-cockpit.breakdown",
    "dr-cockpit.budget",
-   "dr-cockpit.isBandHidden",
+   "dr-cockpit.engine",
+   "dr-cockpit.handoffAt",
    "dr-cockpit.isNudged",
    "dr-cockpit.isPlanSession",
+   "dr-cockpit.notifier",
+   "dr-cockpit.place",
    "dr-cockpit.plan",
    "dr-cockpit.refusals",
+   "dr-cockpit.remote",
    "dr-cockpit.repo",
+   "dr-cockpit.run",
    "dr-cockpit.seats",
+   "dr-cockpit.shells",
    "dr-cockpit.spawns",
-   "dr-cockpit.usage"
+   "dr-cockpit.trend",
+   "dr-cockpit.turnTokens",
+   "dr-cockpit.usage",
+   "dr-cockpit.view"
   ],
   "envReads": [
-   "DR_SUPERPOWERS_BUDGET"
+   "CLAUDE_CONFIG_DIR",
+   "DCC_STATUSLINE_CONFIG",
+   "DR_COCKPIT_NOTIFY_URL",
+   "DR_SUPERPOWERS_BUDGET",
+   "HOME",
+   "HOSTNAME",
+   "TMUX",
+   "USERPROFILE"
   ],
   "raw": {
    "success": true,
@@ -470,7 +872,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: dr-cockpit.budget, dr-cockpit.usage, dr-cockpit.breakdown, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.plan, dr-cockpit.repo, dr-cockpit.refusals, dr-cockpit.alerted, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession"
+     "types ./types/index.d.ts declares state: dr-cockpit.budget, dr-cockpit.usage, dr-cockpit.breakdown, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.shells, dr-cockpit.remote, dr-cockpit.plan, dr-cockpit.repo, dr-cockpit.refusals, dr-cockpit.account, dr-cockpit.place, dr-cockpit.engine, dr-cockpit.alerted, dr-cockpit.trend, dr-cockpit.view, dr-cockpit.activity, dr-cockpit.turnTokens, dr-cockpit.run, dr-cockpit.handoffAt, dr-cockpit.notifier, dr-cockpit.isNudged, dr-cockpit.isPlanSession"
     ],
     "gatingHooks": []
    },
@@ -481,16 +883,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=cockpit}, session.measure, session.compact, agent.spawn, turn.complete, attribution.text{kind=commit}, attribution.text{kind=pr}, tool.call, ui.render{component=AbovePrompt}, ui.render{component=PromptHint}, ui.render{component=Pane, requestId=dr-cockpit}",
+      "./register.tsx hooks: session.start, command.run{command=cockpit}, session.measure, session.end, session.compact, agent.spawn, session.attach, session.detach, prompt.submit, turn.start, tool.check, ui.render{component=ToolProgress}, turn.step, turn.complete, attribution.text{kind=commit}, attribution.text{kind=pr}, tool.call, ui.render{component=Pane, requestId=dr-cockpit}",
       "./register.tsx answers its own command: command.run{command=cockpit}",
       "./register.tsx gating hook with .catch: session.compact",
       "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: tool.check",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.clock.now, $.command.register, $.env.get (via refresh), $.process.run (via refreshDetail), $.prompt.submit, $.session.append (via refresh), $.session.compact, $.session.usage, $.settings.read (via readCompactWindow), $.state.get, $.state.set, $.ui.open, $.ui.panes (via isPaneUp), $.ui.resolve, $.ui.toast (via alertLimits, refresh)",
+      "./register.tsx calls: $.clock.after (via scheduleState, startWait), $.clock.every (via setActivity), $.clock.now, $.clock.sleep (via sendDiscord), $.command.register, $.config.list (via readRemote), $.config.set (via setOption), $.env.get (via readAccount, readNotifier, readPlace, readWhere, refresh), $.fs.list (via readRun), $.fs.read (via readJson, readRun), $.fs.stat (via readRun), $.fs.write (via writeState), $.http.fetch (via sendDiscord), $.process.run (via readWhere, refreshDetail), $.prompt.submit, $.session.append (via refresh), $.session.compact, $.session.cwd (via readPlace), $.session.id (via readWhere), $.session.model (via readEngine), $.session.repo (via readPlace), $.session.surfaces (via readRemote), $.session.usage, $.session.version (via readVersion), $.settings.read (via readCompactWindow, readEngine, readWhere), $.state.get, $.state.set, $.store.delete (via saveMention, saveWebhook), $.store.get (via readNotifier), $.store.set (via saveMention, saveWebhook), $.ui.i… [+137 chars]",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: DR_SUPERPOWERS_BUDGET",
-      "./register.tsx state writes: dr-cockpit.alerted, dr-cockpit.breakdown, dr-cockpit.budget, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.plan, dr-cockpit.refusals, dr-cockpit.repo, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.usage",
-      "./register.tsx state reads: dr-cockpit.alerted, dr-cockpit.breakdown, dr-cockpit.budget, dr-cockpit.isBandHidden, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.plan, dr-cockpit.refusals, dr-cockpit.repo, dr-cockpit.seats, dr-cockpit.spawns, dr-cockpit.usage"
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, DCC_STATUSLINE_CONFIG, DR_COCKPIT_NOTIFY_URL, DR_SUPERPOWERS_BUDGET, HOME, HOSTNAME, TMUX, USERPROFILE",
+      "./register.tsx state writes: dr-cockpit.account, dr-cockpit.activity, dr-cockpit.alerted, dr-cockpit.breakdown, dr-cockpit.budget, dr-cockpit.engine, dr-cockpit.handoffAt, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.notifier, dr-cockpit.place, dr-cockpit.plan, dr-cockpit.refusals, dr-cockpit.remote, dr-cockpit.repo, dr-cockpit.run, dr-cockpit.seats, dr-cockpit.shells, dr-cockpit.spawns, dr-cockpit.trend, dr-cockpit.turnTokens, dr-cockpit.usage, dr-cockpit.view",
+      "./register.tsx state reads: dr-cockpit.account, dr-cockpit.activity, dr-cockpit.alerted, dr-cockpit.breakdown, dr-cockpit.budget, dr-cockpit.engine, dr-cockpit.handoffAt, dr-cockpit.isNudged, dr-cockpit.isPlanSession, dr-cockpit.notifier, dr-cockpit.place, dr-cockpit.plan, dr-cockpit.refusals, dr-cockpit.remote, dr-cockpit.repo, dr-cockpit.run, dr-cockpit.seats, dr-cockpit.shells, dr-cockpit.spawns, dr-cockpit.trend, dr-cockpit.turnTokens, dr-cockpit.usage, dr-cockpit.view"
      ],
      "gatingHooks": [
       {
@@ -507,14 +911,27 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "2dcb85682005e082"
+ "sourceHash": "b2f59c008bba8019"
 }

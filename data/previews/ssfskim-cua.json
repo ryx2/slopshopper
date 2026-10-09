@@ -1,6 +1,6 @@
 {
  "slug": "ssfskim-cua",
- "generatedAt": "2026-10-08T15:54:47.017Z",
+ "generatedAt": "2026-10-09T15:34:27.873Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -57,8 +57,8 @@
   "commands": [
    {
     "name": "secret",
-    "description": "Store a secret that the model sees only by its key; the value goes in the field it opens",
-    "argumentHint": "KEY",
+    "description": "Store a secret for this project (-g: for every project) that the model sees only by its key; the value goes in the field it opens",
+    "argumentHint": "[-g] KEY",
     "output": "No secrets stored."
    }
   ],
@@ -70,8 +70,9 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.process.run": 1,
    "$.env.get": 1,
-   "$.fs.exists": 1,
+   "$.fs.exists": 2,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -106,8 +107,6 @@
         "children": [
          "Escape cancels. Stored in ~/",
          ".config/claude-secrets",
-         "/",
-         "",
          ", mode 600."
         ]
        }
@@ -118,6 +117,7 @@
    }
   },
   "script": [
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir --show-toplevel) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -156,8 +156,10 @@
    "$.fs.exists",
    "$.fs.list",
    "$.fs.read",
-   "$.process.run (via storeField)",
+   "$.process.run (via projectOf",
+   "storeField)",
    "$.session.append (via storeField)",
+   "$.session.cwd (via projectOf)",
    "$.ui.close (via storeField)",
    "$.ui.invalidate",
    "$.ui.open",
@@ -193,7 +195,7 @@
       "./mods/register.tsx gating hook without .catch: ui.close{id=secret}",
       "./mods/register.tsx gating hook with .catch: tool.call",
       "./mods/register.tsx gating hook without .catch: session.append",
-      "./mods/register.tsx calls: $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.process.run (via storeField), $.session.append (via storeField), $.ui.close (via storeField), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./mods/register.tsx calls: $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.process.run (via projectOf, storeField), $.session.append (via storeField), $.session.cwd (via projectOf), $.ui.close (via storeField), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
       "./mods/register.tsx env writes: nothing",
       "./mods/register.tsx env reads: HOME"
      ],
@@ -218,8 +220,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "88fdd758213e9de1"
+ "sourceHash": "4fe150647a77693d"
 }

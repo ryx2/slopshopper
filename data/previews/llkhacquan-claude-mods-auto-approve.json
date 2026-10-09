@@ -1,6 +1,6 @@
 {
  "slug": "llkhacquan-claude-mods-auto-approve",
- "generatedAt": "2026-10-07T15:23:31.560Z",
+ "generatedAt": "2026-10-09T15:33:48.356Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,25 @@
    },
    {
     "event": "classic.PostToolUse"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "auto-approve-learn"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "session.start"
    },
    {
     "event": "classic.SessionStart"
@@ -22,12 +41,33 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.state.get": 3,
    "$.env.get": 3,
    "$.clock.now": 1,
-   "$.fs.exists": 2
+   "$.fs.exists": 2,
+   "$.ui.resolve": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "auto-approve-learn": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No rule to save."
+      ]
+     },
+     "title": "auto-approve-learn"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -51,6 +91,10 @@
   "hooks": [
    "classic.PreToolUse",
    "classic.PostToolUse",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=auto-approve-learn}",
+   "ui.close",
+   "session.start",
    "classic.SessionStart"
   ],
   "calls": [
@@ -65,13 +109,34 @@
    "$.fs.stat (via learnNudge)",
    "$.fs.write (via loadRules",
    "record)",
-   "$.model.complete (via classify)",
-   "$.process.run (via git)",
+   "$.model.complete (via classify",
+   "draft)",
+   "$.process.run (via appendRepoRule",
+   "git)",
    "$.session.cwd",
-   "$.session.id (via record)"
+   "$.session.id (via record)",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.ask (via askOffer)",
+   "$.ui.close (via offerTree",
+   "showOffer)",
+   "$.ui.open (via showOffer)",
+   "$.ui.resolve",
+   "$.ui.toast (via askOffer",
+   "offerTree)"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "auto-approve.approvals",
+   "auto-approve.declined",
+   "auto-approve.offer",
+   "auto-approve.sessionRules"
+  ],
+  "stateWrites": [
+   "auto-approve.approvals",
+   "auto-approve.declined",
+   "auto-approve.offer",
+   "auto-approve.sessionRules"
+  ],
   "envReads": [
    "HOME",
    "XDG_CONFIG_HOME",
@@ -86,7 +151,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: auto-approve.approvals, auto-approve.sessionRules, auto-approve.declined, auto-approve.offer"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -96,37 +164,47 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: classic.PreToolUse, classic.PostToolUse, classic.SessionStart",
-      "./register.ts gating hook with .catch: classic.PreToolUse",
-      "./register.ts gating hook without .catch: classic.PostToolUse",
-      "./register.ts gating hook without .catch: classic.SessionStart",
-      "./register.ts calls: $.clock.now, $.env.get (via paths), $.fs.exists (via learnNudge, loadRules, readOr), $.fs.list (via learnNudge), $.fs.read (via loadRules, readOr), $.fs.stat (via learnNudge), $.fs.write (via loadRules, record), $.model.complete (via classify), $.process.run (via git), $.session.cwd, $.session.id (via record)",
-      "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME, XDG_CONFIG_HOME, XDG_STATE_HOME"
+      "./register.tsx hooks: classic.PreToolUse, classic.PostToolUse, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=auto-approve-learn}, ui.close, session.start, classic.SessionStart",
+      "./register.tsx gating hook with .catch: classic.PreToolUse",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx calls: $.clock.now, $.env.get (via paths), $.fs.exists (via learnNudge, loadRules, readOr), $.fs.list (via learnNudge), $.fs.read (via loadRules, readOr), $.fs.stat (via learnNudge), $.fs.write (via loadRules, record), $.model.complete (via classify, draft), $.process.run (via appendRepoRule, git), $.session.cwd, $.session.id (via record), $.state.get, $.state.set, $.ui.ask (via askOffer), $.ui.close (via offerTree, showOffer), $.ui.open (via showOffer), $.ui.resolve, $.ui.toast (via askOffer, offerTree)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, XDG_CONFIG_HOME, XDG_STATE_HOME",
+      "./register.tsx state writes: auto-approve.approvals, auto-approve.declined, auto-approve.offer, auto-approve.sessionRules",
+      "./register.tsx state reads: auto-approve.approvals, auto-approve.declined, auto-approve.offer, auto-approve.sessionRules"
      ],
      "gatingHooks": [
       {
-       "module": "./register.ts",
+       "module": "./register.tsx",
        "pattern": "classic.PreToolUse",
        "hook": "classic.PreToolUse",
        "hasCatch": true
       },
       {
-       "module": "./register.ts",
+       "module": "./register.tsx",
        "pattern": "classic.PostToolUse",
        "hook": "classic.PostToolUse",
        "hasCatch": false
       },
       {
-       "module": "./register.ts",
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "8499a1031edc77cf"
+ "sourceHash": "c7bd2423732b8819"
 }

@@ -1,11 +1,17 @@
 {
  "slug": "og-matcha-tessera",
- "generatedAt": "2026-10-08T15:54:33.993Z",
+ "generatedAt": "2026-10-09T15:34:09.587Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "surface": "terminal"
+    }
    },
    {
     "event": "ui.render",
@@ -63,6 +69,12 @@
     }
    },
    {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__tessera__inbox_fixed"
@@ -81,6 +93,18 @@
     "event": "command.run",
     "matcher": {
      "command": "tessera"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "UserMessage"
     }
    },
    {
@@ -110,12 +134,6 @@
    {
     "event": "ui.render",
     "matcher": {
-     "component": "UserMessage"
-    }
-   },
-   {
-    "event": "ui.render",
-    "matcher": {
      "component": "AssistantMessage"
     }
    }
@@ -124,17 +142,23 @@
    {
     "name": "tessera",
     "description": "Switch the tessera theme, copy the last reply, or show the demo",
-    "argumentHint": "[inbox [fixed <n…>] | theme <name> | copy [code] | demo]",
-    "output": "\n## Commands\n\n| Command | Does |\n|---------|------|\n| `/tessera theme <name>` | Switch theme on the spot |\n| `/tessera copy` | Copy the last reply, or `copy code` for its last code block |\n| `/tessera demo` | Full showcase, every element and diagram |\n| `/tessera demo-rtl` | Hebrew right-to-left showcase |\n| `/tessera inbox` | Client feedback inbox (turn on feedbackInbox in /config); `inbox fixed 3 5` marks items fixed |\n\n### 16 themes\n\n- Dark: catppuccin-mocha, dracula, nord, tokyo-night, gruvbox-dark, rose-pine, everforest, github-dark, one-dark, solarized-dark\n- Light: catppuccin-latte, gruvbox-light, rose-pine-dawn, github-light, solarized-light\n- Plain: mono, no color, only bold and dim\n\nDocs and issues: https://github.com/OG-Matcha/tessera\n\n> [!TIP]\n> Any color slot beats the theme. Set `headingColor` or `numberColor` to a hex value in `/config`.\n\n### Task lists\n\n- [x] Tables, diagrams and charts drawn in the terminal\n- [x] A copy button on every block\n- [ ] Pick a `taskStyle` in `/config`: checks, ticks, box or progress\n\n```mermaid\nflowchart LR\n    R[Reply] --> P[Parse]\n    P --> D[Draw]\n    D --> S[Screen]\n```\n\n```mermaid\nxychart-beta\n    title \"Color options per group\"\n    x-axis [text, head, num, code, diag]\n    y-axis \"options\" 0 --> 8\n    bar [7, 3, 2, 6, 2]\n```\n\n> [!CAUTION]\n> Claude Code refuses trees over 20000 nodes. A code block past about 500 highlighted lines falls back to plain text.\n"
+    "argumentHint": "[setup | peek <file> | inbox [fixed <n…>] | theme <name> | copy [code|prompt] | demo]",
+    "output": "\n## Commands\n\n| Command | Does |\n|---------|------|\n| `/tessera setup` | Pick the features you want on |\n| `/tessera peek <file>` | Preview a document: .md .csv .json .docx .xlsx .pptx |\n| `/tessera theme <name>` | Switch theme on the spot |\n| `/tessera copy` | Copy the last reply; `copy code` its last code block, `copy prompt` its prompt card |\n| `/tessera demo` | Full showcase, every element and diagram |\n| `/tessera demo-rtl` | Hebrew right-to-left showcase |\n| `/tessera inbox` | Client feedback inbox (turn on feedbackInbox in /config); `inbox fixed 3 5` marks items fixed |\n\n### 16 themes\n\n- Dark: catppuccin-mocha, dracula, nord, tokyo-night, gruvbox-dark, rose-pine, everforest, github-dark, one-dark, solarized-dark\n- Light: catppuccin-latte, gruvbox-light, rose-pine-dawn, github-light, solarized-light\n- Plain: mono, no color, only bold and dim\n\nDocs and issues: https://github.com/OG-Matcha/tessera\n\n> [!TIP]\n> Any color slot beats the theme. Set `headingColor` or `numberColor` to a hex value in `/config`.\n\n### Task lists\n\n- [x] Tables, diagrams and charts drawn in the terminal\n- [x] A copy button on every block\n- [ ] Pick a `taskStyle` in `/config`: checks, ticks, box or progress\n\n```mermaid\nflowchart LR\n    R[Reply] --> P[Parse]\n    P --> D[Draw]\n    D --> S[Screen]\n```\n\n```mermaid\nxychart-beta\n    title \"Color options per group\"\n    x-axis [text, head, num, code, diag]\n    y-axis \"options\" 0 --> 8\n    bar [7, 3, 2, 6, 2]\n```\n\n> [!CAUTION]\n> Claude Code refuses trees over 20000 nodes. A code block past about 500 highlighted lines falls back to plain text.\n"
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [
-   "tessera: /tessera setup picks the features you want on."
+   "tessera: /tessera setup picks the features you want on.",
+   "tessera blocked: force push"
   ],
   "logs": [],
-  "denies": [],
+  "denies": [
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "tessera blocked this call: it force-pushes to main, rewriting history that others and CI build on. Push a branch and merge it instead. If rewriting main is intended, send the same call again unchanged and it goes through."
+   }
+  ],
   "rewrites": [
    {
     "event": "prompt.submit",
@@ -143,18 +167,17 @@
   ],
   "apiCalls": {
    "$.env.get": 20,
-   "$.env.set": 1,
    "$.settings.read": 1,
-   "$.clock.every": 1,
-   "$.store.get": 2,
+   "$.store.get": 3,
+   "$.session.cwd": 2,
+   "$.env.set": 1,
    "$.store.set": 1,
-   "$.ui.toast": 1,
-   "$.session.repo": 4,
+   "$.ui.toast": 2,
+   "$.clock.every": 1,
+   "$.session.repo": 1,
    "$.session.id": 1,
    "$.command.register": 1,
-   "$.state.get": 4,
-   "$.fs.read": 1,
-   "$.session.cwd": 1,
+   "$.state.get": 5,
    "$.fs.stat": 1,
    "$.ui.resolve": 6
   },
@@ -214,7 +237,15 @@
           "bold": false
          },
          "children": [
-          "fix the failing auth test and add an audit log call"
+          {
+           "type": "Text",
+           "props": {
+            "key": "p0.0"
+           },
+           "children": [
+            "fix the failing auth test and add an audit log call"
+           ]
+          }
          ]
         }
        ]
@@ -291,7 +322,7 @@
       {
        "type": "Box",
        "props": {
-        "width": 30,
+        "width": 20,
         "flexDirection": "row"
        },
        "children": [
@@ -326,7 +357,7 @@
             "dimColor": true
            },
            "children": [
-            "/work/app/src/auth.ts"
+            "src/auth.ts"
            ]
           }
          ]
@@ -592,7 +623,7 @@
                   "color": "#89dceb"
                  },
                  "children": [
-                  "/tessera theme <name>"
+                  "/tessera setup"
                  ]
                 }
                ]
@@ -629,7 +660,7 @@
                   "key": "b1.r0.0.1.0"
                  },
                  "children": [
-                  "Switch theme on the spot"
+                  "Pick the features you want on"
                  ]
                 }
                ]
@@ -700,7 +731,7 @@
                   "color": "#89dceb"
                  },
                  "children": [
-                  "/tessera copy"
+                  "/tessera peek <file>"
                  ]
                 }
                ]
@@ -737,26 +768,7 @@
                   "key": "b1.r1.0.1.0"
                  },
                  "children": [
-                  "Copy the last reply, or "
-                 ]
-                },
-                {
-                 "type": "Text",
-                 "props": {
-                  "key": "b1.r1.0.1.1",
-                  "color": "#89dceb"
-                 },
-                 "children": [
-                  "copy code"
-                 ]
-                },
-                {
-                 "type": "Text",
-                 "props": {
-                  "key": "b1.r1.0.1.2"
-                 },
-                 "children": [
-                  " for its last code block"
+                  "Preview a document: .md .csv .json .docx .xlsx .pptx"
                  ]
                 }
                ]
@@ -827,7 +839,7 @@
                   "color": "#89dceb"
                  },
                  "children": [
-                  "/tessera demo"
+                  "/tessera theme <name>"
                  ]
                 }
                ]
@@ -864,7 +876,7 @@
                   "key": "b1.r2.0.1.0"
                  },
                  "children": [
-                  "Full showcase, every element and diagram"
+                  "Switch theme on the spot"
                  ]
                 }
                ]
@@ -935,7 +947,7 @@
                   "color": "#89dceb"
                  },
                  "children": [
-                  "/tessera demo-rtl"
+                  "/tessera copy"
                  ]
                 }
                ]
@@ -972,7 +984,45 @@
                   "key": "b1.r3.0.1.0"
                  },
                  "children": [
-                  "Hebrew right-to-left showcase"
+                  "Copy the last reply; "
+                 ]
+                },
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r3.0.1.1",
+                  "color": "#89dceb"
+                 },
+                 "children": [
+                  "copy code"
+                 ]
+                },
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r3.0.1.2"
+                 },
+                 "children": [
+                  " its last code block, "
+                 ]
+                },
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r3.0.1.3",
+                  "color": "#89dceb"
+                 },
+                 "children": [
+                  "copy prompt"
+                 ]
+                },
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r3.0.1.4"
+                 },
+                 "children": [
+                  " its prompt card"
                  ]
                 }
                ]
@@ -1043,7 +1093,7 @@
                   "color": "#89dceb"
                  },
                  "children": [
-                  "/tessera inbox"
+                  "/tessera demo"
                  ]
                 }
                ]
@@ -1080,13 +1130,229 @@
                   "key": "b1.r4.0.1.0"
                  },
                  "children": [
+                  "Full showcase, every element and diagram"
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "key": "b1.r4.0.r",
+              "color": "#585b70",
+              "dimColor": false
+             },
+             "children": [
+              " │"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "key": "b1.r5r",
+            "color": "#585b70",
+            "dimColor": false
+           },
+           "children": [
+            "├───────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤"
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "b1.r5.0",
+            "flexDirection": "row",
+            "columnGap": 0,
+            "alignItems": "stretch"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "b1.r5.0.l",
+              "color": "#585b70",
+              "dimColor": false
+             },
+             "children": [
+              "│ "
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "key": "b1.r5.0.0",
+              "width": 21,
+              "flexShrink": 0,
+              "justifyContent": "flex-start"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {},
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r5.0.0.0",
+                  "color": "#89dceb"
+                 },
+                 "children": [
+                  "/tessera demo-rtl"
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "key": "b1.r5.0.1s",
+              "color": "#585b70",
+              "dimColor": false
+             },
+             "children": [
+              " │ "
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "key": "b1.r5.0.1",
+              "width": 91,
+              "flexShrink": 0,
+              "justifyContent": "flex-start"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {},
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r5.0.1.0"
+                 },
+                 "children": [
+                  "Hebrew right-to-left showcase"
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "key": "b1.r5.0.r",
+              "color": "#585b70",
+              "dimColor": false
+             },
+             "children": [
+              " │"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "key": "b1.r6r",
+            "color": "#585b70",
+            "dimColor": false
+           },
+           "children": [
+            "├───────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤"
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "b1.r6.0",
+            "flexDirection": "row",
+            "columnGap": 0,
+            "alignItems": "stretch"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "b1.r6.0.l",
+              "color": "#585b70",
+              "dimColor": false
+             },
+             "children": [
+              "│ "
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "key": "b1.r6.0.0",
+              "width": 21,
+              "flexShrink": 0,
+              "justifyContent": "flex-start"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {},
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r6.0.0.0",
+                  "color": "#89dceb"
+                 },
+                 "children": [
+                  "/tessera inbox"
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "key": "b1.r6.0.1s",
+              "color": "#585b70",
+              "dimColor": false
+             },
+             "children": [
+              " │ "
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "key": "b1.r6.0.1",
+              "width": 91,
+              "flexShrink": 0,
+              "justifyContent": "flex-start"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {},
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "key": "b1.r6.0.1.0"
+                 },
+                 "children": [
                   "Client feedback inbox (turn on feedbackInbox in "
                  ]
                 },
                 {
                  "type": "Text",
                  "props": {
-                  "key": "b1.r4.0.1.1",
+                  "key": "b1.r6.0.1.1",
                   "color": "#89dceb"
                  },
                  "children": [
@@ -1096,7 +1362,7 @@
                 {
                  "type": "Text",
                  "props": {
-                  "key": "b1.r4.0.1.2"
+                  "key": "b1.r6.0.1.2"
                  },
                  "children": [
                   "); "
@@ -1105,7 +1371,7 @@
                 {
                  "type": "Text",
                  "props": {
-                  "key": "b1.r4.0.1.3",
+                  "key": "b1.r6.0.1.3",
                   "color": "#89dceb"
                  },
                  "children": [
@@ -1115,7 +1381,7 @@
                 {
                  "type": "Text",
                  "props": {
-                  "key": "b1.r4.0.1.4"
+                  "key": "b1.r6.0.1.4"
                  },
                  "children": [
                   " marks items fixed"
@@ -1128,7 +1394,7 @@
             {
              "type": "Text",
              "props": {
-              "key": "b1.r4.0.r",
+              "key": "b1.r6.0.r",
               "color": "#585b70",
               "dimColor": false
              },
@@ -1186,28 +1452,10 @@
        "type": "Box",
        "props": {
         "key": "c3",
-        "flexDirection": "column",
-        "alignSelf": "flex-start"
+        "flexDirection": "row",
+        "columnGap": 2
        },
        "children": [
-        {
-         "type": "Box",
-         "props": {
-          "justifyContent": "flex-end"
-         },
-         "children": [
-          {
-           "type": "Button",
-           "props": {
-            "key": "copy3",
-            "variant": "primary",
-            "label": "⧉ copy",
-            "onPress": "[fn]"
-           },
-           "children": []
-          }
-         ]
-        },
         {
          "type": "Box",
          "props": {
@@ -1235,6 +1483,7 @@
             {
              "type": "Text",
              "props": {
+              "key": "b3.0",
               "dimColor": false,
               "strikethrough": false
              },
@@ -1272,6 +1521,7 @@
             {
              "type": "Text",
              "props": {
+              "key": "b3.1",
               "dimColor": false,
               "strikethrough": false
              },
@@ -1309,6 +1559,7 @@
             {
              "type": "Text",
              "props": {
+              "key": "b3.2",
               "dimColor": false,
               "strikethrough": false
              },
@@ -1327,6 +1578,16 @@
            ]
           }
          ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "copy3",
+          "variant": "primary",
+          "label": "⧉ copy",
+          "onPress": "[fn]"
+         },
+         "children": []
         }
        ]
       },
@@ -1386,7 +1647,9 @@
           },
           {
            "type": "Text",
-           "props": {},
+           "props": {
+            "key": "b5"
+           },
            "children": [
             {
              "type": "Text",
@@ -1493,28 +1756,10 @@
        "type": "Box",
        "props": {
         "key": "c7",
-        "flexDirection": "column",
-        "alignSelf": "flex-start"
+        "flexDirection": "row",
+        "columnGap": 2
        },
        "children": [
-        {
-         "type": "Box",
-         "props": {
-          "justifyContent": "flex-end"
-         },
-         "children": [
-          {
-           "type": "Button",
-           "props": {
-            "key": "copy7",
-            "variant": "primary",
-            "label": "⧉ copy",
-            "onPress": "[fn]"
-           },
-           "children": []
-          }
-         ]
-        },
         {
          "type": "Box",
          "props": {
@@ -1542,6 +1787,7 @@
             {
              "type": "Text",
              "props": {
+              "key": "b7.0",
               "dimColor": true,
               "strikethrough": true
              },
@@ -1579,6 +1825,7 @@
             {
              "type": "Text",
              "props": {
+              "key": "b7.1",
               "dimColor": true,
               "strikethrough": true
              },
@@ -1616,6 +1863,7 @@
             {
              "type": "Text",
              "props": {
+              "key": "b7.2",
               "dimColor": false,
               "strikethrough": false
              },
@@ -1672,6 +1920,16 @@
            ]
           }
          ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "copy7",
+          "variant": "primary",
+          "label": "⧉ copy",
+          "onPress": "[fn]"
+         },
+         "children": []
         }
        ]
       },
@@ -3371,7 +3629,9 @@
           },
           {
            "type": "Text",
-           "props": {},
+           "props": {
+            "key": "b10"
+           },
            "children": [
             {
              "type": "Text",
@@ -3493,12 +3753,272 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Tables, code, diagrams and tool rows drawn by tessera"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Tables, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "code, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "diagrams "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "and "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "tool "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "rows "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "drawn "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "by "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "tessera"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "foldDiffs",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "toggle-foldDiffs",
+           "label": "☑ Fold long diffs",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Long "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "edit "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "diffs "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "show "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "a "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "few "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "removed "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "and "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "added "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a9",
+             "dimColor": true
+            },
+            "children": [
+             "lines "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a10",
+             "dimColor": true
+            },
+            "children": [
+             "and "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a11",
+             "dimColor": true
+            },
+            "children": [
+             "an "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a12",
+             "dimColor": true
+            },
+            "children": [
+             "expand "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a13",
+             "dimColor": true
+            },
+            "children": [
+             "button"
+            ]
+           }
           ]
          }
         ]
@@ -3521,12 +4041,103 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Pasted images and collapsed text shown above the prompt"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Pasted "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "images "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "and "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "collapsed "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "text "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "shown "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "above "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "the "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "prompt"
+            ]
+           }
           ]
          }
         ]
@@ -3549,12 +4160,103 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Claude replies in the language of your own words"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Claude "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "replies "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "in "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "the "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "language "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "of "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "your "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "own "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "words"
+            ]
+           }
           ]
          }
         ]
@@ -3577,12 +4279,183 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Offers tasks left open here, in a new session or after /clear; turns on Claude task tools"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Offers "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "tasks "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "left "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "open "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "here, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "in "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "a "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "new "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "session "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a9",
+             "dimColor": true
+            },
+            "children": [
+             "or "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a10",
+             "dimColor": true
+            },
+            "children": [
+             "after "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a11",
+             "dimColor": true
+            },
+            "children": [
+             "/clear; "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a12",
+             "dimColor": true
+            },
+            "children": [
+             "turns "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a13",
+             "dimColor": true
+            },
+            "children": [
+             "on "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a14",
+             "dimColor": true
+            },
+            "children": [
+             "Claude "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a15",
+             "dimColor": true
+            },
+            "children": [
+             "task "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a16",
+             "dimColor": true
+            },
+            "children": [
+             "tools"
+            ]
+           }
           ]
          }
         ]
@@ -3605,12 +4478,143 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Blocks tree rewrites while agents run and deletes through links"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Blocks "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "tree "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "rewrites "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "while "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "agents "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "run, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "deletes "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "through "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "links; "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a9",
+             "dimColor": true
+            },
+            "children": [
+             "reminds "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a10",
+             "dimColor": true
+            },
+            "children": [
+             "before "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a11",
+             "dimColor": true
+            },
+            "children": [
+             "force-pushing "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a12",
+             "dimColor": true
+            },
+            "children": [
+             "main"
+            ]
+           }
           ]
          }
         ]
@@ -3633,12 +4637,103 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Blocks Korean, Chinese or Japanese written as \\u escapes"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Blocks "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "Korean, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "Chinese "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "or "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "Japanese "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "written "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "as "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "\\u "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "escapes"
+            ]
+           }
           ]
          }
         ]
@@ -3661,12 +4756,143 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   While you write Traditional Chinese, blocks Simplified characters and zh-CN terms in files"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "While "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "you "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "write "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "Traditional "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "Chinese, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "blocks "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "Simplified "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "characters "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "and "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a9",
+             "dimColor": true
+            },
+            "children": [
+             "zh-CN "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a10",
+             "dimColor": true
+            },
+            "children": [
+             "terms "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a11",
+             "dimColor": true
+            },
+            "children": [
+             "in "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a12",
+             "dimColor": true
+            },
+            "children": [
+             "files"
+            ]
+           }
           ]
          }
         ]
@@ -3689,12 +4915,113 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Blocks unquoted heredocs that would expand ${...} or eat backslashes"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Blocks "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "unquoted "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "heredocs "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "that "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "would "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "expand "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "${...} "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "or "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "eat "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a9",
+             "dimColor": true
+            },
+            "children": [
+             "backslashes"
+            ]
+           }
           ]
          }
         ]
@@ -3711,18 +5038,109 @@
           "type": "Button",
           "props": {
            "key": "toggle-guardGlossary",
-           "label": "☑ Glossary guard",
+           "label": "☐ Glossary guard",
            "onPress": "[fn]"
           },
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Blocks wordings the glossary in CLAUDE.md says to avoid"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Blocks "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "wordings "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "the "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "glossary "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "in "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "CLAUDE.md "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "says "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "to "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "avoid"
+            ]
+           }
           ]
          }
         ]
@@ -3745,12 +5163,133 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Picks haiku, sonnet, opus or fable for each agent by its task"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Picks "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "haiku, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "sonnet, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "opus "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "or "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "fable "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "for "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "each "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "agent "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a9",
+             "dimColor": true
+            },
+            "children": [
+             "by "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a10",
+             "dimColor": true
+            },
+            "children": [
+             "its "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a11",
+             "dimColor": true
+            },
+            "children": [
+             "task"
+            ]
+           }
           ]
          }
         ]
@@ -3773,12 +5312,93 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   A Workflow script must carry your own words"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "A "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "Workflow "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "script "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "must "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "carry "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "your "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "own "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "words"
+            ]
+           }
           ]
          }
         ]
@@ -3801,12 +5421,113 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   When a usage limit stops work, continue at the reset"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "When "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "a "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "usage "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "limit "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "stops "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "work, "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "continue "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "at "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a8",
+             "dimColor": true
+            },
+            "children": [
+             "the "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a9",
+             "dimColor": true
+            },
+            "children": [
+             "reset"
+            ]
+           }
           ]
          }
         ]
@@ -3829,12 +5550,93 @@
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "paddingLeft": 3
           },
           "children": [
-           "   Pasted chat logs become items; regressions are flagged"
+           {
+            "type": "Text",
+            "props": {
+             "key": "a0",
+             "dimColor": true
+            },
+            "children": [
+             "Pasted "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a1",
+             "dimColor": true
+            },
+            "children": [
+             "chat "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a2",
+             "dimColor": true
+            },
+            "children": [
+             "logs "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a3",
+             "dimColor": true
+            },
+            "children": [
+             "become "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a4",
+             "dimColor": true
+            },
+            "children": [
+             "items; "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a5",
+             "dimColor": true
+            },
+            "children": [
+             "regressions "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a6",
+             "dimColor": true
+            },
+            "children": [
+             "are "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "a7",
+             "dimColor": true
+            },
+            "children": [
+             "flagged"
+            ]
+           }
           ]
          }
         ]
@@ -3854,10 +5656,10 @@
    "tool.call Write",
    "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
-   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash denied: tessera blocked this call: it force-pushes to main, rewriting history that others and CI build on. P…",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/tessera → \n## Commands\n\n| Command | Does |\n|---------|------|\n| `/tessera theme <name>` | …"
+   "/tessera → \n## Commands\n\n| Command | Does |\n|---------|------|\n| `/tessera setup` | Pick th…"
   ],
   "console": [],
   "warnings": []
@@ -3868,6 +5670,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.start{surface=terminal}",
    "ui.render{component=AbovePrompt}",
    "tool.call",
    "tool.call{tool=Agent}",
@@ -3879,16 +5682,18 @@
    "tool.call{tool=TodoWrite}",
    "session.end",
    "ui.render{component=AbovePrompt}",
+   "ui.render{component=AbovePrompt}",
    "tool.call{tool=mcp__tessera__inbox_fixed}",
    "session.compact",
    "prompt.autocomplete",
    "prompt.submit",
    "command.run{command=tessera}",
+   "ui.render{component=ToolResult}",
+   "ui.render{component=UserMessage}",
    "ui.render{component=ToolGroup}",
    "ui.render{component=ToolUse}",
    "ui.render{component=TurnDuration}",
    "ui.render{component=CommandOutput}",
-   "ui.render{component=UserMessage}",
    "ui.render{component=AssistantMessage}"
   ],
   "calls": [
@@ -3906,7 +5711,8 @@
    "$.fs.stat (via holdsLink)",
    "$.model.classify (via pickModel)",
    "$.process.run",
-   "$.prompt.fill (via settleCarry)",
+   "$.prompt.fill (via settleCarry",
+   "settleUpdate)",
    "$.prompt.read (via check)",
    "$.prompt.submit (via scheduleResume)",
    "$.session.cwd",
@@ -3921,9 +5727,10 @@
    "$.state.set",
    "$.store.get",
    "$.store.set",
-   "$.tool.register",
+   "$.tool.register (via registerInboxTool)",
    "$.ui.close",
    "$.ui.copy",
+   "$.ui.invalidate",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
@@ -3931,12 +5738,16 @@
   "stateReads": [
    "tessera.carryOver",
    "tessera.draftImages",
-   "tessera.draftPastes"
+   "tessera.draftPastes",
+   "tessera.unfoldedDiffs",
+   "tessera.updateOffer"
   ],
   "stateWrites": [
    "tessera.carryOver",
    "tessera.draftImages",
-   "tessera.draftPastes"
+   "tessera.draftPastes",
+   "tessera.unfoldedDiffs",
+   "tessera.updateOffer"
   ],
   "envReads": [
    "ALACRITTY_WINDOW_ID",
@@ -3969,7 +5780,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: tessera.draftImages, tessera.draftPastes, tessera.carryOver"
+     "types ./types/index.d.ts declares state: tessera.draftImages, tessera.draftPastes, tessera.carryOver, tessera.unfoldedDiffs, tessera.updateOffer"
     ],
     "gatingHooks": []
    },
@@ -3980,7 +5791,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, ui.render{component=AbovePrompt}, tool.call, tool.call{tool=Agent}, tool.call{tool=Workflow}, ui.render{component=Pane, requestId=tessera-setup}, classic.StopFailure, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, session.end, ui.render{component=AbovePrompt}, tool.call{tool=mcp__tessera__inbox_fixed}, session.compact, prompt.autocomplete, prompt.submit, command.run{command=tessera}, ui.render{component=ToolGroup}, ui.render{component=ToolUse}, ui.render{component=TurnDuration}, ui.render{component=CommandOutput}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}",
+      "./register.tsx hooks: session.start, session.start{surface=terminal}, ui.render{component=AbovePrompt}, tool.call, tool.call{tool=Agent}, tool.call{tool=Workflow}, ui.render{component=Pane, requestId=tessera-setup}, classic.StopFailure, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, session.end, ui.render{component=AbovePrompt}, ui.render{component=AbovePrompt}, tool.call{tool=mcp__tessera__inbox_fixed}, session.compact, prompt.autocomplete, prompt.submit, command.run{command=tessera}, ui.render{component=ToolResult}, ui.render{component=UserMessage}, ui.render{component=ToolGroup}, ui.render{component=ToolUse}, ui.render{component=TurnDuration}, ui.render{component=CommandOutput}, ui.render{component=AssistantMessage}",
       "./register.tsx answers its own command: command.run{command=tessera}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
@@ -3992,11 +5803,11 @@
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tessera__inbox_fixed}",
       "./register.tsx gating hook without .catch: session.compact",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after (via scheduleResume), $.clock.every, $.clock.now, $.command.register, $.config.set, $.env.get, $.env.set, $.fs.exists (via check, findImagesDir), $.fs.list (via findImagesDir), $.fs.read, $.fs.stat (via holdsLink), $.model.classify (via pickModel), $.process.run, $.prompt.fill (via settleCarry), $.prompt.read (via check), $.prompt.submit (via scheduleResume), $.session.cwd, $.session.id, $.session.messages, $.session.repo (via carryKey, inboxKey, projectGlossary), $.session.usage (via scheduleResume), $.settings.read, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.close, $.ui.copy, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.after (via scheduleResume), $.clock.every, $.clock.now, $.command.register, $.config.set, $.env.get, $.env.set, $.fs.exists (via check, findImagesDir), $.fs.list (via findImagesDir), $.fs.read, $.fs.stat (via holdsLink), $.model.classify (via pickModel), $.process.run, $.prompt.fill (via settleCarry, settleUpdate), $.prompt.read (via check), $.prompt.submit (via scheduleResume), $.session.cwd, $.session.id, $.session.messages, $.session.repo (via carryKey, inboxKey, projectGlossary), $.session.usage (via scheduleResume), $.settings.read, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register (via registerInboxTool), $.ui.close, $.ui.copy, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: CLAUDE_CODE_ENABLE_TODO_TOOLS",
       "./register.tsx env reads: ALACRITTY_WINDOW_ID, CLAUDE_CODE_ENABLE_TODO_TOOLS, CLAUDE_CODE_FORCE_TERMINAL_IMAGES, CLAUDE_CODE_TMPDIR, HOME, KITTY_WINDOW_ID, KONSOLE_VERSION, LANG, LC_ALL, OS, STY, TEMP, TERM, TERM_PROGRAM, TMUX, VTE_VERSION, WSL_DISTRO_NAME, WT_SESSION",
-      "./register.tsx state writes: tessera.carryOver, tessera.draftImages, tessera.draftPastes",
-      "./register.tsx state reads: tessera.carryOver, tessera.draftImages, tessera.draftPastes"
+      "./register.tsx state writes: tessera.carryOver, tessera.draftImages, tessera.draftPastes, tessera.unfoldedDiffs, tessera.updateOffer",
+      "./register.tsx state reads: tessera.carryOver, tessera.draftImages, tessera.draftPastes, tessera.unfoldedDiffs, tessera.updateOffer"
      ],
      "gatingHooks": [
       {
@@ -4061,8 +5872,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "1a748eecfd991555"
+ "sourceHash": "1378dc17a14b1f74"
 }

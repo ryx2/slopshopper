@@ -1,0 +1,8 @@
+{
+ "slug": "tc3oliver-claude-team-kit-ctkprobe",
+ "files": {
+  "hooks/register.mjs": "// Throwaway probe, not part of CTK: logs what Claude Code sends to `agent.spawn` for each Agent call, and\n// what the next hook answered, so the boundary \"which calls are teammates\" can be observed instead of assumed.\n// It changes nothing: every spawn is passed on untouched. The log path is CTK_PROBE_LOG (default: spawn-probe-log.json\n// in the session's working directory).\nconst rows = []\nasync function note($, e, result) {\n  rows.push({\n    name: e.name ?? null,\n    subagentType: e.subagentType,\n    isTeammate: e.isTeammate ?? null,\n    fork: e.fork,\n    background: e.background,\n    provider: e.provider,\n    keys: Object.keys(e).sort(),\n    result,\n  })\n  const path = (await $.env.get('CTK_PROBE_LOG').catch(() => undefined)) ?? 'spawn-probe-log.json'\n  try {\n    await $.fs.write(path, JSON.stringify(rows, null, 1))\n  } catch {}\n}\nexport const register = on => {\n  on('agent.spawn', async ($, e, next) => {\n    const r = await next(e)\n    await note($, e, r.deny !== undefined ? { deny: String(r.deny).slice(0, 80) } : { agentId: r.agentId ?? null, teammateId: r.teammateId ?? null })\n    return r\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.mjs\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"ctkprobe\",\n  \"version\": \"0.0.1\",\n  \"description\": \"Throwaway probe: logs agent.spawn inputs. Not part of CTK.\"\n}"
+ }
+}

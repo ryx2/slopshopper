@@ -1,6 +1,6 @@
 {
  "slug": "egan-wu-slime-dashboard",
- "generatedAt": "2026-10-08T15:54:00.279Z",
+ "generatedAt": "2026-10-09T15:33:21.602Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,10 +32,19 @@
     "event": "turn.start"
    },
    {
+    "event": "agent.offer"
+   },
+   {
     "event": "agent.spawn"
    },
    {
     "event": "turn.step"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__slime-dashboard__ask_person"
+    }
    },
    {
     "event": "tool.call"
@@ -58,17 +67,29 @@
      "component": "Pane",
      "requestId": "slime-dashboard"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "dungeon"
+    }
    }
   ],
   "commands": [
    {
     "name": "slime-dashboard",
     "description": "Open the slime dashboard pane, or manage its Skill Box",
-    "argumentHint": "[add <skill> [--category <name>] [--desc <words>] | remove <skill> | list | weather]",
+    "argumentHint": "[add <skill> [--category <name>] [--desc <words>] | remove <skill> | list | weather | dungeon]",
     "output": "Slime dashboard opened."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "ask_person",
+    "description": "Ask the person a question and wait for their answer: use it when your task needs them to decide or tell you something you should not guess. The question shows in their dashboard, where they type the answer or pick one of the options."
+   }
+  ],
   "panes": [
    {
     "id": "slime-dashboard",
@@ -81,22 +102,24 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.store.get": 6,
-   "$.state.get": 60,
-   "$.state.set": 15,
+   "$.tool.register": 1,
+   "$.store.get": 13,
+   "$.state.get": 108,
+   "$.state.set": 26,
    "$.session.model": 2,
    "$.session.usage": 2,
+   "$.env.get": 12,
+   "$.session.cwd": 4,
+   "$.fs.read": 7,
    "$.process.run": 3,
-   "$.env.get": 6,
-   "$.http.fetch": 2,
    "$.clock.every": 2,
-   "$.clock.after": 1,
    "$.ui.open": 2,
-   "$.session.cwd": 2,
-   "$.fs.read": 1,
+   "$.clock.now": 6,
    "$.session.id": 2,
-   "$.clock.now": 1,
-   "$.ui.resolve": 2
+   "$.http.fetch": 1,
+   "$.ui.panes": 1,
+   "$.store.set": 1,
+   "$.ui.resolve": 4
   },
   "timers": [
    {
@@ -106,10 +129,6 @@
    {
     "kind": "every",
     "ms": 100
-   },
-   {
-    "kind": "after",
-    "ms": 120000
    }
   ],
   "sites": {
@@ -139,7 +158,6 @@
             "type": "Box",
             "props": {
              "flexDirection": "row",
-             "justifyContent": "center",
              "borderStyle": "round",
              "borderColor": "#5c3a1e",
              "backgroundColor": "#8b5a2b",
@@ -150,15 +168,68 @@
              {
               "type": "Button",
               "props": {
-               "key": "sign",
-               "label": "—",
+               "key": "sessions",
+               "label": "[≡]",
                "plain": true,
                "hover": {
-                "scope": "sign",
+                "scope": "sessions",
                 "color": "#f5e6c8",
                 "bold": true
                },
                "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "justifyContent": "center",
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#ff5a4f"
+                },
+                "children": [
+                 " ! "
+                ]
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "sign",
+                 "label": "Mystic Journey",
+                 "plain": true,
+                 "hover": {
+                  "scope": "sign",
+                  "color": "#f5e6c8",
+                  "bold": true
+                 },
+                 "onPress": "[fn]"
+                },
+                "children": []
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#ff5a4f"
+                },
+                "children": [
+                 " ! "
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 3,
+               "flexShrink": 0
               },
               "children": []
              }
@@ -399,7 +470,7 @@
              "key": "scene",
              "columns": 56,
              "rows": 6,
-             "cells": "IAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABgCUAAOPc2QDj3NkAgCUAAOPc2QDj3NkAgCUAAOPc2QDj3NkAhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAGbR/wAAAAABgCUAAGbR/wBm0f8AhCUAAGbR/wAAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAFCvTAAAAAABgCUAAFCvTABQr0wAgCUAAFCvTABQr0wAgCUAAFCvTABQr0wAhCUAAFCvTAAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABgCUAAOPc2QDj3NkAgCUAAOPc2QDj3NkAgCUAAOPc2QDj3NkAhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAGbR/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFCvTABQr0wAgCUAAFCvTABQr0wAgCUAADJ9LgBQr0wAgCUAAFCvTABQr0wAgCUAAFCvTAAueuAAgCUAAIqKigAueuAAhCUAAC564AAAAAABgCUAAIqKigAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFCvTABQr0wAgCUAADJ9LgBQr0wAgCUAAFCvTABQr0wAgCUAAC564AAueuAAgCUAAC564AAueuAAgCUAAB9IuAAueuAAgCUAAC564AAueuAAgCUAAC564AAfSLgAIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABegAAALCamgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAIqKigAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFCvTAAAAAABgCUAAFCvTAAwUnoAgCUAAFCvTAAAAAABgCUAAC564AAAAAABgCUAAB9IuAAwUnoAgCUAAC564AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB"
+             "cells": "IAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABgCUAAOPc2QDj3NkAgCUAAOPc2QDj3NkAgCUAAOPc2QDj3NkAhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAGbR/wAAAAABgCUAAGbR/wBm0f8AhCUAAGbR/wAAAAABhCUAAOPc2QAAAAABhCUAAOPc2QAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAFCvTAAAAAABgCUAAFCvTABQr0wAgCUAAFCvTABQr0wAgCUAAFCvTABQr0wAhCUAAFCvTAAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAGbR/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFCvTABQr0wAgCUAAFCvTABQr0wAgCUAADJ9LgBQr0wAgCUAAFCvTABQr0wAgCUAAFCvTAAueuAAgCUAAIqKigAueuAAhCUAAC564AAAAAABgCUAAIqKigAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFCvTABQr0wAgCUAADJ9LgBQr0wAgCUAAFCvTABQr0wAgCUAAC564AAueuAAgCUAAC564AAueuAAgCUAAB9IuAAueuAAgCUAAC564AAueuAAgCUAAC564AAfSLgAIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABegAAALCamgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAIqKigAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFCvTAAAAAABgCUAAFCvTAAwUnoAgCUAAFCvTAAAAAABgCUAAC564AAAAAABgCUAAB9IuAAwUnoAgCUAAC564AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB"
             },
             "children": []
            }
@@ -568,6 +639,58 @@
        {
         "type": "Box",
         "props": {
+         "key": "section-passive",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "────────────────────────────────"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Passive "
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "passive-toggle",
+               "label": "▲",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
          "key": "section-property",
          "flexDirection": "column"
         },
@@ -658,6 +781,58 @@
               "type": "Button",
               "props": {
                "key": "skills-toggle",
+               "label": "▲",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "section-tree",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "────────────────────────────────"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Party Combo (0) "
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tree-toggle",
                "label": "▲",
                "onPress": "[fn]"
               },
@@ -776,6 +951,58 @@
        {
         "type": "Box",
         "props": {
+         "key": "section-journal",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "────────────────────────────────"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Journal "
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "journal-toggle",
+               "label": "▲",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
          "flexDirection": "column"
         },
         "children": [
@@ -828,7 +1055,7 @@
              "color": "#5f7186"
             },
             "children": [
-             "v0.2.24"
+             "v0.5.1"
             ]
            }
           ]
@@ -838,15 +1065,36 @@
       ]
      },
      "title": "Slime"
+    },
+    "dungeon": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Raster",
+        "props": {
+         "key": "dungeon-scene",
+         "columns": 55,
+         "rows": 8,
+         "cells": "IAAAAAAAAAEAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABhCUAACZCawAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAFdQSQAAAAABhCUAAH11bAAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAFdQSQAAAAABhCUAAH11bAAAAAABhCUAAH11bAAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAAH11bAAAAAABhCUAAH11bAAAAAABIAAAAAAAAAEAAAABgCUAACZCawAmQmsAgCUAAD9rnAA/a5wAQwAAAMLo/wA/a5wATAAAAMLo/wA/a5wARQAAAMLo/wA/a5wAQQAAAMLo/wA/a5wAUgAAAMLo/wA/a5wARQAAAMLo/wA/a5wARAAAAMLo/wA/a5wAgCUAAD9rnAA/a5wAgCUAACZCawAmQmsAIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFdQSQBXUEkAgCUAAFdQSQAXoNQAgCUAAFdQSQAXoNQAgCUAAFdQSQBXUEkAgCUAAFdQSQBXUEkAgCUAAFdQSQBXUEkAgCUAAFdQSQBXUEkAgCUAAFdQSQBXUEkAgCUAAFdQSQAXoNQAgCUAAFdQSQAXoNQAgCUAAFdQSQBXUEkAIAAAAAAAAAEAAAABgCUAACZCawAmQmsAgCUAAD9rnAA/a5wAgCUAAD9rnAA/0v8AgCUAAD9rnAA/0v8AgCUAAD9rnAA/0v8AgCUAAD9rnAA/a5wAgCUAAD9rnAA/0v8AgCUAAD9rnAA/0v8AgCUAAD9rnAA/0v8AgCUAAD9rnAA/a5wAgCUAACZCawAmQmsAIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAH11bAB9dWwAgCUAABoWpAAaFqQAgCUAABoWpAAaFqQAgCUAAH11bAB9dWwAgCUAANTk6QAUCwsAgCUAANTk6QDU5OkAgCUAANTk6QAUCwsAgCUAAH11bAB9dWwAgCUAABoWpAAaFqQAgCUAABoWpAAaFqQAgCUAAFdQSQBXUEkAIAAAAAAAAAEAAAABgCUAACZCawAmQmsAgCUAAD9rnAA/a5wAgCUAAD/S/wA/0v8AgCUAAD9rnAA/a5wAgCUAAD/S/wA/0v8AgCUAAD9rnAA/a5wAgCUAAD/S/wA/0v8AgCUAAD9rnAA/a5wAgCUAAD/S/wA/0v8AgCUAAD9rnAA/a5wAgCUAACZCawAmQmsAIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhCUAABeg1AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCUAAFdQSQBXUEkAgCUAABoWpAAaFqQAgCUAABoWpAB9dWwAgCUAAFdQSQB9dWwAgCUAANTk6QBXUEkAgCUAAFdQSQB9dWwAgCUAANTk6QB9dWwAgCUAAFdQSQB9dWwAgCUAABoWpAAaFqQAgCUAABoWpAB9dWwAgCUAAFdQSQB9dWwAIAAAAAAAAAEAAAABgCUAACZCawAmQmsAgCUAAD9rnAA/a5wAgCUAAD/S/wA/0v8AgCUAAD9rnAA/0v8AgCUAAD/S/wA/0v8AgCUAAD9rnAA/a5wAgCUAAD/S/wA/0v8AgCUAAD9rnAA/0v8AgCUAAD/S/wA/0v8AgCUAAD9rnAA/a5wAgCUAACZCawAmQmsAIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "dungeon"
     }
    }
   },
   "script": [
    "$.process.run(date +%z) → exit 0",
-   "$.http.fetch(https://wttr.in/?format=%x|%S|%s|%T) → blocked in preview",
    "$.ui.open(slime-dashboard)",
-   "$.process.run(grep -o \"\\(customTitle\\|aiTitle\\)\":\"[^\"]*\" /Users/dev/.claude/projects/-work-app…) → exit 0",
    "$.http.fetch(https://raw.githubusercontent.com/egan-wu/slime-dashboard/main/.claude-plugin/plugin.json) → blocked in preview",
+   "$.process.run(grep -o \"\\(customTitle\\|aiTitle\\)\":\"[^\"]*\" /Users/dev/.claude/projects/-work-app…) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -866,8 +1114,80 @@
   "warnings": []
  },
  "validate": {
-  "ok": true,
-  "errors": [],
+  "ok": false,
+  "errors": [
+   "line 1: `import` reaches outside the file; the contract must be self-contained (no import, export … from, require or reference)",
+   "slime-dashboard.agents is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { agents: ... } }",
+   "slime-dashboard.behind is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { behind: ... } }",
+   "slime-dashboard.busy is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { busy: ... } }",
+   "slime-dashboard.cacheAt is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { cacheAt: ... } }",
+   "slime-dashboard.cacheTtl is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { cacheTtl: ... } }",
+   "slime-dashboard.catOrder is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { catOrder: ... } }",
+   "slime-dashboard.colorOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { colorOpen: ... } }",
+   "slime-dashboard.colors is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { colors: ... } }",
+   "slime-dashboard.comboCond is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboCond: ... } }",
+   "slime-dashboard.comboDelete is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboDelete: ... } }",
+   "slime-dashboard.comboEdits is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboEdits: ... } }",
+   "slime-dashboard.comboFold is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboFold: ... } }",
+   "slime-dashboard.comboFresh is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboFresh: ... } }",
+   "slime-dashboard.comboName is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboName: ... } }",
+   "slime-dashboard.comboPick is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboPick: ... } }",
+   "slime-dashboard.comboRename is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboRename: ... } }",
+   "slime-dashboard.comboSel is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboSel: ... } }",
+   "slime-dashboard.combos is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { combos: ... } }",
+   "slime-dashboard.displayOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { displayOpen: ... } }",
+   "slime-dashboard.effort is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { effort: ... } }",
+   "slime-dashboard.effortOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { effortOpen: ... } }",
+   "slime-dashboard.events is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { events: ... } }",
+   "slime-dashboard.eventsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { eventsOpen: ... } }",
+   "slime-dashboard.hidden is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { hidden: ... } }",
+   "slime-dashboard.iteration is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { iteration: ... } }",
+   "slime-dashboard.journal is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { journal: ... } }",
+   "slime-dashboard.journalOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { journalOpen: ... } }",
+   "slime-dashboard.journalWarmOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { journalWarmOpen: ... } }",
+   "slime-dashboard.lastTurnMs is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { lastTurnMs: ... } }",
+   "slime-dashboard.liveWeather is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { liveWeather: ... } }",
+   "slime-dashboard.minions is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { minions: ... } }",
+   "slime-dashboard.model is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { model: ... } }",
+   "slime-dashboard.modelOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { modelOpen: ... } }",
+   "slime-dashboard.monitorOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { monitorOpen: ... } }",
+   "slime-dashboard.order is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { order: ... } }",
+   "slime-dashboard.orderOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { orderOpen: ... } }",
+   "slime-dashboard.passiveOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { passiveOpen: ... } }",
+   "slime-dashboard.perfOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { perfOpen: ... } }",
+   "slime-dashboard.performance is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { performance: ... } }",
+   "slime-dashboard.propsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { propsOpen: ... } }",
+   "slime-dashboard.recentSessions is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { recentSessions: ... } }",
+   "slime-dashboard.renameDraft is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { renameDraft: ... } }",
+   "slime-dashboard.renameOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { renameOpen: ... } }",
+   "slime-dashboard.respawnConfirm is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { respawnConfirm: ... } }",
+   "slime-dashboard.sessionTitle is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { sessionTitle: ... } }",
+   "slime-dashboard.sessionsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { sessionsOpen: ... } }",
+   "slime-dashboard.settingsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { settingsOpen: ... } }",
+   "slime-dashboard.skillCatsClosed is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillCatsClosed: ... } }",
+   "slime-dashboard.skillOrder is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillOrder: ... } }",
+   "slime-dashboard.skillPieces is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillPieces: ... } }",
+   "slime-dashboard.skillPrompt is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillPrompt: ... } }",
+   "slime-dashboard.skillTops is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillTops: ... } }",
+   "slime-dashboard.skills is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skills: ... } }",
+   "slime-dashboard.skillsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillsOpen: ... } }",
+   "slime-dashboard.squad is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squad: ... } }",
+   "slime-dashboard.squadCleared is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadCleared: ... } }",
+   "slime-dashboard.squadDrafts is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadDrafts: ... } }",
+   "slime-dashboard.squadNow is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadNow: ... } }",
+   "slime-dashboard.squadOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadOpen: ... } }",
+   "slime-dashboard.squadSeq is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadSeq: ... } }",
+   "slime-dashboard.tally is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { tally: ... } }",
+   "slime-dashboard.treeOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { treeOpen: ... } }",
+   "slime-dashboard.turnStartedAt is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { turnStartedAt: ... } }",
+   "slime-dashboard.unloading is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { unloading: ... } }",
+   "slime-dashboard.vitals is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { vitals: ... } }",
+   "slime-dashboard.waiting is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { waiting: ... } }",
+   "slime-dashboard.warmAuto is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { warmAuto: ... } }",
+   "slime-dashboard.warmPrefix is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { warmPrefix: ... } }",
+   "slime-dashboard.weather is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { weather: ... } }",
+   "slime-dashboard.width is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { width: ... } }"
+  ],
   "warnings": [
    "No author information provided. Consider adding author details for plugin attribution"
   ],
@@ -878,63 +1198,92 @@
    "command.run{command=compact}",
    "session.compact",
    "turn.start",
+   "agent.offer",
    "agent.spawn",
    "turn.step",
+   "tool.call{tool=?}",
    "tool.call",
    "classic.UserPromptSubmit",
    "classic.Notification",
    "turn.complete",
    "session.measure",
-   "ui.render{component=Pane, requestId=slime-dashboard}"
+   "ui.render{component=Pane, requestId=slime-dashboard}",
+   "ui.render{component=Pane, requestId=dungeon}"
   ],
   "calls": [
-   "$.agent.list (via checkMinions)",
-   "$.clock.after (via refreshWeather)",
+   "$.agent.list",
+   "$.agent.spawn (via runCombo)",
+   "$.clock.after",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
    "$.command.run (via pickEffort",
    "pickModel",
-   "pressSign",
    "reloadDashboard",
+   "renameTo",
    "respawn",
+   "resumeSession",
    "runSkill",
    "updatePlugin)",
    "$.env.get (via checkFreshness",
-   "readSessionTitle)",
-   "$.fs.read (via checkFreshness)",
+   "projectDir",
+   "refreshCacheTtl)",
+   "$.fs.list (via pressSessions)",
+   "$.fs.read (via checkFreshness",
+   "refreshCacheTtl)",
    "$.http.fetch (via checkFreshness",
    "refreshWeather)",
-   "$.process.run (via readLocalZone",
-   "readSessionTitle",
-   "updatePlugin)",
-   "$.session.cwd (via readSessionTitle)",
-   "$.session.id (via readSessionTitle)",
+   "$.model.fork (via warmBeat)",
+   "$.process.run",
+   "$.prompt.submit (via runCombo)",
+   "$.session.cwd (via projectDir",
+   "refreshCacheTtl)",
+   "$.session.id (via pressSessions",
+   "readSessionTitle)",
    "$.session.model (via refreshModel)",
    "$.session.usage (via refreshVitals)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
-   "$.store.set (via nudgeWidth",
+   "$.store.set (via addJournal",
+   "firstStep",
+   "moveCategory",
+   "nudgeWidth",
+   "setCombos",
+   "setLiveWeather",
    "setOrder",
    "setPerf",
    "setSkills",
    "setSlimeColors",
+   "skillUp",
    "toggleSection)",
    "$.tool.call (via stopMinion)",
+   "$.tool.register",
+   "$.ui.ask",
    "$.ui.blit",
-   "$.ui.invalidate",
-   "$.ui.open (via openPane)",
-   "$.ui.resolve",
-   "$.ui.toast (via respawn",
-   "runSkill",
-   "updatePlugin)"
+   "$.ui.focus (via keepPiece",
+   "movePiece)",
+   "$… [+122 chars]"
   ],
   "stateReads": [
+   "slime-dashboard.agents",
    "slime-dashboard.behind",
    "slime-dashboard.busy",
+   "slime-dashboard.cacheAt",
+   "slime-dashboard.cacheTtl",
+   "slime-dashboard.catOrder",
    "slime-dashboard.colorOpen",
    "slime-dashboard.colors",
+   "slime-dashboard.comboCond",
+   "slime-dashboard.comboDelete",
+   "slime-dashboard.comboEdits",
+   "slime-dashboard.comboFold",
+   "slime-dashboard.comboFresh",
+   "slime-dashboard.comboName",
+   "slime-dashboard.comboPick",
+   "slime-dashboard.comboRename",
+   "slime-dashboard.comboSel",
+   "slime-dashboard.combos",
    "slime-dashboard.displayOpen",
    "slime-dashboard.effort",
    "slime-dashboard.effortOpen",
@@ -942,38 +1291,38 @@
    "slime-dashboard.eventsOpen",
    "slime-dashboard.hidden",
    "slime-dashboard.iteration",
+   "slime-dashboard.journal",
+   "slime-dashboard.journalOpen",
+   "slime-dashboard.journalWarmOpen",
    "slime-dashboard.lastTurnMs",
+   "slime-dashboard.liveWeather",
    "slime-dashboard.minions",
    "slime-dashboard.model",
    "slime-dashboard.modelOpen",
    "slime-dashboard.monitorOpen",
    "slime-dashboard.order",
    "slime-dashboard.orderOpen",
-   "slime-dashboard.perfOpen",
-   "slime-dashboard.performance",
-   "slime-dashboard.propsOpen",
-   "slime-dashboard.renameDraft",
-   "slime-dashboard.renameOpen",
-   "slime-dashboard.respawnConfirm",
-   "slime-dashboard.sessionTitle",
-   "slime-dashboard.settingsOpen",
-   "slime-dashboard.skillCatsClosed",
-   "slime-dashboard.skillPrompt",
-   "slime-dashboard.skillTops",
-   "slime-dashboard.skills",
-   "slime-dashboard.skillsOpen",
-   "slime-dashboard.tally",
-   "slime-dashboard.turnStartedAt",
-   "slime-dashboard.unloading",
-   "slime-dashboard.vitals",
-   "slime-dashboard.waiting",
-   "slime-d… [+39 chars]"
+   "slime-dashboard.pass… [+917 chars]"
   ],
   "stateWrites": [
+   "slime-dashboard.agents",
    "slime-dashboard.behind",
    "slime-dashboard.busy",
+   "slime-dashboard.cacheAt",
+   "slime-dashboard.cacheTtl",
+   "slime-dashboard.catOrder",
    "slime-dashboard.colorOpen",
    "slime-dashboard.colors",
+   "slime-dashboard.comboCond",
+   "slime-dashboard.comboDelete",
+   "slime-dashboard.comboEdits",
+   "slime-dashboard.comboFold",
+   "slime-dashboard.comboFresh",
+   "slime-dashboard.comboName",
+   "slime-dashboard.comboPick",
+   "slime-dashboard.comboRename",
+   "slime-dashboard.comboSel",
+   "slime-dashboard.combos",
    "slime-dashboard.displayOpen",
    "slime-dashboard.effort",
    "slime-dashboard.effortOpen",
@@ -981,45 +1330,38 @@
    "slime-dashboard.eventsOpen",
    "slime-dashboard.hidden",
    "slime-dashboard.iteration",
+   "slime-dashboard.journal",
+   "slime-dashboard.journalOpen",
+   "slime-dashboard.journalWarmOpen",
    "slime-dashboard.lastTurnMs",
+   "slime-dashboard.liveWeather",
    "slime-dashboard.minions",
    "slime-dashboard.model",
    "slime-dashboard.modelOpen",
    "slime-dashboard.monitorOpen",
    "slime-dashboard.order",
    "slime-dashboard.orderOpen",
-   "slime-dashboard.perfOpen",
-   "slime-dashboard.performance",
-   "slime-dashboard.propsOpen",
-   "slime-dashboard.renameDraft",
-   "slime-dashboard.renameOpen",
-   "slime-dashboard.respawnConfirm",
-   "slime-dashboard.sessionTitle",
-   "slime-dashboard.settingsOpen",
-   "slime-dashboard.skillCatsClosed",
-   "slime-dashboard.skillPrompt",
-   "slime-dashboard.skillTops",
-   "slime-dashboard.skills",
-   "slime-dashboard.skillsOpen",
-   "slime-dashboard.tally",
-   "slime-dashboard.turnStartedAt",
-   "slime-dashboard.unloading",
-   "slime-dashboard.vitals",
-   "slime-dashboard.waiting",
-   "slime-… [+40 chars]"
+   "slime-dashboard.pas… [+918 chars]"
   ],
   "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
    "CLAUDE_CONFIG_DIR",
    "HOME"
   ],
   "raw": {
-   "success": true,
+   "success": false,
    "strict": false,
    "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/egan-wu-slime-dashboard/.claude-plugin/plugin.json",
    "manifest": {
     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/egan-wu-slime-dashboard/.claude-plugin/plugin.json",
     "type": "plugin",
-    "errors": [],
+    "errors": [
+     {
+      "path": "types",
+      "message": "line 1: `import` reaches outside the file; the contract must be self-contained (no import, export … from, require or reference)",
+      "code": null
+     }
+    ],
     "warnings": [
      {
       "path": "author",
@@ -1027,33 +1369,383 @@
       "code": null
      }
     ],
-    "notes": [
-     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: slime-dashboard.busy, slime-dashboard.model, slime-dashboard.minions, slime-dashboard.weather, slime-dashboard.vitals, slime-dashboard.sessionTitle, slime-dashboard.renameOpen, slime-dashboard.renameDraft, slime-dashboard.respawnConfirm, slime-dashboard.performance, slime-dashboard.perfOpen, slime-dashboard.waiting, slime-dashboard.skills, slime-dashboard.skillsOpen, slime-dashboard.skillPrompt, slime-dashboard.skillTops, slime-dashboard.skillCatsClosed, slime-dashboard.propsOpen, slime-dashboard.tally, slime-dashboard.iteration, slime-dashboard.lastTurnMs, slime-dashboard.turnStartedAt, slime-dashboard.effort, slime-dashboard.effortOpen, slime-dashboard.modelOpen, slime-dashboard.events, slime-dashboard.monitorOpen, slime-dashboard.eventsOpen, slime-dashboard.settingsOpen, slime-dashboard.displayOpen, slime-dashboard.hidden, slime-dashboard.colorOpen, slime-dashboard.colors, slime-dashboard.unloading, slime-dashboard.orderOpen, slime-dashboard.… [+13 chars]"
-    ],
+    "notes": [],
     "gatingHooks": []
    },
    "contents": [
     {
      "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/egan-wu-slime-dashboard/hooks/hooks.json",
      "type": "hooks",
-     "errors": [],
+     "errors": [
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.agents is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { agents: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.behind is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { behind: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.busy is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { busy: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.cacheAt is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { cacheAt: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.cacheTtl is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { cacheTtl: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.catOrder is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { catOrder: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.colorOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { colorOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.colors is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { colors: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboCond is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboCond: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboDelete is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboDelete: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboEdits is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboEdits: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboFold is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboFold: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboFresh is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboFresh: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboName is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboName: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboPick is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboPick: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboRename is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboRename: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.comboSel is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { comboSel: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.combos is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { combos: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.displayOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { displayOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.effort is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { effort: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.effortOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { effortOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.events is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { events: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.eventsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { eventsOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.hidden is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { hidden: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.iteration is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { iteration: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.journal is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { journal: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.journalOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { journalOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.journalWarmOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { journalWarmOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.lastTurnMs is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { lastTurnMs: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.liveWeather is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { liveWeather: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.minions is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { minions: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.model is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { model: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.modelOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { modelOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.monitorOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { monitorOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.order is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { order: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.orderOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { orderOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.passiveOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { passiveOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.perfOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { perfOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.performance is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { performance: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.propsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { propsOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.recentSessions is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { recentSessions: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.renameDraft is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { renameDraft: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.renameOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { renameOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.respawnConfirm is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { respawnConfirm: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.sessionTitle is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { sessionTitle: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.sessionsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { sessionsOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.settingsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { settingsOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.skillCatsClosed is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillCatsClosed: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.skillOrder is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillOrder: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.skillPieces is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillPieces: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.skillPrompt is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillPrompt: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.skillTops is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillTops: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.skills is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skills: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.skillsOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { skillsOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.squad is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squad: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.squadCleared is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadCleared: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.squadDrafts is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadDrafts: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.squadNow is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadNow: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.squadOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.squadSeq is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { squadSeq: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.tally is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { tally: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.treeOpen is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { treeOpen: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.turnStartedAt is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { turnStartedAt: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.unloading is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { unloading: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.vitals is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { vitals: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.waiting is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { waiting: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.warmAuto is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { warmAuto: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.warmPrefix is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { warmPrefix: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.weather is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { weather: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "slime-dashboard.width is not declared: the manifest's types contract must name it in interface PluginState { slime-dashboard: { width: ... } }",
+       "code": null
+      }
+     ],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=slime-dashboard}, command.run{command=effort}, command.run{command=compact}, session.compact, turn.start, agent.spawn, turn.step, tool.call, classic.UserPromptSubmit, classic.Notification, turn.complete, session.measure, ui.render{component=Pane, requestId=slime-dashboard}",
+      "./register.tsx hooks: session.start, command.run{command=slime-dashboard}, command.run{command=effort}, command.run{command=compact}, session.compact, turn.start, agent.offer, agent.spawn, turn.step, tool.call{tool=?}, tool.call, classic.UserPromptSubmit, classic.Notification, turn.complete, session.measure, ui.render{component=Pane, requestId=slime-dashboard}, ui.render{component=Pane, requestId=dungeon}",
       "./register.tsx answers its own command: command.run{command=slime-dashboard}",
       "./register.tsx gating hook with .catch: command.run{command=effort}",
       "./register.tsx gating hook with .catch: command.run{command=compact}",
       "./register.tsx gating hook with .catch: session.compact",
+      "./register.tsx gating hook with .catch: agent.offer",
       "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: tool.call{tool=?}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: classic.UserPromptSubmit",
       "./register.tsx gating hook with .catch: classic.Notification",
-      "./register.tsx calls: $.agent.list (via checkMinions), $.clock.after (via refreshWeather), $.clock.every, $.clock.now, $.command.register, $.command.run (via pickEffort, pickModel, pressSign, reloadDashboard, respawn, runSkill, updatePlugin), $.env.get (via checkFreshness, readSessionTitle), $.fs.read (via checkFreshness), $.http.fetch (via checkFreshness, refreshWeather), $.process.run (via readLocalZone, readSessionTitle, updatePlugin), $.session.cwd (via readSessionTitle), $.session.id (via readSessionTitle), $.session.model (via refreshModel), $.session.usage (via refreshVitals), $.state.get, $.state.set, $.store.get, $.store.set (via nudgeWidth, setOrder, setPerf, setSkills, setSlimeColors, toggleSection), $.tool.call (via stopMinion), $.ui.blit, $.ui.invalidate, $.ui.open (via openPane), $.ui.resolve, $.ui.toast (via respawn, runSkill, updatePlugin)",
+      "./register.tsx calls: $.agent.list, $.agent.spawn (via runCombo), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via pickEffort, pickModel, reloadDashboard, renameTo, respawn, resumeSession, runSkill, updatePlugin), $.env.get (via checkFreshness, projectDir, refreshCacheTtl), $.fs.list (via pressSessions), $.fs.read (via checkFreshness, refreshCacheTtl), $.http.fetch (via checkFreshness, refreshWeather), $.model.fork (via warmBeat), $.process.run, $.prompt.submit (via runCombo), $.session.cwd (via projectDir, refreshCacheTtl), $.session.id (via pressSessions, readSessionTitle), $.session.model (via refreshModel), $.session.usage (via refreshVitals), $.state.get, $.state.set, $.store.get, $.store.set (via addJournal, firstStep, moveCategory, nudgeWidth, setCombos, setLiveWeather, setOrder, setPerf, setSkills, setSlimeColors, skillUp, toggleSection), $.tool.call (via stopMinion), $.tool.register, $.ui.ask, $.ui.blit, $.ui.focus (via keepPiece, movePiece), $… [+122 chars]",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: slime-dashboard.behind, slime-dashboard.busy, slime-dashboard.colorOpen, slime-dashboard.colors, slime-dashboard.displayOpen, slime-dashboard.effort, slime-dashboard.effortOpen, slime-dashboard.events, slime-dashboard.eventsOpen, slime-dashboard.hidden, slime-dashboard.iteration, slime-dashboard.lastTurnMs, slime-dashboard.minions, slime-dashboard.model, slime-dashboard.modelOpen, slime-dashboard.monitorOpen, slime-dashboard.order, slime-dashboard.orderOpen, slime-dashboard.perfOpen, slime-dashboard.performance, slime-dashboard.propsOpen, slime-dashboard.renameDraft, slime-dashboard.renameOpen, slime-dashboard.respawnConfirm, slime-dashboard.sessionTitle, slime-dashboard.settingsOpen, slime-dashboard.skillCatsClosed, slime-dashboard.skillPrompt, slime-dashboard.skillTops, slime-dashboard.skills, slime-dashboard.skillsOpen, slime-dashboard.tally, slime-dashboard.turnStartedAt, slime-dashboard.unloading, slime-dashboard.vitals, slime-dashboard.waiting, slime-… [+40 chars]",
-      "./register.tsx state reads: slime-dashboard.behind, slime-dashboard.busy, slime-dashboard.colorOpen, slime-dashboard.colors, slime-dashboard.displayOpen, slime-dashboard.effort, slime-dashboard.effortOpen, slime-dashboard.events, slime-dashboard.eventsOpen, slime-dashboard.hidden, slime-dashboard.iteration, slime-dashboard.lastTurnMs, slime-dashboard.minions, slime-dashboard.model, slime-dashboard.modelOpen, slime-dashboard.monitorOpen, slime-dashboard.order, slime-dashboard.orderOpen, slime-dashboard.perfOpen, slime-dashboard.performance, slime-dashboard.propsOpen, slime-dashboard.renameDraft, slime-dashboard.renameOpen, slime-dashboard.respawnConfirm, slime-dashboard.sessionTitle, slime-dashboard.settingsOpen, slime-dashboard.skillCatsClosed, slime-dashboard.skillPrompt, slime-dashboard.skillTops, slime-dashboard.skills, slime-dashboard.skillsOpen, slime-dashboard.tally, slime-dashboard.turnStartedAt, slime-dashboard.unloading, slime-dashboard.vitals, slime-dashboard.waiting, slime-d… [+39 chars]"
+      "./register.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, CLAUDE_CONFIG_DIR, HOME",
+      "./register.tsx state writes: slime-dashboard.agents, slime-dashboard.behind, slime-dashboard.busy, slime-dashboard.cacheAt, slime-dashboard.cacheTtl, slime-dashboard.catOrder, slime-dashboard.colorOpen, slime-dashboard.colors, slime-dashboard.comboCond, slime-dashboard.comboDelete, slime-dashboard.comboEdits, slime-dashboard.comboFold, slime-dashboard.comboFresh, slime-dashboard.comboName, slime-dashboard.comboPick, slime-dashboard.comboRename, slime-dashboard.comboSel, slime-dashboard.combos, slime-dashboard.displayOpen, slime-dashboard.effort, slime-dashboard.effortOpen, slime-dashboard.events, slime-dashboard.eventsOpen, slime-dashboard.hidden, slime-dashboard.iteration, slime-dashboard.journal, slime-dashboard.journalOpen, slime-dashboard.journalWarmOpen, slime-dashboard.lastTurnMs, slime-dashboard.liveWeather, slime-dashboard.minions, slime-dashboard.model, slime-dashboard.modelOpen, slime-dashboard.monitorOpen, slime-dashboard.order, slime-dashboard.orderOpen, slime-dashboard.pas… [+918 chars]",
+      "./register.tsx state reads: slime-dashboard.agents, slime-dashboard.behind, slime-dashboard.busy, slime-dashboard.cacheAt, slime-dashboard.cacheTtl, slime-dashboard.catOrder, slime-dashboard.colorOpen, slime-dashboard.colors, slime-dashboard.comboCond, slime-dashboard.comboDelete, slime-dashboard.comboEdits, slime-dashboard.comboFold, slime-dashboard.comboFresh, slime-dashboard.comboName, slime-dashboard.comboPick, slime-dashboard.comboRename, slime-dashboard.comboSel, slime-dashboard.combos, slime-dashboard.displayOpen, slime-dashboard.effort, slime-dashboard.effortOpen, slime-dashboard.events, slime-dashboard.eventsOpen, slime-dashboard.hidden, slime-dashboard.iteration, slime-dashboard.journal, slime-dashboard.journalOpen, slime-dashboard.journalWarmOpen, slime-dashboard.lastTurnMs, slime-dashboard.liveWeather, slime-dashboard.minions, slime-dashboard.model, slime-dashboard.modelOpen, slime-dashboard.monitorOpen, slime-dashboard.order, slime-dashboard.orderOpen, slime-dashboard.pass… [+917 chars]"
      ],
      "gatingHooks": [
       {
@@ -1076,8 +1768,20 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
        "hasCatch": true
       },
       {
@@ -1100,8 +1804,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "782c425bdc364f12"
+ "sourceHash": "143b56818477d08e"
 }

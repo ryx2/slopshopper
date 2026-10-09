@@ -1,6 +1,6 @@
 {
  "slug": "a1exk-dev-claude-tui-ctui",
- "generatedAt": "2026-10-07T15:22:43.586Z",
+ "generatedAt": "2026-10-09T15:32:54.883Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,12 @@
    },
    {
     "event": "tool.describe"
+   },
+   {
+    "event": "classic.CwdChanged"
+   },
+   {
+    "event": "classic.PostToolUse"
    },
    {
     "event": "tool.call"
@@ -83,6 +89,9 @@
       "kind": "task-notification"
      }
     }
+   },
+   {
+    "event": "skill.prompt"
    },
    {
     "event": "session.end"
@@ -180,65 +189,59 @@
    {
     "event": "command.run",
     "matcher": {
-     "command": "ctui:theme"
-    }
-   },
-   {
-    "event": "command.run",
-    "matcher": {
-     "command": "ctui:plugins:enable"
-    }
-   },
-   {
-    "event": "command.run",
-    "matcher": {
-     "command": "ctui:plugins:disable"
+     "command": "ctui"
     }
    },
    {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
-     "requestId": "ctui-theme"
+     "requestId": "ctui"
     }
    },
    {
-    "event": "ui.select",
-    "matcher": {
-     "plugin": "ctui",
-     "element": "theme"
-    }
-   },
-   {
-    "event": "ui.render",
+    "event": "ui.focus",
     "matcher": {
      "component": "Pane",
-     "requestId": "ctui-enable"
+     "requestId": "ctui"
     }
    },
    {
-    "event": "ui.select",
-    "matcher": {
-     "plugin": "ctui",
-     "element": "enable"
-    }
-   },
-   {
-    "event": "ui.render",
+    "event": "ui.press",
     "matcher": {
      "component": "Pane",
-     "requestId": "ctui-disable"
+     "requestId": "ctui"
     }
    },
    {
-    "event": "ui.select",
+    "event": "ui.input",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "ctui"
+    }
+   },
+   {
+    "event": "ui.input",
     "matcher": {
      "plugin": "ctui",
-     "element": "disable"
+     "element": "menu-filter"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "ctui"
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "ctui",
+    "description": "ctui: Sidebar plugins and themes",
+    "immediate": true,
+    "output": "Can't change ctui settings in claude -p. Use /config in an interactive session."
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -246,22 +249,25 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 34,
+   "$.command.register": 1,
+   "$.state.get": 42,
    "$.env.get": 12,
    "$.env.set": 1,
-   "$.state.set": 8,
+   "$.state.set": 9,
    "$.session.model": 1,
-   "$.settings.read": 1,
+   "$.settings.read": 3,
    "$.tool.list": 1,
-   "$.session.cwd": 9,
-   "$.fs.read": 2,
-   "$.session.usage": 1,
-   "$.config.list": 1,
+   "$.session.cwd": 10,
+   "$.fs.read": 6,
+   "$.session.usage": 2,
+   "$.config.list": 2,
    "$.clock.every": 1,
+   "$.command.list": 1,
+   "$.session.messages": 1,
    "$.process.run": 24,
-   "$.clock.now": 2,
+   "$.clock.now": 3,
    "$.clock.after": 4,
-   "$.ui.resolve": 7
+   "$.ui.resolve": 5
   },
   "timers": [
    {
@@ -452,16 +458,6 @@
            "wrap": "truncate-end"
           },
           "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "inactive"
-            },
-            "children": [
-             "⎇"
-            ]
-           },
-           " ",
            ""
           ]
          }
@@ -482,10 +478,54 @@
            "wrap": "truncate-end"
           },
           "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             ""
+            ]
+           },
+           " ",
            ""
           ]
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "subtle"
+          },
+          "children": [
+           "════════════════════════════════════════════════════"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": []
        },
        {
         "type": "Box",
@@ -500,35 +540,41 @@
            "key": "fold-context",
            "module": "./press.tsx",
            "props": {
-            "label": "▾",
+            "label": "▼",
             "color": "inactive",
-            "hover": "text"
+            "hover": "suggestion",
+            "scope": "foldrow-context"
            }
           },
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Client",
           "props": {
-           "bold": true,
-           "color": "text",
-           "wrap": "truncate-end"
-          },
-          "children": [
-           " ",
-           "Context"
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
+           "key": "foldrow-context",
+           "module": "./foldrow.tsx",
+           "width": 51,
            "flexGrow": 1,
-           "justifyContent": "flex-end",
-           "paddingLeft": 1
+           "props": {
+            "title": "Context",
+            "right": null,
+            "main": "text",
+            "muted": "inactive",
+            "accent": "suggestion",
+            "scope": "foldrow-context"
+           }
           },
           "children": []
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": []
        },
        {
         "type": "Box",
@@ -582,34 +628,16 @@
         },
         "children": [
          {
-          "type": "Box",
+          "type": "Text",
           "props": {
-           "flexGrow": 1,
-           "justifyContent": "space-between"
+           "color": "inactive",
+           "wrap": "truncate-end"
           },
           "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "inactive",
-             "wrap": "truncate-end"
-            },
-            "children": [
-             "97,400",
-             " / ",
-             "200k",
-             " tokens"
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "inactive"
-            },
-            "children": [
-             "$0.42"
-            ]
-           }
+           "97,400",
+           " / ",
+           "200k",
+           " tokens"
           ]
          }
         ]
@@ -618,18 +646,24 @@
         "type": "Box",
         "props": {
          "height": 1,
-         "flexShrink": 0,
-         "paddingLeft": 0
+         "flexShrink": 0
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
         },
         "children": [
          {
           "type": "Text",
           "props": {
-           "color": "text",
-           "wrap": "truncate-end"
+           "color": "subtle"
           },
           "children": [
-           ""
+           "────────────────────────────────────────────────────"
           ]
          }
         ]
@@ -647,35 +681,41 @@
            "key": "fold-limits",
            "module": "./press.tsx",
            "props": {
-            "label": "▾",
+            "label": "▼",
             "color": "inactive",
-            "hover": "text"
+            "hover": "suggestion",
+            "scope": "foldrow-limits"
            }
           },
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Client",
           "props": {
-           "bold": true,
-           "color": "text",
-           "wrap": "truncate-end"
-          },
-          "children": [
-           " ",
-           "Limits"
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
+           "key": "foldrow-limits",
+           "module": "./foldrow.tsx",
+           "width": 51,
            "flexGrow": 1,
-           "justifyContent": "flex-end",
-           "paddingLeft": 1
+           "props": {
+            "title": "Limits",
+            "right": null,
+            "main": "text",
+            "muted": "inactive",
+            "accent": "suggestion",
+            "scope": "foldrow-limits"
+           }
           },
           "children": []
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": []
        },
        {
         "type": "Box",
@@ -748,21 +788,9 @@
         "type": "Box",
         "props": {
          "height": 1,
-         "flexShrink": 0,
-         "paddingLeft": 0
+         "flexShrink": 0
         },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "color": "text",
-           "wrap": "truncate-end"
-          },
-          "children": [
-           ""
-          ]
-         }
-        ]
+        "children": []
        },
        {
         "type": "Box",
@@ -772,68 +800,12 @@
         },
         "children": [
          {
-          "type": "Client",
-          "props": {
-           "key": "fold-mcp",
-           "module": "./press.tsx",
-           "props": {
-            "label": "▾",
-            "color": "inactive",
-            "hover": "text"
-           }
-          },
-          "children": []
-         },
-         {
           "type": "Text",
           "props": {
-           "bold": true,
-           "color": "text",
-           "wrap": "truncate-end"
+           "color": "subtle"
           },
           "children": [
-           " ",
-           "MCP"
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
-           "flexGrow": 1,
-           "justifyContent": "flex-end",
-           "paddingLeft": 1
-          },
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "inactive",
-             "wrap": "truncate-end"
-            },
-            "children": [
-             "0/0"
-            ]
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "height": 1,
-         "flexShrink": 0,
-         "paddingLeft": 0
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "color": "text",
-           "wrap": "truncate-end"
-          },
-          "children": [
-           ""
+           "────────────────────────────────────────────────────"
           ]
          }
         ]
@@ -851,35 +823,41 @@
            "key": "fold-todo",
            "module": "./press.tsx",
            "props": {
-            "label": "▾",
+            "label": "▼",
             "color": "inactive",
-            "hover": "text"
+            "hover": "suggestion",
+            "scope": "foldrow-todo"
            }
           },
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Client",
           "props": {
-           "bold": true,
-           "color": "text",
-           "wrap": "truncate-end"
-          },
-          "children": [
-           " ",
-           "Todo"
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
+           "key": "foldrow-todo",
+           "module": "./foldrow.tsx",
+           "width": 51,
            "flexGrow": 1,
-           "justifyContent": "flex-end",
-           "paddingLeft": 1
+           "props": {
+            "title": "Todo",
+            "right": null,
+            "main": "text",
+            "muted": "inactive",
+            "accent": "suggestion",
+            "scope": "foldrow-todo"
+           }
           },
           "children": []
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": []
        },
        {
         "type": "Box",
@@ -905,18 +883,24 @@
         "type": "Box",
         "props": {
          "height": 1,
-         "flexShrink": 0,
-         "paddingLeft": 0
+         "flexShrink": 0
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
         },
         "children": [
          {
           "type": "Text",
           "props": {
-           "color": "text",
-           "wrap": "truncate-end"
+           "color": "subtle"
           },
           "children": [
-           ""
+           "────────────────────────────────────────────────────"
           ]
          }
         ]
@@ -931,49 +915,44 @@
          {
           "type": "Client",
           "props": {
-           "key": "fold-agents",
+           "key": "fold-skills",
            "module": "./press.tsx",
            "props": {
-            "label": "▾",
+            "label": "▼",
             "color": "inactive",
-            "hover": "text"
+            "hover": "suggestion",
+            "scope": "foldrow-skills"
            }
           },
           "children": []
          },
          {
-          "type": "Text",
+          "type": "Client",
           "props": {
-           "bold": true,
-           "color": "text",
-           "wrap": "truncate-end"
-          },
-          "children": [
-           " ",
-           "Agents & shells"
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
+           "key": "foldrow-skills",
+           "module": "./foldrow.tsx",
+           "width": 51,
            "flexGrow": 1,
-           "justifyContent": "flex-end",
-           "paddingLeft": 1
-          },
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "inactive",
-             "wrap": "truncate-end"
-            },
-            "children": [
-             "0 running"
-            ]
+           "props": {
+            "title": "Skills",
+            "right": "0",
+            "main": "text",
+            "muted": "inactive",
+            "accent": "suggestion",
+            "scope": "foldrow-skills"
            }
-          ]
+          },
+          "children": []
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": []
        },
        {
         "type": "Box",
@@ -986,11 +965,29 @@
          {
           "type": "Text",
           "props": {
-           "color": "inactive",
-           "wrap": "truncate-end"
+           "color": "subtle"
           },
           "children": [
-           "nothing running"
+           "no skills used yet"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "height": 1,
+         "flexShrink": 0,
+         "justifyContent": "flex-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "inactive"
+          },
+          "children": [
+           "↓ more"
           ]
          }
         ]
@@ -1006,97 +1003,9 @@
      },
      "title": "sidebar"
     },
-    "ctui-theme": {
+    "ctui": {
      "ok": "engine",
-     "title": "ctui-theme"
-    },
-    "ctui-enable": {
-     "ok": true,
-     "tree": {
-      "type": "Box",
-      "props": {
-       "flexDirection": "column",
-       "paddingX": 2,
-       "paddingY": 1
-      },
-      "children": [
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "Enable a Sidebar plugin"
-        ]
-       },
-       {
-        "type": "Select",
-        "props": {
-         "key": "enable",
-         "options": [],
-         "autoFocus": true,
-         "onSelect": "[fn]"
-        },
-        "children": []
-       }
-      ]
-     },
-     "title": "ctui-enable"
-    },
-    "ctui-disable": {
-     "ok": true,
-     "tree": {
-      "type": "Box",
-      "props": {
-       "flexDirection": "column",
-       "paddingX": 2,
-       "paddingY": 1
-      },
-      "children": [
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "Disable a Sidebar plugin"
-        ]
-       },
-       {
-        "type": "Select",
-        "props": {
-         "key": "disable",
-         "options": [
-          {
-           "value": "git"
-          },
-          {
-           "value": "context"
-          },
-          {
-           "value": "limits"
-          },
-          {
-           "value": "mcp"
-          },
-          {
-           "value": "todo"
-          },
-          {
-           "value": "agents"
-          },
-          {
-           "value": "versions"
-          }
-         ],
-         "autoFocus": true,
-         "onSelect": "[fn]"
-        },
-        "children": []
-       }
-      ]
-     },
-     "title": "ctui-disable"
+     "title": "ctui"
     }
    }
   },
@@ -1136,6 +1045,7 @@
    "$.process.run(git --no-optional-locks stash list) → exit 0",
    "$.process.run(git --no-optional-locks diff --numstat HEAD) → exit 0",
    "turn.complete",
+   "/ctui → Can't change ctui settings in claude -p. Use /config in an interactive session.",
    "ui.render: hook threw ENOENT: no such file /plugins/ctui/.claude-plugin/plugin.json"
   ],
   "console": [],
@@ -1149,6 +1059,8 @@
    "session.start",
    "session.measure",
    "tool.describe",
+   "classic.CwdChanged",
+   "classic.PostToolUse",
    "tool.call",
    "tool.call{tool=TaskCreate}",
    "tool.call{tool=TaskUpdate}",
@@ -1163,6 +1075,7 @@
    "message has {name=queued_command}}",
    "session.append{door=prompt",
    "origin has {kind=task-notification}}",
+   "skill.prompt",
    "session.end",
    "ui.render{component=SessionMode}",
    "ui.render{component=PromptHint}",
@@ -1180,8 +1093,7 @@
    "classic.UserPromptSubmit",
    "classic.Stop",
    "turn.complete",
-   "ui.render{component=TurnDuration}",
-   "command.run{command=ctui… [+167 chars]"
+   "ui.r… [+278 chars]"
   ],
   "calls": [
    "$.agent.list (via refreshAgents)",
@@ -1189,39 +1101,44 @@
    "$.clock.every",
    "$.clock.now",
    "$.clock.sleep (via drainToasts)",
-   "$.config.list (via refreshGlass",
-   "runCommand)",
-   "$.config.set (via pick",
-   "runCommand)",
+   "$.command.list (via skillCatalog)",
+   "$.command.register (via registerMenu)",
+   "$.config.list (via hasConfig",
+   "refreshGlass)",
+   "$.config.set (via writeSetting)",
    "$.env.get",
    "$.env.set (via setTodoEnv)",
    "$.fs.exists (via projectOf)",
+   "$.fs.list (via listTranscripts)",
    "$.fs.read (via loadVersions",
-   "readDisabled",
+   "readClaudeJson",
    "refreshGlass",
+   "serverNames",
    "themeLook",
+   "themeNamesOf",
    "themesOf)",
    "$.fs.stat",
-   "$.process.run (via refreshGit)",
+   "$.process.run (via refreshGit",
+   "scanMonth)",
    "$.session.cwd",
-   "$.session.messages (via loadTodo)",
+   "$.session.id (via refreshMonth",
+   "scanMonth)",
+   "$.session.messages (via loadTodo",
+   "refillSkills)",
    "$.session.model (via refreshModel)",
-   "$.session.usage (via loadUsage)",
+   "$.session.usage (via loadUsage",
+   "skillCatalog)",
    "$.session.version (via loadVersions)",
-   "$.settings.read (via refreshModel)",
+   "$.settings.read (via readMcpFiles",
+   "refreshModel)",
    "$.state.get",
    "$.state.set",
+   "$.store.delete (via scanMonth)",
+   "$.store.get (via scanMonth)",
+   "$.store.keys (via scanMonth)",
+   "$.store.set (via scanMonth)",
    "$.tool.call (via loadTodo)",
-   "$.tool.list (via loadTodo",
-   "refreshMcp",
-   "refreshTodo)",
-   "$.ui.close",
-   "$.ui.invalidate (via redrawLater)",
-   "$.ui.open (via openSidebar",
-   "runCommand)",
-   "$.ui.panes",
-   "$.ui.resolve",
-   "$.ui.toast (via drainToasts)"
+   "… [+222 chars]"
   ],
   "stateReads": [
    "ctui.activeForms",
@@ -1231,9 +1148,14 @@
    "ctui.git",
    "ctui.glass",
    "ctui.mcp",
+   "ctui.mcpObserved",
+   "ctui.menu",
+   "ctui.menuTaken",
    "ctui.model",
+   "ctui.month",
    "ctui.now",
    "ctui.scroll",
+   "ctui.skills",
    "ctui.tasks",
    "ctui.todo",
    "ctui.todoEnvSet",
@@ -1249,9 +1171,14 @@
    "ctui.git",
    "ctui.glass",
    "ctui.mcp",
+   "ctui.mcpObserved",
+   "ctui.menu",
+   "ctui.menuTaken",
    "ctui.model",
+   "ctui.month",
    "ctui.now",
    "ctui.scroll",
+   "ctui.skills",
    "ctui.tasks",
    "ctui.todo",
    "ctui.todoEnvSet",
@@ -1276,7 +1203,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ctui.folded, ctui.expanded, ctui.scroll, ctui.now, ctui.git, ctui.usage, ctui.mcp, ctui.todo, ctui.activeForms, ctui.todoEnvSet, ctui.versions, ctui.tasks, ctui.model, ctui.effort, ctui.turns, ctui.glass"
+     "types ./types/index.d.ts declares state: ctui.folded, ctui.expanded, ctui.scroll, ctui.now, ctui.git, ctui.usage, ctui.month, ctui.mcp, ctui.mcpObserved, ctui.todo, ctui.skills, ctui.activeForms, ctui.todoEnvSet, ctui.versions, ctui.tasks, ctui.model, ctui.effort, ctui.turns, ctui.glass, ctui.menu, ctui.menuTaken"
     ],
     "gatingHooks": []
    },
@@ -1287,7 +1214,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, tool.describe, tool.call, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, agent.spawn, classic.StopFailure, tool.call{tool=Bash}, tool.call{tool=Workflow}, tool.call{tool=TaskStop}, prompt.submit{origin has {kind=task-notification}}, session.append{door=delivery, message has {name=queued_command}}, session.append{door=prompt, origin has {kind=task-notification}}, session.end, ui.render{component=SessionMode}, ui.render{component=PromptHint}, prompt.submit, ui.render{component=Pane, requestId=sidebar}, ui.message{component=Pane, requestId=sidebar}, ui.close{id=sidebar}, ui.scroll{component=Pane, requestId=sidebar}, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}, ui.render{component=ToolGroup}, ui.render{component=ToolUse}, turn.step, command.run{command=effort}, classic.UserPromptSubmit, classic.Stop, turn.complete, ui.render{component=TurnDuration}, command.run{command=ctui… [+167 chars]",
+      "./register.tsx hooks: session.start, session.measure, tool.describe, classic.CwdChanged, classic.PostToolUse, tool.call, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, agent.spawn, classic.StopFailure, tool.call{tool=Bash}, tool.call{tool=Workflow}, tool.call{tool=TaskStop}, prompt.submit{origin has {kind=task-notification}}, session.append{door=delivery, message has {name=queued_command}}, session.append{door=prompt, origin has {kind=task-notification}}, skill.prompt, session.end, ui.render{component=SessionMode}, ui.render{component=PromptHint}, prompt.submit, ui.render{component=Pane, requestId=sidebar}, ui.message{component=Pane, requestId=sidebar}, ui.close{id=sidebar}, ui.scroll{component=Pane, requestId=sidebar}, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}, ui.render{component=ToolGroup}, ui.render{component=ToolUse}, turn.step, command.run{command=effort}, classic.UserPromptSubmit, classic.Stop, turn.complete, ui.r… [+278 chars]",
+      "./register.tsx answers its own command: command.run{command=ctui}",
+      "./register.tsx gating hook without .catch: classic.CwdChanged",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskCreate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskUpdate}",
@@ -1306,17 +1236,28 @@
       "./register.tsx gating hook without .catch: command.run{command=effort}",
       "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
       "./register.tsx gating hook without .catch: classic.Stop",
-      "./register.tsx gating hook without .catch: command.run{command=ctui:theme}",
-      "./register.tsx gating hook without .catch: command.run{command=ctui:plugins:enable}",
-      "./register.tsx gating hook without .catch: command.run{command=ctui:plugins:disable}",
-      "./register.tsx calls: $.agent.list (via refreshAgents), $.clock.after, $.clock.every, $.clock.now, $.clock.sleep (via drainToasts), $.config.list (via refreshGlass, runCommand), $.config.set (via pick, runCommand), $.env.get, $.env.set (via setTodoEnv), $.fs.exists (via projectOf), $.fs.read (via loadVersions, readDisabled, refreshGlass, themeLook, themesOf), $.fs.stat, $.process.run (via refreshGit), $.session.cwd, $.session.messages (via loadTodo), $.session.model (via refreshModel), $.session.usage (via loadUsage), $.session.version (via loadVersions), $.settings.read (via refreshModel), $.state.get, $.state.set, $.tool.call (via loadTodo), $.tool.list (via loadTodo, refreshMcp, refreshTodo), $.ui.close, $.ui.invalidate (via redrawLater), $.ui.open (via openSidebar, runCommand), $.ui.panes, $.ui.resolve, $.ui.toast (via drainToasts)",
+      "./register.tsx gating hook without .catch: ui.focus{component=Pane, requestId=ctui}",
+      "./register.tsx gating hook without .catch: ui.close{id=ctui}",
+      "./register.tsx calls: $.agent.list (via refreshAgents), $.clock.after, $.clock.every, $.clock.now, $.clock.sleep (via drainToasts), $.command.list (via skillCatalog), $.command.register (via registerMenu), $.config.list (via hasConfig, refreshGlass), $.config.set (via writeSetting), $.env.get, $.env.set (via setTodoEnv), $.fs.exists (via projectOf), $.fs.list (via listTranscripts), $.fs.read (via loadVersions, readClaudeJson, refreshGlass, serverNames, themeLook, themeNamesOf, themesOf), $.fs.stat, $.process.run (via refreshGit, scanMonth), $.session.cwd, $.session.id (via refreshMonth, scanMonth), $.session.messages (via loadTodo, refillSkills), $.session.model (via refreshModel), $.session.usage (via loadUsage, skillCatalog), $.session.version (via loadVersions), $.settings.read (via readMcpFiles, refreshModel), $.state.get, $.state.set, $.store.delete (via scanMonth), $.store.get (via scanMonth), $.store.keys (via scanMonth), $.store.set (via scanMonth), $.tool.call (via loadTodo), … [+222 chars]",
       "./register.tsx env writes: CLAUDE_CODE_ENABLE_TODO_TOOLS",
       "./register.tsx env reads: CLAUDE_CODE_ENABLE_TODO_TOOLS, CLAUDE_CONFIG_DIR, HOME, MCP_TIMEOUT",
-      "./register.tsx state writes: ctui.activeForms, ctui.effort, ctui.expanded, ctui.folded, ctui.git, ctui.glass, ctui.mcp, ctui.model, ctui.now, ctui.scroll, ctui.tasks, ctui.todo, ctui.todoEnvSet, ctui.turns, ctui.usage, ctui.versions",
-      "./register.tsx state reads: ctui.activeForms, ctui.effort, ctui.expanded, ctui.folded, ctui.git, ctui.glass, ctui.mcp, ctui.model, ctui.now, ctui.scroll, ctui.tasks, ctui.todo, ctui.todoEnvSet, ctui.turns, ctui.usage, ctui.versions",
-      "./register.tsx surface modules: hooks/press.tsx"
+      "./register.tsx state writes: ctui.activeForms, ctui.effort, ctui.expanded, ctui.folded, ctui.git, ctui.glass, ctui.mcp, ctui.mcpObserved, ctui.menu, ctui.menuTaken, ctui.model, ctui.month, ctui.now, ctui.scroll, ctui.skills, ctui.tasks, ctui.todo, ctui.todoEnvSet, ctui.turns, ctui.usage, ctui.versions",
+      "./register.tsx state reads: ctui.activeForms, ctui.effort, ctui.expanded, ctui.folded, ctui.git, ctui.glass, ctui.mcp, ctui.mcpObserved, ctui.menu, ctui.menuTaken, ctui.model, ctui.month, ctui.now, ctui.scroll, ctui.skills, ctui.tasks, ctui.todo, ctui.todoEnvSet, ctui.turns, ctui.usage, ctui.versions",
+      "./register.tsx surface modules: hooks/foldrow.tsx, hooks/press.tsx"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.CwdChanged",
+       "hook": "classic.CwdChanged",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -1427,26 +1368,21 @@
       },
       {
        "module": "./register.tsx",
-       "pattern": "command.run",
-       "hook": "command.run{command=ctui:theme}",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=Pane, requestId=ctui}",
        "hasCatch": false
       },
       {
        "module": "./register.tsx",
-       "pattern": "command.run",
-       "hook": "command.run{command=ctui:plugins:enable}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
-       "pattern": "command.run",
-       "hook": "command.run{command=ctui:plugins:disable}",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=ctui}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "838b60b01d499337"
+ "sourceHash": "a2c1c2d9f68d327d"
 }

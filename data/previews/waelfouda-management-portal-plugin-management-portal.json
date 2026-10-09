@@ -1,6 +1,6 @@
 {
  "slug": "waelfouda-management-portal-plugin-management-portal",
- "generatedAt": "2026-10-07T15:24:10.858Z",
+ "generatedAt": "2026-10-09T15:34:42.064Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,16 +8,53 @@
     "event": "session.start"
    },
    {
+    "event": "classic.SessionStart",
+    "matcher": {
+     "source": [
+      "clear",
+      "resume",
+      "fork"
+     ]
+    }
+   },
+   {
     "event": "classic.PostToolUse"
    },
    {
+    "event": "tool.call"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
     "event": "turn.complete"
+   },
+   {
+    "event": "prompt.context"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "portal-commands"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "portal-gates"
+    }
    },
    {
     "event": "command.run",
     "matcher": {
      "command": "portal-cockpit"
     }
+   },
+   {
+    "event": "ui.close"
    },
    {
     "event": "ui.render",
@@ -42,8 +79,22 @@
   "commands": [
    {
     "name": "portal-cockpit",
-    "description": "Portal run cockpit: run, phases, milestones, tasks, owed read-backs, stood-down gates (management-portal mod)",
+    "description": "Portal run cockpit: plan, phases, milestones, tasks with progress bars, done vs remaining, gates (management-portal mod)",
+    "argumentHint": "[project-id | gates | graph | board | settings | watch <channel> <agent> | unwatch | nudge on|off|auto|<minutes> | url <https://…>]",
+    "immediate": true,
     "output": "Portal cockpit opened."
+   },
+   {
+    "name": "portal-gates",
+    "description": "Portal canon gate control panel: every gate armed or stood down, with re-arm and stand-down buttons (management-portal mod)",
+    "immediate": true,
+    "output": "Portal gate control panel opened."
+   },
+   {
+    "name": "portal-commands",
+    "description": "A button for every management-portal command, with saved presets of which ones to show (management-portal mod)",
+    "immediate": true,
+    "output": "Portal command launcher opened."
    }
   ],
   "tools": [],
@@ -60,20 +111,21 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 2,
-   "$.command.register": 1,
-   "$.clock.every": 2,
-   "$.clock.after": 2,
-   "$.ui.open": 1,
-   "$.session.id": 1,
-   "$.session.cwd": 1,
-   "$.env.get": 3,
-   "$.fs.exists": 1,
-   "$.process.run": 1,
+   "$.store.get": 8,
+   "$.session.id": 2,
+   "$.clock.now": 6,
+   "$.state.get": 22,
+   "$.state.set": 9,
+   "$.command.register": 3,
+   "$.fs.list": 2,
+   "$.clock.every": 5,
+   "$.clock.after": 3,
+   "$.ui.open": 3,
+   "$.session.cwd": 2,
+   "$.env.get": 6,
+   "$.fs.exists": 2,
+   "$.process.run": 2,
    "$.ui.log": 1,
-   "$.state.get": 10,
-   "$.state.set": 2,
-   "$.clock.now": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -83,11 +135,27 @@
    },
    {
     "kind": "every",
+    "ms": 120000
+   },
+   {
+    "kind": "every",
     "ms": 45000
+   },
+   {
+    "kind": "every",
+    "ms": 180000
+   },
+   {
+    "kind": "every",
+    "ms": 15000
    },
    {
     "kind": "after",
     "ms": 500
+   },
+   {
+    "kind": "after",
+    "ms": 20000
    },
    {
     "kind": "after",
@@ -109,105 +177,344 @@
       },
       "children": [
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "key": "h-run",
-         "bold": true,
-         "wrap": "truncate-end"
+         "key": "tabs",
+         "flexDirection": "row",
+         "columnGap": 2
         },
         "children": [
-         "RUN"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "run-none",
-         "dimColor": true,
-         "wrap": "truncate-end"
-        },
-        "children": [
-         "reading the canon status…"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "h-plan",
-         "bold": true,
-         "wrap": "truncate-end"
-        },
-        "children": [
-         "PLAN"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "plan-none",
-         "dimColor": true,
-         "wrap": "truncate-end"
-        },
-        "children": [
-         "no project in the run"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "src",
-         "dimColor": true,
-         "wrap": "truncate-end"
-        },
-        "children": [
-         "source: canon-gate.js status --json · portal via not resolved yet"
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-plan",
+           "label": "Plan",
+           "hotkey": "1",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-commands",
+           "label": "[Commands]",
+           "hotkey": "2",
+           "plain": true,
+           "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-gates",
+           "label": "Gates",
+           "hotkey": "3",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-graph",
+           "label": "Graph",
+           "hotkey": "4",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-board",
+           "label": "Board",
+           "hotkey": "5",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-settings",
+           "label": "Settings",
+           "hotkey": "6",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
         ]
        },
        {
         "type": "Box",
         "props": {
-         "key": "buttons",
-         "flexDirection": "row",
-         "gap": 1
+         "key": "cmds",
+         "flexDirection": "column"
         },
         "children": [
          {
-          "type": "Button",
+          "type": "Select",
           "props": {
-           "key": "refresh",
-           "label": "Refresh",
-           "hotkey": "r",
-           "onPress": "[fn]"
+           "key": "preset",
+           "label": "Preset",
+           "value": "Run",
+           "options": [
+            {
+             "value": "Run",
+             "label": "Run (2)"
+            },
+            {
+             "value": "Team Chat",
+             "label": "Team Chat (0)"
+            },
+            {
+             "value": "All",
+             "label": "All (2)"
+            }
+           ],
+           "onSelect": "[fn]"
           },
           "children": []
          },
          {
-          "type": "Button",
+          "type": "Text",
           "props": {
-           "key": "rich",
-           "label": "Cards: on",
-           "onPress": "[fn]"
+           "key": "c-h",
+           "bold": true
           },
-          "children": []
+          "children": [
+           "COMMANDS · Run · 2 shown"
+          ]
          },
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "key": "watch",
-           "label": "Chat wake: on",
-           "onPress": "[fn]"
+           "key": "row-portal-cockpit",
+           "flexDirection": "row",
+           "columnGap": 1,
+           "hover": {
+            "scope": "cmd-portal-cockpit"
+           }
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "cmd-portal-cockpit",
+             "label": "/portal-cockpit",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "args-portal-cockpit",
+             "label": "…",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "desc-portal-cockpit",
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "Open the run cockpit: plan,…"
+            ]
+           }
+          ]
          },
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "key": "close",
-           "label": "Close",
-           "role": "dismiss",
-           "onPress": "[fn]"
+           "key": "row-portal-gates",
+           "flexDirection": "row",
+           "columnGap": 1,
+           "hover": {
+            "scope": "cmd-portal-gates"
+           }
           },
-          "children": []
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "cmd-portal-gates",
+             "label": "/portal-gates",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "desc-portal-gates",
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "Open the gate control panel: …"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "c-detail",
+           "flexDirection": "column",
+           "height": 6,
+           "borderStyle": "single",
+           "borderDimColor": true,
+           "paddingX": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column",
+             "position": "absolute",
+             "top": 3,
+             "left": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "c-detail-hint",
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "point at a command for its full usage"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "detail-portal-cockpit",
+             "flexDirection": "column",
+             "position": "absolute",
+             "top": 0,
+             "left": 0,
+             "display": "none",
+             "hover": {
+              "scope": "cmd-portal-cockpit",
+              "display": "flex"
+             }
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "detail-t-portal-cockpit",
+               "bold": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "/portal-cockpit  [project-id | gates | graph | board | settings]"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "key": "detail-d-portal-cockpit",
+               "wrap": "wrap"
+              },
+              "children": [
+               "Open the run cockpit: plan, phases, milestones, tasks with progress bars, done vs remaining."
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "detail-portal-gates",
+             "flexDirection": "column",
+             "position": "absolute",
+             "top": 0,
+             "left": 0,
+             "display": "none",
+             "hover": {
+              "scope": "cmd-portal-gates",
+              "display": "flex"
+             }
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "detail-t-portal-gates",
+               "bold": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "/portal-gates"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "key": "detail-d-portal-gates",
+               "wrap": "wrap"
+              },
+              "children": [
+               "Open the gate control panel: every canon gate armed or stood down, with re-arm and stand-down b…"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "c-acts",
+           "flexDirection": "row",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "edit-preset",
+             "label": "Choose commands…",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "reload-cmds",
+             "label": "Reload",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
          }
         ]
        }
@@ -230,8 +537,13 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(portal-cockpit)",
+   "/portal-cockpit → Portal cockpit opened.",
    "$.process.run(node /plugins/management-portal/scripts/canon-gate.js status --json --session pr…) → exit 0",
-   "/portal-cockpit → Portal cockpit opened."
+   "$.ui.open(portal-cockpit)",
+   "/portal-gates → Portal gate control panel opened.",
+   "$.process.run(node /plugins/management-portal/scripts/canon-gate.js doctor) → exit 0",
+   "$.ui.open(portal-cockpit)",
+   "/portal-commands → Portal command launcher opened."
   ],
   "console": [],
   "warnings": []
@@ -244,58 +556,96 @@
   ],
   "hooks": [
    "session.start",
+   "classic.SessionStart{source=clear|resume|fork}",
    "classic.PostToolUse",
+   "tool.call",
+   "classic.UserPromptSubmit",
+   "turn.start",
    "turn.complete",
+   "prompt.context",
+   "command.run{command=portal-commands}",
+   "command.run{command=portal-gates}",
    "command.run{command=portal-cockpit}",
+   "ui.close",
    "ui.render{component=Pane, requestId=portal-cockpit}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=ToolResult}"
   ],
   "calls": [
+   "$.agent.list (via backgroundBusy)",
    "$.clock.after",
    "$.clock.every",
-   "$.clock.now (via loadCockpit",
-   "pollWatch)",
+   "$.clock.now",
    "$.command.register",
+   "$.command.run (via runCommand)",
    "$.env.get (via dataEnv)",
    "$.fs.exists (via dataEnv)",
-   "$.mcp.call (via portalRead)",
-   "$.mcp.connect (via discoverServers)",
-   "$.process.run (via readCanon)",
+   "$.fs.list (via loadCommands)",
+   "$.fs.read (via loadCommands)",
+   "$.mcp.call (via portalCall)",
+   "$.mcp.connect (via candidates)",
+   "$.process.run (via gateAction",
+   "readCanon",
+   "refreshGates)",
+   "$.prompt.fill (via runCommand)",
    "$.prompt.submit",
-   "$.session.cwd (via readCanon)",
-   "$.session.id (via readCanon)",
-   "$.session.usage (via discoverServers)",
+   "$.session.cwd (via readCanon",
+   "refreshGates)",
+   "$.session.id (via loadStored",
+   "readCanon",
+   "setContinueMode)",
+   "$.session.surfaces (via maybeAutoOpen)",
+   "$.session.usage (via candidates)",
    "$.state.get",
    "$.state.set",
    "$.store.delete",
-   "$.store.get",
-   "$.store.set (via pollWatch",
-   "rememberWatch",
-   "setPref)",
-   "$.tool.list (via discoverServers)",
-   "$.ui.close",
-   "$.ui.log (via discoverServers",
-   "readCanon)",
+   "$.store.get (via loadCommands",
+   "loadStored",
+   "pollNotify",
+   "resolveProject",
+   "setContinueMode)",
+   "$.store.set",
+   "$.tool.list (via candidates)",
+   "$.ui.close (via planBody)",
+   "$.ui.invalidate (via pushStatus)",
+   "$.ui.log (via readCanon)",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.status (via readCanon)",
+   "$.ui.status (via pushStatus)",
    "$.ui.toast"
   ],
   "stateReads": [
    "management-portal.band",
+   "management-portal.board",
    "management-portal.canon",
    "management-portal.cockpit",
+   "management-portal.gates",
+   "management-portal.idle",
+   "management-portal.kg",
+   "management-portal.launcher",
+   "management-portal.notify",
    "management-portal.prefs",
    "management-portal.raw",
+   "management-portal.server",
+   "management-portal.timer",
+   "management-portal.view",
    "management-portal.watch"
   ],
   "stateWrites": [
    "management-portal.band",
+   "management-portal.board",
    "management-portal.canon",
    "management-portal.cockpit",
+   "management-portal.gates",
+   "management-portal.idle",
+   "management-portal.kg",
+   "management-portal.launcher",
+   "management-portal.notify",
    "management-portal.prefs",
    "management-portal.raw",
+   "management-portal.server",
+   "management-portal.timer",
+   "management-portal.view",
    "management-portal.watch"
   ],
   "envReads": [
@@ -314,7 +664,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: management-portal.canon, management-portal.cockpit, management-portal.prefs, management-portal.band, management-portal.raw, management-portal.watch"
+     "types ./types/index.d.ts declares state: management-portal.canon, management-portal.cockpit, management-portal.prefs, management-portal.band, management-portal.raw, management-portal.watch, management-portal.server, management-portal.view, management-portal.gates, management-portal.kg, management-portal.board, management-portal.timer, management-portal.notify, management-portal.idle, management-portal.launcher"
     ],
     "gatingHooks": []
    },
@@ -325,26 +675,75 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mods/register.tsx hooks: session.start, classic.PostToolUse, turn.complete, command.run{command=portal-cockpit}, ui.render{component=Pane, requestId=portal-cockpit}, ui.render{component=AbovePrompt}, ui.render{component=ToolResult}",
-      "./mods/register.tsx answers its own command: command.run{command=portal-cockpit}",
-      "./mods/register.tsx gating hook without .catch: classic.PostToolUse",
-      "./mods/register.tsx calls: $.clock.after, $.clock.every, $.clock.now (via loadCockpit, pollWatch), $.command.register, $.env.get (via dataEnv), $.fs.exists (via dataEnv), $.mcp.call (via portalRead), $.mcp.connect (via discoverServers), $.process.run (via readCanon), $.prompt.submit, $.session.cwd (via readCanon), $.session.id (via readCanon), $.session.usage (via discoverServers), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set (via pollWatch, rememberWatch, setPref), $.tool.list (via discoverServers), $.ui.close, $.ui.log (via discoverServers, readCanon), $.ui.open, $.ui.resolve, $.ui.status (via readCanon), $.ui.toast",
+      "./mods/register.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, classic.PostToolUse, tool.call, classic.UserPromptSubmit, turn.start, turn.complete, prompt.context, command.run{command=portal-commands}, command.run{command=portal-gates}, command.run{command=portal-cockpit}, ui.close, ui.render{component=Pane, requestId=portal-cockpit}, ui.render{component=AbovePrompt}, ui.render{component=ToolResult}",
+      "./mods/register.tsx gating hook with .catch: classic.SessionStart{source=clear|resume|fork}",
+      "./mods/register.tsx gating hook with .catch: classic.PostToolUse",
+      "./mods/register.tsx gating hook with .catch: tool.call",
+      "./mods/register.tsx gating hook with .catch: classic.UserPromptSubmit",
+      "./mods/register.tsx gating hook without .catch: command.run{command=portal-commands}",
+      "./mods/register.tsx gating hook without .catch: command.run{command=portal-gates}",
+      "./mods/register.tsx gating hook without .catch: command.run{command=portal-cockpit}",
+      "./mods/register.tsx gating hook with .catch: ui.close",
+      "./mods/register.tsx calls: $.agent.list (via backgroundBusy), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via runCommand), $.env.get (via dataEnv), $.fs.exists (via dataEnv), $.fs.list (via loadCommands), $.fs.read (via loadCommands), $.mcp.call (via portalCall), $.mcp.connect (via candidates), $.process.run (via gateAction, readCanon, refreshGates), $.prompt.fill (via runCommand), $.prompt.submit, $.session.cwd (via readCanon, refreshGates), $.session.id (via loadStored, readCanon, setContinueMode), $.session.surfaces (via maybeAutoOpen), $.session.usage (via candidates), $.state.get, $.state.set, $.store.delete, $.store.get (via loadCommands, loadStored, pollNotify, resolveProject, setContinueMode), $.store.set, $.tool.list (via candidates), $.ui.close (via planBody), $.ui.invalidate (via pushStatus), $.ui.log (via readCanon), $.ui.open, $.ui.resolve, $.ui.status (via pushStatus), $.ui.toast",
       "./mods/register.tsx env writes: nothing",
       "./mods/register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./mods/register.tsx state writes: management-portal.band, management-portal.canon, management-portal.cockpit, management-portal.prefs, management-portal.raw, management-portal.watch",
-      "./mods/register.tsx state reads: management-portal.band, management-portal.canon, management-portal.cockpit, management-portal.prefs, management-portal.raw, management-portal.watch"
+      "./mods/register.tsx state writes: management-portal.band, management-portal.board, management-portal.canon, management-portal.cockpit, management-portal.gates, management-portal.idle, management-portal.kg, management-portal.launcher, management-portal.notify, management-portal.prefs, management-portal.raw, management-portal.server, management-portal.timer, management-portal.view, management-portal.watch",
+      "./mods/register.tsx state reads: management-portal.band, management-portal.board, management-portal.canon, management-portal.cockpit, management-portal.gates, management-portal.idle, management-portal.kg, management-portal.launcher, management-portal.notify, management-portal.prefs, management-portal.raw, management-portal.server, management-portal.timer, management-portal.view, management-portal.watch"
      ],
      "gatingHooks": [
       {
        "module": "./mods/register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=clear|resume|fork}",
+       "hasCatch": true
+      },
+      {
+       "module": "./mods/register.tsx",
        "pattern": "classic.PostToolUse",
        "hook": "classic.PostToolUse",
+       "hasCatch": true
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": true
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=portal-commands}",
        "hasCatch": false
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=portal-gates}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=portal-cockpit}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "6a8397fc10068a"
+ "sourceHash": "9c4892e8ea360ed7"
 }

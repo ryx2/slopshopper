@@ -1,6 +1,6 @@
 {
  "slug": "nelsben-chassis-delegation",
- "generatedAt": "2026-10-08T15:54:30.006Z",
+ "generatedAt": "2026-10-09T15:34:03.790Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -64,7 +64,32 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "mcp__chassis-delegation__card"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__chassis-delegation__init"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__chassis-delegation__setup"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "delegation-dash"
     }
    },
    {
@@ -83,9 +108,9 @@
    },
    {
     "name": "delegation",
-    "description": "Delegation state; \"init\" scaffolds this repo for chassis-delegation",
-    "argumentHint": "[init]",
-    "output": "Delegation state (chassis-delegation): nothing running, queued or owed.\n\nconfig: no .chassis-delegation.json in /work/app (built-in defaults + /config)\ngate map: (empty: gates are reported \"not re-run\")\ntiers: economy→haiku, standard→sonnet, frontier→opus · max workers 2 · git guard on (main, master) · eval off\nbase: origin/main → main → origin/master → master · repo=here ignore: .delegation/**"
+    "description": "Delegation state; \"setup\" checks this repo and scaffolds it; \"init\" is the bare scaffold",
+    "argumentHint": "[setup|init|dashboard]",
+    "output": "Delegation state (chassis-delegation): nothing running, queued or owed.\n\nmod: chassis-delegation 0.5.0 loaded from /plugins/chassis-delegation\nconfig: no .chassis-delegation.json in /work/app (built-in defaults + /config)\nnot set up here: run /delegation setup\ngate map: (empty: gates are reported \"not re-run\")\ntiers: economy→haiku, standard→sonnet, frontier→opus · max workers 2 · git guard on (main, master) · eval off\nbase: origin/main → main → origin/master → master · repo=here ignore: .delegation/**, agents/tasks/**"
    }
   ],
   "tools": [
@@ -94,8 +119,16 @@
     "description": "Dispatch a chassis task card to a worker: writes the brief from the card, cuts the worktree (or, with here, shares the session's own checkout), picks the tier and spawns. Pass scope/forbid globs when the card's are prose. With verify (a sha), spawns nothing: runs the verifier on the work already in the task's worktree."
    },
    {
+    "name": "card",
+    "description": "When the person describes work to delegate, look at the repo to choose scope globs, then call this with the task. It writes the card, runs the dry run and returns the brief; show the person the summary and dispatch when they say go (call dispatch, or call this with dispatch: true when they already said to go ahead). Never ask the person to edit a card file."
+   },
+   {
     "name": "init",
     "description": "Scaffold chassis-delegation in this repo: a card folder (agents/tasks/, or docs/cards/ in a plugin repo) with its README and a sample card, .chassis-delegation.json with its defaults, and .delegation/ in .gitignore. Never overwrites a file; says what it wrote."
+   },
+   {
+    "name": "setup",
+    "description": "Checks the repo for chassis-delegation and returns what to fix; run the fixes, then call it again. When every required check holds it scaffolds the config and returns the first card to write."
    }
   ],
   "panes": [],
@@ -112,28 +145,698 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 2,
-   "$.tool.register": 2,
-   "$.session.root": 3,
+   "$.tool.register": 4,
+   "$.session.root": 6,
    "$.fs.read": 2,
-   "$.agent.list": 2,
+   "$.clock.now": 8,
+   "$.agent.list": 6,
+   "$.state.get": 16,
+   "$.session.usage": 4,
+   "$.state.set": 1,
+   "$.ui.invalidate": 1,
+   "$.clock.after": 2,
+   "$.store.keys": 1,
+   "$.process.run": 1,
    "$.session.cwd": 1,
    "$.ui.log": 1,
-   "$.clock.now": 1,
    "$.session.id": 2,
    "$.store.get": 5,
    "$.store.set": 1,
-   "$.clock.after": 1,
-   "$.state.get": 4
+   "$.ui.resolve": 1
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 60000
+   },
    {
     "kind": "after",
     "ms": 1200000
    }
   ],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "delegation-dash": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "dash-kpis",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "kpi-live",
+             "flexDirection": "column",
+             "borderStyle": "round",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "live"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "0"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "kpi-queued",
+             "flexDirection": "column",
+             "borderStyle": "round",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "queued"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "0"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "kpi-spend",
+             "flexDirection": "column",
+             "borderStyle": "round",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "spend"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "$0.42"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "whole session"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "kpi-first",
+             "flexDirection": "column",
+             "borderStyle": "round",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "verified 1st try"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "0 of 0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "dash-spend",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Spend over time"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "cumulative dollars, this session · ticks: spawn ┬ verdict ┴ · hover for time, $ and event"
+            ]
+           },
+           {
+            "type": "Raster",
+            "props": {
+             "key": "spend-raster",
+             "columns": 54,
+             "rows": 5,
+             "cells": "iCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABiCUAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "dash-worktrees",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Worktrees"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "no worker has run this session"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "tokens and cost update when a run ends"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "dash-models",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Spend by model"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 20
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#3987e5"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "haiku · $0.00 · 0 tok · 0 verified"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 20
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#d95926"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "sonnet · $0.00 · 0 tok · 0 verified"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 20
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#199e70"
+                },
+                "children": [
+                 ""
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "opus · $0.00 · 0 tok · 0 verified"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Across sessions"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Steps saved"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "  0 dispatches · ~0 hand steps saved"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Raster",
+            "props": {
+             "key": "spark-steps",
+             "columns": 1,
+             "rows": 1,
+             "cells": "gSUAAAAAAAEAAAAB"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Verdicts"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "  0 verified · 0 unverified · 0 refuted"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "  ",
+           "no sessions measured yet"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Tiers"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "  haiku 0 · sonnet 0 · opus 0 · resume 0 · respawn 0"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "  ",
+           "no sessions measured yet"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Owed work that ran itself"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "  0 debriefs · 0 evals"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Raster",
+            "props": {
+             "key": "spark-owed",
+             "columns": 1,
+             "rows": 1,
+             "cells": "gSUAAAAAAAEAAAAB"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Compaction"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "  0 compactions served, state block attached"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Raster",
+            "props": {
+             "key": "spark-compaction",
+             "columns": 1,
+             "rows": 1,
+             "cells": "gSUAAAAAAAEAAAAB"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Spend"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "  $0.00 on workers · window –"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Raster",
+            "props": {
+             "key": "spark-spend",
+             "columns": 1,
+             "rows": 1,
+             "cells": "gSUAAAAAAAEAAAAB"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Open items"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "  ",
+           "nothing open"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "close",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "delegation-dash"
+    }
+   }
+  },
   "script": [
    "session.start",
+   "$.process.run(git -C /work/app worktree list --porcelain) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -145,7 +848,7 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/dispatch → usage: /dispatch <TASK-ID> [--dry-run] [--base <origin/main|sha>] [--replay --ba…",
-   "/delegation → Delegation state (chassis-delegation): nothing running, queued or owed.\n\nconfig:…"
+   "/delegation → Delegation state (chassis-delegation): nothing running, queued or owed.\n\nmod: ch…"
   ],
   "console": [],
   "warnings": []
@@ -169,26 +872,36 @@
    "command.run{command=dispatch}",
    "tool.call{tool=mcp__chassis-delegation__dispatch}",
    "command.run{command=delegation}",
+   "tool.call{tool=mcp__chassis-delegation__card}",
    "tool.call{tool=mcp__chassis-delegation__init}",
+   "tool.call{tool=mcp__chassis-delegation__setup}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=delegation-dash}",
    "session.compact",
    "prompt.compose"
   ],
   "calls": [
    "$.agent.list",
    "$.agent.spawn (via spawnSelf)",
-   "$.clock.after (via armIdle)",
+   "$.clock.after (via armIdle",
+   "scheduleSample)",
    "$.clock.every",
    "$.clock.now (via now)",
    "$.command.register",
-   "$.env.get (via maybeDebrief)",
+   "$.env.get (via gatherSetup",
+   "maybeDebrief)",
    "$.fs.exists (via exists)",
    "$.fs.list (via cardsInTree",
    "dispatchOnce",
+   "gatherSetup",
+   "runCard",
    "runVerifyDispatch)",
    "$.fs.read",
    "$.fs.write (via appendLedger",
    "applyHandbackAmends",
+   "runCard",
    "runInit",
+   "runSetup",
    "runVerify",
    "writeBrief)",
    "$.model.classify (via decideSpawn",
@@ -204,38 +917,39 @@
    "decideSpawn",
    "dispatchOnce",
    "inlineBrief",
+   "liveModel",
    "loadRepoConfig",
    "maybeDebrief",
    "maybeEval",
    "onRunnerComplete",
    "recipeDir",
+   "runCard",
    "runCardless",
    "runInit",
+   "runSetup",
    "runVerify",
    "runVerifyDispatch",
    "statusReport",
    "workInWorktree)",
    "$.session.send (via finalizeOnce",
    "trackSpend)",
-   "$.session.usage (via refreshStatus",
-   "sessionUsd)",
-   "$.state.get (via readQueue",
-   "setWorkers)",
-   "$.state.set (via refreshStatus",
-   "setLast… [+430 chars]"
+   "$.session.usage (via liveMode… [+644 chars]"
   ],
   "stateReads": [
    "chassis-delegation.queue",
+   "chassis-delegation.spend",
    "chassis-delegation.workers"
   ],
   "stateWrites": [
    "chassis-delegation.lastVerdict",
    "chassis-delegation.queue",
+   "chassis-delegation.spend",
    "chassis-delegation.status",
    "chassis-delegation.workers"
   ],
   "envReads": [
-   "HOME"
+   "HOME",
+   "PATH"
   ],
   "raw": {
    "success": true,
@@ -248,7 +962,7 @@
     "warnings": [],
     "notes": [
      "types ./hooks/types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./hooks/types/index.d.ts declares state: chassis-delegation.workers, chassis-delegation.status, chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.band, chassis-delegation.dashboard"
+     "types ./hooks/types/index.d.ts declares state: chassis-delegation.workers, chassis-delegation.status, chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.band, chassis-delegation.dashboard, chassis-delegation.spend"
     ],
     "gatingHooks": []
    },
@@ -259,7 +973,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: agent.spawn, tool.call, tool.call{tool=Bash}, tool.call{tool=Agent}, turn.complete, turn.start, prompt.submit, session.send, session.start, agent.offer, session.measure, command.run{command=dispatch}, tool.call{tool=mcp__chassis-delegation__dispatch}, command.run{command=delegation}, tool.call{tool=mcp__chassis-delegation__init}, session.compact, prompt.compose",
+      "./register.ts hooks: agent.spawn, tool.call, tool.call{tool=Bash}, tool.call{tool=Agent}, turn.complete, turn.start, prompt.submit, session.send, session.start, agent.offer, session.measure, command.run{command=dispatch}, tool.call{tool=mcp__chassis-delegation__dispatch}, command.run{command=delegation}, tool.call{tool=mcp__chassis-delegation__card}, tool.call{tool=mcp__chassis-delegation__init}, tool.call{tool=mcp__chassis-delegation__setup}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=delegation-dash}, session.compact, prompt.compose",
       "./register.ts answers its own command: command.run{command=dispatch}",
       "./register.ts answers its own command: command.run{command=delegation}",
       "./register.ts gating hook without .catch: agent.spawn",
@@ -270,13 +984,15 @@
       "./register.ts gating hook without .catch: session.send",
       "./register.ts gating hook without .catch: agent.offer",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__dispatch}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__card}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__init}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__setup}",
       "./register.ts gating hook without .catch: session.compact",
-      "./register.ts calls: $.agent.list, $.agent.spawn (via spawnSelf), $.clock.after (via armIdle), $.clock.every, $.clock.now (via now), $.command.register, $.env.get (via maybeDebrief), $.fs.exists (via exists), $.fs.list (via cardsInTree, dispatchOnce, runVerifyDispatch), $.fs.read, $.fs.write (via appendLedger, applyHandbackAmends, runInit, runVerify, writeBrief), $.model.classify (via decideSpawn, probe), $.process.run (via run), $.session.append (via appendRow, decideSpawn), $.session.cwd (via bashCwd), $.session.id (via sessionIdOf), $.session.messages (via transcriptHandbacks), $.session.root (via appendLedger, bashCwd, decideSpawn, dispatchOnce, inlineBrief, loadRepoConfig, maybeDebrief, maybeEval, onRunnerComplete, recipeDir, runCardless, runInit, runVerify, runVerifyDispatch, statusReport, workInWorktree), $.session.send (via finalizeOnce, trackSpend), $.session.usage (via refreshStatus, sessionUsd), $.state.get (via readQueue, setWorkers), $.state.set (via refreshStatus, setLast… [+430 chars]",
+      "./register.ts calls: $.agent.list, $.agent.spawn (via spawnSelf), $.clock.after (via armIdle, scheduleSample), $.clock.every, $.clock.now (via now), $.command.register, $.env.get (via gatherSetup, maybeDebrief), $.fs.exists (via exists), $.fs.list (via cardsInTree, dispatchOnce, gatherSetup, runCard, runVerifyDispatch), $.fs.read, $.fs.write (via appendLedger, applyHandbackAmends, runCard, runInit, runSetup, runVerify, writeBrief), $.model.classify (via decideSpawn, probe), $.process.run (via run), $.session.append (via appendRow, decideSpawn), $.session.cwd (via bashCwd), $.session.id (via sessionIdOf), $.session.messages (via transcriptHandbacks), $.session.root (via appendLedger, bashCwd, decideSpawn, dispatchOnce, inlineBrief, liveModel, loadRepoConfig, maybeDebrief, maybeEval, onRunnerComplete, recipeDir, runCard, runCardless, runInit, runSetup, runVerify, runVerifyDispatch, statusReport, workInWorktree), $.session.send (via finalizeOnce, trackSpend), $.session.usage (via liveMode… [+644 chars]",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME",
-      "./register.ts state writes: chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.status, chassis-delegation.workers",
-      "./register.ts state reads: chassis-delegation.queue, chassis-delegation.workers"
+      "./register.ts env reads: HOME, PATH",
+      "./register.ts state writes: chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.spend, chassis-delegation.status, chassis-delegation.workers",
+      "./register.ts state reads: chassis-delegation.queue, chassis-delegation.spend, chassis-delegation.workers"
      ],
      "gatingHooks": [
       {
@@ -330,7 +1046,19 @@
       {
        "module": "./register.ts",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__chassis-delegation__card}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__chassis-delegation__init}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__chassis-delegation__setup}",
        "hasCatch": false
       },
       {
@@ -341,8 +1069,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "e65c455fb7c4f8cc"
+ "sourceHash": "4ffb961f490c5c89"
 }

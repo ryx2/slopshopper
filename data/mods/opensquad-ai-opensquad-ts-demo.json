@@ -1,0 +1,8 @@
+{
+ "slug": "opensquad-ai-opensquad-ts-demo",
+ "files": {
+  "hooks/register.ts": "// Fixture for P6-B1: a TypeScript mod, run as-is on Node 24's type stripping,\n// importing the `claude-code` SDK surface that the host answers with a shim.\n//\n// Type-only imports are erased at runtime; the value import must resolve.\nimport { atom, memberOf, read, update } from 'claude-code'\nimport type { EngineInterface, Register } from 'claude-code'\n\ntype Counter = { hits: number }\n\nconst hits = atom({ plugin: 'ts-demo', key: 'hits' } as const, 0)\nconst seen = atom({ plugin: 'ts-demo', key: 'seen' } as const, 0)\n\nexport const register: Register = (on: (event: string, matcher: unknown, handler: unknown) => void) => {\n  on('tool.call', { tool: 'demo.typed' }, async ($: EngineInterface, e: { tool: string }, next: () => unknown) => {\n    const before: number = read(hits) ?? 0\n    update(hits, (value: number) => (value ?? 0) + 1)\n    const after: number = read(hits) ?? 0\n    // `memberOf` gives this member its own cell, reached with the `$`-first shape.\n    // `elsewhere` is a *different* member, read to prove the cells are not shared.\n    const member = memberOf(seen, e)\n    const mine: number = read($, member) ?? 0\n    update($, member, mine + 1)\n    const elsewhere: number = read($, memberOf(seen, { requestId: 'demo-elsewhere' })) ?? 0\n    return {\n      deny: `ts-demo: typed ts works, hits ${before} -> ${after}, seen ${mine} -> ${mine + 1}, elsewhere ${elsewhere}`,\n    }\n  })\n}\n",
+  "hooks/hooks.json": "{\"modules\":[\"./register.ts\"]}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"ts-demo\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Fixture: a TypeScript mod that imports the claude-code SDK surface.\"\n}"
+ }
+}

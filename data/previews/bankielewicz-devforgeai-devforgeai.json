@@ -1,6 +1,6 @@
 {
  "slug": "bankielewicz-devforgeai-devforgeai",
- "generatedAt": "2026-10-07T15:22:53.613Z",
+ "generatedAt": "2026-10-09T15:33:02.863Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -45,6 +45,15 @@
     "event": "command.run"
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "progress"
+    }
+   },
+   {
+    "event": "session.measure"
+   },
+   {
     "event": "session.compact"
    },
    {
@@ -57,7 +66,14 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "progress",
+    "description": "Show the DevForgeAI run in progress",
+    "immediate": true,
+    "output": "No DevForgeAI run is open in this session."
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -67,11 +83,12 @@
   "apiCalls": {
    "$.session.root": 2,
    "$.process.run": 2,
-   "$.state.get": 20,
-   "$.state.set": 2,
-   "$.session.id": 1,
-   "$.clock.now": 1,
-   "$.clock.every": 1
+   "$.state.get": 25,
+   "$.state.set": 3,
+   "$.session.id": 2,
+   "$.clock.now": 3,
+   "$.clock.every": 1,
+   "$.command.register": 1
   },
   "timers": [
    {
@@ -97,7 +114,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/progress → No DevForgeAI run is open in this session."
   ],
   "console": [],
   "warnings": []
@@ -117,6 +135,8 @@
    "session.append{door=response}",
    "turn.complete",
    "command.run",
+   "command.run{command=progress}",
+   "session.measure",
    "session.compact",
    "session.end",
    "ui.render{component=AbovePrompt}"
@@ -126,19 +146,26 @@
    "$.clock.now (via adapterLog",
    "appendEvent",
    "askReview",
+   "holdStarts",
+   "ledgerTurn",
    "namedByLiveRuns",
    "pendingState",
    "prepareRun",
+   "progressNow",
    "refreshStatus",
    "resumeOffer",
    "unwindNow)",
    "$.clock.sleep",
+   "$.command.register (via registerProgress)",
+   "$.command.run (via measured)",
    "$.fs.exists (via appendLog",
    "ensureIgnore",
    "evaluate",
    "gatedFor",
+   "ledgerAdd",
    "listFolders",
    "resumeOffer",
+   "setup",
    "skillKind",
    "writeGateOf)",
    "$.fs.list (via listFolders",
@@ -152,6 +179,7 @@
    "continuedFiles",
    "evaluate",
    "gatedFor",
+   "ledgerAdd",
    "linesOf",
    "namedByLiveRuns",
    "resumeOffer",
@@ -166,25 +194,18 @@
    "appendLog",
    "askReview",
    "ensureIgnore",
+   "ledgerAdd",
+   "liftOdometer",
    "pendingState",
-   "writeLog)",
+   "putLog",
+   "tryOdometer)",
    "$.process.run (via evaluate",
    "findPython",
    "resolveMode",
    "startCleanup",
    "startPrune",
    "switchMode)",
-   "$.session.id (via ownDrafts",
-   "prepareRun",
-   "resolveMode",
-   "sessionDir)",
-   "$.session.root",
-   "$.session.surfaces (via hasSurface",
-   "resumeOffer",
-   "review",
-   "reviewReturned)",
-   "$.session.version (via prepareRun)",
-   "$.state.g… [+164 chars]"
+   "$.session.id (via ledgerTur… [+381 chars]"
   ],
   "stateReads": [
    "devforgeai.adhered",
@@ -197,6 +218,7 @@
    "devforgeai.mode",
    "devforgeai.modeSource",
    "devforgeai.off",
+   "devforgeai.precompact",
    "devforgeai.refusals",
    "devforgeai.refused",
    "devforgeai.returned",
@@ -220,6 +242,7 @@
    "devforgeai.mode",
    "devforgeai.modeSource",
    "devforgeai.off",
+   "devforgeai.precompact",
    "devforgeai.refusals",
    "devforgeai.refused",
    "devforgeai.returned",
@@ -244,7 +267,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: devforgeai.run, devforgeai.mode, devforgeai.modeSource, devforgeai.summary, devforgeai.lastEventAt, devforgeai.marked, devforgeai.shown, devforgeai.contextSent, devforgeai.off, devforgeai.tasks, devforgeai.todos, devforgeai.hinted, devforgeai.adhered, devforgeai.refusals, devforgeai.refused, devforgeai.reviewed, devforgeai.trail, devforgeai.returned, devforgeai.cleaned, devforgeai.wroteSeen, devforgeai.closedFor"
+     "types ./types/index.d.ts declares state: devforgeai.run, devforgeai.mode, devforgeai.modeSource, devforgeai.summary, devforgeai.lastEventAt, devforgeai.marked, devforgeai.shown, devforgeai.contextSent, devforgeai.off, devforgeai.tasks, devforgeai.todos, devforgeai.hinted, devforgeai.adhered, devforgeai.refusals, devforgeai.refused, devforgeai.reviewed, devforgeai.trail, devforgeai.returned, devforgeai.cleaned, devforgeai.wroteSeen, devforgeai.closedFor, devforgeai.precompact"
     ],
     "gatingHooks": []
    },
@@ -255,16 +278,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./progress.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, prompt.compose, skill.prompt, tool.call, prompt.submit, turn.start, session.append{door=response}, turn.complete, command.run, session.compact, session.end, ui.render{component=AbovePrompt}",
+      "./progress.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, prompt.compose, skill.prompt, tool.call, prompt.submit, turn.start, session.append{door=response}, turn.complete, command.run, command.run{command=progress}, session.measure, session.compact, session.end, ui.render{component=AbovePrompt}",
       "./progress.tsx gating hook with .catch: classic.SessionStart{source=clear|resume|fork}",
       "./progress.tsx gating hook with .catch: tool.call",
       "./progress.tsx gating hook with .catch: prompt.submit",
       "./progress.tsx gating hook with .catch: session.append{door=response}",
       "./progress.tsx gating hook with .catch: command.run",
+      "./progress.tsx gating hook with .catch: command.run{command=progress}",
       "./progress.tsx gating hook with .catch: session.compact",
-      "./progress.tsx calls: $.clock.every (via ensureTimer), $.clock.now (via adapterLog, appendEvent, askReview, namedByLiveRuns, pendingState, prepareRun, refreshStatus, resumeOffer, unwindNow), $.clock.sleep, $.fs.exists (via appendLog, ensureIgnore, evaluate, gatedFor, listFolders, resumeOffer, skillKind, writeGateOf), $.fs.list (via listFolders, namedByLiveRuns, resumeOffer, skillKind), $.fs.read (via appendEvent, appendLog, compactNotes, contentOf, continuedFiles, evaluate, gatedFor, linesOf, namedByLiveRuns, resumeOffer, returnStepNow, review, reviewReturned, skillKind, stopIfAsked, writeGateOf, wroteFiles), $.fs.write (via absorbNow, appendLog, askReview, ensureIgnore, pendingState, writeLog), $.process.run (via evaluate, findPython, resolveMode, startCleanup, startPrune, switchMode), $.session.id (via ownDrafts, prepareRun, resolveMode, sessionDir), $.session.root, $.session.surfaces (via hasSurface, resumeOffer, review, reviewReturned), $.session.version (via prepareRun), $.state.g… [+164 chars]",
-      "./progress.tsx state writes: devforgeai.adhered, devforgeai.cleaned, devforgeai.closedFor, devforgeai.contextSent, devforgeai.hinted, devforgeai.lastEventAt, devforgeai.marked, devforgeai.mode, devforgeai.modeSource, devforgeai.off, devforgeai.refusals, devforgeai.refused, devforgeai.returned, devforgeai.reviewed, devforgeai.run, devforgeai.shown, devforgeai.summary, devforgeai.tasks, devforgeai.todos, devforgeai.trail, devforgeai.wroteSeen",
-      "./progress.tsx state reads: devforgeai.adhered, devforgeai.cleaned, devforgeai.closedFor, devforgeai.contextSent, devforgeai.hinted, devforgeai.lastEventAt, devforgeai.marked, devforgeai.mode, devforgeai.modeSource, devforgeai.off, devforgeai.refusals, devforgeai.refused, devforgeai.returned, devforgeai.reviewed, devforgeai.run, devforgeai.shown, devforgeai.summary, devforgeai.tasks, devforgeai.todos, devforgeai.trail, devforgeai.wroteSeen"
+      "./progress.tsx calls: $.clock.every (via ensureTimer), $.clock.now (via adapterLog, appendEvent, askReview, holdStarts, ledgerTurn, namedByLiveRuns, pendingState, prepareRun, progressNow, refreshStatus, resumeOffer, unwindNow), $.clock.sleep, $.command.register (via registerProgress), $.command.run (via measured), $.fs.exists (via appendLog, ensureIgnore, evaluate, gatedFor, ledgerAdd, listFolders, resumeOffer, setup, skillKind, writeGateOf), $.fs.list (via listFolders, namedByLiveRuns, resumeOffer, skillKind), $.fs.read (via appendEvent, appendLog, compactNotes, contentOf, continuedFiles, evaluate, gatedFor, ledgerAdd, linesOf, namedByLiveRuns, resumeOffer, returnStepNow, review, reviewReturned, skillKind, stopIfAsked, writeGateOf, wroteFiles), $.fs.write (via absorbNow, appendLog, askReview, ensureIgnore, ledgerAdd, liftOdometer, pendingState, putLog, tryOdometer), $.process.run (via evaluate, findPython, resolveMode, startCleanup, startPrune, switchMode), $.session.id (via ledgerTur… [+381 chars]",
+      "./progress.tsx state writes: devforgeai.adhered, devforgeai.cleaned, devforgeai.closedFor, devforgeai.contextSent, devforgeai.hinted, devforgeai.lastEventAt, devforgeai.marked, devforgeai.mode, devforgeai.modeSource, devforgeai.off, devforgeai.precompact, devforgeai.refusals, devforgeai.refused, devforgeai.returned, devforgeai.reviewed, devforgeai.run, devforgeai.shown, devforgeai.summary, devforgeai.tasks, devforgeai.todos, devforgeai.trail, devforgeai.wroteSeen",
+      "./progress.tsx state reads: devforgeai.adhered, devforgeai.cleaned, devforgeai.closedFor, devforgeai.contextSent, devforgeai.hinted, devforgeai.lastEventAt, devforgeai.marked, devforgeai.mode, devforgeai.modeSource, devforgeai.off, devforgeai.precompact, devforgeai.refusals, devforgeai.refused, devforgeai.returned, devforgeai.reviewed, devforgeai.run, devforgeai.shown, devforgeai.summary, devforgeai.tasks, devforgeai.todos, devforgeai.trail, devforgeai.wroteSeen"
      ],
      "gatingHooks": [
       {
@@ -299,14 +323,21 @@
       },
       {
        "module": "./progress.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=progress}",
+       "hasCatch": true
+      },
+      {
+       "module": "./progress.tsx",
        "pattern": "session.compact",
        "hook": "session.compact",
        "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "c49045bbcb5937b4"
+ "sourceHash": "2207feadd97687c2"
 }

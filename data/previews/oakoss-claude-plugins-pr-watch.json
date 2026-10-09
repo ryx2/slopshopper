@@ -1,6 +1,6 @@
 {
  "slug": "oakoss-claude-plugins-pr-watch",
- "generatedAt": "2026-10-08T15:54:33.042Z",
+ "generatedAt": "2026-10-09T15:34:07.671Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,6 +14,24 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__pr-watch__watch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__pr-watch__unwatch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__pr-watch__watches"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
@@ -21,13 +39,27 @@
    }
   ],
   "commands": [],
-  "tools": [],
+  "tools": [
+   {
+    "name": "watch",
+    "description": "Watches a GitHub pull request in pr-watch and returns what it shows now. Its line above the prompt follows its checks, and pr-watch tells you in this conversation, as /config allows, when it turns ready to merge, a check fails, it has conflicts or requested changes, someone comments or reviews, or its merge's checks finish. Pull requests you open with gh pr create, or merge with gh pr merge and a number, URL or branch, are watched already; use this for any other you are waiting on, instead of polling gh pr checks or sleeping."
+   },
+   {
+    "name": "unwatch",
+    "description": "Stops pr-watch watching a pull request (its number, URL or head branch) or a pushed branch, once you no longer need its news."
+   },
+   {
+    "name": "watches",
+    "description": "Lists what pr-watch is watching, each with what its line shows now. Read-only."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.tool.register": 3,
    "$.clock.every": 1,
    "$.clock.now": 1,
    "$.state.get": 1
@@ -66,18 +98,26 @@
   "hooks": [
    "session.start",
    "tool.call{tool=Bash}",
+   "tool.call{tool=mcp__pr-watch__watch}",
+   "tool.call{tool=mcp__pr-watch__unwatch}",
+   "tool.call{tool=mcp__pr-watch__watches}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.clock.every",
    "$.clock.now",
-   "$.process.run (via learnEstimates",
-   "readGh)",
+   "$.process.run (via followMerge",
+   "learnEstimates",
+   "readGh",
+   "viewedTarget)",
    "$.prompt.submit (via wake)",
    "$.state.get",
    "$.state.set",
+   "$.tool.register (via registerTools)",
    "$.ui.resolve",
-   "$.ui.toast (via refresh",
+   "$.ui.toast (via followMerge",
+   "refresh",
+   "registerTools",
    "safeTick",
    "wake)"
   ],
@@ -114,9 +154,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=Bash}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, tool.call{tool=Bash}, tool.call{tool=mcp__pr-watch__watch}, tool.call{tool=mcp__pr-watch__unwatch}, tool.call{tool=mcp__pr-watch__watches}, ui.render{component=AbovePrompt}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.process.run (via learnEstimates, readGh), $.prompt.submit (via wake), $.state.get, $.state.set, $.ui.resolve, $.ui.toast (via refresh, safeTick, wake)",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__pr-watch__watch}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__pr-watch__unwatch}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__pr-watch__watches}",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.process.run (via followMerge, learnEstimates, readGh, viewedTarget), $.prompt.submit (via wake), $.state.get, $.state.set, $.tool.register (via registerTools), $.ui.resolve, $.ui.toast (via followMerge, refresh, registerTools, safeTick, wake)",
       "./register.tsx state writes: pr-watch.estimates, pr-watch.now, pr-watch.watches",
       "./register.tsx state reads: pr-watch.estimates, pr-watch.now, pr-watch.watches"
      ],
@@ -126,11 +169,30 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__pr-watch__watch}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__pr-watch__unwatch}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__pr-watch__watches}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "63a117725dbc63bb"
+ "sourceHash": "bd3e17941e719afb"
 }

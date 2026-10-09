@@ -1,0 +1,352 @@
+{
+ "slug": "liuyejinghong-claude-workflow-token-speed",
+ "generatedAt": "2026-10-09T15:32:38.877Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "classic.PostToolUse"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tok-speed"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "tok-speed",
+    "description": "各代理独立按请求模型统计；主控 first，reset 清空本会话统计",
+    "argumentHint": "[reset]",
+    "output": "token-speed 0.3.2 · 各代理独立累计 · 主控 first\n各代理同一行显示模型、effort、Ctx、Live/Last/Avg（tok/s 只标一次）；工作区最后一行。effort 来源：request 为 turn.step 请求，applied 为 classic 实际档位，configured 为主控配置或明确模型后缀，unknown 为 —。主控 Ctx 来自 session.usage；子代理输入来自最近 CLI uncached+cache读写总量，窗口从 data/model-contexts.json 精确匹配模型尾名/aliases，明确 override 优先官方 default，来源分别 cli-input-window-config、cli-input-official-default 与 cli-input-official-capacity，均不冒充 API 实测窗口；未匹配模型显示 k/?。暗底块状条固定 10 格，每格 8 档共 80 视觉档位（相邻整数百分比可能落在同一档，数字仍为整数 1%），填充固定使用 theme `rate_limit_fill`，轨道为 `rate_limit_empty`，窄屏可省条；无占用读数显示 —%。\ncontext registry v1 (load failed: confirmed overrides only) · 优先实际 session 窗口、明确 override、官方 default（未给默认时明确 capacity）、未知；官方 max 仅元数据，不因 [1m] 自动选择。\nmain · 主控 · ended · claude-opus-5-5 · effort — (unknown) · Ctx —/? (unknown) · Live — · idle\nLast — · Avg — · 尚无本会话统计\nLive：最近 3 秒收到的文本、thinking、工具 JSON 参数估算；CJK 每 Unicode code point 1 token，其余 0.25。分母 min(3 秒, 请求已耗时)，不足 250ms 为 —；停流 3 秒后为 0。~ 非 tokenizer 精确计数。无法观察的代理流为 —，不推算速度。\nLast/Avg：CLI usage.output_tokens / 请求全程耗时，包含 TTFT、thinking、网络与请求内停顿；排除请求之间的工具/用户空闲，非纯解码速度。Last 为该代理该模型最近一次有效请求；Avg 为最近 24 小时滚动窗口内该模型的有效 token 总数 / 有效耗时总和，按请求完成时间戳（clock epoch ms）判窗，与本地时区无关，出窗即弃。迁移自 v0.2 的无时间戳桶在首个新请求前退回全程累计口径；失败/中断、无有效 usage、耗时不大于 0 不入统计；有效 0 计入。CPA 缺字段可能被 CLI 归零，无法确认其来源；turn.complete usage 不重复累计。\n模型名：以请求 model 为准，去除末尾 [1m]、(high) 或 :high 等配置后缀；统计桶与命令保留已知渠道，UI 仅隐藏最后 / 之前的渠道，不推断渠道。同代理 bare 模型与已知渠道模型尾名相同时沿用渠道；usage.model 不改变标签或桶。旧 v0.1 response-model 均值标为 legacy，保留且不混入新的请求模型均值。\nUI 主控始终第一，活跃子代理按首次观察顺序每个一行；切换 view 不过滤。工具间隙保留行，Live —；结束立即隐藏，命令可查看历史。reload 保留统计、清除无法接管的旧流，以本 session agent.list 同步元数据；/clear 清空，reset 任意 active 请求时拒绝、工具间隙保留活跃代理元数据。"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.fs.read": 1,
+   "$.command.register": 1,
+   "$.state.get": 9,
+   "$.state.set": 5,
+   "$.clock.every": 1,
+   "$.agent.list": 1,
+   "$.session.model": 1,
+   "$.settings.read": 1,
+   "$.session.repo": 1,
+   "$.process.run": 1,
+   "$.clock.now": 2,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 250
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "key": "token-speed-main",
+        "color": "inactive",
+        "wrap": "truncate-end"
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "color": "claude",
+          "bold": true
+         },
+         "children": [
+          "⚡ main"
+         ]
+        },
+        " · ",
+        {
+         "type": "Text",
+         "props": {
+          "color": "text"
+         },
+         "children": [
+          "claude-opus-5-5"
+         ]
+        },
+        " · ",
+        {
+         "type": "Text",
+         "props": {
+          "color": "inactive"
+         },
+         "children": [
+          "—"
+         ]
+        },
+        " · Ctx ",
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "key": "context-meter-main",
+            "backgroundColor": "rate_limit_empty"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "rate_limit_fill"
+             },
+             "children": [
+              ""
+             ]
+            },
+            "          "
+           ]
+          },
+          " "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "inactive"
+         },
+         "children": [
+          "—/?"
+         ]
+        },
+        " · Live ",
+        {
+         "type": "Text",
+         "props": {
+          "color": "inactive",
+          "bold": false
+         },
+         "children": [
+          "    —"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          " · Last ",
+          {
+           "type": "Text",
+           "props": {
+            "color": "inactive"
+           },
+           "children": [
+            "    —"
+           ]
+          }
+         ]
+        },
+        " · Avg ",
+        {
+         "type": "Text",
+         "props": {
+          "color": "inactive"
+         },
+         "children": [
+          "    —"
+         ]
+        },
+        " tok/s"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "token-speed-workspace",
+        "color": "inactive",
+        "wrap": "truncate-end"
+       },
+       "children": [
+        "⌂ app on feat/auth-refresh"
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git branch --show-current) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/tok-speed → token-speed 0.3.2 · 各代理独立累计 · 主控 first\n各代理同一行显示模型、effort、Ctx、Live/Last/Avg（tok/s…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "agent.spawn",
+   "turn.step",
+   "turn.complete",
+   "classic.PostToolUse",
+   "classic.Stop",
+   "session.compact",
+   "command.run{command=tok-speed}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.agent.list",
+   "$.clock.every (via ensureTimer)",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.read",
+   "$.process.run (via refreshWorkspace)",
+   "$.session.model (via refreshMain)",
+   "$.session.repo (via refreshWorkspace)",
+   "$.session.root (via refreshWorkspace)",
+   "$.session.usage (via pollUsage)",
+   "$.settings.read (via configuredEffort)",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.resolve"
+  ],
+  "stateReads": [
+   "token-speed.snapshot"
+  ],
+  "stateWrites": [
+   "token-speed.snapshot"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/liuyejinghong-claude-workflow-token-speed/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/liuyejinghong-claude-workflow-token-speed/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: token-speed.snapshot"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/liuyejinghong-claude-workflow-token-speed/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, agent.spawn, turn.step, turn.complete, classic.PostToolUse, classic.Stop, session.compact, command.run{command=tok-speed}, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=tok-speed}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx calls: $.agent.list, $.clock.every (via ensureTimer), $.clock.now, $.command.register, $.fs.read, $.process.run (via refreshWorkspace), $.session.model (via refreshMain), $.session.repo (via refreshWorkspace), $.session.root (via refreshWorkspace), $.session.usage (via pollUsage), $.settings.read (via configuredEffort), $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx state writes: token-speed.snapshot",
+      "./register.tsx state reads: token-speed.snapshot"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "a2b38dc2820482e5"
+}

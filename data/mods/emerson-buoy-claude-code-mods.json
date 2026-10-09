@@ -1,0 +1,9 @@
+{
+ "slug": "emerson-buoy-claude-code-mods",
+ "files": {
+  "hooks/register.tsx": "import { atom, read, update } from 'claude-code'\nimport type { Register } from 'claude-code'\n\nconst model = atom({ plugin: 'model-badge', key: 'model' } as const, null)\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const current = await $.session.model()\n    await update($, model, () => current)\n\n    return next(e)\n  })\n\n  on('classic.PostModelSwitch', async ($, e, next) => {\n    await update($, model, () => e.to_model)\n\n    return next(e)\n  }).catch(($, e, next) => next(e))\n\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {\n    if (e.props.hasSurvey) {\n      return next(e)\n    }\n\n    const current = await read($, model)\n\n    if (current === null) {\n      return next(e)\n    }\n\n    const { Box, Text } = $.ui.resolve(e)\n\n    return (\n      <Box>\n        <Text dimColor>Model: </Text>\n        <Text bold color=\"claude\">\n          {current}\n        </Text>\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./register.tsx\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"model-badge\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Shows the active model above the prompt.\",\n  \"author\": {\n    \"name\": \"emerson-buoy\"\n  },\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "declare module 'claude-code' {\n  interface PluginState {\n    'model-badge': { model: string | null };\n  }\n}\n"
+ }
+}

@@ -1,0 +1,8 @@
+{
+ "slug": "1619supply-sudo-token-meter",
+ "files": {
+  "hooks/register.ts": "import type { Register, SessionMeasureInput } from 'claude-code'\n\ntype Usage = Pick<SessionMeasureInput, 'context' | 'rateLimits' | 'cost'>\n\nconst LIMIT_NAMES: Record<string, string> = { five_hour: '5h', seven_day: '7d', spend_limit: 'spend' }\n\nconst k = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`)\n\nexport const formatUsage = ({ context, rateLimits, cost }: Usage): string => {\n  const parts = [\n    context.tokens === undefined\n      ? `ctx –/${k(context.window)}`\n      : `ctx ${k(context.tokens)}/${k(context.window)} (${context.percent ?? 0}%)`,\n    ...rateLimits.map(r => `${LIMIT_NAMES[r.kind] ?? r.kind} ${r.percentUsed}%`),\n  ]\n  if (cost) parts.push(`$${cost.usd.toFixed(2)}`)\n  return `◆ ${parts.join(' · ')}`\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const result = await next(e)\n    $.ui.status(formatUsage(await $.session.usage()))\n    return result\n  })\n\n  on('session.measure', ($, e, next) => {\n    $.ui.status(formatUsage(e))\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"token-meter\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Always-on token usage: context fill, rate-limit windows and session cost\",\n  \"author\": {\n    \"name\": \"1619supply-sudo\"\n  }\n}"
+ }
+}

@@ -1,0 +1,338 @@
+{
+ "slug": "codyamaughan-meme-factory",
+ "generatedAt": "2026-10-09T15:33:08.213Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__meme-factory__make_meme"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.check"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__meme-factory__meme_factory_debug"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "meme"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "meme-factory:picture-check"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "meme",
+    "description": "Open the Meme Factory panel, start a meme (/meme <what it is about>), or open /meme gallery or /meme settings in your browser",
+    "argumentHint": "[what the meme is about | gallery | settings]",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "meme_factory_debug",
+    "description": "Meme Factory troubleshooting, for when the user reports the panel misbehaving (no Slack channels, posts failing). Actions: 'status' (connectors, Slack channels and the last problem, posting state, recent debug log), 'refresh' (look up connectors and Slack channels again), 'upload_check' (test Slack's upload steps without sharing anything), and for testing the panel 'approve' (approve the selected draft) and 'pick' (choose a channel by name). Nothing here posts: only the person's Post it does."
+   },
+   {
+    "name": "make_meme",
+    "description": "Make a meme with the Meme Factory. Use it whenever the user asks for a meme. It returns immediately: drafts appear in a side panel where the user reviews them, chats to refine them, approves one, and posts it from the panel, so do not wait for it or ask the user to describe the result. For destinations the panel cannot post to itself, you will get a separate message asking you to post it through their connectors."
+   }
+  ],
+  "panes": [
+   {
+    "id": "meme-factory",
+    "title": "Meme Factory"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 12,
+   "$.fs.read": 1,
+   "$.store.get": 1,
+   "$.tool.register": 2,
+   "$.session.id": 1,
+   "$.fs.exists": 1,
+   "$.agent.register": 1,
+   "$.command.register": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "meme-factory": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "rowGap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "columnGap": 2,
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#19141F",
+           "backgroundColor": "#D9F24A"
+          },
+          "children": [
+           " MEME FACTORY "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Ask Claude for a meme, or describe one here."
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "chat",
+         "label": "Meme",
+         "placeholder": "when the standup was supposed to be 15 minutes",
+         "value": "",
+         "submitLabel": "make",
+         "autoFocus": true,
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "gallery",
+         "label": "Gallery and settings in your browser",
+         "hotkey": "v",
+         "plain": true,
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "Meme Factory"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(meme-factory)",
+   "/meme → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__meme-factory__make_meme}",
+   "tool.call",
+   "tool.check",
+   "tool.call{tool=mcp__meme-factory__meme_factory_debug}",
+   "command.run{command=meme}",
+   "agent.offer{agent=meme-factory:picture-check}",
+   "turn.complete",
+   "ui.render{component=Pane}"
+  ],
+  "calls": [
+   "$.agent.register",
+   "$.agent.spawn (via checkPictures)",
+   "$.clock.after (via choose",
+   "confirmPost",
+   "remix",
+   "startJob)",
+   "$.clock.now (via approve)",
+   "$.clock.sleep (via checkPictures)",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.exists",
+   "$.fs.read",
+   "$.fs.stat (via postToSlack",
+   "uploadCheck)",
+   "$.fs.write (via debug)",
+   "$.http.fetch (via jevJudge",
+   "jevPick",
+   "syncGallery)",
+   "$.mcp.call (via findSlackByName",
+   "slackCall)",
+   "$.model.complete (via complete)",
+   "$.process.run",
+   "$.process.spawn (via startGallery)",
+   "$.prompt.submit",
+   "$.session.id",
+   "$.session.surfaces (via debugStatus",
+   "renderArt)",
+   "$.session.version (via debugStatus)",
+   "$.store.get",
+   "$.store.set (via approve",
+   "saveSettings)",
+   "$.tool.call (via slackCall)",
+   "$.tool.list (via refreshConnectors)",
+   "$.tool.register",
+   "$.ui.ask",
+   "$.ui.copy (via copyLink)",
+   "$.ui.focus (via talkButton)",
+   "$.ui.invalidate (via changed)",
+   "$.ui.log (via dlog)",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve (via drawPane)",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "CLAUDE_CODE_FORCE_TERMINAL_IMAGES",
+   "HOME",
+   "KITTY_WINDOW_ID",
+   "MEMEGEN_API_KEY",
+   "MEMEGEN_URL",
+   "MEMEGEN_WATERMARK",
+   "MEME_FACTORY_CHAT_MODEL",
+   "MEME_FACTORY_CHECK_PICTURES",
+   "MEME_FACTORY_DEBUG",
+   "MEME_FACTORY_JUDGE_MODEL",
+   "MEME_FACTORY_MODEL",
+   "MEME_FACTORY_WRITER_MODEL",
+   "STY",
+   "TERM",
+   "TERM_PROGRAM",
+   "TMUX",
+   "TYPESAFE_API_KEY"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/codyamaughan-meme-factory/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/codyamaughan-meme-factory/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/codyamaughan-meme-factory/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.js hooks: session.start, tool.call{tool=mcp__meme-factory__make_meme}, tool.call, tool.check, tool.call{tool=mcp__meme-factory__meme_factory_debug}, command.run{command=meme}, agent.offer{agent=meme-factory:picture-check}, turn.complete, ui.render{component=Pane}",
+      "./register.js answers its own command: command.run{command=meme}",
+      "./register.js gating hook with .catch: tool.call{tool=mcp__meme-factory__make_meme}",
+      "./register.js gating hook with .catch: tool.call",
+      "./register.js gating hook without .catch: tool.check",
+      "./register.js gating hook without .catch: tool.call{tool=mcp__meme-factory__meme_factory_debug}",
+      "./register.js gating hook without .catch: agent.offer{agent=meme-factory:picture-check}",
+      "./register.js calls: $.agent.register, $.agent.spawn (via checkPictures), $.clock.after (via choose, confirmPost, remix, startJob), $.clock.now (via approve), $.clock.sleep (via checkPictures), $.command.register, $.env.get, $.fs.exists, $.fs.read, $.fs.stat (via postToSlack, uploadCheck), $.fs.write (via debug), $.http.fetch (via jevJudge, jevPick, syncGallery), $.mcp.call (via findSlackByName, slackCall), $.model.complete (via complete), $.process.run, $.process.spawn (via startGallery), $.prompt.submit, $.session.id, $.session.surfaces (via debugStatus, renderArt), $.session.version (via debugStatus), $.store.get, $.store.set (via approve, saveSettings), $.tool.call (via slackCall), $.tool.list (via refreshConnectors), $.tool.register, $.ui.ask, $.ui.copy (via copyLink), $.ui.focus (via talkButton), $.ui.invalidate (via changed), $.ui.log (via dlog), $.ui.open (via openPane), $.ui.resolve (via drawPane), $.ui.toast",
+      "./register.js env writes: nothing",
+      "./register.js env reads: CLAUDE_CODE_FORCE_TERMINAL_IMAGES, HOME, KITTY_WINDOW_ID, MEMEGEN_API_KEY, MEMEGEN_URL, MEMEGEN_WATERMARK, MEME_FACTORY_CHAT_MODEL, MEME_FACTORY_CHECK_PICTURES, MEME_FACTORY_DEBUG, MEME_FACTORY_JUDGE_MODEL, MEME_FACTORY_MODEL, MEME_FACTORY_WRITER_MODEL, STY, TERM, TERM_PROGRAM, TMUX, TYPESAFE_API_KEY"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__meme-factory__make_meme}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.check",
+       "hook": "tool.check",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__meme-factory__meme_factory_debug}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=meme-factory:picture-check}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "800fb0e85117a954"
+}

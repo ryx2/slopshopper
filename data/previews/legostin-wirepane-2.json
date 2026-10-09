@@ -1,0 +1,901 @@
+{
+ "slug": "legostin-wirepane-2",
+ "generatedAt": "2026-10-09T15:33:47.814Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "proxy"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "proxy"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__track_domains"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__list_rules"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__add_rule"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__update_rule"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__remove_rule"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__resume_request"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__send_ws_message"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__close_websocket"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__list_requests"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__get_request"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__diagnose"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__search_requests"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__wait_for_request"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__replay_request"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__diff_requests"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__wirepane__export_har"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "proxy",
+    "description": "HTTPS proxy: captured requests, filter, and setup for a browser, iOS and Android",
+    "argumentHint": "[start|stop|restart|clear|setup|rules|doctor|track <domains>|untrack <domains>|export [file]|status|tree|list]",
+    "output": "The Proxy pane is open."
+   }
+  ],
+  "tools": [
+   {
+    "name": "list_requests",
+    "description": "List the HTTP(S) requests captured by Wirepane, the proxy the person runs with /proxy for their browser, iOS simulator/iPhone and Android emulator/phone. Returns the proxy status, then one line per request, oldest first: #id method status url (long ones cut) response-size duration type, WebSocket message counts, server-sent event counts, the rules that changed it and the error if one. Status CERT means the client refused the proxy certificate. To check for new requests, pass since: the newest id you saw. filter: space-separated terms that must all hold, a leading \"-\" negates one: free text (substring of the URL), method:POST (or method:get,post), status:4xx | status:404 | status:>=400 | status:400-499, host:api.example.com | host:*.example.com, path:/v1/login, type:json|html|xml|js|css|img|font|media|text|form|grpc|ws|tunnel|other, is:error|ok|pending|tunnel|ws|https|h2|grpc|held|rejected|modified, client:192.168.."
+   },
+   {
+    "name": "get_request",
+    "description": "Show one captured request in full by its id from list_requests: URL, status, protocol, timing, client, error, request and response headers, the decoded (gunzipped) text bodies cut at max_body_chars, gRPC and protobuf bodies decoded without a schema, trailers (gRPC status), a WebSocket's messages both ways and a text/event-stream's events (newest 50; from and limit page through them)."
+   },
+   {
+    "name": "diagnose",
+    "description": "Check everything between the person and their traffic, and say how to fix each problem: the proxy and its process (sessions sharing it, memory), the system proxy (left on by a dead proxy, held by Charles or Proxyman), a VPN, the Mac's trust in the CA, clients that refuse the CA (missing CA vs a pinned host), upstream failures (DNS, self-signed dev servers, closed ports), tracked domains that match nothing, Android emulators (proxy, system CA). Call it first when the person says nothing shows up, the app fails behind the proxy, or a phone cannot connect."
+   },
+   {
+    "name": "search_requests",
+    "description": "Find captured requests that hold some text (case aside) in their URL, headers, bodies, WebSocket messages or server-sent events, newest first, with the text in context: which request returned \"invalid_token\", which one sent a user id. Looks through the newest 400."
+   },
+   {
+    "name": "wait_for_request",
+    "description": "Wait until a request matching the filter ends (or starts, with until: start), then answer it: for \"now tap Log in\" moments, instead of calling list_requests again and again. Counts requests after since (default: the newest now)."
+   },
+   {
+    "name": "replay_request",
+    "description": "Send a captured HTTP request again through the proxy, as it was or changed (method, url, headers, body), and answer the new request with its response; it is recorded (marked as a replay) and the rules apply. It really is sent again: mind requests that pay, post or delete."
+   },
+   {
+    "name": "diff_requests",
+    "description": "Compare two captured requests (the one that works and the one that does not): method, URL, query, headers, status and JSON bodies field by field."
+   },
+   {
+    "name": "export_har",
+    "description": "Write the captured requests (all, or those matching a filter, at most 1000) to a HAR 1.2 file, with bodies and WebSocket messages, for a teammate, a bug report, Chrome DevTools or another proxy. Answers the path."
+   },
+   {
+    "name": "resume_request",
+    "description": "Let go of an exchange held at a breakpoint (a rule step {type: breakpoint} in request or response; list_requests shows it as HELD, get_request shows what is held). action continue (default) with optional changes: method, url, headers (null removes one), body or json (request phase); status, headers, body or json (response phase). action respond answers a held request without the server: respond {status, headers?, text | json}. action abort cuts the connection."
+   },
+   {
+    "name": "send_ws_message",
+    "description": "Send a message into a live WebSocket the proxy records (its id from list_requests, kind ws, still open): to the client (as if the server said it) or to the server (as if the client did). Give text, json, or b64 for a binary message. The message shows in the log marked \"sent by Claude\"."
+   },
+   {
+    "name": "close_websocket",
+    "description": "Close a live WebSocket the proxy records, both sides, with a close code (default 1000) and reason, to see how the app copes."
+   },
+   {
+    "name": "list_rules",
+    "description": "List the proxy's rules (<project>/.claude/proxy-rules.json): order (priority), id, on/off, what each does in words, errors, and how many captured requests each changed."
+   },
+   {
+    "name": "add_rule",
+    "description": "Add a rule to the proxy's rules engine. A rule changes matching requests before they are sent and their responses before the client gets them: delays, throttling, headers, query, sending elsewhere, mocked answers, rewritten or merged bodies, status codes, failed connections, scripts; and a WebSocket's messages both ways (rewrite, drop, delay, answer, send more, close), up to a mock WebSocket server. Works on HTTP/1.1 and HTTP/2. Rules live in <project>/.claude/proxy-rules.json; earlier rules apply first and every matching rule chains. It applies at once while the proxy runs. Prefer declarative steps; a script you add here is approved to run. Answers the rule in words. Ids of changed requests show in list_requests."
+   },
+   {
+    "name": "update_rule",
+    "description": "Change a proxy rule by id: replace any of its fields (match, request and response are replaced whole), turn it on or off, or move it in the order. Answers the rule in words."
+   },
+   {
+    "name": "remove_rule",
+    "description": "Remove a proxy rule by id."
+   },
+   {
+    "name": "track_domains",
+    "description": "Show or change the proxy's tracked domains (one list for every session on this Mac). While the list is on and not empty, the proxy decrypts and records only these hosts; every other connection passes through untouched and unrecorded (so a phone's system services keep working and the list stays clean). Patterns: app.example.com, *.example.com (covers example.com too), or re:<regex>; URLs are cut to their host. Answers the list and the untracked hosts the proxy has seen, busiest first. With no arguments it only answers."
+   }
+  ],
+  "panes": [
+   {
+    "id": "proxy",
+    "title": "Proxy"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 16,
+   "$.session.id": 2,
+   "$.store.get": 2,
+   "$.fs.read": 4,
+   "$.session.root": 1,
+   "$.env.get": 4,
+   "$.state.get": 22,
+   "$.state.set": 4,
+   "$.ui.open": 1,
+   "$.fs.list": 3,
+   "$.process.run": 6,
+   "$.fs.exists": 19,
+   "$.ui.status": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "proxy": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "error"
+        },
+        "children": [
+         "✕ not working · 0 requests"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "toggle",
+           "hotkey": "s",
+           "variant": "primary",
+           "label": "Start",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "View"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "layout-list",
+           "hotkey": "l",
+           "variant": "primary",
+           "label": "List",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "layout-tree",
+           "hotkey": "t",
+           "label": "Tree",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "domains",
+           "hotkey": "d",
+           "label": "Domains: all",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "rules",
+           "hotkey": "r",
+           "label": "Rules (0)",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "health",
+           "hotkey": "h",
+           "label": "Health",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "clear",
+           "hotkey": "x",
+           "label": "Clear",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setup",
+           "hotkey": "n",
+           "label": "Setup",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "error"
+        },
+        "children": [
+         "Node.js 18 or newer runs the proxy, and there is none on PATH or where Homebrew, Volta, nvm, fnm, mise, asdf, nodenv or MacPorts put it."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "download-node",
+           "hotkey": "i",
+           "variant": "primary",
+           "label": "Download Node.js",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "nodejs.org: install it, then press Start"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "filter",
+         "label": "Filter ",
+         "placeholder": "method:POST status:4xx host:*.api.com type:json is:error -text",
+         "value": "",
+         "submitLabel": "apply",
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "claude",
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Quick start",
+           ""
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "qs-row-Proxy",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "Proxy        "
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "qs-start",
+             "variant": "primary",
+             "label": "Start",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "runs it on this Mac"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "qs-row-Browser",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "Browser      "
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "no Chrome, Edge, Brave or Chromium in /Applications"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "qs-row-Phone",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "Phone        "
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "qs-phone",
+             "label": "Set up a phone",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "its address and a QR code"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "qs-row-Only your app",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "Only your app"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "qs-domains",
+             "label": "Track domains",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true,
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "record only its hosts"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Proxy"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(proxy)",
+   "$.process.run(node --version) → exit 0",
+   "$.process.run(xcrun simctl list devices available -j) → exit 0",
+   "$.process.run(emulator -version) → exit 0",
+   "$.process.run(adb version) → exit 0",
+   "/proxy → The Proxy pane is open.",
+   "$.process.run(emulator -list-avds) → exit 0",
+   "$.process.run(adb devices) → exit 0"
+  ],
+  "console": [],
+  "status": "⇄ proxy: failed (/proxy)",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "command.run{command=proxy}",
+   "ui.render{component=Pane, requestId=proxy}",
+   "tool.call{tool=mcp__wirepane__track_domains}",
+   "tool.call{tool=mcp__wirepane__list_rules}",
+   "tool.call{tool=mcp__wirepane__add_rule}",
+   "tool.call{tool=mcp__wirepane__update_rule}",
+   "tool.call{tool=mcp__wirepane__remove_rule}",
+   "tool.call{tool=mcp__wirepane__resume_request}",
+   "tool.call{tool=mcp__wirepane__send_ws_message}",
+   "tool.call{tool=mcp__wirepane__close_websocket}",
+   "tool.call{tool=mcp__wirepane__list_requests}",
+   "tool.call{tool=mcp__wirepane__get_request}",
+   "tool.call{tool=mcp__wirepane__diagnose}",
+   "tool.call{tool=mcp__wirepane__search_requests}",
+   "tool.call{tool=mcp__wirepane__wait_for_request}",
+   "tool.call{tool=mcp__wirepane__replay_request}",
+   "tool.call{tool=mcp__wirepane__diff_requests}",
+   "tool.call{tool=mcp__wirepane__export_har}"
+  ],
+  "calls": [
+   "$.clock.after (via scheduleFlush)",
+   "$.clock.now",
+   "$.clock.sleep (via startProxy)",
+   "$.command.register",
+   "$.config.list (via drawSetup",
+   "setOption)",
+   "$.config.set (via drawSetup",
+   "setOption)",
+   "$.env.get (via adb",
+   "androidTool",
+   "dataDirOf",
+   "findBrowsers",
+   "findNode",
+   "trustCaOnMac)",
+   "$.fs.exists (via adb",
+   "androidTool",
+   "findBrew",
+   "findBrowsers",
+   "findNode)",
+   "$.fs.list (via findNode)",
+   "$.fs.read",
+   "$.fs.write",
+   "$.process.run",
+   "$.process.spawn (via startProxy)",
+   "$.prompt.fill (via drawDetail",
+   "drawHeld)",
+   "$.session.id",
+   "$.session.root (via exportHar",
+   "rulesFileOf",
+   "startProxy)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via chooseLayout",
+   "setTracking",
+   "startProxy)",
+   "$.tool.register",
+   "$.ui.copy (via drawDetail",
+   "drawSetup)",
+   "$.ui.log (via startProxy)",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve (via drawDetail",
+   "drawDomains",
+   "drawHealth",
+   "drawHeld",
+   "drawList",
+   "drawRules",
+   "drawSetup)",
+   "$.ui.status (via showStatus)",
+   "$.ui.toast (via openPane",
+   "repairLeftoverProxy",
+   "startProxy)"
+  ],
+  "stateReads": [
+   "wirepane.busy",
+   "wirepane.caSimulators",
+   "wirepane.devices",
+   "wirepane.emulators",
+   "wirepane.expanded",
+   "wirepane.filter",
+   "wirepane.flows",
+   "wirepane.health",
+   "wirepane.held",
+   "wirepane.macTrust",
+   "wirepane.nextId",
+   "wirepane.notice",
+   "wirepane.pinned",
+   "wirepane.rules",
+   "wirepane.sessions",
+   "wirepane.skipped",
+   "wirepane.status",
+   "wirepane.systemProxy",
+   "wirepane.tracking",
+   "wirepane.version",
+   "wirepane.view",
+   "wirepane.wanted"
+  ],
+  "stateWrites": [
+   "wirepane.busy",
+   "wirepane.caSimulators",
+   "wirepane.devices",
+   "wirepane.emulators",
+   "wirepane.expanded",
+   "wirepane.filter",
+   "wirepane.flows",
+   "wirepane.health",
+   "wirepane.held",
+   "wirepane.macTrust",
+   "wirepane.nextId",
+   "wirepane.notice",
+   "wirepane.pinned",
+   "wirepane.rules",
+   "wirepane.sessions",
+   "wirepane.skipped",
+   "wirepane.status",
+   "wirepane.systemProxy",
+   "wirepane.tracking",
+   "wirepane.version",
+   "wirepane.view",
+   "wirepane.wanted"
+  ],
+  "envReads": [
+   "ANDROID_HOME",
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/legostin-wirepane-2/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/legostin-wirepane-2/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: wirepane.flows, wirepane.status, wirepane.view, wirepane.filter, wirepane.wanted, wirepane.nextId, wirepane.notice, wirepane.emulators, wirepane.expanded, wirepane.rules, wirepane.tracking, wirepane.skipped, wirepane.devices, wirepane.systemProxy, wirepane.caSimulators, wirepane.busy, wirepane.macTrust, wirepane.version, wirepane.sessions, wirepane.pinned, wirepane.health, wirepane.held"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/legostin-wirepane-2/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, command.run{command=proxy}, ui.render{component=Pane, requestId=proxy}, tool.call{tool=mcp__wirepane__track_domains}, tool.call{tool=mcp__wirepane__list_rules}, tool.call{tool=mcp__wirepane__add_rule}, tool.call{tool=mcp__wirepane__update_rule}, tool.call{tool=mcp__wirepane__remove_rule}, tool.call{tool=mcp__wirepane__resume_request}, tool.call{tool=mcp__wirepane__send_ws_message}, tool.call{tool=mcp__wirepane__close_websocket}, tool.call{tool=mcp__wirepane__list_requests}, tool.call{tool=mcp__wirepane__get_request}, tool.call{tool=mcp__wirepane__diagnose}, tool.call{tool=mcp__wirepane__search_requests}, tool.call{tool=mcp__wirepane__wait_for_request}, tool.call{tool=mcp__wirepane__replay_request}, tool.call{tool=mcp__wirepane__diff_requests}, tool.call{tool=mcp__wirepane__export_har}",
+      "./register.tsx answers its own command: command.run{command=proxy}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__track_domains}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__list_rules}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__add_rule}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__update_rule}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__remove_rule}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__resume_request}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__send_ws_message}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__close_websocket}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__list_requests}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__get_request}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__diagnose}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__search_requests}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__wait_for_request}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__replay_request}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__diff_requests}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__wirepane__export_har}",
+      "./register.tsx calls: $.clock.after (via scheduleFlush), $.clock.now, $.clock.sleep (via startProxy), $.command.register, $.config.list (via drawSetup, setOption), $.config.set (via drawSetup, setOption), $.env.get (via adb, androidTool, dataDirOf, findBrowsers, findNode, trustCaOnMac), $.fs.exists (via adb, androidTool, findBrew, findBrowsers, findNode), $.fs.list (via findNode), $.fs.read, $.fs.write, $.process.run, $.process.spawn (via startProxy), $.prompt.fill (via drawDetail, drawHeld), $.session.id, $.session.root (via exportHar, rulesFileOf, startProxy), $.state.get, $.state.set, $.store.get, $.store.set (via chooseLayout, setTracking, startProxy), $.tool.register, $.ui.copy (via drawDetail, drawSetup), $.ui.log (via startProxy), $.ui.open (via openPane), $.ui.resolve (via drawDetail, drawDomains, drawHealth, drawHeld, drawList, drawRules, drawSetup), $.ui.status (via showStatus), $.ui.toast (via openPane, repairLeftoverProxy, startProxy)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: ANDROID_HOME, HOME",
+      "./register.tsx state writes: wirepane.busy, wirepane.caSimulators, wirepane.devices, wirepane.emulators, wirepane.expanded, wirepane.filter, wirepane.flows, wirepane.health, wirepane.held, wirepane.macTrust, wirepane.nextId, wirepane.notice, wirepane.pinned, wirepane.rules, wirepane.sessions, wirepane.skipped, wirepane.status, wirepane.systemProxy, wirepane.tracking, wirepane.version, wirepane.view, wirepane.wanted",
+      "./register.tsx state reads: wirepane.busy, wirepane.caSimulators, wirepane.devices, wirepane.emulators, wirepane.expanded, wirepane.filter, wirepane.flows, wirepane.health, wirepane.held, wirepane.macTrust, wirepane.nextId, wirepane.notice, wirepane.pinned, wirepane.rules, wirepane.sessions, wirepane.skipped, wirepane.status, wirepane.systemProxy, wirepane.tracking, wirepane.version, wirepane.view, wirepane.wanted"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__track_domains}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__list_rules}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__add_rule}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__update_rule}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__remove_rule}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__resume_request}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__send_ws_message}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__close_websocket}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__list_requests}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__get_request}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__diagnose}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__search_requests}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__wait_for_request}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__replay_request}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__diff_requests}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__wirepane__export_har}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "48e09977f37cb73a"
+}

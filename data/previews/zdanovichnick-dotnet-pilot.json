@@ -1,6 +1,6 @@
 {
  "slug": "zdanovichnick-dotnet-pilot",
- "generatedAt": "2026-10-08T15:53:05.958Z",
+ "generatedAt": "2026-10-09T15:32:00.405Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -53,6 +53,18 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "city"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "surface": "terminal"
+    }
+   },
+   {
     "event": "prompt.compose"
    }
   ],
@@ -62,6 +74,12 @@
     "description": "Show the dotnet-pilot pressure score and the events behind it",
     "immediate": true,
     "output": "pressure 0 steady — no red dotnet run recorded this session"
+   },
+   {
+    "name": "city",
+    "description": "Pixel band above the prompt (off: enable \"Pixel city band\" in /config)",
+    "argumentHint": "",
+    "output": "The pixel band is off. Turn on \"Pixel city band\" (pixel_city) in /config, then /city show."
    }
   ],
   "tools": [],
@@ -73,7 +91,7 @@
   "apiCalls": {
    "$.state.get": 5,
    "$.ui.status": 1,
-   "$.command.register": 1
+   "$.command.register": 2
   },
   "timers": [],
   "sites": {},
@@ -89,7 +107,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/dnp-pressure → pressure 0 steady — no red dotnet run recorded this session"
+   "/dnp-pressure → pressure 0 steady — no red dotnet run recorded this session",
+   "/city → The pixel band is off. Turn on \"Pixel city band\" (pixel_city) in /config, then /…"
   ],
   "console": [],
   "status": "pressure 0 steady",
@@ -109,9 +128,16 @@
    "prompt.submit",
    "session.start",
    "command.run{command=dnp-pressure}",
+   "tool.call",
+   "tool.call{tool=Bash|PowerShell}",
+   "turn.complete",
+   "ui.render{component=AbovePrompt}",
+   "command.run{command=city}",
+   "session.start{surface=terminal}",
    "prompt.compose"
   ],
   "calls": [
+   "$.clock.every",
    "$.clock.now",
    "$.command.register",
    "$.fs.list (via isDotNetProject)",
@@ -119,15 +145,19 @@
    "$.session.cwd (via routingSection)",
    "$.state.get",
    "$.state.set",
+   "$.ui.blit",
+   "$.ui.resolve",
    "$.ui.status (via showStatus)",
    "$.ui.toast"
   ],
   "stateReads": [
    "dotnet-pilot.buildStreak",
+   "dotnet-pilot.cityScene",
    "dotnet-pilot.pressure"
   ],
   "stateWrites": [
    "dotnet-pilot.buildStreak",
+   "dotnet-pilot.cityScene",
    "dotnet-pilot.pressure"
   ],
   "envReads": [],
@@ -142,7 +172,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: dotnet-pilot.buildStreak, dotnet-pilot.pressure"
+     "types ./types/index.d.ts declares state: dotnet-pilot.buildStreak, dotnet-pilot.pressure, dotnet-pilot.cityScene"
     ],
     "gatingHooks": []
    },
@@ -153,16 +183,19 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mods/register.ts hooks: tool.call{tool=Bash|PowerShell}, tool.call{tool=Bash|PowerShell}, tool.call{tool=Edit}, tool.call{tool=Write}, prompt.submit, session.start, command.run{command=dnp-pressure}, prompt.compose",
+      "./mods/register.ts hooks: tool.call{tool=Bash|PowerShell}, tool.call{tool=Bash|PowerShell}, tool.call{tool=Edit}, tool.call{tool=Write}, prompt.submit, session.start, command.run{command=dnp-pressure}, tool.call, tool.call{tool=Bash|PowerShell}, turn.complete, ui.render{component=AbovePrompt}, command.run{command=city}, session.start{surface=terminal}, prompt.compose",
       "./mods/register.ts answers its own command: command.run{command=dnp-pressure}",
+      "./mods/register.ts answers its own command: command.run{command=city}",
       "./mods/register.ts gating hook without .catch: tool.call{tool=Bash|PowerShell}",
       "./mods/register.ts gating hook without .catch: tool.call{tool=Bash|PowerShell}",
       "./mods/register.ts gating hook without .catch: tool.call{tool=Edit}",
       "./mods/register.ts gating hook without .catch: tool.call{tool=Write}",
       "./mods/register.ts gating hook without .catch: prompt.submit",
-      "./mods/register.ts calls: $.clock.now, $.command.register, $.fs.list (via isDotNetProject), $.fs.read, $.session.cwd (via routingSection), $.state.get, $.state.set, $.ui.status (via showStatus), $.ui.toast",
-      "./mods/register.ts state writes: dotnet-pilot.buildStreak, dotnet-pilot.pressure",
-      "./mods/register.ts state reads: dotnet-pilot.buildStreak, dotnet-pilot.pressure"
+      "./mods/register.ts gating hook with .catch: tool.call",
+      "./mods/register.ts gating hook with .catch: tool.call{tool=Bash|PowerShell}",
+      "./mods/register.ts calls: $.clock.every, $.clock.now, $.command.register, $.fs.list (via isDotNetProject), $.fs.read, $.session.cwd (via routingSection), $.state.get, $.state.set, $.ui.blit, $.ui.resolve, $.ui.status (via showStatus), $.ui.toast",
+      "./mods/register.ts state writes: dotnet-pilot.buildStreak, dotnet-pilot.cityScene, dotnet-pilot.pressure",
+      "./mods/register.ts state reads: dotnet-pilot.buildStreak, dotnet-pilot.cityScene, dotnet-pilot.pressure"
      ],
      "gatingHooks": [
       {
@@ -194,11 +227,24 @@
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
+      },
+      {
+       "module": "./mods/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./mods/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash|PowerShell}",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "f3d4d12f4c7017a9"
+ "sourceHash": "cd7ee01fe78dcc1a"
 }

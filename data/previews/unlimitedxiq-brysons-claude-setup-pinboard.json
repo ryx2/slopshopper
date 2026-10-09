@@ -1,0 +1,421 @@
+{
+ "slug": "unlimitedxiq-brysons-claude-setup-pinboard",
+ "generatedAt": "2026-10-09T15:34:35.379Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "pinboard"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__pinboard__update"
+    }
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "mcp__pinboard__update"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "props": {
+      "tool": "mcp__pinboard__update"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "pinboard"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "pinboard",
+    "description": "Open the pane of open decisions, todos and links",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "update",
+    "description": "Keep the session's task list and open decisions on the user's Pinboard, a sidebar that stays in view while the transcript scrolls. Any question you end a reply on that needs the user to answer goes in open_decisions, however small the task, even a single yes/no. Use it in place of writing task lists in your reply whenever the work takes 3+ distinct steps or the user gives new instructions. add_todos: one action per item. start_todo: the todo id you are working on now; exactly one is in progress at a time. done_todos / remove_todos: todo ids. Update in real time; do not batch completions. Mark a todo done only after the work is actually done, including any verification it needs, never based on intent. If blocked or partly done, leave it in progress and add a follow-up todo describing the blocker. open_decisions: questions that need the user to choose. Never stop and wait on one, since the user may be away: pin it, then carry on with every step that does not depend on the answer, and leave the steps that do as todos saying which decision they wait on. The user can answer in the Pinboard pane at any time; the answer arrives as a user message naming the decision id, and the board marks it [answered]. Act on the answer, then close the decision with decide (do the same when the user answers in chat). add_findings: pin what the user should know without reading the transcript, as it happens, not saved for the end: kind 'found' for a discovery, 'switched' when you change approach or move to other work (the why says why it was the better move), 'result' for the outcome of a run, test or backtest with its numbers. text is a headline of about 12 words; why is one short sentence on why it matters, or the data behind it. remove_findings: finding ids that turned out wrong or no longer matter. With the findings on the board, keep the reply that ends your work short: a few lines on what changed and what the user should do next, not a retelling of everything you tried. The current board, with ids, is at the end of your system prompt."
+   }
+  ],
+  "panes": [
+   {
+    "id": "pinboard",
+    "title": "Pinboard"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.state.get": 6,
+   "$.state.set": 1,
+   "$.store.get": 2,
+   "$.ui.open": 3,
+   "$.store.set": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "pinboard": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "width": 56,
+       "minHeight": 30,
+       "padding": 1,
+       "backgroundColor": "#011627"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "#7FDBCA"
+        },
+        "children": [
+         "Open decisions",
+         " ",
+         {
+          "type": "Text",
+          "props": {
+           "color": "#637777"
+          },
+          "children": [
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#637777"
+        },
+        "children": [
+         "  ",
+         "No open decisions."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "#7FDBCA"
+        },
+        "children": [
+         "Todos",
+         " ",
+         {
+          "type": "Text",
+          "props": {
+           "color": "#637777"
+          },
+          "children": [
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#637777"
+        },
+        "children": [
+         "  ",
+         "No todos yet."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "width": 54
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#7FDBCA"
+          },
+          "children": [
+           "Links",
+           " ",
+           {
+            "type": "Text",
+            "props": {
+             "color": "#637777"
+            },
+            "children": [
+             ""
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "clear-links",
+           "label": "clear",
+           "hotkey": "l",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#637777"
+        },
+        "children": [
+         "  ",
+         "Nothing created yet."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "width": 54
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#7FDBCA"
+          },
+          "children": [
+           "Findings",
+           " ",
+           {
+            "type": "Text",
+            "props": {
+             "color": "#637777"
+            },
+            "children": [
+             ""
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "clear-findings",
+           "label": "clear",
+           "hotkey": "f",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#637777"
+        },
+        "children": [
+         "  ",
+         "Nothing found yet."
+        ]
+       }
+      ]
+     },
+     "title": "Pinboard"
+    }
+   }
+  },
+  "script": [
+   "$.ui.open(pinboard)",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(pinboard)",
+   "/pinboard → ",
+   "$.ui.open(pinboard)"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "turn.start",
+   "session.start",
+   "command.run{command=pinboard}",
+   "prompt.compose",
+   "tool.call{tool=mcp__pinboard__update}",
+   "classic.Stop",
+   "tool.call",
+   "ui.render{component=ToolUse",
+   "props has {tool=mcp__pinboard__update}}",
+   "ui.render{component=ToolResult",
+   "props has {tool=mcp__pinboard__update}}",
+   "ui.render{component=Pane, requestId=pinboard}"
+  ],
+  "calls": [
+   "$.command.register",
+   "$.prompt.submit (via reply)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via openPane)",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve"
+  ],
+  "stateReads": [
+   "pinboard.decisions",
+   "pinboard.findings",
+   "pinboard.links",
+   "pinboard.todos"
+  ],
+  "stateWrites": [
+   "pinboard.decisions",
+   "pinboard.findings",
+   "pinboard.links",
+   "pinboard.todos"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/unlimitedxiq-brysons-claude-setup-pinboard/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/unlimitedxiq-brysons-claude-setup-pinboard/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: pinboard.decisions, pinboard.todos, pinboard.links, pinboard.findings"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/unlimitedxiq-brysons-claude-setup-pinboard/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: turn.start, session.start, command.run{command=pinboard}, prompt.compose, tool.call{tool=mcp__pinboard__update}, classic.Stop, tool.call, ui.render{component=ToolUse, props has {tool=mcp__pinboard__update}}, ui.render{component=ToolResult, props has {tool=mcp__pinboard__update}}, ui.render{component=Pane, requestId=pinboard}",
+      "./register.tsx answers its own command: command.run{command=pinboard}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__pinboard__update}",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.command.register, $.prompt.submit (via reply), $.state.get, $.state.set, $.store.get (via openPane), $.store.set, $.tool.register, $.ui.open, $.ui.resolve",
+      "./register.tsx state writes: pinboard.decisions, pinboard.findings, pinboard.links, pinboard.todos",
+      "./register.tsx state reads: pinboard.decisions, pinboard.findings, pinboard.links, pinboard.todos"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__pinboard__update}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "8e8ee807817cf094"
+}

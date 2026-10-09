@@ -1,6 +1,6 @@
 {
  "slug": "stephen-taipei-deckhand-deckhand",
- "generatedAt": "2026-10-08T15:54:48.232Z",
+ "generatedAt": "2026-10-09T15:34:29.985Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -43,6 +43,19 @@
     "matcher": {
      "component": "Pane",
      "requestId": "deckhand-recap"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "delegates"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "deckhand-delegates"
     }
    },
    {
@@ -173,6 +186,11 @@
     "output": "Usage: /delegate <target> [task]\n  cL  Codex (GPT-6 Luna, effort max)\n  cS  Codex (GPT-6.1 Sol, effort medium)\n  cA  Codex (GPT-6 Astra, effort medium)\n  cR  Cursor agent (Grok 4.7, effort high)\n  gF  agy (Gemini 3.8 Flash, effort high)\nWithout a task, the latest unfinished work of this conversation goes. Delegated models are read-only; Claude integrates and summarizes."
    },
    {
+    "name": "delegates",
+    "description": "Open the delegate records: the answers of the last 3 days",
+    "output": "Opened the delegate records."
+   },
+   {
     "name": "usage-raw",
     "description": "List the raw sources of the usage readout (engine and account), to compare with the usage card",
     "output": "Engine report ($.session.usage, last response; only five_hour is used, seven_day depends on the model that answered):\n  five_hour  31%  resets 1760003600000\n\nAccount usage (/api/oauth/usage): no-credential, 0 s ago\n\nThe bar shows: 5h 31% · 7d – · ctx 49%"
@@ -195,6 +213,10 @@
     "title": "Codex inbox"
    },
    {
+    "id": "deckhand-delegates",
+    "title": "Delegate records"
+   },
+   {
     "id": "deckhand-settings",
     "title": "Deckhand settings"
    }
@@ -206,25 +228,25 @@
   "apiCalls": {
    "$.settings.read": 1,
    "$.store.get": 2,
-   "$.state.get": 105,
-   "$.state.set": 24,
-   "$.command.register": 9,
+   "$.state.get": 122,
+   "$.state.set": 28,
+   "$.command.register": 10,
    "$.agent.register": 1,
    "$.tool.register": 1,
    "$.ui.status": 1,
    "$.env.get": 2,
-   "$.process.run": 9,
+   "$.process.run": 10,
    "$.fs.exists": 6,
-   "$.clock.now": 8,
+   "$.clock.now": 9,
    "$.session.usage": 2,
    "$.session.model": 2,
    "$.session.authorize": 2,
    "$.model.fork": 1,
    "$.session.cwd": 2,
-   "$.ui.open": 2,
+   "$.ui.open": 3,
    "$.session.root": 2,
    "$.clock.after": 1,
-   "$.ui.resolve": 4
+   "$.ui.resolve": 5
   },
   "timers": [
    {
@@ -889,6 +911,54 @@
      },
      "title": "Codex inbox"
     },
+    "deckhand-delegates": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Delegate runs · last 3 days"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "Refresh",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "red"
+        },
+        "children": [
+         "Failed to read: JSON Parse error: Unexpected identifier \"dev\""
+        ]
+       }
+      ]
+     },
+     "title": "Delegate records"
+    },
     "deckhand-settings": {
      "ok": true,
      "tree": {
@@ -1249,6 +1319,9 @@
    "/handoff-in → The handoff check failed: dev",
    "/sub5 → Sub5 is about to start.",
    "/delegate → Usage: /delegate <target> [task]\n  cL  Codex (GPT-6 Luna, effort max)\n  cS  Code…",
+   "$.ui.open(deckhand-delegates)",
+   "$.process.run(python3 /plugins/deckhand/bin/delegate.py list --format json --lang en) → exit 0",
+   "/delegates → Opened the delegate records.",
    "/usage-raw → Engine report ($.session.usage, last response; only five_hour is used, seven_day…",
    "$.ui.open(deckhand-settings)",
    "/deckhand → Deckhand settings"
@@ -1268,6 +1341,8 @@
    "command.run{command=deckhand}",
    "ui.render{component=Pane, requestId=deckhand-settings}",
    "ui.render{component=Pane, requestId=deckhand-recap}",
+   "command.run{command=delegates}",
+   "ui.render{component=Pane, requestId=deckhand-delegates}",
    "command.run{command=handoff-in}",
    "command.run{command=handoff}",
    "command.run{command=codex}",
@@ -1288,6 +1363,7 @@
   "calls": [
    "$.agent.register (via registerWorker)",
    "$.clock.after",
+   "$.clock.every (via syncRunTimers)",
    "$.clock.now",
    "$.command.list (via restoreEffort)",
    "$.command.register (via registerCommands)",
@@ -1297,7 +1373,9 @@
    "syncSharedTool)",
    "$.fs.exists (via resolveBin",
    "syncSharedTool)",
-   "$.fs.read (via syncSharedTool)",
+   "$.fs.read (via noteTaskEnded",
+   "readAnswer",
+   "syncSharedTool)",
    "$.fs.write (via syncSharedTool)",
    "$.http.fetch (via checkWatch",
    "refreshAccountUsage)",
@@ -1305,11 +1383,13 @@
    "$.process.run (via checkBins",
    "checkWatch",
    "handoffTool",
+   "listRecords",
    "loadCodexThreads",
    "runAssist",
    "syncSharedTool)",
    "$.prompt.fill",
-   "$.prompt.read (via pressModel",
+   "$.prompt.read (via answerToPrompt",
+   "pressModel",
    "startDelegate)",
    "$.prompt.submit (via startDelegate",
    "startSub5)",
@@ -1322,11 +1402,7 @@
    "$.session.root (via loadCodexThreads)",
    "$.session.usage (via loadUsage)",
    "$.settings.read",
-   "$.state.get",
-   "$.state.set",
-   "$.store.get (via loadSettings)",
-   "$.store.set (via commitSettings",
-   "… [+173 chars]"
+   "… [+264 chars]"
   ],
   "stateReads": [
    "deckhand.accountLimits",
@@ -1336,10 +1412,16 @@
    "deckhand.codexThreads",
    "deckhand.contextPercent",
    "deckhand.contextTokens",
+   "deckhand.delegateAnswer",
+   "deckhand.delegateRecords",
+   "deckhand.delegateRecordsError",
+   "deckhand.delegateRuns",
+   "deckhand.delegateTick",
    "deckhand.effort",
    "deckhand.engineLimits",
    "deckhand.isBandHidden",
    "deckhand.isCodexLoading",
+   "deckhand.isDelegateRecordsLoading",
    "deckhand.knownScoped",
    "deckhand.locale",
    "deckhand.model",
@@ -1356,10 +1438,16 @@
    "deckhand.codexThreads",
    "deckhand.contextPercent",
    "deckhand.contextTokens",
+   "deckhand.delegateAnswer",
+   "deckhand.delegateRecords",
+   "deckhand.delegateRecordsError",
+   "deckhand.delegateRuns",
+   "deckhand.delegateTick",
    "deckhand.effort",
    "deckhand.engineLimits",
    "deckhand.isBandHidden",
    "deckhand.isCodexLoading",
+   "deckhand.isDelegateRecordsLoading",
    "deckhand.knownScoped",
    "deckhand.locale",
    "deckhand.model",
@@ -1382,7 +1470,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: deckhand.watches, deckhand.isBandHidden, deckhand.codexThreads, deckhand.codexError, deckhand.isCodexLoading, deckhand.codexAllProjects, deckhand.engineLimits, deckhand.accountLimits, deckhand.contextPercent, deckhand.contextTokens, deckhand.model, deckhand.effort, deckhand.settings, deckhand.locale, deckhand.recap, deckhand.settingsView, deckhand.bins, deckhand.knownScoped"
+     "types ./types/index.d.ts declares state: deckhand.watches, deckhand.isBandHidden, deckhand.codexThreads, deckhand.codexError, deckhand.isCodexLoading, deckhand.codexAllProjects, deckhand.engineLimits, deckhand.accountLimits, deckhand.contextPercent, deckhand.contextTokens, deckhand.model, deckhand.effort, deckhand.settings, deckhand.locale, deckhand.recap, deckhand.settingsView, deckhand.bins, deckhand.knownScoped, deckhand.delegateRuns, deckhand.delegateTick, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.isDelegateRecordsLoading, deckhand.delegateAnswer"
     ],
     "gatingHooks": []
    },
@@ -1393,9 +1481,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=watch-deploy}, tool.call{tool=mcp__deckhand__watch_deploy}, ui.render{component=AbovePrompt}, command.run{command=deckhand}, ui.render{component=Pane, requestId=deckhand-settings}, ui.render{component=Pane, requestId=deckhand-recap}, command.run{command=handoff-in}, command.run{command=handoff}, command.run{command=codex}, command.run{command=codex-latest}, ui.render{component=Pane, requestId=deckhand-codex}, prompt.submit, tool.call{tool=Bash}, tool.call{tool=mcp__deckhand__translate}, tool.call{tool=mcp__deckhand__search}, session.measure, classic.Stop, command.run{command=model}, command.run{command=usage-raw}, command.run{command=sub5}, command.run{command=delegate}, prompt.compose",
+      "./register.tsx hooks: session.start, command.run{command=watch-deploy}, tool.call{tool=mcp__deckhand__watch_deploy}, ui.render{component=AbovePrompt}, command.run{command=deckhand}, ui.render{component=Pane, requestId=deckhand-settings}, ui.render{component=Pane, requestId=deckhand-recap}, command.run{command=delegates}, ui.render{component=Pane, requestId=deckhand-delegates}, command.run{command=handoff-in}, command.run{command=handoff}, command.run{command=codex}, command.run{command=codex-latest}, ui.render{component=Pane, requestId=deckhand-codex}, prompt.submit, tool.call{tool=Bash}, tool.call{tool=mcp__deckhand__translate}, tool.call{tool=mcp__deckhand__search}, session.measure, classic.Stop, command.run{command=model}, command.run{command=usage-raw}, command.run{command=sub5}, command.run{command=delegate}, prompt.compose",
       "./register.tsx answers its own command: command.run{command=watch-deploy}",
       "./register.tsx answers its own command: command.run{command=deckhand}",
+      "./register.tsx answers its own command: command.run{command=delegates}",
       "./register.tsx answers its own command: command.run{command=handoff-in}",
       "./register.tsx answers its own command: command.run{command=handoff}",
       "./register.tsx answers its own command: command.run{command=codex}",
@@ -1410,11 +1499,11 @@
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__deckhand__search}",
       "./register.tsx gating hook with .catch: classic.Stop",
       "./register.tsx gating hook with .catch: command.run{command=model}",
-      "./register.tsx calls: $.agent.register (via registerWorker), $.clock.after, $.clock.now, $.command.list (via restoreEffort), $.command.register (via registerCommands), $.command.run (via pressModel, restoreEffort), $.env.get (via resolveBin, syncSharedTool), $.fs.exists (via resolveBin, syncSharedTool), $.fs.read (via syncSharedTool), $.fs.write (via syncSharedTool), $.http.fetch (via checkWatch, refreshAccountUsage), $.model.fork, $.process.run (via checkBins, checkWatch, handoffTool, loadCodexThreads, runAssist, syncSharedTool), $.prompt.fill, $.prompt.read (via pressModel, startDelegate), $.prompt.submit (via startDelegate, startSub5), $.session.append (via runCheck), $.session.authorize (via refreshAccountUsage), $.session.cwd (via handoffTool, startWatch), $.session.model (via pressModel, refreshModel), $.session.root (via loadCodexThreads), $.session.usage (via loadUsage), $.settings.read, $.state.get, $.state.set, $.store.get (via loadSettings), $.store.set (via commitSettings, … [+173 chars]",
+      "./register.tsx calls: $.agent.register (via registerWorker), $.clock.after, $.clock.every (via syncRunTimers), $.clock.now, $.command.list (via restoreEffort), $.command.register (via registerCommands), $.command.run (via pressModel, restoreEffort), $.env.get (via resolveBin, syncSharedTool), $.fs.exists (via resolveBin, syncSharedTool), $.fs.read (via noteTaskEnded, readAnswer, syncSharedTool), $.fs.write (via syncSharedTool), $.http.fetch (via checkWatch, refreshAccountUsage), $.model.fork, $.process.run (via checkBins, checkWatch, handoffTool, listRecords, loadCodexThreads, runAssist, syncSharedTool), $.prompt.fill, $.prompt.read (via answerToPrompt, pressModel, startDelegate), $.prompt.submit (via startDelegate, startSub5), $.session.append (via runCheck), $.session.authorize (via refreshAccountUsage), $.session.cwd (via handoffTool, startWatch), $.session.model (via pressModel, refreshModel), $.session.root (via loadCodexThreads), $.session.usage (via loadUsage), $.settings.read, … [+264 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches",
-      "./register.tsx state reads: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches"
+      "./register.tsx state writes: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.delegateAnswer, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.delegateRuns, deckhand.delegateTick, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.isDelegateRecordsLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches",
+      "./register.tsx state reads: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.delegateAnswer, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.delegateRuns, deckhand.delegateTick, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.isDelegateRecordsLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches"
      ],
      "gatingHooks": [
       {
@@ -1461,8 +1550,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "ec17723bf96d2ccf"
+ "sourceHash": "12977900e3378c8c"
 }

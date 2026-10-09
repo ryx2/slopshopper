@@ -1,6 +1,6 @@
 {
  "slug": "tomikng-prompt-forge-prompt-forge",
- "generatedAt": "2026-10-07T15:24:02.945Z",
+ "generatedAt": "2026-10-09T15:34:32.910Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,53 +17,44 @@
     "event": "prompt.submit"
    },
    {
-    "event": "ui.render",
-    "matcher": {
-     "component": "AbovePrompt"
-    }
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "ui.render",
     "matcher": {
-     "component": "UserMessage",
-     "props": {
-      "origin": {
-       "kind": "composer"
-      }
-     }
+     "component": "AbovePrompt"
     }
    }
   ],
   "commands": [
    {
     "name": "forge",
-    "description": "Prompt Forge: /forge on, /forge off, or /forge to see its state",
-    "output": "✨ Prompt Forge is ON. Prompts of 5+ words get sharpened before sending; start one with \"raw:\" to send it untouched."
+    "description": "Prompt Forge: /forge on|off, /forge fresh on|off, /forge model on|off, or /forge to see its state; more in /config",
+    "argumentHint": "[on|off|fresh on|off|model on|off]",
+    "output": "✨ Prompt Forge is ON. Fresh start for new tasks in long sessions: ON (/forge fresh on|off), opening a tmux window or a new terminal window (/config → prompt-forge). Sonnet for small, clear tasks on a fresh context: ON (/forge model on|off). Start a prompt with \"raw:\" to skip both."
    }
   ],
   "tools": [],
   "panes": [],
-  "toasts": [
-   "✨ Prompt Forge: no usable rewrite, sent as typed."
-  ],
+  "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 3,
-   "$.store.get": 2,
-   "$.ui.status": 2,
-   "$.session.messages": 1,
-   "$.model.complete": 1,
-   "$.ui.toast": 1
+   "$.store.get": 6,
+   "$.state.get": 2,
+   "$.session.usage": 1
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
-   },
-   "UserMessage": {
     "ok": "engine"
    }
   },
@@ -79,7 +70,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/forge → ✨ Prompt Forge is ON. Prompts of 5+ words get sharpened before sending; start on…"
+   "/forge → ✨ Prompt Forge is ON. Fresh start for new tasks in long sessions: ON (/forge fre…"
   ],
   "console": [],
   "warnings": []
@@ -92,30 +83,37 @@
    "session.start",
    "command.run{command=forge}",
    "prompt.submit",
-   "ui.render{component=AbovePrompt}",
-   "ui.render{component=UserMessage",
-   "props.origin has {kind=composer}}"
+   "turn.start",
+   "turn.step",
+   "turn.complete",
+   "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.command.register",
-   "$.model.complete (via forge)",
-   "$.prompt.submit",
+   "$.command.run (via startFresh)",
+   "$.model.complete (via topicOf)",
+   "$.process.run (via currentBranch",
+   "out",
+   "ran",
+   "supersetWorkspace)",
+   "$.prompt.submit (via sendHere",
+   "startFresh)",
+   "$.session.cwd (via openSession",
+   "supersetWorkspace)",
    "$.session.messages (via conversation)",
+   "$.session.usage (via conversationTokens)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via isOn)",
+   "$.store.get",
    "$.store.set",
    "$.ui.resolve",
-   "$.ui.status",
    "$.ui.toast"
   ],
   "stateReads": [
-   "prompt-forge.forged",
-   "prompt-forge.pending"
+   "prompt-forge.fresh"
   ],
   "stateWrites": [
-   "prompt-forge.forged",
-   "prompt-forge.pending"
+   "prompt-forge.fresh"
   ],
   "envReads": [],
   "raw": {
@@ -129,7 +127,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: prompt-forge.forged, prompt-forge.pending"
+     "types ./types/index.d.ts declares state: prompt-forge.fresh"
     ],
     "gatingHooks": []
    },
@@ -140,12 +138,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=forge}, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=UserMessage, props.origin has {kind=composer}}",
+      "./register.tsx hooks: session.start, command.run{command=forge}, prompt.submit, turn.start, turn.step, turn.complete, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=forge}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.command.register, $.model.complete (via forge), $.prompt.submit, $.session.messages (via conversation), $.state.get, $.state.set, $.store.get (via isOn), $.store.set, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: prompt-forge.forged, prompt-forge.pending",
-      "./register.tsx state reads: prompt-forge.forged, prompt-forge.pending"
+      "./register.tsx calls: $.command.register, $.command.run (via startFresh), $.model.complete (via topicOf), $.process.run (via currentBranch, out, ran, supersetWorkspace), $.prompt.submit (via sendHere, startFresh), $.session.cwd (via openSession, supersetWorkspace), $.session.messages (via conversation), $.session.usage (via conversationTokens), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: prompt-forge.fresh",
+      "./register.tsx state reads: prompt-forge.fresh"
      ],
      "gatingHooks": [
       {
@@ -156,8 +154,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "6ff6afa732b8acb3"
+ "sourceHash": "ac8c971d8c6f9048"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "herman925-925-cc-plugins-team-orchestrator",
- "generatedAt": "2026-10-08T15:53:27.944Z",
+ "generatedAt": "2026-10-09T15:32:18.336Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -58,6 +58,18 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "PowerShell"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "SendMessage"
     }
    },
@@ -91,7 +103,61 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "mcp__team-orchestrator__team_take_top"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__team-orchestrator__team_take_top"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__team-orchestrator__member_claim"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__team-orchestrator__member_claim"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__team-orchestrator__team_launch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__team-orchestrator__member_add"
+    }
+   },
+   {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "mcp__team-orchestrator__member_add"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "PowerShell"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "team-orchestrator.orcaCommand"
     }
    },
    {
@@ -133,7 +199,7 @@
   "tools": [
    {
     "name": "team_launch",
-    "description": "Launch a team of Claude Code sessions as Orca tabs in the current worktree. members is ordered boss-first; boss is a member name or \"user\". model/effort optional per member (opus, sonnet, haiku, fable / low, medium, high, xhigh, max)."
+    "description": "Launch a team of Claude Code sessions as Orca tabs in the current worktree. members is ordered boss-first; boss is a member name or \"user\". model/effort optional per member (opus, sonnet, haiku, fable / low, medium, high, xhigh, max). A team name already on the roster is never replaced: the launch is refused until the user picks ifExists \"add\" (every launched member joins that team as a new member, started on its boss's first team_message) or \"merge\" (the launched team merges into it by name; members already there are kept as they are)."
    },
    {
     "name": "team_adopt",
@@ -141,7 +207,11 @@
    },
    {
     "name": "team_message",
-    "description": "Send a message to a teammate on the roster, starting it first when it has not started yet or was closed (it is then briefed before the message arrives). Use this, not SendMessage, for messages to your direct reports. to is the member name."
+    "description": "Send a message to a teammate on the roster, starting it first when it has not started yet or was closed (it is then briefed before the message arrives). Use this, not SendMessage, for messages to your direct reports. to is the member name. startHere: only after the user said yes, for a member whose home is another PC: start a fresh copy of it on this PC."
+   },
+   {
+    "name": "team_take_top",
+    "description": "Apply the user's answer about moving the team top to this PC, after asking with AskUserQuestion in this turn. take true: the roster records this PC as the team top's machine, and the PC that had it becomes read-only for the team files; take false: nothing changes and the user is not asked again in this session."
    },
    {
     "name": "team_remove",
@@ -154,6 +224,14 @@
    {
     "name": "member_move",
     "description": "Move one member to another team (a new team name makes one), under boss or else that team's head; level becomes the boss level + 1. Refused while others report to the member. Closes no terminal."
+   },
+   {
+    "name": "member_add",
+    "description": "Add a new member to a running team: saved as not yet, with its role file, and started fresh and briefed on its boss's first team_message. From a head or lead this is a REQUEST, only for its own team and the teams below it: the team top asks the user, and nothing is added until the user approves. boss: a member of that team, or you (empty: you; a boss outside your purview is refused). model and effort optional (opus, sonnet, haiku, fable / low, medium, high, xhigh, max). Team top only: after asking the user with AskUserQuestion in this turn, apply the answer to a request with { request, approve }."
+   },
+   {
+    "name": "member_claim",
+    "description": "Team top only: apply the user's answer about a session on hold that looks like a team member. decision \"is\": the roster takes its id, tab and name as that member; \"new\": it joins as a worker under that member's boss, with its own role file; \"reject\": it stays on hold, off the team. sessionId is the held session's id; member is the member it looks like."
    }
   ],
   "panes": [],
@@ -163,12 +241,17 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.tool.register": 6,
+   "$.tool.register": 9,
    "$.ui.close": 2,
-   "$.state.get": 40,
+   "$.state.get": 42,
    "$.session.root": 21,
    "$.fs.exists": 21,
+   "$.env.get": 6,
+   "$.fs.read": 1,
    "$.clock.every": 3,
+   "$.process.run": 1,
+   "$.config.set": 1,
+   "$.session.id": 1,
    "$.state.set": 1,
    "$.ui.resolve": 2
   },
@@ -200,10 +283,29 @@
        "props": {},
        "children": [
         {
+         "type": "Text",
+         "props": {
+          "bold": true,
+          "inverse": false,
+          "backgroundColor": "cyan",
+          "color": "black"
+         },
+         "children": [
+          " ◆ Team Orchestrator "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          " "
+         ]
+        },
+        {
          "type": "Button",
          "props": {
           "key": "main",
-          "label": "◆ Team Orchestrator",
+          "label": "▾",
           "hotkey": "t",
           "variant": "primary",
           "onPress": "[fn]"
@@ -312,7 +414,16 @@
               "color": "cyan"
              },
              "children": [
-              "◆ TEAM ORCHESTRATOR",
+              "◆ TEAM ORCHESTRATOR"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              "",
               "  "
              ]
             },
@@ -747,7 +858,16 @@
                "color": "cyan"
               },
               "children": [
-               "◆ TEAM ORCHESTRATOR",
+               "◆ TEAM ORCHESTRATOR"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "",
                "  "
               ]
              },
@@ -1136,6 +1256,7 @@
    }
   },
   "script": [
+   "$.process.run(orca --version) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -1172,64 +1293,78 @@
    "tool.describe{tool=SendMessage}",
    "tool.describe{tool=mcp__team-orchestrator__team_message}",
    "tool.call{tool=mcp__team-orchestrator__team_message}",
+   "tool.call{tool=mcp__team-orchestrator__team_take_top}",
+   "tool.describe{tool=mcp__team-orchestrator__team_take_top}",
+   "tool.call{tool=mcp__team-orchestrator__member_claim}",
+   "tool.describe{tool=mcp__team-orchestrator__member_claim}",
    "tool.call{tool=mcp__team-orchestrator__team_launch}",
+   "tool.call{tool=mcp__team-orchestrator__member_add}",
+   "tool.describe{tool=mcp__team-orchestrator__member_add}",
+   "tool.check{tool=Bash|PowerShell}",
+   "config.set{key=\"team-orchestrator.orcaCommand\"}",
    "command.run{command=team}",
    "prompt.submit",
-   "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=team-dock}",
-   "ui.close{id=team-dock}"
+   "ui.rend… [+97 chars]"
   ],
   "calls": [
    "$.clock.every",
    "$.clock.sleep (via launch)",
    "$.command.register",
-   "$.env.get (via claudeDirs",
-   "transcripts)",
-   "$.fs.exists (via exclude",
+   "$.config.set (via orcaSetup)",
+   "$.env.get",
+   "$.fs.exists (via checkGrants",
+   "effective",
+   "exclude",
    "migrate",
-   "pull",
-   "readQueue",
+   "moveFiles",
+   "readClaims",
+   "readJson",
+   "readSettingsFile",
    "readStatus",
-   "readTeamSettings",
-   "share",
-   "writeRoles)",
-   "$.fs.list (via transcripts)",
-   "$.fs.read (via exclude",
-   "migrate",
-   "pull",
-   "readQueue",
-   "readStatus",
-   "readTeamSettings",
-   "share",
-   "writeRoles)",
-   "$.fs.write (via exclude",
-   "migrate",
-   "share",
-   "writeQueue",
    "writeRoles",
-   "writeStatusOf",
-   "writeTeamSettings)",
+   "writeRoster",
+   "writerRole)",
+   "$.fs.list",
+   "$.fs.read (via checkGrants",
+   "effective",
+   "exclude",
+   "migrate",
+   "moveFiles",
+   "readClaims",
+   "readJson",
+   "readRegistry",
+   "readSettingsFile",
+   "readStatus",
+   "readVersion",
+   "writeRoles",
+   "writeRoster)",
+   "$.fs.write",
    "$.process.run (via countLeftovers",
    "exclude",
    "orca",
-   "rosterView",
+   "orcaProblem",
+   "processes",
    "tails)",
    "$.prompt.submit (via emptyState",
    "formView)",
+   "$.session.cwd",
    "$.session.id",
    "$.session.root (via exclude",
    "refresh",
    "rootOf)",
+   "$.session.send",
+   "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.store.get (via readGrantRecord)",
+   "$.store.set (via writeGrantRecord)",
    "$.tool.call",
    "$.tool.register",
    "$.ui.close",
    "$.ui.open",
    "$.ui.panes (via docked)",
    "$.ui.resolve",
-   "$.ui.toast (via deliver",
-   "guard)"
+   "$.ui.toast"
   ],
   "stateReads": [
    "team-orchestrator.act",
@@ -1258,7 +1393,16 @@
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
+   "COMPUTERNAME",
    "HOME",
+   "HOSTNAME",
+   "NO_COLOR",
+   "ORCA_TERMINAL_HANDLE",
+   "ORCA_WORKTREE_ID",
+   "OS",
+   "TEMP",
+   "TMP",
+   "TMPDIR",
    "USERPROFILE"
   ],
   "raw": {
@@ -1289,7 +1433,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=mcp__team-orchestrator__team_adopt}, tool.call{tool=mcp__team-orchestrator__team_remove}, tool.call{tool=mcp__team-orchestrator__member_remove}, tool.call{tool=mcp__team-orchestrator__member_move}, tool.call{tool=?}, tool.call{tool=SendMessage}, turn.complete, turn.start, tool.call, tool.describe{tool=SendMessage}, tool.describe{tool=mcp__team-orchestrator__team_message}, tool.call{tool=mcp__team-orchestrator__team_message}, tool.call{tool=mcp__team-orchestrator__team_launch}, command.run{command=team}, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=team-dock}, ui.close{id=team-dock}",
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__team-orchestrator__team_adopt}, tool.call{tool=mcp__team-orchestrator__team_remove}, tool.call{tool=mcp__team-orchestrator__member_remove}, tool.call{tool=mcp__team-orchestrator__member_move}, tool.call{tool=?}, tool.call{tool=SendMessage}, turn.complete, turn.start, tool.call, tool.describe{tool=SendMessage}, tool.describe{tool=mcp__team-orchestrator__team_message}, tool.call{tool=mcp__team-orchestrator__team_message}, tool.call{tool=mcp__team-orchestrator__team_take_top}, tool.describe{tool=mcp__team-orchestrator__team_take_top}, tool.call{tool=mcp__team-orchestrator__member_claim}, tool.describe{tool=mcp__team-orchestrator__member_claim}, tool.call{tool=mcp__team-orchestrator__team_launch}, tool.call{tool=mcp__team-orchestrator__member_add}, tool.describe{tool=mcp__team-orchestrator__member_add}, tool.check{tool=Bash|PowerShell}, config.set{key=\"team-orchestrator.orcaCommand\"}, command.run{command=team}, prompt.submit, ui.rend… [+97 chars]",
       "./register.tsx answers its own command: command.run{command=team}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_adopt}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_remove}",
@@ -1299,12 +1443,17 @@
       "./register.tsx gating hook without .catch: tool.call{tool=SendMessage}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_message}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_take_top}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__member_claim}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__team_launch}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__team-orchestrator__member_add}",
+      "./register.tsx gating hook without .catch: tool.check{tool=Bash|PowerShell}",
+      "./register.tsx gating hook without .catch: config.set{key=\"team-orchestrator.orcaCommand\"}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: ui.close{id=team-dock}",
-      "./register.tsx calls: $.clock.every, $.clock.sleep (via launch), $.command.register, $.env.get (via claudeDirs, transcripts), $.fs.exists (via exclude, migrate, pull, readQueue, readStatus, readTeamSettings, share, writeRoles), $.fs.list (via transcripts), $.fs.read (via exclude, migrate, pull, readQueue, readStatus, readTeamSettings, share, writeRoles), $.fs.write (via exclude, migrate, share, writeQueue, writeRoles, writeStatusOf, writeTeamSettings), $.process.run (via countLeftovers, exclude, orca, rosterView, tails), $.prompt.submit (via emptyState, formView), $.session.id, $.session.root (via exclude, refresh, rootOf), $.state.get, $.state.set, $.tool.call, $.tool.register, $.ui.close, $.ui.open, $.ui.panes (via docked), $.ui.resolve, $.ui.toast (via deliver, guard)",
+      "./register.tsx calls: $.clock.every, $.clock.sleep (via launch), $.command.register, $.config.set (via orcaSetup), $.env.get, $.fs.exists (via checkGrants, effective, exclude, migrate, moveFiles, readClaims, readJson, readSettingsFile, readStatus, writeRoles, writeRoster, writerRole), $.fs.list, $.fs.read (via checkGrants, effective, exclude, migrate, moveFiles, readClaims, readJson, readRegistry, readSettingsFile, readStatus, readVersion, writeRoles, writeRoster), $.fs.write, $.process.run (via countLeftovers, exclude, orca, orcaProblem, processes, tails), $.prompt.submit (via emptyState, formView), $.session.cwd, $.session.id, $.session.root (via exclude, refresh, rootOf), $.session.send, $.session.usage, $.state.get, $.state.set, $.store.get (via readGrantRecord), $.store.set (via writeGrantRecord), $.tool.call, $.tool.register, $.ui.close, $.ui.open, $.ui.panes (via docked), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, COMPUTERNAME, HOME, HOSTNAME, NO_COLOR, ORCA_TERMINAL_HANDLE, ORCA_WORKTREE_ID, OS, TEMP, TMP, TMPDIR, USERPROFILE",
       "./register.tsx state writes: team-orchestrator.act, team-orchestrator.bulk, team-orchestrator.form, team-orchestrator.frame, team-orchestrator.members, team-orchestrator.menu, team-orchestrator.note, team-orchestrator.settings, team-orchestrator.spawn, team-orchestrator.view",
       "./register.tsx state reads: team-orchestrator.act, team-orchestrator.bulk, team-orchestrator.form, team-orchestrator.frame, team-orchestrator.members, team-orchestrator.menu, team-orchestrator.note, team-orchestrator.settings, team-orchestrator.spawn, team-orchestrator.teamName, team-orchestrator.view"
      ],
@@ -1360,7 +1509,37 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team-orchestrator__team_take_top}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team-orchestrator__member_claim}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__team-orchestrator__team_launch}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team-orchestrator__member_add}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Bash|PowerShell}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "config.set",
+       "hook": "config.set{key=\"team-orchestrator.orcaCommand\"}",
        "hasCatch": false
       },
       {
@@ -1377,8 +1556,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "a556bdf12924a1b4"
+ "sourceHash": "8b99a60f86faf9e7"
 }

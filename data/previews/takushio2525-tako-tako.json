@@ -1,6 +1,6 @@
 {
  "slug": "takushio2525-tako-tako",
- "generatedAt": "2026-10-08T15:53:39.331Z",
+ "generatedAt": "2026-10-09T15:32:48.135Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,9 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "classic.PreToolUse"
@@ -30,6 +33,25 @@
    },
    {
     "event": "session.end"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "tako"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tako"
+    }
    }
   ],
   "commands": [],
@@ -40,10 +62,48 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 2
+   "$.env.get": 2,
+   "$.state.get": 4,
+   "$.ui.resolve": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "tako": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No reply from tako (outside a tako pane, or tako has stopped)"
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "band-toggle",
+         "label": "Hide band",
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "tako"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -67,18 +127,22 @@
   "hooks": [
    "session.start",
    "turn.start",
+   "turn.step",
    "classic.PreToolUse",
    "classic.PermissionRequest",
    "tool.check",
    "tool.call",
    "turn.complete",
    "classic.Stop",
-   "session.end"
+   "session.end",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=tako}",
+   "command.run{command=tako}"
   ],
   "calls": [
    "$.clock.every (via wake)",
-   "$.clock.now (via buildReport",
-   "tick)",
+   "$.clock.now",
+   "$.command.register (via registerCommand)",
    "$.env.get (via buildReport",
    "wake)",
    "$.process.run (via send)",
@@ -86,10 +150,29 @@
    "$.session.model (via buildReport)",
    "$.session.usage (via buildReport)",
    "$.session.version (via buildReport)",
-   "$.ui.log (via send)"
+   "$.state.get",
+   "$.state.set (via setHidden",
+   "setView",
+   "stampLimits",
+   "syncStore)",
+   "$.store.get (via syncStore)",
+   "$.store.set (via setHidden)",
+   "$.ui.log (via send",
+   "stampLimits",
+   "wake)",
+   "$.ui.open",
+   "$.ui.resolve"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "tako.bandHidden",
+   "tako.limitsSeen",
+   "tako.view"
+  ],
+  "stateWrites": [
+   "tako.bandHidden",
+   "tako.limitsSeen",
+   "tako.view"
+  ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
    "TAKO_CLI",
@@ -104,7 +187,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: tako.view, tako.bandHidden, tako.limitsSeen"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -114,15 +200,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.start, classic.PreToolUse, classic.PermissionRequest, tool.check, tool.call, turn.complete, classic.Stop, session.end",
+      "./register.ts hooks: session.start, turn.start, turn.step, classic.PreToolUse, classic.PermissionRequest, tool.check, tool.call, turn.complete, classic.Stop, session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=tako}, command.run{command=tako}",
       "./register.ts gating hook with .catch: classic.PreToolUse",
       "./register.ts gating hook with .catch: classic.PermissionRequest",
       "./register.ts gating hook with .catch: tool.check",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: classic.Stop",
-      "./register.ts calls: $.clock.every (via wake), $.clock.now (via buildReport, tick), $.env.get (via buildReport, wake), $.process.run (via send), $.session.id (via buildReport), $.session.model (via buildReport), $.session.usage (via buildReport), $.session.version (via buildReport), $.ui.log (via send)",
+      "./register.ts gating hook with .catch: command.run{command=tako}",
+      "./register.ts calls: $.clock.every (via wake), $.clock.now, $.command.register (via registerCommand), $.env.get (via buildReport, wake), $.process.run (via send), $.session.id (via buildReport), $.session.model (via buildReport), $.session.usage (via buildReport), $.session.version (via buildReport), $.state.get, $.state.set (via setHidden, setView, stampLimits, syncStore), $.store.get (via syncStore), $.store.set (via setHidden), $.ui.log (via send, stampLimits, wake), $.ui.open, $.ui.resolve",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: CLAUDE_CONFIG_DIR, TAKO_CLI, TAKO_PANE_ID"
+      "./register.ts env reads: CLAUDE_CONFIG_DIR, TAKO_CLI, TAKO_PANE_ID",
+      "./register.ts state writes: tako.bandHidden, tako.limitsSeen, tako.view",
+      "./register.ts state reads: tako.bandHidden, tako.limitsSeen, tako.view"
      ],
      "gatingHooks": [
       {
@@ -154,11 +243,18 @@
        "pattern": "classic.Stop",
        "hook": "classic.Stop",
        "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=tako}",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "eda64db631f4c835"
+ "sourceHash": "ed3734aed9122920"
 }

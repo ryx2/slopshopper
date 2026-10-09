@@ -1,0 +1,9 @@
+{
+ "slug": "vukrosic-claude-code-mods-from-scratch-meter",
+ "files": {
+  "hooks/register.js": "// Mod 4: DRAW. A strip above the prompt that shows how full Claude's memory is.\nimport { advice, bar } from './bar.js'\n\nexport function register(on) {\n  // Draw in the band above the prompt\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e) => {\n    const { Box, Text } = $.ui.resolve(e)\n    // Ask Claude Code how much of the context window this session has used\n    const usage = await $.session.usage()\n    const percent = Math.round(usage.context.percent)\n    return Box({\n      flexDirection: 'row',\n      children: [\n        Text({ key: 'bar', children: ['memory ' + bar(percent) + ' ' + percent + '%'] }),\n        Text({ key: 'advice', children: ['  ' + advice(percent)] }),\n      ],\n    })\n  })\n\n  // After every turn the number has changed, so ask for a redraw\n  on('turn.complete', async ($, e, next) => {\n    $.ui.invalidate('ui.render')\n    return next(e)\n  })\n}\n",
+  "hooks/bar.js": "// Draw a number from 0 to 100 as ten blocks: 40 -> ████░░░░░░\nexport function bar(percent) {\n  const full = Math.max(0, Math.min(10, Math.round(percent / 10)))\n  return '█'.repeat(full) + '░'.repeat(10 - full)\n}\n\n// The words after the bar\nexport function advice(percent) {\n  if (percent >= 80) return 'almost full: start a fresh session soon'\n  if (percent >= 50) return 'half used'\n  return 'plenty of room'\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"Shows how full Claude's memory is, above the prompt\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"meter\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Shows how full Claude's memory is, above the prompt\",\n  \"author\": {\n    \"name\": \"Vuk Rosic\"\n  }\n}"
+ }
+}

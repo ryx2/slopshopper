@@ -1,0 +1,232 @@
+{
+ "slug": "naoanao-shared-repo-guard",
+ "generatedAt": "2026-10-09T15:34:00.955Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "guard"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "preflight"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Bash",
+      "PowerShell"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Read"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Write",
+      "Edit"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^(?!(Bash|PowerShell|Read|Write|Edit)$)/"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "guard",
+    "description": "shared-repo-guard: what it watches and what it stopped",
+    "output": "Secret values watched: 0\nPublic remotes: none set\nStopped this session: 1\nUncommitted files this session did not write (protected): 1\n  src/auth.ts\n?? src/auth.test.ts\n"
+   },
+   {
+    "name": "preflight",
+    "description": "Check unpushed commits: line endings, secrets, .env files, other agents' changes",
+    "output": "Unpushed commits on top of a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0: 2\na1b2c3d fix: refresh expired tokens (2 minutes ago)\n9f8e7d6 feat: add audit log (3 hours ago)\nLine endings: unchanged\nSecret-looking strings: none\nUncommitted files this session did not write: 1\n  src/auth.ts\n?? src/auth.test.ts\n"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [
+   "shared-repo-guard stopped: This prints a "
+  ],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Bash: cat .env",
+    "reason": "shared-repo-guard: This prints a .env file. Read the value inside a script and never print it."
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.process.run": 11,
+   "$.fs.list": 2,
+   "$.command.register": 2,
+   "$.ui.invalidate": 4,
+   "$.ui.resolve": 5,
+   "$.ui.toast": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Text",
+     "props": {
+      "dimColor": true
+     },
+     "children": [
+      "shared-repo-guard: ",
+      "1",
+      " uncommitted file(s) from outside this session are protected (/guard)"
+     ]
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git status --porcelain=v1 -z --untracked-files=all) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash denied: shared-repo-guard: This prints a .env file. Read the value inside a script and never print it.",
+   "$.process.run(git status --porcelain=v1 -z --untracked-files=all) → exit 0",
+   "turn.complete",
+   "$.process.run(git status --porcelain=v1 -z --untracked-files=all) → exit 0",
+   "/guard → Secret values watched: 0\nPublic remotes: none set\nStopped this session: 1\nUncomm…",
+   "$.process.run(git rev-parse --abbrev-ref --symbolic-full-name @{u}) → exit 0",
+   "$.process.run(git log a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0..HEAD --format=%h %ad %an %s --…) → exit 0",
+   "$.process.run(git diff --shortstat a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 HEAD) → exit 0",
+   "$.process.run(git diff --ignore-cr-at-eol --shortstat a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0…) → exit 0",
+   "$.process.run(git diff a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 HEAD) → exit 0",
+   "$.process.run(git diff --name-only a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 HEAD) → exit 0",
+   "$.process.run(git status --porcelain=v1 -z --untracked-files=all) → exit 0",
+   "/preflight → Unpushed commits on top of a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0: 2\na1b2c3d f…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.complete",
+   "command.run{command=guard}",
+   "command.run{command=preflight}",
+   "ui.render{component=AbovePrompt}",
+   "tool.call{tool=Bash|PowerShell}",
+   "tool.call{tool=Read}",
+   "tool.call{tool=Write|Edit}",
+   "tool.call{tool=/\"^(?!(Bash|PowerShell|Read|Write|Edit)$)\"/}"
+  ],
+  "calls": [
+   "$.command.register",
+   "$.fs.exists (via loadSecrets)",
+   "$.fs.list (via loadSecrets)",
+   "$.fs.read (via loadSecrets)",
+   "$.process.run (via findRoot",
+   "git)",
+   "$.session.cwd (via loadSecrets)",
+   "$.ui.ask",
+   "$.ui.invalidate (via refreshForeign)",
+   "$.ui.resolve",
+   "$.ui.toast (via deny)"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/naoanao-shared-repo-guard/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/naoanao-shared-repo-guard/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/naoanao-shared-repo-guard/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, turn.complete, command.run{command=guard}, command.run{command=preflight}, ui.render{component=AbovePrompt}, tool.call{tool=Bash|PowerShell}, tool.call{tool=Read}, tool.call{tool=Write|Edit}, tool.call{tool=/\"^(?!(Bash|PowerShell|Read|Write|Edit)$)\"/}",
+      "./register.tsx answers its own command: command.run{command=guard}",
+      "./register.tsx answers its own command: command.run{command=preflight}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash|PowerShell}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Read}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Write|Edit}",
+      "./register.tsx gating hook without .catch: tool.call{tool=/\"^(?!(Bash|PowerShell|Read|Write|Edit)$)\"/}",
+      "./register.tsx calls: $.command.register, $.fs.exists (via loadSecrets), $.fs.list (via loadSecrets), $.fs.read (via loadSecrets), $.process.run (via findRoot, git), $.session.cwd (via loadSecrets), $.ui.ask, $.ui.invalidate (via refreshForeign), $.ui.resolve, $.ui.toast (via deny)"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash|PowerShell}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Read}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write|Edit}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^(?!(Bash|PowerShell|Read|Write|Edit)$)\"/}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "623534e1efbf4834"
+}

@@ -1,6 +1,6 @@
 {
  "slug": "naicud-cc-vitals-vitals",
- "generatedAt": "2026-10-08T15:53:35.577Z",
+ "generatedAt": "2026-10-09T15:32:09.831Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,24 @@
     "event": "command.run",
     "matcher": {
      "command": "vitals"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "vitals-low"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "vitals-medium"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "vitals-high"
     }
    },
    {
@@ -76,8 +94,23 @@
   "commands": [
    {
     "name": "vitals",
-    "description": "Vitals: full ↔ compact band · \"/vitals pane\" every agent and shell · \"/vitals report\" weekly and monthly usage",
-    "output": "Vitals: compact line."
+    "description": "Vitals: next detail level (high → medium → low) · \"/vitals pane\" every agent and shell · \"/vitals report\" weekly and monthly usage",
+    "output": "Vitals: medium · vitals, context, agents."
+   },
+   {
+    "name": "vitals-low",
+    "description": "Vitals: the vitals box alone (model, effort, cost, context, compaction, limits, forecast)",
+    "output": "Vitals: low · the vitals box."
+   },
+   {
+    "name": "vitals-medium",
+    "description": "Vitals: the vitals box, what fills the context, and the agents",
+    "output": "Vitals: medium · vitals, context, agents."
+   },
+   {
+    "name": "vitals-high",
+    "description": "Vitals: everything (tokens, context, usage, agents, tools, shells)",
+    "output": "Vitals: high · everything."
    }
   ],
   "tools": [],
@@ -87,10 +120,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.state.get": 80,
-   "$.store.get": 1,
-   "$.clock.now": 17,
+   "$.command.register": 4,
+   "$.store.get": 2,
+   "$.state.get": 108,
+   "$.state.set": 41,
+   "$.clock.now": 20,
    "$.session.usage": 2,
    "$.session.cwd": 2,
    "$.session.turns": 2,
@@ -98,14 +132,20 @@
    "$.agent.list": 2,
    "$.process.run": 3,
    "$.config.list": 2,
-   "$.state.set": 36,
-   "$.clock.every": 3,
-   "$.ui.resolve": 3
+   "$.clock.every": 4,
+   "$.session.authorize": 1,
+   "$.ui.invalidate": 1,
+   "$.ui.resolve": 4,
+   "$.store.set": 4
   },
   "timers": [
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 300000
    },
    {
     "kind": "every",
@@ -122,24 +162,394 @@
     "tree": {
      "type": "Box",
      "props": {
-      "flexDirection": "row",
-      "flexWrap": "wrap"
+      "flexDirection": "column"
      },
      "children": [
       {
        "type": "Box",
        "props": {
-        "flexDirection": "row"
+        "flexDirection": "column",
+        "width": 100,
+        "borderStyle": "round",
+        "borderColor": "claude",
+        "paddingX": 1
        },
        "children": [
         {
-         "type": "Text",
+         "type": "Box",
          "props": {
-          "bold": true,
-          "dimColor": false
+          "flexDirection": "row",
+          "justifyContent": "space-between"
          },
          "children": [
-          "🧠 Opus 5.5"
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true,
+              "color": "claude"
+             },
+             "children": [
+              "◆ VITALS"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              "   🧠 "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "Opus 5.5"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {},
+             "children": [
+              "   ⚡ "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "bold": true,
+              "dimColor": true
+             },
+             "children": [
+              "—"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "marginLeft": 2,
+            "flexShrink": 1
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexShrink": 1
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true,
+                "wrap": "truncate-end"
+               },
+               "children": [
+                "📁 app ●2   ⏳ 30m · 1 prompt   "
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexShrink": 0,
+              "marginLeft": 1
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": true
+               },
+               "children": [
+                "💸 $0.42"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexShrink": 0
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                "  🔥 $0.84/h"
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexShrink": 0
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": true
+               },
+               "children": [
+                "⛽ CTX "
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "flexDirection": "row",
+                "flexShrink": 0
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "suggestion"
+                 },
+                 "children": [
+                  "███████████▎"
+                 ]
+                },
+                {
+                 "type": "Text",
+                 "props": {
+                  "dimColor": true
+                 },
+                 "children": [
+                  "░░░░░░░░░░░"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 5,
+                "justifyContent": "flex-end",
+                "flexShrink": 0
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true,
+                  "dimColor": false
+                 },
+                 "children": [
+                  "49%"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " 97k/200k"
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              " │ "
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexShrink": 0
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": true
+               },
+               "children": [
+                "🗜 COMPACT "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                "───────────────────────"
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 5,
+                "justifyContent": "flex-end",
+                "flexShrink": 0
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true,
+                  "dimColor": true
+                 },
+                 "children": [
+                  "—"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " auto off"
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexShrink": 0
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": true
+               },
+               "children": [
+                "⏳ 5H LIMIT "
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "flexDirection": "row",
+                "flexShrink": 0
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "suggestion"
+                 },
+                 "children": [
+                  "███████▏"
+                 ]
+                },
+                {
+                 "type": "Text",
+                 "props": {
+                  "dimColor": true
+                 },
+                 "children": [
+                  "░░░░░░░░░░░░░░░"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 5,
+                "justifyContent": "flex-end",
+                "flexShrink": 0
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true,
+                  "dimColor": false
+                 },
+                 "children": [
+                  "31%"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " ↻ NaNd NaNh"
+               ]
+              }
+             ]
+            }
+           ]
+          }
          ]
         }
        ]
@@ -147,107 +557,495 @@
       {
        "type": "Box",
        "props": {
-        "flexDirection": "row"
+        "flexDirection": "column"
        },
        "children": [
         {
-         "type": "Text",
+         "type": "Box",
          "props": {
-          "dimColor": true
+          "flexDirection": "row"
          },
          "children": [
-          " · "
+          {
+           "type": "Box",
+           "props": {
+            "width": 11,
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true,
+              "color": "claude"
+             },
+             "children": [
+              "🔥 TOKENS"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "flexWrap": "wrap"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": true,
+                "dimColor": false
+               },
+               "children": [
+                "turn"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "in 2.1k out 1.5k"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "R 91k W 4.3k"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "color": "success",
+                "bold": false,
+                "dimColor": false
+               },
+               "children": [
+                "hit 93%"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": true,
+                "dimColor": false
+               },
+               "children": [
+                "session"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "in 2.1k out 1.5k"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "R 91k W 4.3k"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "color": "success",
+                "bold": false,
+                "dimColor": false
+               },
+               "children": [
+                "hit 93%"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "🧊 cache warm · expires in 59m"
+               ]
+              }
+             ]
+            }
+           ]
+          }
          ]
         },
         {
-         "type": "Text",
+         "type": "Box",
          "props": {
-          "bold": false,
-          "dimColor": true
+          "flexDirection": "row"
          },
          "children": [
-          "⛽ 49%"
-         ]
-        }
-       ]
-      },
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row"
-       },
-       "children": [
-        {
-         "type": "Text",
-         "props": {
-          "dimColor": true
-         },
-         "children": [
-          " · "
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "bold": false,
-          "dimColor": true
-         },
-         "children": [
-          "⏳ 31%"
-         ]
-        }
-       ]
-      },
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row"
-       },
-       "children": [
-        {
-         "type": "Text",
-         "props": {
-          "dimColor": true
-         },
-         "children": [
-          " · "
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "bold": false,
-          "dimColor": true
-         },
-         "children": [
-          "🧊 93%"
-         ]
-        }
-       ]
-      },
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row"
-       },
-       "children": [
-        {
-         "type": "Text",
-         "props": {
-          "dimColor": true
-         },
-         "children": [
-          " · "
+          {
+           "type": "Box",
+           "props": {
+            "width": 11,
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true,
+              "color": "claude"
+             },
+             "children": [
+              "🤖 AGENTS"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "flexWrap": "wrap"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "no subagents yet"
+               ]
+              }
+             ]
+            }
+           ]
+          }
          ]
         },
         {
-         "type": "Text",
+         "type": "Box",
          "props": {
-          "bold": true,
-          "dimColor": false
+          "flexDirection": "row"
          },
          "children": [
-          "💸 $0.42"
+          {
+           "type": "Box",
+           "props": {
+            "width": 11,
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true,
+              "color": "claude"
+             },
+             "children": [
+              "🔧 TOOLS"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "flexWrap": "wrap"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "Bash 4"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "Write 2"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "Read 1"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "Grep 1"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "Edit 1"
+               ]
+              }
+             ]
+            }
+           ]
+          }
          ]
         }
        ]
@@ -261,24 +1059,3262 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "column",
-       "borderStyle": "round",
-       "borderColor": "claude",
-       "paddingX": 1
+       "flexDirection": "column"
       },
       "children": [
        {
         "type": "Box",
         "props": {
-         "flexDirection": "row",
-         "justifyContent": "space-between",
-         "width": "100%"
+         "flexDirection": "column",
+         "width": 56,
+         "borderStyle": "round",
+         "borderColor": "claude",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true,
+               "color": "claude"
+              },
+              "children": [
+               "◆ VITALS"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {},
+              "children": [
+               "   🧠 "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "Opus 5.5"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {},
+              "children": [
+               "   ⚡ "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true,
+               "dimColor": true
+              },
+              "children": [
+               "—"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "marginLeft": 0,
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "📁 app ●2   ⏳ 30m · 1 prompt   "
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0,
+               "marginLeft": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "💸 $0.42"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "  🔥 $0.84/h"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "⛽ CTX "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "suggestion"
+                  },
+                  "children": [
+                   "██"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "░░"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "justifyContent": "flex-end",
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "bold": true,
+                   "dimColor": false
+                  },
+                  "children": [
+                   "49%"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " 97k/200k"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               " │ "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "🗜 COMPACT "
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "────"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "justifyContent": "flex-end",
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "bold": true,
+                   "dimColor": true
+                  },
+                  "children": [
+                   "—"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " auto off"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "⏳ 5H LIMIT "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "suggestion"
+                  },
+                  "children": [
+                   "█▎"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "░░"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "justifyContent": "flex-end",
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "bold": true,
+                   "dimColor": false
+                  },
+                  "children": [
+                   "31%"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " ↻ NaNd NaNh"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "width": 56,
+         "flexShrink": 0,
+         "borderStyle": "round",
+         "borderColor": "subtle",
+         "paddingX": 1
         },
         "children": [
          {
           "type": "Box",
           "props": {
            "flexDirection": "row",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "🔥 TOKENS"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "🧊 cache warm · expires in 59m"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   " "
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "IN"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "OUT"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "CACHE R"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "CACHE W"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 4,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "HIT"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "───────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "──────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "──────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "───────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "───────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 4,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": true
+                  },
+                  "children": [
+                   "turn"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "2.1k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "1.5k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "91k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "4.3k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 4,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "color": "success"
+                  },
+                  "children": [
+                   "93%"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": true
+                  },
+                  "children": [
+                   "session"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "2.1k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "1.5k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "91k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 7,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "4.3k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 4,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "color": "success"
+                  },
+                  "children": [
+                   "93%"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "width": 56,
+         "flexShrink": 0,
+         "borderStyle": "round",
+         "borderColor": "subtle",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "🤖 AGENTS"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "no subagents yet"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   " "
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "AGENT"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 11,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "MODEL"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "TOKENS"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "TIME"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "─"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "────────────────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 11,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "───────────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "──────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "──────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "color": "claude"
+                  },
+                  "children": [
+                   "◆"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": true
+                  },
+                  "children": [
+                   "main"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 11,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "Opus 5.5"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "99k"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 6,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "30m"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "width": 56,
+         "flexShrink": 0,
+         "borderStyle": "round",
+         "borderColor": "subtle",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "🔧 TOOLS"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "9 calls · 1 error"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   " "
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "TOOL"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "CALLS"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 3,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "ERR"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true,
+                   "bold": true
+                  },
+                  "children": [
+                   "NOW"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "─"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "───────────────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "─────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 3,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "───"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "─┼─"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "────────────────"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "·"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": false
+                  },
+                  "children": [
+                   "Bash"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "4"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 3,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "color": "warning"
+                  },
+                  "children": [
+                   "1"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   ""
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "·"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": false
+                  },
+                  "children": [
+                   "Write"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "2"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 3,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "0"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   ""
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "·"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": false
+                  },
+                  "children": [
+                   "Read"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "1"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 3,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "0"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   ""
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "·"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": false
+                  },
+                  "children": [
+                   "Grep"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "1"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 3,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "0"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   ""
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 1,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "·"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 15,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "bold": false
+                  },
+                  "children": [
+                   "Edit"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 5,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "1"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 3,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-end"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end",
+                   "dimColor": true
+                  },
+                  "children": [
+                   "0"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " │ "
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "width": 16,
+                 "flexShrink": 0,
+                 "justifyContent": "flex-start"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   ""
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "width": 11,
            "flexShrink": 0
           },
           "children": [
@@ -289,40 +4325,7 @@
              "color": "claude"
             },
             "children": [
-             "◆ VITALS"
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {},
-            "children": [
-             "   🧠 "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "bold": true
-            },
-            "children": [
-             "Opus 5.5"
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {},
-            "children": [
-             "   ⚡ "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "bold": true,
-             "dimColor": true
-            },
-            "children": [
-             "—"
+             "📊 USAGE"
             ]
            }
           ]
@@ -331,234 +4334,7 @@
           "type": "Box",
           "props": {
            "flexDirection": "row",
-           "marginLeft": 2,
-           "flexShrink": 1
-          },
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "dimColor": true,
-             "wrap": "truncate-end"
-            },
-            "children": [
-             "📁 app ●2   ⏳ 30m · 1 prompt   "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "bold": true
-            },
-            "children": [
-             "💸 $0.42"
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "dimColor": true
-            },
-            "children": [
-             "  🔥 $0.84/h"
-            ]
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row",
-         "flexWrap": "wrap"
-        },
-        "children": [
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "row"
-          },
-          "children": [
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row",
-             "flexShrink": 0
-            },
-            "children": [
-             {
-              "type": "Text",
-              "props": {
-               "bold": true
-              },
-              "children": [
-               "⛽ CTX "
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexShrink": 0
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "color": "suggestion"
-                },
-                "children": [
-                 "██"
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "dimColor": true
-                },
-                "children": [
-                 "░░"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "width": 5,
-               "justifyContent": "flex-end",
-               "flexShrink": 0
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "bold": true,
-                 "dimColor": false
-                },
-                "children": [
-                 "49%"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "dimColor": true
-              },
-              "children": [
-               " 97k/200k"
-              ]
-             }
-            ]
-           }
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "row"
-          },
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "dimColor": true
-            },
-            "children": [
-             " │ "
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row",
-             "flexShrink": 0
-            },
-            "children": [
-             {
-              "type": "Text",
-              "props": {
-               "bold": true
-              },
-              "children": [
-               "⏳ 5H "
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexShrink": 0
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "color": "suggestion"
-                },
-                "children": [
-                 "█▎"
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "dimColor": true
-                },
-                "children": [
-                 "░░"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "width": 5,
-               "justifyContent": "flex-end",
-               "flexShrink": 0
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "bold": true,
-                 "dimColor": false
-                },
-                "children": [
-                 "31%"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "dimColor": true
-              },
-              "children": [
-               " ↻ NaNd NaNh"
-              ]
-             }
-            ]
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "marginTop": 1
-        },
-        "children": [
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "column"
+           "flexWrap": "wrap"
           },
           "children": [
            {
@@ -570,1765 +4346,11 @@
              {
               "type": "Text",
               "props": {
+               "bold": false,
                "dimColor": true
               },
               "children": [
-               "── "
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "bold": true,
-               "color": "claude"
-              },
-              "children": [
-               "🔥 TOKENS"
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "dimColor": true,
-               "wrap": "truncate-end"
-              },
-              "children": [
-               " ────────────────────── 🧊 cache warm ──"
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column"
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     " "
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "IN"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "OUT"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "CACHE R"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "CACHE W"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 4,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "HIT"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "───────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "──────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "──────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "───────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "───────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 4,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "bold": true
-                    },
-                    "children": [
-                     "turn"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "2.1k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "1.5k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "91k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "4.3k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 4,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "color": "success"
-                    },
-                    "children": [
-                     "93%"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "bold": true
-                    },
-                    "children": [
-                     "session"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "2.1k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "1.5k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "91k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 7,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "4.3k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 4,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "color": "success"
-                    },
-                    "children": [
-                     "93%"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             }
-            ]
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "marginTop": 1
-        },
-        "children": [
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "row"
-          },
-          "children": [
-           {
-            "type": "Box",
-            "props": {
-             "width": 11,
-             "flexShrink": 0
-            },
-            "children": [
-             {
-              "type": "Text",
-              "props": {
-               "bold": true,
-               "color": "claude"
-              },
-              "children": [
-               "📊 USAGE"
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row",
-             "flexWrap": "wrap"
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "bold": false,
-                 "dimColor": true
-                },
-                "children": [
-                 "no history: unreadable ccusage output"
-                ]
-               }
-              ]
-             }
-            ]
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "marginTop": 1
-        },
-        "children": [
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "column"
-          },
-          "children": [
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row"
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "width": 11,
-               "flexShrink": 0
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "bold": true,
-                 "color": "claude"
-                },
-                "children": [
-                 "🔧 TOOLS"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexWrap": "wrap"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": false,
-                   "dimColor": true
-                  },
-                  "children": [
-                   "Bash 4"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " · "
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": false,
-                   "dimColor": true
-                  },
-                  "children": [
-                   "Write 2"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " · "
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": false,
-                   "dimColor": true
-                  },
-                  "children": [
-                   "Read 1"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " · "
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": false,
-                   "dimColor": true
-                  },
-                  "children": [
-                   "Grep 1"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " · "
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": false,
-                   "dimColor": true
-                  },
-                  "children": [
-                   "Edit 1"
-                  ]
-                 }
-                ]
-               }
-              ]
-             }
-            ]
-           }
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "marginTop": 1
-        },
-        "children": [
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "column"
-          },
-          "children": [
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row"
-            },
-            "children": [
-             {
-              "type": "Text",
-              "props": {
-               "dimColor": true
-              },
-              "children": [
-               "── "
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "bold": true,
-               "color": "claude"
-              },
-              "children": [
-               "🤖 AGENTS"
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "dimColor": true,
-               "wrap": "truncate-end"
-              },
-              "children": [
-               " ─────────────────── no subagents yet ──"
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column"
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 1,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     " "
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 16,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "AGENT"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 11,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "MODEL"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "TOKENS"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true,
-                     "bold": true
-                    },
-                    "children": [
-                     "TIME"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 1,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "─"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 16,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "────────────────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 11,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "───────────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "──────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   "─┼─"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "dimColor": true,
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "──────"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 1,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "color": "claude"
-                    },
-                    "children": [
-                     "◆"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 16,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "bold": true
-                    },
-                    "children": [
-                     "main"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 11,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-start"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "Opus 5.5"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end"
-                    },
-                    "children": [
-                     "99k"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   " │ "
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "width": 6,
-                   "flexShrink": 0,
-                   "justifyContent": "flex-end"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "wrap": "truncate-end",
-                     "dimColor": true
-                    },
-                    "children": [
-                     "30m"
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               }
+               "no history: unreadable ccusage output"
               ]
              }
             ]
@@ -2344,12 +4366,20 @@
     "vitals-report": {
      "ok": true,
      "tree": {
-      "type": "Text",
+      "type": "Box",
       "props": {
-       "dimColor": true
+       "flexDirection": "column"
       },
       "children": [
-       "No usage history: unreadable ccusage output"
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No usage history: unreadable ccusage output"
+        ]
+       }
       ]
      },
      "title": "vitals-report"
@@ -2371,7 +4401,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/vitals → Vitals: compact line."
+   "/vitals → Vitals: medium · vitals, context, agents.",
+   "/vitals-low → Vitals: low · the vitals box.",
+   "/vitals-medium → Vitals: medium · vitals, context, agents.",
+   "/vitals-high → Vitals: high · everything."
   ],
   "console": [],
   "warnings": []
@@ -2383,6 +4416,9 @@
   "hooks": [
    "session.start",
    "command.run{command=vitals}",
+   "command.run{command=vitals-low}",
+   "command.run{command=vitals-medium}",
+   "command.run{command=vitals-high}",
    "session.attach",
    "session.measure",
    "turn.step",
@@ -2404,20 +4440,24 @@
    "$.clock.now",
    "$.command.register",
    "$.config.list (via refresh)",
+   "$.http.fetch (via refreshPlan)",
    "$.process.run (via refresh",
    "refreshHistory)",
+   "$.session.authorize (via refreshPlan)",
    "$.session.cwd (via refresh)",
    "$.session.model (via refresh)",
    "$.session.turns (via refresh)",
    "$.session.usage (via refresh)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via restoreHistory)",
-   "$.store.set (via refreshHistory)",
-   "$.ui.invalidate (via tick)",
+   "$.store.get",
+   "$.store.set (via refreshHistory",
+   "setLevel)",
+   "$.ui.invalidate (via refreshHistory",
+   "tick)",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.toast (via applyMeasure)"
+   "$.ui.toast (via noteLimits)"
   ],
   "stateReads": [
    "vitals.agents",
@@ -2427,6 +4467,7 @@
    "vitals.historyProblem",
    "vitals.lastTurn",
    "vitals.live",
+   "vitals.plan",
    "vitals.shells",
    "vitals.snap",
    "vitals.tools",
@@ -2442,6 +4483,7 @@
    "vitals.historyProblem",
    "vitals.lastTurn",
    "vitals.live",
+   "vitals.plan",
    "vitals.shells",
    "vitals.snap",
    "vitals.tools",
@@ -2461,7 +4503,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: vitals.snap, vitals.warned, vitals.lastTurn, vitals.totals, vitals.compactions, vitals.effort, vitals.view, vitals.agents, vitals.shells, vitals.live, vitals.tools, vitals.history, vitals.historyProblem"
+     "types ./types/index.d.ts declares state: vitals.snap, vitals.warned, vitals.lastTurn, vitals.totals, vitals.compactions, vitals.effort, vitals.view, vitals.agents, vitals.shells, vitals.live, vitals.tools, vitals.history, vitals.historyProblem, vitals.plan"
     ],
     "gatingHooks": []
    },
@@ -2472,17 +4514,20 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=vitals}, session.attach, session.measure, turn.step, turn.complete, tool.call, tool.call{tool=Bash}, tool.call{tool=Agent}, tool.call{tool=TaskStop}, prompt.submit, session.compact, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=vitals}, ui.render{component=Pane, requestId=vitals-report}",
+      "./register.tsx hooks: session.start, command.run{command=vitals}, command.run{command=vitals-low}, command.run{command=vitals-medium}, command.run{command=vitals-high}, session.attach, session.measure, turn.step, turn.complete, tool.call, tool.call{tool=Bash}, tool.call{tool=Agent}, tool.call{tool=TaskStop}, prompt.submit, session.compact, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=vitals}, ui.render{component=Pane, requestId=vitals-report}",
       "./register.tsx answers its own command: command.run{command=vitals}",
+      "./register.tsx answers its own command: command.run{command=vitals-low}",
+      "./register.tsx answers its own command: command.run{command=vitals-medium}",
+      "./register.tsx answers its own command: command.run{command=vitals-high}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook with .catch: tool.call{tool=Agent}",
       "./register.tsx gating hook with .catch: tool.call{tool=TaskStop}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: session.compact",
-      "./register.tsx calls: $.agent.list (via refresh), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.config.list (via refresh), $.process.run (via refresh, refreshHistory), $.session.cwd (via refresh), $.session.model (via refresh), $.session.turns (via refresh), $.session.usage (via refresh), $.state.get, $.state.set, $.store.get (via restoreHistory), $.store.set (via refreshHistory), $.ui.invalidate (via tick), $.ui.open, $.ui.resolve, $.ui.toast (via applyMeasure)",
-      "./register.tsx state writes: vitals.agents, vitals.compactions, vitals.effort, vitals.history, vitals.historyProblem, vitals.lastTurn, vitals.live, vitals.shells, vitals.snap, vitals.tools, vitals.totals, vitals.view, vitals.warned",
-      "./register.tsx state reads: vitals.agents, vitals.compactions, vitals.effort, vitals.history, vitals.historyProblem, vitals.lastTurn, vitals.live, vitals.shells, vitals.snap, vitals.tools, vitals.totals, vitals.view, vitals.warned"
+      "./register.tsx calls: $.agent.list (via refresh), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.config.list (via refresh), $.http.fetch (via refreshPlan), $.process.run (via refresh, refreshHistory), $.session.authorize (via refreshPlan), $.session.cwd (via refresh), $.session.model (via refresh), $.session.turns (via refresh), $.session.usage (via refresh), $.state.get, $.state.set, $.store.get, $.store.set (via refreshHistory, setLevel), $.ui.invalidate (via refreshHistory, tick), $.ui.open, $.ui.resolve, $.ui.toast (via noteLimits)",
+      "./register.tsx state writes: vitals.agents, vitals.compactions, vitals.effort, vitals.history, vitals.historyProblem, vitals.lastTurn, vitals.live, vitals.plan, vitals.shells, vitals.snap, vitals.tools, vitals.totals, vitals.view, vitals.warned",
+      "./register.tsx state reads: vitals.agents, vitals.compactions, vitals.effort, vitals.history, vitals.historyProblem, vitals.lastTurn, vitals.live, vitals.plan, vitals.shells, vitals.snap, vitals.tools, vitals.totals, vitals.view, vitals.warned"
      ],
      "gatingHooks": [
       {
@@ -2523,8 +4568,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "5f3dc025a4aa2603"
+ "sourceHash": "77cd4b708245be6d"
 }

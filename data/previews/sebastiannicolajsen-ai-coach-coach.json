@@ -1,6 +1,6 @@
 {
  "slug": "sebastiannicolajsen-ai-coach-coach",
- "generatedAt": "2026-10-08T15:54:42.653Z",
+ "generatedAt": "2026-10-09T15:34:24.674Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "prompt.edit"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "tool.call"
@@ -61,7 +67,7 @@
    {
     "name": "coach",
     "description": "Coach: on/off, pane, ask, settings, about",
-    "argumentHint": "[help|pane|ask|settings|model [haiku|haiku-5.5|sonnet|opus]|preview [on|off]|why|gallery|about|on|off]",
+    "argumentHint": "[help|pane|ask|settings|model [haiku|haiku-5.5|sonnet|opus]|recommend [on|off]|switch [ask|auto|off]|preview [on|off]|why|gallery|about|on|off]",
     "immediate": true,
     "output": "Coach pane opened."
    }
@@ -86,12 +92,14 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 153,
-   "$.state.set": 57,
+   "$.state.get": 167,
+   "$.state.set": 66,
    "$.store.get": 14,
-   "$.session.usage": 2,
+   "$.session.usage": 3,
    "$.session.authorize": 2,
+   "$.session.model": 2,
    "$.store.set": 2,
+   "$.model.complete": 1,
    "$.session.surface": 1,
    "$.ui.ask": 1,
    "$.clock.after": 4,
@@ -133,7 +141,7 @@
         "dimColor": true
        },
        "children": [
-        "The coach follows your loop with Claude. Press Coach to focus on a step."
+        "The coach follows your loop with Claude. Press ⋯ to focus on a step."
        ]
       },
       {
@@ -149,7 +157,9 @@
           "flexDirection": "row",
           "gap": 1,
           "flexGrow": 1,
-          "flexShrink": 1
+          "flexShrink": 1,
+          "minWidth": 0,
+          "overflow": "hidden"
          },
          "children": [
           {
@@ -215,6 +225,8 @@
            "type": "Box",
            "props": {
             "flexShrink": 1,
+            "minWidth": 0,
+            "overflow": "hidden",
             "marginLeft": 1
            },
            "children": [
@@ -233,11 +245,65 @@
          ]
         },
         {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "gap": 1,
+          "flexShrink": 0,
+          "alignItems": "center"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "alignItems": "center",
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "model",
+              "plain": true,
+              "dimColor": true,
+              "label": "Opus 5.5",
+              "onPress": "[fn]"
+             },
+             "children": []
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "alignItems": "center",
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "switch-mode",
+              "plain": true,
+              "dimColor": true,
+              "label": "Prompt me",
+              "onPress": "[fn]"
+             },
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
          "type": "Button",
          "props": {
           "key": "menu",
           "plain": true,
-          "label": "Coach",
+          "dimColor": true,
+          "label": "⋯",
           "onPress": "[fn]"
          },
          "children": []
@@ -1982,6 +2048,82 @@
             "type": "Text",
             "props": {},
             "children": [
+             "Recommend a model"
+            ]
+           },
+           {
+            "type": "Select",
+            "props": {
+             "key": "set-recommend",
+             "options": [
+              {
+               "value": "on",
+               "label": "On"
+              },
+              {
+               "value": "off",
+               "label": "Off"
+              }
+             ],
+             "value": "on",
+             "onSelect": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "Before a prompt runs"
+            ]
+           },
+           {
+            "type": "Select",
+            "props": {
+             "key": "set-switch",
+             "options": [
+              {
+               "value": "ask",
+               "label": "Prompt me"
+              },
+              {
+               "value": "auto",
+               "label": "Auto-select"
+              },
+              {
+               "value": "off",
+               "label": "Only show"
+              }
+             ],
+             "value": "ask",
+             "onSelect": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
              "Coach checks"
             ]
            },
@@ -2132,7 +2274,7 @@
            "dimColor": true
           },
           "children": [
-           "Coach 0% of this session · Haiku 5.5"
+           "Coach <1% of this session · Haiku 5.5"
           ]
          },
          {
@@ -2179,6 +2321,8 @@
   "hooks": [
    "session.start",
    "prompt.submit",
+   "prompt.edit",
+   "turn.step",
    "tool.call",
    "turn.complete",
    "command.run{command=coach}",
@@ -2190,9 +2334,10 @@
    "ui.render{component=AssistantMessage}"
   ],
   "calls": [
-   "$.clock.after (via scheduleInit",
-   "shim)",
+   "$.clock.after",
    "$.command.register (via init)",
+   "$.config.list (via shim)",
+   "$.config.set (via shim)",
    "$.model.complete (via shim)",
    "$.prompt.fill (via shim)",
    "$.prompt.read (via shim)",
@@ -2200,6 +2345,7 @@
    "$.prompt.suggest (via shim)",
    "$.session.authorize (via shim)",
    "$.session.messages (via shim)",
+   "$.session.model (via shim)",
    "$.session.surface (via shim)",
    "$.session.usage (via shim)",
    "$.state.get",
@@ -2242,11 +2388,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, tool.call, turn.complete, command.run{command=coach}, ui.render{component=AbovePrompt}, ui.render{component=CommandOutput, props has {command=coach}}, ui.render{component=Pane, requestId=coach}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}",
+      "./register.tsx hooks: session.start, prompt.submit, prompt.edit, turn.step, tool.call, turn.complete, command.run{command=coach}, ui.render{component=AbovePrompt}, ui.render{component=CommandOutput, props has {command=coach}}, ui.render{component=Pane, requestId=coach}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}",
       "./register.tsx answers its own command: command.run{command=coach}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.clock.after (via scheduleInit, shim), $.command.register (via init), $.model.complete (via shim), $.prompt.fill (via shim), $.prompt.read (via shim), $.prompt.submit (via shim), $.prompt.suggest (via shim), $.session.authorize (via shim), $.session.messages (via shim), $.session.surface (via shim), $.session.usage (via shim), $.state.get, $.state.set, $.store.get (via shim), $.store.set (via shim), $.ui.ask (via shim), $.ui.log (via report, shim), $.ui.open (via shim), $.ui.resolve (via shim), $.ui.toast (via shim)",
+      "./register.tsx calls: $.clock.after, $.command.register (via init), $.config.list (via shim), $.config.set (via shim), $.model.complete (via shim), $.prompt.fill (via shim), $.prompt.read (via shim), $.prompt.submit (via shim), $.prompt.suggest (via shim), $.session.authorize (via shim), $.session.messages (via shim), $.session.model (via shim), $.session.surface (via shim), $.session.usage (via shim), $.state.get, $.state.set, $.store.get (via shim), $.store.set (via shim), $.ui.ask (via shim), $.ui.log (via report, shim), $.ui.open (via shim), $.ui.resolve (via shim), $.ui.toast (via shim)",
       "./register.tsx state writes: coach.state",
       "./register.tsx state reads: coach.state"
      ],
@@ -2265,8 +2411,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "c0858ffc1b122f06"
+ "sourceHash": "b319ffd0f5a731cb"
 }

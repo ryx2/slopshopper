@@ -1,6 +1,6 @@
 {
  "slug": "abrose-claude-plugins-team",
- "generatedAt": "2026-10-07T15:22:44.552Z",
+ "generatedAt": "2026-10-09T15:32:55.539Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,30 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__team__ask"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__team__queue"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__team__decide"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__team__relay"
+    }
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "team-overview"
@@ -25,21 +49,34 @@
    {
     "event": "ui.close",
     "matcher": {
-     "id": "team-overview"
+     "id": "team"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "questions"
     }
    },
    {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
-     "requestId": "team-overview"
+     "requestId": "questions"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "team"
     }
    }
   ],
   "commands": [
    {
     "name": "team-overview",
-    "description": "Show or hide the team overview pane",
+    "description": "Show or hide the Team and Questions tabs",
     "output": "No team run in this session."
    }
   ],
@@ -47,6 +84,22 @@
    {
     "name": "brief_send",
     "description": "Send a composed brief to a team agent by its session id. Run `team-brief compose` first. Returns \"<name>: <state>\"; an error names the reason."
+   },
+   {
+    "name": "ask",
+    "description": "File an open question for the human as a card. State door and rework; park (parked: true) only a two-way question with about an hour of rework or less, and continue on your recommendation. Returns the card id, Q-<n>; name it in your REPORT line."
+   },
+   {
+    "name": "queue",
+    "description": "List the open and assumed cards grouped by tag, most pressing first. Envoy session only."
+   },
+   {
+    "name": "decide",
+    "description": "Close cards with one numbered decision, or mark them obsolete. List in overrides the assumed cards whose assumption this answer changes. Envoy session only. Returns \"Decision <n>\"."
+   },
+   {
+    "name": "relay",
+    "description": "Pass an operational request from the human to the orchestrator. Envoy session only. Returns \"sent\"."
    }
   ],
   "panes": [],
@@ -58,12 +111,12 @@
    "$.session.id": 1,
    "$.env.set": 1,
    "$.command.register": 1,
-   "$.tool.register": 1,
+   "$.tool.register": 5,
    "$.clock.every": 1,
    "$.env.get": 1,
    "$.fs.read": 1,
-   "$.ui.resolve": 1,
-   "$.state.get": 5
+   "$.ui.resolve": 2,
+   "$.state.get": 8
   },
   "timers": [
    {
@@ -73,7 +126,28 @@
   ],
   "sites": {
    "Pane": {
-    "team-overview": {
+    "questions": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "no questions yet"
+        ]
+       }
+      ]
+     },
+     "title": "questions"
+    },
+    "team": {
      "ok": true,
      "tree": {
       "type": "Box",
@@ -90,6 +164,22 @@
         "children": [
          "no plan yet: ",
          ""
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Questions: none open"
         ]
        },
        {
@@ -129,7 +219,7 @@
        }
       ]
      },
-     "title": "team-overview"
+     "title": "team"
     }
    }
   },
@@ -158,13 +248,21 @@
    "session.start",
    "session.end",
    "tool.call{tool=?}",
+   "tool.call{tool=mcp__team__ask}",
+   "tool.call{tool=mcp__team__queue}",
+   "tool.call{tool=mcp__team__decide}",
+   "tool.call{tool=mcp__team__relay}",
    "command.run{command=team-overview}",
    "ui.close{id=?}",
+   "ui.close{id=?}",
+   "ui.render{component=Pane, requestId=?}",
    "ui.render{component=Pane, requestId=?}"
   ],
   "calls": [
    "$.clock.every",
-   "$.clock.now (via tick)",
+   "$.clock.now (via makeIo",
+   "orchestratorHalf",
+   "tick)",
    "$.clock.sleep (via makeIo)",
    "$.command.register",
    "$.env.get (via makeIo)",
@@ -174,34 +272,42 @@
    "$.fs.stat (via makeIo)",
    "$.fs.write (via makeIo)",
    "$.process.run (via makeIo)",
-   "$.prompt.submit (via tick)",
+   "$.prompt.submit (via orchestratorHalf)",
    "$.session.id",
    "$.session.send (via makeIo)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via showPane)",
+   "$.store.get (via showPanes)",
    "$.store.set",
    "$.tool.register",
    "$.ui.close",
-   "$.ui.open",
+   "$.ui.open (via openPanes)",
    "$.ui.panes",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.status (via setStatus)",
+   "$.ui.toast (via urgentBadge)"
   ],
   "stateReads": [
    "team.active",
    "team.agents",
+   "team.cards",
    "team.error",
+   "team.idleTabs",
    "team.plan",
    "team.planPath",
-   "team.tickAt"
+   "team.tickAt",
+   "team.urgent"
   ],
   "stateWrites": [
    "team.active",
    "team.agents",
+   "team.cards",
    "team.error",
+   "team.idleTabs",
    "team.plan",
    "team.planPath",
-   "team.tickAt"
+   "team.tickAt",
+   "team.urgent"
   ],
   "envReads": [
    "HERDR_BIN_PATH",
@@ -218,7 +324,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: team.active, team.agents, team.plan, team.planPath, team.tickAt, team.error"
+     "types ./types/index.d.ts declares state: team.active, team.agents, team.idleTabs, team.plan, team.cards, team.urgent, team.planPath, team.tickAt, team.error"
     ],
     "gatingHooks": []
    },
@@ -229,15 +335,20 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mod/team.tsx hooks: session.start, session.end, tool.call{tool=?}, command.run{command=team-overview}, ui.close{id=?}, ui.render{component=Pane, requestId=?}",
+      "./mod/team.tsx hooks: session.start, session.end, tool.call{tool=?}, tool.call{tool=mcp__team__ask}, tool.call{tool=mcp__team__queue}, tool.call{tool=mcp__team__decide}, tool.call{tool=mcp__team__relay}, command.run{command=team-overview}, ui.close{id=?}, ui.close{id=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}",
       "./mod/team.tsx answers its own command: command.run{command=team-overview}",
       "./mod/team.tsx gating hook without .catch: tool.call{tool=?}",
+      "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__ask}",
+      "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__queue}",
+      "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__decide}",
+      "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__relay}",
       "./mod/team.tsx gating hook without .catch: ui.close{id=?}",
-      "./mod/team.tsx calls: $.clock.every, $.clock.now (via tick), $.clock.sleep (via makeIo), $.command.register, $.env.get (via makeIo), $.env.set, $.fs.list (via makeIo), $.fs.read (via makeIo), $.fs.stat (via makeIo), $.fs.write (via makeIo), $.process.run (via makeIo), $.prompt.submit (via tick), $.session.id, $.session.send (via makeIo), $.state.get, $.state.set, $.store.get (via showPane), $.store.set, $.tool.register, $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve",
+      "./mod/team.tsx gating hook without .catch: ui.close{id=?}",
+      "./mod/team.tsx calls: $.clock.every, $.clock.now (via makeIo, orchestratorHalf, tick), $.clock.sleep (via makeIo), $.command.register, $.env.get (via makeIo), $.env.set, $.fs.list (via makeIo), $.fs.read (via makeIo), $.fs.stat (via makeIo), $.fs.write (via makeIo), $.process.run (via makeIo), $.prompt.submit (via orchestratorHalf), $.session.id, $.session.send (via makeIo), $.state.get, $.state.set, $.store.get (via showPanes), $.store.set, $.tool.register, $.ui.close, $.ui.open (via openPanes), $.ui.panes, $.ui.resolve, $.ui.status (via setStatus), $.ui.toast (via urgentBadge)",
       "./mod/team.tsx env writes: TEAM_SESSION_ID",
       "./mod/team.tsx env reads: HERDR_BIN_PATH, TEAM_SCRATCH",
-      "./mod/team.tsx state writes: team.active, team.agents, team.error, team.plan, team.planPath, team.tickAt",
-      "./mod/team.tsx state reads: team.active, team.agents, team.error, team.plan, team.planPath, team.tickAt"
+      "./mod/team.tsx state writes: team.active, team.agents, team.cards, team.error, team.idleTabs, team.plan, team.planPath, team.tickAt, team.urgent",
+      "./mod/team.tsx state reads: team.active, team.agents, team.cards, team.error, team.idleTabs, team.plan, team.planPath, team.tickAt, team.urgent"
      ],
      "gatingHooks": [
       {
@@ -248,14 +359,45 @@
       },
       {
        "module": "./mod/team.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team__ask}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team__queue}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team__decide}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__team__relay}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
        "pattern": "ui.close",
        "hook": "ui.close{id=?}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "22b5370244f6478f"
+ "sourceHash": "50c50ffb8c6a5214"
 }

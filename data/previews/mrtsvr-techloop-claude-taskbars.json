@@ -1,9 +1,36 @@
 {
  "slug": "mrtsvr-techloop-claude-taskbars",
- "generatedAt": "2026-10-08T15:53:35.422Z",
+ "generatedAt": "2026-10-09T15:32:41.129Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "state.set",
+    "matcher": {
+     "key": "signal"
+    }
+   },
+   {
+    "event": "engine.create"
+   },
+   {
+    "event": "taskBars.isOpen"
+   },
+   {
+    "event": "taskBars.open"
+   },
+   {
+    "event": "taskBars.close"
+   },
+   {
+    "event": "taskBars.toggle"
+   },
+   {
+    "event": "taskBars.list"
+   },
+   {
+    "event": "taskBars.getStatus"
+   },
    {
     "event": "session.start"
    },
@@ -77,13 +104,11 @@
   "commands": [
    {
     "name": "task-bars",
-    "description": "Show or hide the task progress bars above the prompt",
-    "output": "Task bars hidden."
+    "description": "Show or hide the task progress bars above the prompt"
    },
    {
     "name": "task-bars-demo",
-    "description": "Add or remove sample tasks at different percentages in the task bars",
-    "output": "Sample tasks added."
+    "description": "Add or remove sample tasks at different percentages in the task bars"
    }
   ],
   "tools": [
@@ -100,8 +125,8 @@
   "apiCalls": {
    "$.command.register": 2,
    "$.tool.register": 1,
-   "$.state.get": 8,
-   "$.state.set": 4,
+   "$.state.get": 17,
+   "$.state.set": 10,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -447,8 +472,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/task-bars → Task bars hidden.",
-   "/task-bars-demo → Sample tasks added."
+   "command.run: hook threw undefined is not an object (evaluating '$.taskBars.toggle')",
+   "/task-bars → ",
+   "command.run: hook threw undefined is not an object (evaluating '$.taskBars.open')",
+   "/task-bars-demo → "
   ],
   "console": [],
   "warnings": []
@@ -460,6 +487,14 @@
    "No author information provided. Consider adding author details for plugin attribution"
   ],
   "hooks": [
+   "state.set{key=signal}",
+   "engine.create",
+   "taskBars.isOpen",
+   "taskBars.open",
+   "taskBars.close",
+   "taskBars.toggle",
+   "taskBars.list",
+   "taskBars.getStatus",
    "session.start",
    "tool.call{tool=mcp__task-bars__set_tasks}",
    "tool.call{tool=Agent}",
@@ -479,15 +514,21 @@
    "$.command.register",
    "$.state.get",
    "$.state.set",
+   "$.taskBars.close (via obey)",
+   "$.taskBars.open",
+   "$.taskBars.statusChanged (via change)",
+   "$.taskBars.toggle",
    "$.tool.register",
    "$.ui.resolve"
   ],
   "stateReads": [
    "task-bars.isHidden",
+   "task-bars.signal",
    "task-bars.tasks"
   ],
   "stateWrites": [
    "task-bars.isHidden",
+   "task-bars.signal",
    "task-bars.tasks"
   ],
   "envReads": [],
@@ -507,8 +548,8 @@
      }
     ],
     "notes": [
-     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: task-bars.tasks, task-bars.isHidden"
+     "types ./types/index.d.ts declares on $: $.taskBars",
+     "types ./types/index.d.ts declares state: task-bars.tasks, task-bars.isHidden, task-bars.signal"
     ],
     "gatingHooks": []
    },
@@ -519,7 +560,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=mcp__task-bars__set_tasks}, tool.call{tool=Agent}, classic.SubagentStop, command.run{command=task-bars-demo}, command.run{command=task-bars}, prompt.compose, prompt.submit, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TaskList}, tool.call{tool=TodoWrite}, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: state.set{key=signal}, engine.create, taskBars.isOpen, taskBars.open, taskBars.close, taskBars.toggle, taskBars.list, taskBars.getStatus, session.start, tool.call{tool=mcp__task-bars__set_tasks}, tool.call{tool=Agent}, classic.SubagentStop, command.run{command=task-bars-demo}, command.run{command=task-bars}, prompt.compose, prompt.submit, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TaskList}, tool.call{tool=TodoWrite}, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx gating hook with .catch: state.set{key=signal}",
+      "./register.tsx gating hook without .catch: taskBars.isOpen",
+      "./register.tsx gating hook without .catch: taskBars.open",
+      "./register.tsx gating hook without .catch: taskBars.close",
+      "./register.tsx gating hook without .catch: taskBars.toggle",
+      "./register.tsx gating hook without .catch: taskBars.list",
+      "./register.tsx gating hook without .catch: taskBars.getStatus",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__task-bars__set_tasks}",
       "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
       "./register.tsx gating hook without .catch: classic.SubagentStop",
@@ -530,11 +578,53 @@
       "./register.tsx gating hook without .catch: tool.call{tool=TaskUpdate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskList}",
       "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite}",
-      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.tool.register, $.ui.resolve",
-      "./register.tsx state writes: task-bars.isHidden, task-bars.tasks",
-      "./register.tsx state reads: task-bars.isHidden, task-bars.tasks"
+      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.taskBars.close (via obey), $.taskBars.open, $.taskBars.statusChanged (via change), $.taskBars.toggle, $.tool.register, $.ui.resolve",
+      "./register.tsx state writes: task-bars.isHidden, task-bars.signal, task-bars.tasks",
+      "./register.tsx state reads: task-bars.isHidden, task-bars.signal, task-bars.tasks"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "state.set",
+       "hook": "state.set{key=signal}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "taskBars.isOpen",
+       "hook": "taskBars.isOpen",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "taskBars.open",
+       "hook": "taskBars.open",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "taskBars.close",
+       "hook": "taskBars.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "taskBars.toggle",
+       "hook": "taskBars.toggle",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "taskBars.list",
+       "hook": "taskBars.list",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "taskBars.getStatus",
+       "hook": "taskBars.getStatus",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -597,8 +687,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "ba68da14f09de6a"
+ "sourceHash": "3317908b5d034068"
 }

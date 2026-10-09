@@ -1,6 +1,6 @@
 {
  "slug": "wiktordepina-mait-code-mait-companion",
- "generatedAt": "2026-10-08T15:53:41.627Z",
+ "generatedAt": "2026-10-09T15:32:51.813Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -15,6 +15,12 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call"
    },
    {
     "event": "session.measure"
@@ -41,14 +47,16 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.process.run": 6,
+   "$.process.run": 8,
    "$.session.id": 2,
    "$.session.root": 2,
    "$.session.cwd": 2,
    "$.session.model": 2,
    "$.session.usage": 1,
-   "$.state.get": 9,
-   "$.state.set": 8
+   "$.clock.now": 2,
+   "$.state.get": 12,
+   "$.state.set": 8,
+   "$.agent.list": 2
   },
   "timers": [],
   "sites": {
@@ -61,6 +69,7 @@
    "$.process.run(mait-code settings get status-bar-style --json) → exit 0",
    "$.process.run(mc-tool-board summary --json --session preview-session) → exit 0",
    "$.process.run(git symbolic-ref --short -q HEAD) → exit 0",
+   "$.process.run(git status --porcelain=v2 --branch) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -73,6 +82,7 @@
    "tool.call Bash cat .env",
    "$.process.run(mc-tool-board summary --json --session preview-session) → exit 0",
    "$.process.run(git symbolic-ref --short -q HEAD) → exit 0",
+   "$.process.run(git status --porcelain=v2 --branch) → exit 0",
    "turn.complete",
    "/capture → Usage: /capture <text>"
   ],
@@ -87,10 +97,15 @@
    "session.start",
    "command.run{command=capture}",
    "turn.complete",
+   "agent.spawn",
+   "tool.call",
    "session.measure",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.agent.list (via reconcileAgents)",
+   "$.clock.every (via syncTicker)",
+   "$.clock.now",
    "$.command.register",
    "$.process.run (via run)",
    "$.session.cwd (via refreshWhere)",
@@ -103,12 +118,18 @@
    "$.ui.resolve"
   ],
   "stateReads": [
+   "mait-companion.agentsOpen",
+   "mait-companion.events",
+   "mait-companion.now",
    "mait-companion.palette",
    "mait-companion.session",
    "mait-companion.style",
    "mait-companion.work"
   ],
   "stateWrites": [
+   "mait-companion.agentsOpen",
+   "mait-companion.events",
+   "mait-companion.now",
    "mait-companion.palette",
    "mait-companion.session",
    "mait-companion.style",
@@ -126,7 +147,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: mait-companion.work, mait-companion.session, mait-companion.palette, mait-companion.style"
+     "types ./types/index.d.ts declares state: mait-companion.work, mait-companion.session, mait-companion.events, mait-companion.agentsOpen, mait-companion.now, mait-companion.palette, mait-companion.style"
     ],
     "gatingHooks": []
    },
@@ -137,16 +158,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=capture}, turn.complete, session.measure, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=capture}, turn.complete, agent.spawn, tool.call, session.measure, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=capture}",
-      "./register.tsx calls: $.command.register, $.process.run (via run), $.session.cwd (via refreshWhere), $.session.id (via refreshWork), $.session.model (via refreshWhere), $.session.root (via refreshWhere), $.session.usage, $.state.get, $.state.set, $.ui.resolve",
-      "./register.tsx state writes: mait-companion.palette, mait-companion.session, mait-companion.style, mait-companion.work",
-      "./register.tsx state reads: mait-companion.palette, mait-companion.session, mait-companion.style, mait-companion.work"
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.agent.list (via reconcileAgents), $.clock.every (via syncTicker), $.clock.now, $.command.register, $.process.run (via run), $.session.cwd (via refreshWhere), $.session.id (via refreshWork), $.session.model (via refreshWhere), $.session.root (via refreshWhere), $.session.usage, $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx state writes: mait-companion.agentsOpen, mait-companion.events, mait-companion.now, mait-companion.palette, mait-companion.session, mait-companion.style, mait-companion.work",
+      "./register.tsx state reads: mait-companion.agentsOpen, mait-companion.events, mait-companion.now, mait-companion.palette, mait-companion.session, mait-companion.style, mait-companion.work"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
+     ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "91334a6434fca3c1"
+ "sourceHash": "efa10b0dc07981e"
 }

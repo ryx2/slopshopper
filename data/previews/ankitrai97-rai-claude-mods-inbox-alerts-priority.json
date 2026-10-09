@@ -1,9 +1,12 @@
 {
  "slug": "ankitrai97-rai-claude-mods-inbox-alerts-priority",
- "generatedAt": "2026-10-08T15:53:46.342Z",
+ "generatedAt": "2026-10-09T15:32:14.764Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "tool.describe"
+   },
    {
     "event": "session.start"
    },
@@ -24,7 +27,7 @@
   "commands": [
    {
     "name": "alerts",
-    "description": "Inbox alerts: /alerts to open, /alerts check|clear|triage",
+    "description": "Inbox alerts: /alerts to open, /alerts check|status|clear|triage",
     "output": "Inbox pane opened."
    }
   ],
@@ -41,13 +44,16 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.mcp.call": 3,
+   "$.tool.list": 4,
    "$.clock.now": 10,
    "$.clock.every": 4,
-   "$.state.get": 16,
+   "$.mcp.call": 3,
+   "$.state.get": 17,
    "$.state.set": 3,
    "$.store.get": 1,
    "$.ui.status": 3,
+   "$.env.get": 2,
+   "$.fs.write": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -118,7 +124,7 @@
              "dimColor": true
             },
             "children": [
-             "offline"
+             "checking…"
             ]
            }
           ]
@@ -226,7 +232,7 @@
              "dimColor": true
             },
             "children": [
-             "checking…"
+             "offline"
             ]
            }
           ]
@@ -282,6 +288,7 @@
    "session.start",
    "tool.call Read",
    "tool.call Grep",
+   "$.fs.write(/Users/dev/.claude/inbox-alerts-priority/last-check.json)",
    "tool.call Edit",
    "tool.call Write",
    "tool.call Write",
@@ -294,7 +301,7 @@
    "/alerts → Inbox pane opened."
   ],
   "console": [],
-  "status": "Inbox: gmail+slack offline",
+  "status": "Inbox: calendar+slack offline",
   "warnings": []
  },
  "validate": {
@@ -302,19 +309,21 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "tool.describe",
    "session.start",
    "command.run{command=alerts}",
    "ui.render{component=Pane, requestId=inbox-alerts-priority}"
   ],
   "calls": [
-   "$.clock.after (via triage)",
+   "$.clock.after",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
+   "$.env.get (via dataDir)",
    "$.fs.read (via loadLists)",
-   "$.mcp.call (via fetchCalendar",
-   "fetchGmail",
-   "fetchSlack)",
+   "$.fs.write (via loadLists",
+   "writeLog)",
+   "$.mcp.call (via callConnector)",
    "$.prompt.submit (via triage)",
    "$.state.get",
    "$.state.set",
@@ -322,6 +331,7 @@
    "$.store.set (via checkMessages",
    "dismiss",
    "remind)",
+   "$.tool.list (via candidates)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.status (via refreshStatus)",
@@ -338,7 +348,11 @@
    "inbox-alerts-priority.events",
    "inbox-alerts-priority.poll"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME",
+   "OS",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -361,16 +375,19 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=alerts}, ui.render{component=Pane, requestId=inbox-alerts-priority}",
+      "./register.tsx hooks: tool.describe, session.start, command.run{command=alerts}, ui.render{component=Pane, requestId=inbox-alerts-priority}",
       "./register.tsx answers its own command: command.run{command=alerts}",
-      "./register.tsx calls: $.clock.after (via triage), $.clock.every, $.clock.now, $.command.register, $.fs.read (via loadLists), $.mcp.call (via fetchCalendar, fetchGmail, fetchSlack), $.prompt.submit (via triage), $.state.get, $.state.set, $.store.get (via strings), $.store.set (via checkMessages, dismiss, remind), $.ui.open, $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast (via announce, remind)",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via dataDir), $.fs.read (via loadLists), $.fs.write (via loadLists, writeLog), $.mcp.call (via callConnector), $.prompt.submit (via triage), $.state.get, $.state.set, $.store.get (via strings), $.store.set (via checkMessages, dismiss, remind), $.tool.list (via candidates), $.ui.open, $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast (via announce, remind)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, OS, USERPROFILE",
       "./register.tsx state writes: inbox-alerts-priority.alerts, inbox-alerts-priority.events, inbox-alerts-priority.poll",
       "./register.tsx state reads: inbox-alerts-priority.alerts, inbox-alerts-priority.events, inbox-alerts-priority.poll"
      ],
      "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "d5f378ac7b18b5e2"
+ "sourceHash": "ef015167eaf5b2e2"
 }

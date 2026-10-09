@@ -1,0 +1,8 @@
+{
+ "slug": "vukrosic-claude-code-mods-from-scratch-counter",
+ "files": {
+  "hooks/register.js": "// Mod 1: WATCH. Count every tool Claude uses, and answer /tally with the count.\nlet calls = 0\n\nexport function register(on) {\n  // When a session starts, tell Claude Code that /tally exists\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'tally', description: 'Show how many tool calls Claude has made' })\n    return next(e)\n  })\n\n  // Every tool call passes through here. Count it, then pass it on untouched.\n  on('tool.call', async ($, e, next) => {\n    calls += 1\n    $.ui.invalidate('ui.render')\n    return next(e)\n  })\n\n  // /tally is answered by this function. No model is asked, so it costs nothing.\n  on('command.run', { command: 'tally' }, async () => {\n    return { text: 'Claude has made ' + calls + ' tool calls since this mod loaded' }\n  })\n\n  // Put the count after the spinner's word while Claude works\n  on('ui.render', { component: 'Spinner' }, async ($, e, next) => {\n    if (calls === 0) return next(e)\n    return next({ ...e, props: { ...e.props, suffix: ' · tool calls: ' + calls + '…' } })\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"Counts the tool calls Claude makes and adds a /tally command\",\n  \"modules\": [\"./register.js\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"counter\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Counts the tool calls Claude makes and adds a /tally command\",\n  \"author\": {\n    \"name\": \"Vuk Rosic\"\n  }\n}"
+ }
+}

@@ -1,6 +1,6 @@
 {
  "slug": "vibe-commit-claude-context-mods-context-handoff",
- "generatedAt": "2026-10-06T05:30:41.706Z",
+ "generatedAt": "2026-10-09T15:34:37.371Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -26,6 +26,9 @@
     "event": "prompt.submit"
    },
    {
+    "event": "turn.start"
+   },
+   {
     "event": "turn.complete"
    },
    {
@@ -43,7 +46,7 @@
   "tools": [
    {
     "name": "Handoff",
-    "description": "Save a handoff note for yourself, after which the session compacts and you resume from the note. Call it only when told your context is in the handoff band, and only at a natural boundary: a task finished, tests green, before a new subtask. Never mid-edit. Call it alone, not beside other tools. `content` is the whole note in markdown, written for a future you with no memory of this session: ## Goal (what the user asked for, in their words where it matters); ## State (what is done, what is verified and how); ## Decisions (each with its why, and what was ruled out); ## Files (paths touched or central, one line each); ## Open problems (bugs, doubts, unverified claims); ## Next steps (numbered, concrete, the very next action first); ## Verify (commands that prove the state). After it returns, end your turn immediately with a one-line message and no further tool calls."
+    "description": "Saves a note you resume from after the session compacts. Call it only when a `[context-handoff]` note asks you to, at a natural boundary, never mid-edit. In a git repo, first run `git status -sb` and `git log -1 --oneline`, then call it alone in its own message. `content` is markdown for a future you with no memory of this session: state, not narrative. Use extremely concise language and minimize text, except in Pending specs, where exact wording matters more than brevity. Reference what is on disk by path or commit; copy what is not. Anything the user said in conversation that is not in a file is not on disk, so copy it. Never include secret values. Use these sections in order, writing \"None\" for an empty one: ## Goal (the user's current request in their words, and what done looks like); ## Constraints (every user rule still in force, verbatim); ## Status (each item: verified with a command and result from after its last change, unverified, or not started); ## Pending specs (verbatim) (for every item not yet done that the user or a plan specified: copy the exact text, including conditions, fail-closed shapes, required tests or witness mutants, and where it wires in, e.g. build sessions vs rewrite attempts, live-only vs testable in dry runs; never reduce an item to a label; write any detail that was never decided as an open question under that item); ## Next action (one step: the file or command, and the expected result); ## Failed approaches (what failed and why, with the exact error); ## Decisions (each choice, what was ruled out, and why); ## Open issues (bugs and failing tests with exact errors, questions for the user); ## Environment (branch, HEAD, uncommitted changes, files changed this session, running processes); ## Verify (read-only commands, each with its expected result)."
    }
   ],
   "panes": [],
@@ -54,7 +57,7 @@
   "apiCalls": {
    "$.tool.register": 1,
    "$.command.register": 1,
-   "$.state.get": 36,
+   "$.state.get": 37,
    "$.session.usage": 12
   },
   "timers": [],
@@ -77,8 +80,11 @@
   "warnings": []
  },
  "validate": {
-  "ok": true,
-  "errors": [],
+  "ok": false,
+  "errors": [
+   "context-handoff.lateMessages is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { lateMessages: ... } }",
+   "context-handoff.resumeTurnId is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { resumeTurnId: ... } }"
+  ],
   "warnings": [],
   "hooks": [
    "session.start",
@@ -86,6 +92,7 @@
    "tool.call{tool=mcp__context-handoff__Handoff}",
    "tool.call",
    "prompt.submit",
+   "turn.start",
    "turn.complete",
    "session.compact"
   ],
@@ -113,7 +120,9 @@
    "context-handoff.isDisabled",
    "context-handoff.isFirmSent",
    "context-handoff.isOvershootSent",
-   "context-handoff.phase"
+   "context-handoff.lateMessages",
+   "context-handoff.phase",
+   "context-handoff.resumeTurnId"
   ],
   "stateWrites": [
    "context-handoff.handoffCount",
@@ -121,42 +130,88 @@
    "context-handoff.isDisabled",
    "context-handoff.isFirmSent",
    "context-handoff.isOvershootSent",
-   "context-handoff.phase"
+   "context-handoff.lateMessages",
+   "context-handoff.phase",
+   "context-handoff.resumeTurnId"
   ],
   "envReads": [
    "HOME"
   ],
   "raw": {
-   "success": true,
+   "success": false,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/vibe-commit-claude-context-mods-context-handoff/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibe-commit-claude-context-mods-context-handoff/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vibe-commit-claude-context-mods-context-handoff/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibe-commit-claude-context-mods-context-handoff/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
      "types ./types/index.d.ts declares state: context-handoff.phase, context-handoff.handoffPath, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.isDisabled, context-handoff.handoffCount"
-    ]
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/vibe-commit-claude-context-mods-context-handoff/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibe-commit-claude-context-mods-context-handoff/hooks/hooks.json",
      "type": "hooks",
-     "errors": [],
+     "errors": [
+      {
+       "path": "modules../register.ts",
+       "message": "context-handoff.lateMessages is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { lateMessages: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.ts",
+       "message": "context-handoff.resumeTurnId is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { resumeTurnId: ... } }",
+       "code": null
+      }
+     ],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=handoff}, tool.call{tool=mcp__context-handoff__Handoff}, tool.call, prompt.submit, turn.complete, session.compact",
+      "./register.ts hooks: session.start, command.run{command=handoff}, tool.call{tool=mcp__context-handoff__Handoff}, tool.call, prompt.submit, turn.start, turn.complete, session.compact",
+      "./register.ts answers its own command: command.run{command=handoff}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__context-handoff__Handoff}",
+      "./register.ts gating hook without .catch: tool.call",
+      "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: session.compact",
       "./register.ts calls: $.clock.after, $.command.register, $.env.get (via handoffDir), $.fs.stat (via cleanup), $.fs.write, $.process.run (via cleanup), $.prompt.submit, $.session.compact (via compactAndResume), $.session.id (via handoffDir), $.session.usage, $.state.get, $.state.set, $.tool.register, $.ui.log, $.ui.status, $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: HOME",
-      "./register.ts state writes: context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.phase",
-      "./register.ts state reads: context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.phase"
+      "./register.ts state writes: context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.lateMessages, context-handoff.phase, context-handoff.resumeTurnId",
+      "./register.ts state reads: context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.lateMessages, context-handoff.phase, context-handoff.resumeTurnId"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__context-handoff__Handoff}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "7b53622efe3d7cc1"
+ "sourceHash": "51aeafa4be915ea4"
 }

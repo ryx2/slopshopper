@@ -1,0 +1,8 @@
+{
+ "slug": "zimoholdijk-collapse-diffs",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\n// A written change: an object with a patch, not held for review.\nconst isWritten = (output: unknown) =>\n  typeof output === 'object' &&\n  output !== null &&\n  Array.isArray((output as { structuredPatch?: unknown }).structuredPatch) &&\n  (output as { staged?: boolean }).staged !== true\n\nexport const register: Register = on => {\n  for (const tool of ['Edit', 'Write']) {\n    on('ui.render', { component: 'ToolResult', props: { tool } }, async ($, e, next) => {\n      if (e.props.isErrored || !isWritten(e.props.output)) {\n        return next(e)\n      }\n      const { Box } = $.ui.resolve(e)\n      return <Box />\n    })\n  }\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"collapse-diffs\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Hides the diff under successful Edit and Write tool rows\",\n  \"author\": {\n    \"name\": \"Zimoholdijk\"\n  }\n}"
+ }
+}

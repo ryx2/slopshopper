@@ -1,6 +1,6 @@
 {
  "slug": "deshpandeamrut-claude-code-mods-cache-expiry-notifier",
- "generatedAt": "2026-10-08T15:53:56.552Z",
+ "generatedAt": "2026-10-09T15:33:14.574Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "keepwarm"
+    }
    },
    {
     "event": "turn.step"
@@ -23,7 +29,13 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "keepwarm",
+    "description": "Toggle automatic cache keep-warm for this session. When on, sends · before expiry to reset the clock.",
+    "output": "🔥 Keep-warm enabled for this session. Will send · before the cache expires to reset the clock. Run /keepwarm again to turn off."
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -31,12 +43,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 3,
+   "$.state.get": 6,
    "$.store.get": 1,
+   "$.command.register": 1,
    "$.env.get": 2,
    "$.session.root": 1,
    "$.session.id": 1,
-   "$.fs.stat": 1
+   "$.fs.stat": 1,
+   "$.state.set": 1,
+   "$.ui.status": 1
   },
   "timers": [],
   "sites": {
@@ -55,9 +70,11 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/keepwarm → 🔥 Keep-warm enabled for this session. Will send · before the cache expires to r…"
   ],
   "console": [],
+  "status": "🔥 keepwarm",
   "warnings": []
  },
  "validate": {
@@ -67,6 +84,7 @@
   "hooks": [
    "session.start",
    "session.end",
+   "command.run{command=keepwarm}",
    "turn.step",
    "turn.complete",
    "ui.render{component=AbovePrompt}"
@@ -75,11 +93,13 @@
    "$.clock.after (via arm",
    "restartTimer)",
    "$.clock.now",
+   "$.command.register",
    "$.env.get (via transcriptPath)",
    "$.fs.read (via readTail)",
    "$.fs.stat (via readTail)",
    "$.process.run (via onWarn",
    "readTail)",
+   "$.prompt.submit (via onWarn)",
    "$.session.id (via transcriptPath)",
    "$.session.root (via transcriptPath)",
    "$.session.usage",
@@ -91,15 +111,18 @@
    "onWarn",
    "restartTimer)",
    "$.ui.resolve",
+   "$.ui.status",
    "$.ui.toast (via onWarn)"
   ],
   "stateReads": [
    "cache-expiry-notifier.detectedTtl",
+   "cache-expiry-notifier.keepWarmEnabled",
    "cache-expiry-notifier.lastRequestAt",
    "cache-expiry-notifier.notifiedAt"
   ],
   "stateWrites": [
    "cache-expiry-notifier.detectedTtl",
+   "cache-expiry-notifier.keepWarmEnabled",
    "cache-expiry-notifier.lastRequestAt",
    "cache-expiry-notifier.notifiedAt"
   ],
@@ -118,7 +141,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: cache-expiry-notifier.lastRequestAt, cache-expiry-notifier.detectedTtl, cache-expiry-notifier.notifiedAt"
+     "types ./types/index.d.ts declares state: cache-expiry-notifier.lastRequestAt, cache-expiry-notifier.detectedTtl, cache-expiry-notifier.notifiedAt, cache-expiry-notifier.keepWarmEnabled"
     ],
     "gatingHooks": []
    },
@@ -129,17 +152,19 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, turn.step, turn.complete, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.after (via arm, restartTimer), $.clock.now, $.env.get (via transcriptPath), $.fs.read (via readTail), $.fs.stat (via readTail), $.process.run (via onWarn, readTail), $.session.id (via transcriptPath), $.session.root (via transcriptPath), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set (via detectTtl), $.ui.invalidate (via arm, onWarn, restartTimer), $.ui.resolve, $.ui.toast (via onWarn)",
+      "./register.tsx hooks: session.start, session.end, command.run{command=keepwarm}, turn.step, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=keepwarm}",
+      "./register.tsx calls: $.clock.after (via arm, restartTimer), $.clock.now, $.command.register, $.env.get (via transcriptPath), $.fs.read (via readTail), $.fs.stat (via readTail), $.process.run (via onWarn, readTail), $.prompt.submit (via onWarn), $.session.id (via transcriptPath), $.session.root (via transcriptPath), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set (via detectTtl), $.ui.invalidate (via arm, onWarn, restartTimer), $.ui.resolve, $.ui.status, $.ui.toast (via onWarn)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: cache-expiry-notifier.detectedTtl, cache-expiry-notifier.lastRequestAt, cache-expiry-notifier.notifiedAt",
-      "./register.tsx state reads: cache-expiry-notifier.detectedTtl, cache-expiry-notifier.lastRequestAt, cache-expiry-notifier.notifiedAt"
+      "./register.tsx state writes: cache-expiry-notifier.detectedTtl, cache-expiry-notifier.keepWarmEnabled, cache-expiry-notifier.lastRequestAt, cache-expiry-notifier.notifiedAt",
+      "./register.tsx state reads: cache-expiry-notifier.detectedTtl, cache-expiry-notifier.keepWarmEnabled, cache-expiry-notifier.lastRequestAt, cache-expiry-notifier.notifiedAt"
      ],
      "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "8dcd672a0f5bb539"
+ "sourceHash": "3c8365531fb9ed4e"
 }

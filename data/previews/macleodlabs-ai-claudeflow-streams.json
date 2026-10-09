@@ -1,11 +1,17 @@
 {
  "slug": "macleodlabs-ai-claudeflow-streams",
- "generatedAt": "2026-10-07T15:22:08.173Z",
+ "generatedAt": "2026-10-09T15:32:20.535Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.attach",
+    "matcher": {
+     "surface": "mobile"
+    }
    },
    {
     "event": "command.run",
@@ -42,6 +48,12 @@
    },
    {
     "event": "prompt.edit"
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    },
    {
     "event": "ui.render",
@@ -85,7 +97,7 @@
    {
     "name": "streams",
     "description": "Open the streams navigator",
-    "output": "Streams navigator opened. `/streams import` files a past session of this project into streams."
+    "output": "Streams navigator opened. Attached: terminal. Pane drawn. `/streams import` files a past session of this project into streams."
    },
    {
     "name": "stream",
@@ -105,24 +117,30 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 1,
+   "$.store.get": 3,
    "$.command.register": 2,
-   "$.state.get": 107,
+   "$.state.get": 117,
    "$.ui.status": 2,
-   "$.state.set": 40,
+   "$.state.set": 43,
    "$.ui.open": 2,
-   "$.clock.every": 2,
-   "$.clock.now": 18,
+   "$.clock.every": 3,
+   "$.clock.now": 19,
+   "$.process.run": 2,
+   "$.store.set": 2,
    "$.model.complete": 1,
    "$.session.cwd": 1,
-   "$.store.set": 1,
    "$.ui.scroll": 1,
-   "$.ui.resolve": 2
+   "$.session.surfaces": 1,
+   "$.ui.resolve": 4
   },
   "timers": [
    {
     "kind": "every",
     "ms": 5000
+   },
+   {
+    "kind": "every",
+    "ms": 21600000
    },
    {
     "kind": "every",
@@ -187,6 +205,17 @@
       {
        "type": "Button",
        "props": {
+        "key": "status",
+        "plain": true,
+        "label": "status",
+        "hotkey": "t",
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Button",
+       "props": {
         "key": "pane",
         "plain": true,
         "label": "≡",
@@ -232,6 +261,18 @@
            " streams · ",
            "showing all"
           ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "collapse",
+           "plain": true,
+           "dimColor": true,
+           "label": "⇥ hide",
+           "hotkey": "h",
+           "onPress": "[fn]"
+          },
+          "children": []
          }
         ]
        },
@@ -431,6 +472,8 @@
   },
   "script": [
    "$.ui.open(streams)",
+   "$.process.run(claude plugin marketplace update) → exit 0",
+   "$.process.run(claude plugin list --json) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -443,7 +486,7 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(streams)",
-   "/streams → Streams navigator opened. `/streams import` files a past session of this project…",
+   "/streams → Streams navigator opened. Attached: terminal. Pane drawn. `/streams import` file…",
    "/stream → fix-the-failing-auth: fix the failing auth test and add an audit log call"
   ],
   "console": [],
@@ -456,6 +499,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.attach{surface=mobile}",
    "command.run{command=streams}",
    "command.run{command=stream}",
    "prompt.submit",
@@ -466,6 +510,7 @@
    "turn.start",
    "turn.complete",
    "prompt.edit",
+   "ui.focus{component=AbovePrompt}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=UserMessage}",
    "ui.render{component=AssistantMessage}",
@@ -476,24 +521,37 @@
   "calls": [
    "$.clock.every",
    "$.clock.now",
+   "$.clock.sleep (via applyUpdates)",
    "$.command.register",
+   "$.command.run (via applyUpdates)",
    "$.fs.exists (via importCommand)",
    "$.fs.list (via importCommand)",
-   "$.fs.read (via readWhole)",
+   "$.fs.read (via checkUpdates",
+   "readWhole)",
    "$.fs.stat (via readWhole)",
    "$.fs.write (via writeDiagnostics)",
    "$.model.complete (via classify",
    "importHistory",
    "routeReply)",
+   "$.process.run (via applyUpdates",
+   "checkUpdates",
+   "openStatus)",
    "$.process.spawn (via readWhole)",
+   "$.prompt.submit (via answerYes)",
    "$.session.cwd (via save)",
-   "$.session.usage (via importHistory)",
+   "$.session.surfaces",
+   "$.session.usage",
    "$.state.get (via streamOf",
    "stripe)",
    "$.state.set (via fileAs",
    "paintStreams)",
    "$.store.get",
-   "$.store.set (via save)",
+   "$.store.set (via checkUpdates",
+   "collapsePane",
+   "expandPane",
+   "save)",
+   "$.ui.close (via collapsePane)",
+   "$.ui.focus (via openStatus)",
    "$.ui.log",
    "$.ui.open",
    "$.ui.panes (via unstick)",
@@ -519,16 +577,22 @@
    "streams.live",
    "streams.loopStream",
    "streams.loops",
+   "streams.mobileOpen",
    "streams.outcome",
+   "streams.paneCollapsed",
    "streams.rowStream",
    "streams.rows",
    "streams.showArchived",
+   "streams.statusGit",
+   "streams.statusOpen",
    "streams.streamColor",
    "streams.streams",
    "streams.tagHint",
    "streams.tick",
    "streams.transcript",
    "streams.turnStartedAt",
+   "streams.updates",
+   "streams.updating",
    "streams.view"
   ],
   "stateWrites": [
@@ -548,16 +612,22 @@
    "streams.live",
    "streams.loopStream",
    "streams.loops",
+   "streams.mobileOpen",
    "streams.outcome",
+   "streams.paneCollapsed",
    "streams.rowStream",
    "streams.rows",
    "streams.showArchived",
+   "streams.statusGit",
+   "streams.statusOpen",
    "streams.streamColor",
    "streams.streams",
    "streams.tagHint",
    "streams.tick",
    "streams.transcript",
    "streams.turnStartedAt",
+   "streams.updates",
+   "streams.updating",
    "streams.view"
   ],
   "envReads": [],
@@ -572,7 +642,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: streams.streams, streams.current, streams.focus, streams.view, streams.busy, streams.agents, streams.fold, streams.turnStartedAt, streams.tick, streams.loops, streams.chatStyle, streams.tagHint, streams.showArchived, streams.historyFiled, streams.keyVersion, streams.importProgress, streams.transcript, streams.folded, streams.rows, streams.agentStream, streams.live, streams.inflight, streams.outcome, streams.health, streams.loopStream, streams.rowStream, streams.streamColor"
+     "types ./types/index.d.ts declares state: streams.streams, streams.current, streams.focus, streams.view, streams.busy, streams.agents, streams.fold, streams.turnStartedAt, streams.tick, streams.loops, streams.chatStyle, streams.tagHint, streams.updates, streams.updating, streams.mobileOpen, streams.paneCollapsed, streams.statusOpen, streams.statusGit, streams.showArchived, streams.historyFiled, streams.keyVersion, streams.importProgress, streams.transcript, streams.folded, streams.rows, streams.agentStream, streams.live, streams.inflight, streams.outcome, streams.health, streams.loopStream, streams.rowStream, streams.streamColor"
     ],
     "gatingHooks": []
    },
@@ -583,7 +653,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=streams}, command.run{command=stream}, prompt.submit, classic.UserPromptSubmit, agent.spawn, tool.call, session.append, turn.start, turn.complete, prompt.edit, ui.render{component=AbovePrompt}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=ToolGroup}, ui.render{component=ToolUse}, ui.render{component=Pane, requestId=streams}",
+      "./register.tsx hooks: session.start, session.attach{surface=mobile}, command.run{command=streams}, command.run{command=stream}, prompt.submit, classic.UserPromptSubmit, agent.spawn, tool.call, session.append, turn.start, turn.complete, prompt.edit, ui.focus{component=AbovePrompt}, ui.render{component=AbovePrompt}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=ToolGroup}, ui.render{component=ToolUse}, ui.render{component=Pane, requestId=streams}",
       "./register.tsx answers its own command: command.run{command=streams}",
       "./register.tsx answers its own command: command.run{command=stream}",
       "./register.tsx gating hook with .catch: prompt.submit",
@@ -591,9 +661,10 @@
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: session.append",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.exists (via importCommand), $.fs.list (via importCommand), $.fs.read (via readWhole), $.fs.stat (via readWhole), $.fs.write (via writeDiagnostics), $.model.complete (via classify, importHistory, routeReply), $.process.spawn (via readWhole), $.session.cwd (via save), $.session.usage (via importHistory), $.state.get (via streamOf, stripe), $.state.set (via fileAs, paintStreams), $.store.get, $.store.set (via save), $.ui.log, $.ui.open, $.ui.panes (via unstick), $.ui.resolve, $.ui.scroll, $.ui.status (via refreshStatus), $.ui.toast",
-      "./register.tsx state writes: streams.agentStream, streams.agents, streams.busy, streams.chatStyle, streams.current, streams.focus, streams.fold, streams.folded, streams.health, streams.historyFiled, streams.importProgress, streams.inflight, streams.keyVersion, streams.live, streams.loopStream, streams.loops, streams.outcome, streams.rowStream, streams.rows, streams.showArchived, streams.streamColor, streams.streams, streams.tagHint, streams.tick, streams.transcript, streams.turnStartedAt, streams.view",
-      "./register.tsx state reads: streams.agentStream, streams.agents, streams.busy, streams.chatStyle, streams.current, streams.focus, streams.fold, streams.folded, streams.health, streams.historyFiled, streams.importProgress, streams.inflight, streams.keyVersion, streams.live, streams.loopStream, streams.loops, streams.outcome, streams.rowStream, streams.rows, streams.showArchived, streams.streamColor, streams.streams, streams.tagHint, streams.tick, streams.transcript, streams.turnStartedAt, streams.view"
+      "./register.tsx gating hook without .catch: ui.focus{component=AbovePrompt}",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.clock.sleep (via applyUpdates), $.command.register, $.command.run (via applyUpdates), $.fs.exists (via importCommand), $.fs.list (via importCommand), $.fs.read (via checkUpdates, readWhole), $.fs.stat (via readWhole), $.fs.write (via writeDiagnostics), $.model.complete (via classify, importHistory, routeReply), $.process.run (via applyUpdates, checkUpdates, openStatus), $.process.spawn (via readWhole), $.prompt.submit (via answerYes), $.session.cwd (via save), $.session.surfaces, $.session.usage, $.state.get (via streamOf, stripe), $.state.set (via fileAs, paintStreams), $.store.get, $.store.set (via checkUpdates, collapsePane, expandPane, save), $.ui.close (via collapsePane), $.ui.focus (via openStatus), $.ui.log, $.ui.open, $.ui.panes (via unstick), $.ui.resolve, $.ui.scroll, $.ui.status (via refreshStatus), $.ui.toast",
+      "./register.tsx state writes: streams.agentStream, streams.agents, streams.busy, streams.chatStyle, streams.current, streams.focus, streams.fold, streams.folded, streams.health, streams.historyFiled, streams.importProgress, streams.inflight, streams.keyVersion, streams.live, streams.loopStream, streams.loops, streams.mobileOpen, streams.outcome, streams.paneCollapsed, streams.rowStream, streams.rows, streams.showArchived, streams.statusGit, streams.statusOpen, streams.streamColor, streams.streams, streams.tagHint, streams.tick, streams.transcript, streams.turnStartedAt, streams.updates, streams.updating, streams.view",
+      "./register.tsx state reads: streams.agentStream, streams.agents, streams.busy, streams.chatStyle, streams.current, streams.focus, streams.fold, streams.folded, streams.health, streams.historyFiled, streams.importProgress, streams.inflight, streams.keyVersion, streams.live, streams.loopStream, streams.loops, streams.mobileOpen, streams.outcome, streams.paneCollapsed, streams.rowStream, streams.rows, streams.showArchived, streams.statusGit, streams.statusOpen, streams.streamColor, streams.streams, streams.tagHint, streams.tick, streams.transcript, streams.turnStartedAt, streams.updates, streams.updating, streams.view"
      ],
      "gatingHooks": [
       {
@@ -625,11 +696,18 @@
        "pattern": "session.append",
        "hook": "session.append",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=AbovePrompt}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "ebaaaaa105032735"
+ "sourceHash": "e85fb77b35e3ee7e"
 }

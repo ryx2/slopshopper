@@ -1,6 +1,6 @@
 {
  "slug": "verkyyi-claude-fleet-fleet",
- "generatedAt": "2026-10-08T15:53:21.317Z",
+ "generatedAt": "2026-10-09T15:32:23.139Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -51,13 +51,73 @@
     "matcher": {
      "tool": "/^mcp__fleet__fleet_(status|spawn|await)$/"
     }
+   },
+   {
+    "event": "command.run"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "qd"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "fleet-qd"
+    }
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "text": "/^\\s*派[：:]\\s*/"
+    }
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": [
+       "composer",
+       "bridge"
+      ]
+     }
+    }
+   },
+   {
+    "event": "turn.start",
+    "matcher": {
+     "turnId": "/./"
+    }
+   },
+   {
+    "event": "turn.step",
+    "matcher": {
+     "index": "/^\\d+$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/./"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "turnId": "/./"
+    }
    }
   ],
   "commands": [],
   "tools": [],
   "panes": [],
   "toasts": [
-   "fleet 扩展已加载 · v0.4.1"
+   "fleet 扩展已加载 · v0.4.5"
   ],
   "logs": [],
   "denies": [],
@@ -65,11 +125,12 @@
   "apiCalls": {
    "$.session.version": 1,
    "$.env.get": 8,
-   "$.state.get": 2,
+   "$.state.get": 4,
    "$.state.set": 1,
    "$.clock.now": 1,
    "$.clock.every": 4,
-   "$.ui.toast": 1
+   "$.ui.toast": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -92,6 +153,43 @@
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
+   },
+   "Pane": {
+    "fleet-qd": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Input",
+        "props": {
+         "key": "qd-title",
+         "label": "qd_field_title",
+         "placeholder": "qd_placeholder",
+         "value": "",
+         "submitLabel": "qd_submit",
+         "autoFocus": true,
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "qd_hint"
+        ]
+       }
+      ]
+     },
+     "title": "fleet-qd"
+    }
    }
   },
   "script": [
@@ -126,39 +224,60 @@
    "session.start{isInteractive=true}",
    "ui.render{component=AbovePrompt}",
    "prompt.compose",
-   "tool.call{tool=?}"
+   "tool.call{tool=?}",
+   "command.run",
+   "prompt.submit",
+   "command.run{command=qd}",
+   "ui.render{component=Pane, requestId=fleet-qd}",
+   "prompt.submit{text=?}",
+   "prompt.submit{origin has {kind=composer|bridge}}",
+   "turn.start{turnId=/\".\"/}",
+   "turn.step{index=/\"^\\\\d+$\"/}",
+   "tool.call{tool=/\".\"/}",
+   "turn.complete{turnId=/\".\"/}"
   ],
   "calls": [
    "$.clock.every",
-   "$.clock.now (via beat)",
-   "$.command.run (via inboxIo)",
+   "$.clock.now",
+   "$.command.register (via registerQuickDispatchCommand)",
+   "$.command.run",
    "$.env.get",
    "$.fs.list (via inboxIo)",
    "$.fs.read (via inboxIo",
-   "readOr)",
+   "readOr",
+   "readRole)",
    "$.fs.write (via inboxIo)",
    "$.process.run",
    "$.session.model (via pollModel)",
    "$.session.version",
    "$.state.get",
    "$.state.set",
+   "$.store.get",
+   "$.store.set",
    "$.tool.register (via registerFallbackTools)",
+   "$.ui.close (via submit)",
+   "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
    "fleet.alerts",
    "fleet.progress",
+   "fleet.qd",
+   "fleet.queue",
    "fleet.status"
   ],
   "stateWrites": [
    "fleet.alerts",
    "fleet.progress",
+   "fleet.qd",
+   "fleet.queue",
    "fleet.status"
   ],
   "envReads": [
    "FLEET_CONF_DIR",
    "FLEET_MCP_SERVER",
+   "FLEET_ORCH_QD_PREFIX",
    "HOME",
    "TMPDIR",
    "TMUX",
@@ -175,7 +294,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: fleet.status, fleet.progress, fleet.alerts"
+     "types ./types/index.d.ts declares state: fleet.status, fleet.progress, fleet.alerts, fleet.qd, fleet.queue"
     ],
     "gatingHooks": []
    },
@@ -186,15 +305,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.end, session.measure, turn.step, turn.start, turn.complete, tool.call{tool=AskUserQuestion}, tool.call, session.start{isInteractive=true}, ui.render{component=AbovePrompt}, prompt.compose, tool.call{tool=?}",
+      "./register.ts hooks: session.start, session.end, session.measure, turn.step, turn.start, turn.complete, tool.call{tool=AskUserQuestion}, tool.call, session.start{isInteractive=true}, ui.render{component=AbovePrompt}, prompt.compose, tool.call{tool=?}, command.run, prompt.submit, command.run{command=qd}, ui.render{component=Pane, requestId=fleet-qd}, prompt.submit{text=?}, prompt.submit{origin has {kind=composer|bridge}}, turn.start{turnId=/\".\"/}, turn.step{index=/\"^\\\\d+$\"/}, tool.call{tool=/\".\"/}, turn.complete{turnId=/\".\"/}",
       "./register.ts gating hook with .catch: tool.call{tool=AskUserQuestion}",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.call{tool=?}",
-      "./register.ts calls: $.clock.every, $.clock.now (via beat), $.command.run (via inboxIo), $.env.get, $.fs.list (via inboxIo), $.fs.read (via inboxIo, readOr), $.fs.write (via inboxIo), $.process.run, $.session.model (via pollModel), $.session.version, $.state.get, $.state.set, $.tool.register (via registerFallbackTools), $.ui.resolve, $.ui.toast",
+      "./register.ts gating hook with .catch: command.run",
+      "./register.ts gating hook with .catch: prompt.submit",
+      "./register.ts gating hook with .catch: command.run{command=qd}",
+      "./register.ts gating hook with .catch: prompt.submit{text=?}",
+      "./register.ts gating hook with .catch: prompt.submit{origin has {kind=composer|bridge}}",
+      "./register.ts gating hook with .catch: tool.call{tool=/\".\"/}",
+      "./register.ts calls: $.clock.every, $.clock.now, $.command.register (via registerQuickDispatchCommand), $.command.run, $.env.get, $.fs.list (via inboxIo), $.fs.read (via inboxIo, readOr, readRole), $.fs.write (via inboxIo), $.process.run, $.session.model (via pollModel), $.session.version, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register (via registerFallbackTools), $.ui.close (via submit), $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: FLEET_CONF_DIR, FLEET_MCP_SERVER, HOME, TMPDIR, TMUX, TMUX_PANE",
-      "./register.ts state writes: fleet.alerts, fleet.progress, fleet.status",
-      "./register.ts state reads: fleet.alerts, fleet.progress, fleet.status"
+      "./register.ts env reads: FLEET_CONF_DIR, FLEET_MCP_SERVER, FLEET_ORCH_QD_PREFIX, HOME, TMPDIR, TMUX, TMUX_PANE",
+      "./register.ts state writes: fleet.alerts, fleet.progress, fleet.qd, fleet.queue, fleet.status",
+      "./register.ts state reads: fleet.alerts, fleet.progress, fleet.qd, fleet.queue, fleet.status"
      ],
      "gatingHooks": [
       {
@@ -214,11 +339,48 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=?}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=qd}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{text=?}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=composer|bridge}}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\".\"/}",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "b2b04b52a0e808e5"
+ "sourceHash": "ad5acadf1fd41c44"
 }

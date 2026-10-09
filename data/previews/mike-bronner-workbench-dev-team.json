@@ -1,9 +1,21 @@
 {
  "slug": "mike-bronner-workbench-dev-team",
- "generatedAt": "2026-10-08T15:54:25.426Z",
+ "generatedAt": "2026-10-09T15:33:54.907Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
    {
     "event": "agent.spawn"
    },
@@ -17,12 +29,37 @@
     "event": "turn.complete"
    },
    {
+    "event": "session.end"
+   },
+   {
     "event": "tool.call"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "dev-team-runs",
+    "description": "Show live and recent dev-team runs from the dispatch logs",
+    "immediate": true,
+    "output": "Dev-team runs pane opened."
+   },
+   {
+    "name": "dev-team-board",
+    "description": "Show The Index board's lanes, fetched once per dispatch cadence at most",
+    "immediate": true,
+    "output": "The Index board pane opened."
+   }
+  ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "dev-team-runs",
+    "title": "Dev-team runs"
+   },
+   {
+    "id": "dev-team-board",
+    "title": "The Index board"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [
@@ -56,9 +93,79 @@
    }
   ],
   "rewrites": [],
-  "apiCalls": {},
-  "timers": [],
-  "sites": {},
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.ui.panes": 3,
+   "$.ui.open": 2,
+   "$.clock.every": 1,
+   "$.env.get": 2,
+   "$.fs.list": 2,
+   "$.state.get": 6,
+   "$.ui.resolve": 2,
+   "$.state.set": 3,
+   "$.clock.now": 1,
+   "$.process.run": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 15000
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "dev-team-runs": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No dispatched runs in the logs yet."
+        ]
+       }
+      ]
+     },
+     "title": "Dev-team runs"
+    },
+    "dev-team-board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "board-status"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Fetching the board from The Index."
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "The Index board"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -77,7 +184,12 @@
    "tool.call Bash denied: 🛑 Blocked: a call the guards could not judge.\n\nworkbench-dev-team. The commit guard or the review g…",
    "tool.call: hook threw undefined is not an object (evaluating '$.workbench.callerLane')",
    "tool.call Bash denied: 🛑 Blocked: a call the guards could not judge.\n\nworkbench-dev-team. The commit guard or the review g…",
-   "turn.complete"
+   "turn.complete",
+   "$.ui.open(dev-team-runs)",
+   "/dev-team-runs → Dev-team runs pane opened.",
+   "$.ui.open(dev-team-board)",
+   "/dev-team-board → The Index board pane opened.",
+   "$.process.run(bash /plugins/workbench-dev-team/bin/dispatch-tick.sh --board) → exit 0"
   ],
   "console": [],
   "warnings": []
@@ -87,20 +199,28 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "session.start",
+   "command.run",
+   "ui.render{component=Pane}",
    "agent.spawn",
    "prompt.submit",
    "turn.step",
    "turn.complete",
+   "session.end",
    "tool.call"
   ],
   "calls": [
    "$.agent.list (via endRun",
    "isReviewer",
    "spawnerTypeOf)",
+   "$.clock.every (via startRefresh)",
+   "$.clock.now (via refreshBoard)",
+   "$.command.register",
    "$.env.get",
    "$.fs.exists (via scratchFolderOf)",
-   "$.fs.list (via reviewDeny)",
-   "$.fs.read (via configText)",
+   "$.fs.list (via readRuns",
+   "refreshBoard",
+   "reviewDeny)",
    "$.fs.stat (via reviewDeny",
    "scratchRootsOf)",
    "$.process.run",
@@ -108,6 +228,9 @@
    "$.state.get",
    "$.state.set",
    "$.ui.log (via measure)",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
    "$.ui.toast (via measure)",
    "$.workbench.briefCheck",
    "$.workbench.briefSlots",
@@ -117,20 +240,27 @@
    "$.workbench.parseShell (via guard",
    "withScratch)",
    "$.workbench.scratchRoots (via endRun",
+   "endSession",
    "scratchFolderOf",
    "scratchRootsOf)"
   ],
   "stateReads": [
    "workbench-dev-team.agentType",
+   "workbench-dev-team.board",
    "workbench-dev-team.effort",
    "workbench-dev-team.overBudget",
-   "workbench-dev-team.scratch"
+   "workbench-dev-team.runs",
+   "workbench-dev-team.scratch",
+   "workbench-dev-team.scratchFolders"
   ],
   "stateWrites": [
    "workbench-dev-team.agentType",
+   "workbench-dev-team.board",
    "workbench-dev-team.effort",
    "workbench-dev-team.overBudget",
-   "workbench-dev-team.scratch"
+   "workbench-dev-team.runs",
+   "workbench-dev-team.scratch",
+   "workbench-dev-team.scratchFolders"
   ],
   "envReads": [
    "CLAUDE_CODE_AGENT",
@@ -148,7 +278,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: workbench-dev-team.effort, workbench-dev-team.agentType, workbench-dev-team.scratch, workbench-dev-team.overBudget"
+     "types ./types/index.d.ts declares state: workbench-dev-team.effort, workbench-dev-team.agentType, workbench-dev-team.scratch, workbench-dev-team.scratchFolders, workbench-dev-team.overBudget, workbench-dev-team.runs, workbench-dev-team.board"
     ],
     "gatingHooks": []
    },
@@ -159,17 +289,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: agent.spawn, prompt.submit, turn.step, turn.complete, tool.call",
+      "./register.ts hooks: session.start, command.run, ui.render{component=Pane}, agent.spawn, prompt.submit, turn.step, turn.complete, session.end, tool.call",
+      "./register.ts gating hook with .catch: command.run",
       "./register.ts gating hook with .catch: agent.spawn",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook with .catch: tool.call",
-      "./register.ts calls: $.agent.list (via endRun, isReviewer, spawnerTypeOf), $.env.get, $.fs.exists (via scratchFolderOf), $.fs.list (via reviewDeny), $.fs.read (via configText), $.fs.stat (via reviewDeny, scratchRootsOf), $.process.run, $.session.cwd (via reviewDeny), $.state.get, $.state.set, $.ui.log (via measure), $.ui.toast (via measure), $.workbench.briefCheck, $.workbench.briefSlots, $.workbench.callerLane, $.workbench.isUnattended (via guard), $.workbench.orchestratorIsOn (via gated), $.workbench.parseShell (via guard, withScratch), $.workbench.scratchRoots (via endRun, scratchFolderOf, scratchRootsOf)",
+      "./register.ts calls: $.agent.list (via endRun, isReviewer, spawnerTypeOf), $.clock.every (via startRefresh), $.clock.now (via refreshBoard), $.command.register, $.env.get, $.fs.exists (via scratchFolderOf), $.fs.list (via readRuns, refreshBoard, reviewDeny), $.fs.stat (via reviewDeny, scratchRootsOf), $.process.run, $.session.cwd (via reviewDeny), $.state.get, $.state.set, $.ui.log (via measure), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via measure), $.workbench.briefCheck, $.workbench.briefSlots, $.workbench.callerLane, $.workbench.isUnattended (via guard), $.workbench.orchestratorIsOn (via gated), $.workbench.parseShell (via guard, withScratch), $.workbench.scratchRoots (via endRun, endSession, scratchFolderOf, scratchRootsOf)",
       "./register.ts env writes: nothing",
       "./register.ts env reads: CLAUDE_CODE_AGENT, HOME, TMPDIR",
-      "./register.ts state writes: workbench-dev-team.agentType, workbench-dev-team.effort, workbench-dev-team.overBudget, workbench-dev-team.scratch",
-      "./register.ts state reads: workbench-dev-team.agentType, workbench-dev-team.effort, workbench-dev-team.overBudget, workbench-dev-team.scratch"
+      "./register.ts state writes: workbench-dev-team.agentType, workbench-dev-team.board, workbench-dev-team.effort, workbench-dev-team.overBudget, workbench-dev-team.runs, workbench-dev-team.scratch, workbench-dev-team.scratchFolders",
+      "./register.ts state reads: workbench-dev-team.agentType, workbench-dev-team.board, workbench-dev-team.effort, workbench-dev-team.overBudget, workbench-dev-team.runs, workbench-dev-team.scratch, workbench-dev-team.scratchFolders"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": true
+      },
       {
        "module": "./register.ts",
        "pattern": "agent.spawn",
@@ -190,8 +327,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "20ca8042ade0055"
+ "sourceHash": "e9f465944c32ec92"
 }

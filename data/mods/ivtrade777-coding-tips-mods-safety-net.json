@@ -1,0 +1,8 @@
+{
+ "slug": "ivtrade777-coding-tips-mods-safety-net",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst DANGEROUS: [RegExp, string][] = [\n  [/\\brm\\s+-[a-z]*r[a-z]*f|\\brm\\s+-[a-z]*f[a-z]*r/i, 'rm -rf'],\n  [/\\bgit\\s+push\\b.*(--force\\b|\\s-f\\b)/i, 'git push --force'],\n  [/\\bgit\\s+reset\\s+--hard\\b/i, 'git reset --hard'],\n  [/\\bdrop\\s+(table|database)\\b/i, 'DROP TABLE'],\n]\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    const hit = DANGEROUS.find(([pattern]) => pattern.test(e.command))\n    if (!hit) return next(e)\n\n    $.ui.toast(`🛑 safety-net blocked: ${hit[1]}`)\n    return { deny: `safety-net: \"${hit[1]}\" is blocked. Ask the user to run it themselves if they really mean it.` }\n  }).catch(($, e, next) =>\n    // If the guard itself fails, block instead of letting the command through\n    next.called ? next(e) : { deny: 'safety-net: the guard failed, so the command was blocked.' },\n  )\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"safety-net\",\n  \"author\": {\n    \"name\": \"Coding Tips\"\n  },\n  \"license\": \"MIT\",\n  \"repository\": \"https://github.com/ivtrade777/coding-tips-mods\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Blocks dangerous shell commands (rm -rf, force push, hard reset, DROP TABLE)\"\n}"
+ }
+}

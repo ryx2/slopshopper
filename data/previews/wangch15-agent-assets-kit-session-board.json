@@ -1,6 +1,6 @@
 {
  "slug": "wangch15-agent-assets-kit-session-board",
- "generatedAt": "2026-10-07T15:24:10.016Z",
+ "generatedAt": "2026-10-09T15:34:40.679Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -16,19 +16,25 @@
    {
     "event": "ui.render",
     "matcher": {
-     "component": "AbovePrompt"
+     "component": "Pane",
+     "requestId": "session-board"
     }
    }
   ],
   "commands": [
    {
     "name": "board",
-    "description": "收合／展開 session 看板",
-    "output": "Session 看板已收合"
+    "description": "打開／關閉右側的 session 看板",
+    "output": "Session 看板已關閉"
    }
   ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "session-board",
+    "title": "Sessions"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
@@ -40,11 +46,15 @@
    "$.store.set": 1,
    "$.session.id": 1,
    "$.state.get": 6,
-   "$.state.set": 4,
+   "$.state.set": 3,
    "$.clock.now": 1,
    "$.fs.list": 1,
    "$.clock.every": 1,
-   "$.command.register": 1
+   "$.command.register": 1,
+   "$.ui.open": 1,
+   "$.ui.panes": 1,
+   "$.ui.close": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -53,11 +63,87 @@
    }
   ],
   "sites": {
-   "AbovePrompt": {
-    "ok": "engine"
+   "Pane": {
+    "session-board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "rowGap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "alignItems": "center",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "#8A8A93"
+            },
+            "children": [
+             "▤"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Sessions"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#8A8A93"
+            },
+            "children": [
+             "0"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "alignItems": "center",
+           "columnGap": 2
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#8A8A93"
+        },
+        "children": [
+         "目前沒有進行中的 session"
+        ]
+       }
+      ]
+     },
+     "title": "session-board"
+    }
    }
   },
   "script": [
+   "$.ui.open(session-board)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -69,7 +155,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/board → Session 看板已收合"
+   "/board → Session 看板已關閉"
   ],
   "console": [],
   "warnings": []
@@ -83,7 +169,7 @@
   "hooks": [
    "session.start",
    "command.run{command=board}",
-   "ui.render{component=AbovePrompt}"
+   "ui.render{component=Pane, requestId=?}"
   ],
   "calls": [
    "$.clock.every",
@@ -110,7 +196,10 @@
    "refresh)",
    "$.store.set (via dismiss",
    "loadAccounts)",
+   "$.ui.close (via togglePane)",
    "$.ui.log",
+   "$.ui.open",
+   "$.ui.panes (via togglePane)",
    "$.ui.resolve",
    "$.ui.toast (via runJump)"
   ],
@@ -118,14 +207,12 @@
    "session-board.collapsedUsers",
    "session-board.dismissed",
    "session-board.entries",
-   "session-board.isCollapsed",
    "session-board.selfId"
   ],
   "stateWrites": [
    "session-board.collapsedUsers",
    "session-board.dismissed",
    "session-board.entries",
-   "session-board.isCollapsed",
    "session-board.selfId"
   ],
   "envReads": [
@@ -151,7 +238,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-board.entries, session-board.selfId, session-board.isCollapsed, session-board.collapsedUsers, session-board.dismissed"
+     "types ./types/index.d.ts declares state: session-board.entries, session-board.selfId, session-board.collapsedUsers, session-board.dismissed"
     ],
     "gatingHooks": []
    },
@@ -162,18 +249,19 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=board}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=board}, ui.render{component=Pane, requestId=?}",
       "./register.tsx answers its own command: command.run{command=board}",
-      "./register.tsx calls: $.clock.every, $.clock.now (via refresh), $.command.register, $.env.get (via ownSessionId, resolveOwnAccount, start), $.fs.exists (via desktopAccountOf, transcriptTitleOf), $.fs.list (via desktopAccountOf, readRegistry), $.fs.read (via readCliAccount, readRecord), $.http.fetch (via fetchProfile), $.process.run (via runText, tryRun), $.session.authorize (via fetchProfile), $.session.id (via ownSessionId), $.state.get, $.state.set, $.store.get (via dismiss, loadAccounts, refresh), $.store.set (via dismiss, loadAccounts), $.ui.log, $.ui.resolve, $.ui.toast (via runJump)",
+      "./register.tsx calls: $.clock.every, $.clock.now (via refresh), $.command.register, $.env.get (via ownSessionId, resolveOwnAccount, start), $.fs.exists (via desktopAccountOf, transcriptTitleOf), $.fs.list (via desktopAccountOf, readRegistry), $.fs.read (via readCliAccount, readRecord), $.http.fetch (via fetchProfile), $.process.run (via runText, tryRun), $.session.authorize (via fetchProfile), $.session.id (via ownSessionId), $.state.get, $.state.set, $.store.get (via dismiss, loadAccounts, refresh), $.store.set (via dismiss, loadAccounts), $.ui.close (via togglePane), $.ui.log, $.ui.open, $.ui.panes (via togglePane), $.ui.resolve, $.ui.toast (via runJump)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_ACCOUNT_UUID, CLAUDE_CODE_SESSION_ID, CLAUDE_CODE_USER_EMAIL, HOME",
-      "./register.tsx state writes: session-board.collapsedUsers, session-board.dismissed, session-board.entries, session-board.isCollapsed, session-board.selfId",
-      "./register.tsx state reads: session-board.collapsedUsers, session-board.dismissed, session-board.entries, session-board.isCollapsed, session-board.selfId"
+      "./register.tsx state writes: session-board.collapsedUsers, session-board.dismissed, session-board.entries, session-board.selfId",
+      "./register.tsx state reads: session-board.collapsedUsers, session-board.dismissed, session-board.entries, session-board.selfId"
      ],
      "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "802b16489f84d848"
+ "sourceHash": "d28f4749a7f1fe95"
 }

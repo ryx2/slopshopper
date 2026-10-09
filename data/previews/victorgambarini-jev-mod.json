@@ -1,11 +1,14 @@
 {
  "slug": "victorgambarini-jev-mod",
- "generatedAt": "2026-10-08T15:54:54.275Z",
+ "generatedAt": "2026-10-09T15:34:38.747Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "prompt.submit"
@@ -14,25 +17,40 @@
     "event": "turn.start"
    },
    {
+    "event": "classic.Stop"
+   },
+   {
     "event": "turn.step"
    },
    {
     "event": "command.run",
     "matcher": {
-     "command": "compact-jev"
+     "command": "jev-mod"
     }
    },
    {
-    "event": "command.run",
-    "matcher": {
-     "command": "jev-status"
-    }
+    "event": "prompt.autocomplete"
    },
    {
     "event": "session.compact"
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__jev-mod__find_files"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__jev-mod__browse"
+    }
+   },
+   {
     "event": "tool.call"
+   },
+   {
+    "event": "tool.check"
    },
    {
     "event": "ui.render",
@@ -43,61 +61,56 @@
   ],
   "commands": [
    {
-    "name": "compact-jev",
-    "description": "Compact with no summary: keep only the turns Jev marks keep (plus the last few)",
-    "output": "compact-jev: asking Jev which turns to keep; nothing will be summarised."
-   },
-   {
-    "name": "jev-status",
-    "description": "Show jev-mod's decision backend, where its key comes from, a live check, and its switches",
-    "output": "jev-mod 0.5.0\nbackend: none (no key found for TypeSafe, OpenRouter, Venice or OpenCode Zen)\nkey: none found\ncheck: failed (no_key): run `jev setup-key`. Set a key in jev-mod's settings: /plugin, or `claude plugin configure jev-mod@jev-mod --values-stdin` in your own terminal (README).\nswitches: routing on · skills on · screening on\ntoday: $0.0000 of the $1.00 daily budget"
+    "name": "jev-mod",
+    "description": "jev-mod's features: list, set a mode or setting, status, compact, dashboard",
+    "argumentHint": "[status|compact|dashboard [stop]|<feature> [on|off|shadow|reset|<setting> <value>] [--project]]",
+    "output": "jev-mod 0.7.1\nrouting      off     Each turn's model and effort from the decision model's lane\nskills       off     Suggests the installed skill that matches a prompt\nscreening    on      Withholds instructions aimed at the model in fetched text\ntool-gate    off     Asks you before a consequential tool call the decision model doubts\n             minConfidence = 0.7\n             scope = all-risky\n             timeoutMs = 2000\nstop-gate    off     Checks that a turn claiming the work is done has the evidence to show it\n             maxNudges = 2\n             minConfidence = 0.7\n             evidenceChars = 6000\ntrim-output  off     Cuts long Bash output down to what the current goal needs; the full output is kept in a file\n             minLines = 200\n             keepThreshold = 0.35\n             localOnly = false\nfind-files   off     A tool the model calls to find the files that implement something described in plain words\n             maxCandidates = 60\n             limit = 10\n             timeoutMs = 8000\nbrowser      off     A tool the model calls to drive a web page toward a goal; the decision model picks each step\n             maxSteps = 20\n             confirmConfidence = 0.85\n             stepFloor = 0.65\n             headed = false\n             allowAttach = false\n             textChars = 6000\nband         on      A line above the prompt: what jev-mod decided, its cost, what screening withheld\nfiles: user /Users/dev/.config/jev-mod/config.json · project /work/app/.claude/jev-mod.json\n/jev-mod <feature> for its help and settings; /jev-mod help for the rest."
    }
   ],
   "tools": [],
   "panes": [],
-  "toasts": [],
+  "toasts": [
+   "jev-mod: nothing on yet · /jev-mod dashboard to choose"
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
+   "$.command.register": 1,
+   "$.env.get": 170,
+   "$.session.root": 31,
+   "$.fs.read": 324,
+   "$.ui.toast": 1,
+   "$.state.get": 9,
+   "$.state.set": 8,
    "$.session.id": 1,
-   "$.store.get": 2,
-   "$.env.get": 82,
-   "$.fs.read": 33,
-   "$.session.root": 1,
-   "$.fs.list": 2,
-   "$.session.usage": 1,
-   "$.store.set": 1,
-   "$.process.run": 9,
-   "$.fs.write": 1,
-   "$.state.get": 2,
-   "$.state.set": 1,
-   "$.clock.after": 1
+   "$.store.get": 1,
+   "$.ui.resolve": 1
   },
-  "timers": [
-   {
-    "kind": "after",
-    "ms": 0
-   }
-  ],
+  "timers": [],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {},
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "🧭 jev-mod: nothing on yet · /jev-mod dashboard to choose"
+       ]
+      }
+     ]
+    }
    }
   },
   "script": [
    "session.start",
-   "$.process.run(printenv JEV_LIMITS) → exit 0",
-   "$.fs.write(/Users/dev/.config/jev/limits.state.json)",
-   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes TypeSafe API -a TYPESAFE_AP…) → exit 0",
-   "$.process.run(secret-tool lookup service Hermes TypeSafe API account TYPESAFE_API_KEY) → exit 0",
-   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes OpenRouter API -a OPENROUTE…) → exit 0",
-   "$.process.run(secret-tool lookup service Hermes OpenRouter API account OPENROUTER_API_KEY) → exit 0",
-   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes Venice API -a VENICE_API_KE…) → exit 0",
-   "$.process.run(secret-tool lookup service Hermes Venice API account VENICE_API_KEY) → exit 0",
-   "$.process.run(/usr/bin/security find-generic-password -w -s Hermes OpenCode Zen API -a OPENCOD…) → exit 0",
-   "$.process.run(secret-tool lookup service Hermes OpenCode Zen API account OPENCODE_ZEN_API_KEY) → exit 0",
+   "turn.start: hook threw undefined is not an object (evaluating 'text.trim')",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -108,8 +121,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/compact-jev → compact-jev: asking Jev which turns to keep; nothing will be summarised.",
-   "/jev-status → jev-mod 0.5.0\nbackend: none (no key found for TypeSafe, OpenRouter, Venice or Op…"
+   "/jev-mod → jev-mod 0.7.1\nrouting      off     Each turn's model and effort from the decisio…"
   ],
   "console": [],
   "warnings": []
@@ -120,13 +132,18 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.end",
    "prompt.submit",
    "turn.start",
+   "classic.Stop",
    "turn.step",
-   "command.run{command=compact-jev}",
-   "command.run{command=jev-status}",
+   "command.run{command=jev-mod}",
+   "prompt.autocomplete",
    "session.compact",
+   "tool.call{tool=mcp__jev-mod__find_files}",
+   "tool.call{tool=mcp__jev-mod__browse}",
    "tool.call",
+   "tool.check",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
@@ -143,13 +160,17 @@
    "$.http.fetch (via ioOf)",
    "$.process.run (via envOf",
    "ioOf)",
+   "$.process.spawn (via ioOf)",
    "$.session.id (via ioOf)",
+   "$.session.messages (via ioOf)",
    "$.session.root (via ioOf)",
    "$.session.usage (via ioOf)",
    "$.state.get",
    "$.state.set",
    "$.store.get (via ioOf)",
    "$.store.set (via ioOf)",
+   "$.tool.register (via offerBrowse",
+   "offerFindFiles)",
    "$.ui.resolve",
    "$.ui.status (via ioOf)",
    "$.ui.toast (via ioOf)"
@@ -166,6 +187,9 @@
    "JEV_BACKENDS",
    "JEV_HOME",
    "JEV_MODEL",
+   "JEV_MOD_BROWSER_CDP",
+   "JEV_MOD_BROWSER_DIR",
+   "JEV_MOD_DASHBOARD",
    "JEV_PROVIDER",
    "JEV_PROXY_API_KEY",
    "OPENCODE_ZEN_API_KEY",
@@ -174,6 +198,7 @@
    "TYPESAFE_BASE_URL",
    "TYPESAFE_MODEL",
    "VENICE_API_KEY",
+   "XDG_CACHE_HOME",
    "XDG_CONFIG_HOME"
   ],
   "raw": {
@@ -198,15 +223,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "../src/register.tsx hooks: session.start, prompt.submit, turn.start, turn.step, command.run{command=compact-jev}, command.run{command=jev-status}, session.compact, tool.call, ui.render{component=AbovePrompt}",
-      "../src/register.tsx gating hook without .catch: prompt.submit",
-      "../src/register.tsx gating hook without .catch: command.run{command=compact-jev}",
-      "../src/register.tsx gating hook without .catch: command.run{command=jev-status}",
-      "../src/register.tsx gating hook without .catch: session.compact",
-      "../src/register.tsx gating hook without .catch: tool.call",
-      "../src/register.tsx calls: $.clock.after (via ioOf), $.clock.sleep (via ioOf), $.command.register, $.command.run (via ioOf), $.env.get (via envOf, ioOf), $.fs.list (via ioOf), $.fs.read (via ioOf), $.fs.stat (via ioOf), $.fs.write (via ioOf), $.http.fetch (via ioOf), $.process.run (via envOf, ioOf), $.session.id (via ioOf), $.session.root (via ioOf), $.session.usage (via ioOf), $.state.get, $.state.set, $.store.get (via ioOf), $.store.set (via ioOf), $.ui.resolve, $.ui.status (via ioOf), $.ui.toast (via ioOf)",
+      "../src/register.tsx hooks: session.start, session.end, prompt.submit, turn.start, classic.Stop, turn.step, command.run{command=jev-mod}, prompt.autocomplete, session.compact, tool.call{tool=mcp__jev-mod__find_files}, tool.call{tool=mcp__jev-mod__browse}, tool.call, tool.check, ui.render{component=AbovePrompt}",
+      "../src/register.tsx gating hook with .catch: prompt.submit",
+      "../src/register.tsx gating hook with .catch: classic.Stop",
+      "../src/register.tsx gating hook with .catch: command.run{command=jev-mod}",
+      "../src/register.tsx gating hook with .catch: session.compact",
+      "../src/register.tsx gating hook with .catch: tool.call{tool=mcp__jev-mod__find_files}",
+      "../src/register.tsx gating hook with .catch: tool.call{tool=mcp__jev-mod__browse}",
+      "../src/register.tsx gating hook with .catch: tool.call",
+      "../src/register.tsx gating hook with .catch: tool.check",
+      "../src/register.tsx calls: $.clock.after (via ioOf), $.clock.sleep (via ioOf), $.command.register, $.command.run (via ioOf), $.env.get (via envOf, ioOf), $.fs.list (via ioOf), $.fs.read (via ioOf), $.fs.stat (via ioOf), $.fs.write (via ioOf), $.http.fetch (via ioOf), $.process.run (via envOf, ioOf), $.process.spawn (via ioOf), $.session.id (via ioOf), $.session.messages (via ioOf), $.session.root (via ioOf), $.session.usage (via ioOf), $.state.get, $.state.set, $.store.get (via ioOf), $.store.set (via ioOf), $.tool.register (via offerBrowse, offerFindFiles), $.ui.resolve, $.ui.status (via ioOf), $.ui.toast (via ioOf)",
       "../src/register.tsx env writes: nothing",
-      "../src/register.tsx env reads: HOME, JEV_BACKEND, JEV_BACKENDS, JEV_HOME, JEV_MODEL, JEV_PROVIDER, JEV_PROXY_API_KEY, OPENCODE_ZEN_API_KEY, OPENROUTER_API_KEY, TYPESAFE_API_KEY, TYPESAFE_BASE_URL, TYPESAFE_MODEL, VENICE_API_KEY, XDG_CONFIG_HOME",
+      "../src/register.tsx env reads: HOME, JEV_BACKEND, JEV_BACKENDS, JEV_HOME, JEV_MODEL, JEV_MOD_BROWSER_CDP, JEV_MOD_BROWSER_DIR, JEV_MOD_DASHBOARD, JEV_PROVIDER, JEV_PROXY_API_KEY, OPENCODE_ZEN_API_KEY, OPENROUTER_API_KEY, TYPESAFE_API_KEY, TYPESAFE_BASE_URL, TYPESAFE_MODEL, VENICE_API_KEY, XDG_CACHE_HOME, XDG_CONFIG_HOME",
       "../src/register.tsx state writes: jev-mod.band",
       "../src/register.tsx state reads: jev-mod.band"
      ],
@@ -215,36 +243,55 @@
        "module": "../src/register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "../src/register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
       },
       {
        "module": "../src/register.tsx",
        "pattern": "command.run",
-       "hook": "command.run{command=compact-jev}",
-       "hasCatch": false
-      },
-      {
-       "module": "../src/register.tsx",
-       "pattern": "command.run",
-       "hook": "command.run{command=jev-status}",
-       "hasCatch": false
+       "hook": "command.run{command=jev-mod}",
+       "hasCatch": true
       },
       {
        "module": "../src/register.tsx",
        "pattern": "session.compact",
        "hook": "session.compact",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "../src/register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__jev-mod__find_files}",
+       "hasCatch": true
+      },
+      {
+       "module": "../src/register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__jev-mod__browse}",
+       "hasCatch": true
       },
       {
        "module": "../src/register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "../src/register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "6480be805e26019e"
+ "sourceHash": "5e3790ad1d7754d0"
 }

@@ -1,11 +1,33 @@
 {
  "slug": "raisedadead-claude-code-plugins-dossier",
- "generatedAt": "2026-10-06T05:27:41.125Z",
+ "generatedAt": "2026-10-09T15:32:22.119Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "dossier-tasks"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "dossier-tasks"
+    }
+   },
+   {
     "event": "classic.PreToolUse"
+   },
+   {
+    "event": "classic.PostToolUse"
    },
    {
     "event": "classic.UserPromptExpansion"
@@ -20,24 +42,59 @@
     "event": "classic.Stop"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "dossier-tasks",
+    "description": "Show the live dossier tasks and their needs in a pane",
+    "output": "Dossier tasks pane opened."
+   }
+  ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "dossier-tasks",
+    "title": "Dossier tasks"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.fs.stat": 4,
+   "$.command.register": 1,
+   "$.fs.stat": 7,
    "$.process.run": 2,
-   "$.env.get": 1
+   "$.fs.list": 3,
+   "$.state.get": 4,
+   "$.state.set": 3,
+   "$.ui.status": 3,
+   "$.session.cwd": 2,
+   "$.env.get": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "Pane": {
+    "dossier-tasks": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No live dossier wave."
+      ]
+     },
+     "title": "Dossier tasks"
+    }
+   }
+  },
   "script": [
-   "session.start",
    "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
    "$.process.run(git -C /work/app worktree list --porcelain) → exit 0",
+   "session.start",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -47,7 +104,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.ui.open(dossier-tasks)",
+   "/dossier-tasks → Dossier tasks pane opened."
   ],
   "console": [],
   "warnings": []
@@ -59,24 +118,41 @@
    "No version specified. Consider adding a version following semver (e.g., \"1.0.0\")"
   ],
   "hooks": [
+   "session.start",
+   "turn.complete",
+   "command.run{command=dossier-tasks}",
+   "ui.render{component=Pane, requestId=dossier-tasks}",
    "classic.PreToolUse",
+   "classic.PostToolUse",
    "classic.UserPromptExpansion",
    "classic.SessionStart",
    "classic.UserPromptSubmit",
    "classic.Stop"
   ],
   "calls": [
+   "$.command.register",
    "$.env.get (via ioOf)",
    "$.fs.exists (via ioOf)",
-   "$.fs.list (via ioOf)",
-   "$.fs.read (via ioOf)",
+   "$.fs.list (via ioOf",
+   "liveWave)",
+   "$.fs.read (via ioOf",
+   "readOr)",
    "$.fs.stat (via ioOf)",
    "$.process.run (via ioOf)",
    "$.session.cwd",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via refresh)",
    "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "dossier.wave"
+  ],
+  "stateWrites": [
+   "dossier.wave"
+  ],
   "envReads": [
    "DOSSIER_FAKEIMPL_CMD",
    "DOSSIER_INVARIANT_GUARD",
@@ -85,9 +161,9 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/raisedadead-claude-code-plugins-dossier/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/raisedadead-claude-code-plugins-dossier/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/raisedadead-claude-code-plugins-dossier/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/raisedadead-claude-code-plugins-dossier/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [
@@ -97,23 +173,81 @@
       "code": null
      }
     ],
-    "notes": []
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: dossier.wave"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/raisedadead-claude-code-plugins-dossier/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/raisedadead-claude-code-plugins-dossier/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: classic.PreToolUse, classic.UserPromptExpansion, classic.SessionStart, classic.UserPromptSubmit, classic.Stop",
-      "./register.ts calls: $.env.get (via ioOf), $.fs.exists (via ioOf), $.fs.list (via ioOf), $.fs.read (via ioOf), $.fs.stat (via ioOf), $.process.run (via ioOf), $.session.cwd, $.ui.toast",
-      "./register.ts env writes: nothing",
-      "./register.ts env reads: DOSSIER_FAKEIMPL_CMD, DOSSIER_INVARIANT_GUARD, DOSSIER_MARKER_GUARD"
+      "./register.tsx hooks: session.start, turn.complete, command.run{command=dossier-tasks}, ui.render{component=Pane, requestId=dossier-tasks}, classic.PreToolUse, classic.PostToolUse, classic.UserPromptExpansion, classic.SessionStart, classic.UserPromptSubmit, classic.Stop",
+      "./register.tsx gating hook without .catch: command.run{command=dossier-tasks}",
+      "./register.tsx gating hook without .catch: classic.PreToolUse",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
+      "./register.tsx gating hook without .catch: classic.UserPromptExpansion",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx calls: $.command.register, $.env.get (via ioOf), $.fs.exists (via ioOf), $.fs.list (via ioOf, liveWave), $.fs.read (via ioOf, readOr), $.fs.stat (via ioOf), $.process.run (via ioOf), $.session.cwd, $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status (via refresh), $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: DOSSIER_FAKEIMPL_CMD, DOSSIER_INVARIANT_GUARD, DOSSIER_MARKER_GUARD",
+      "./register.tsx state writes: dossier.wave",
+      "./register.tsx state reads: dossier.wave"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=dossier-tasks}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptExpansion",
+       "hook": "classic.UserPromptExpansion",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "78c572667f03d089"
+ "sourceHash": "8430e956c2652af2"
 }

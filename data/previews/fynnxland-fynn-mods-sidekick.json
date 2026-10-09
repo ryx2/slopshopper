@@ -1,6 +1,6 @@
 {
  "slug": "fynnxland-fynn-mods-sidekick",
- "generatedAt": "2026-10-08T15:53:11.647Z",
+ "generatedAt": "2026-10-09T15:32:12.426Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -69,19 +69,28 @@
       "command": "savings"
      }
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "CommandOutput",
+     "props": {
+      "command": "sidekick"
+     }
+    }
    }
   ],
   "commands": [
    {
     "name": "sidekick",
-    "description": "Sidekick: on/off, status, thresholds, maintenance hints",
-    "argumentHint": "[off|cache|guide|plan|auto|on|status|threshold 80k|big 150k|skills on|off|ttl 5|60|auto|long 800|off|hints …]",
-    "output": "**Guide** · status\n\n| | |\n|---|---|\n| **Level** | Guide (check with Haiku, hint lines and questions) |\n| **Threshold** | 80k context (checks from here) |\n| **Big** | 150k (asks when the cache is cold) |\n| **Skills to the check** | on |\n| **Cache lifetime** | 60 min (default) |\n| **Long** | 800 characters (split into to-dos from here, only with worklist) |\n\n**Summary:** none yet\n\n**Last hint:** none\n\n**Last handoff:** none\n\n**Last split:** none\n\n**Footer label:** never requested by Claude Code (measured since 0.10.1)\n\n**Maintenance hints:** on · details: `/sidekick hints status`\n\nChange: `/sidekick off|cache|guide|plan|auto|on` · `status` · `threshold 80k` · `big 150k` · `skills on|off` · `ttl 5|60|auto` · `long 800|off` · `hints …`"
+    "description": "Sidekick: on/off, status, thresholds, maintenance hints, good-to-know notes",
+    "argumentHint": "[off|cache|guide|plan|auto|on|status|threshold 80k|big 150k|skills on|off|ttl 5|60|auto|long 800|off|hints …|notes on|off|forget|help]",
+    "output": "**Guide** · status\n\n| | |\n|---|---|\n| **Level** | Guide (check with Haiku, hint lines and questions) |\n| **Threshold** | 80k context (checks from here) |\n| **Big** | 150k (asks when the cache is cold) |\n| **Skills to the check** | on |\n| **Cache lifetime** | 60 min (default) |\n| **Long** | 800 characters (split into to-dos from here, only with worklist) |\n| **Good to know** | off · 0 known topics · `/sidekick notes` |\n\n**Summary:** none yet\n\n**Last hint:** none\n\n**Last handoff:** none\n\n**Last split:** none\n\n**Footer label:** never requested by Claude Code (measured since 0.10.1)\n\n**Maintenance hints:** on · details: `/sidekick hints status`\n\nChange: `/sidekick off|cache|guide|plan|auto|on` · `status` · `threshold 80k` · `big 150k` · `skills on|off` · `ttl 5|60|auto` · `long 800|off` · `hints …` · `notes on|off|forget` · `help`"
    },
    {
     "name": "savings",
     "description": "Sidekick: cost and estimated savings",
-    "argumentHint": "[detail] [today|week|all]",
+    "argumentHint": "[detail] [today|week|all|help]",
     "output": "**Week (Oct 3–Oct 9)** · #16k3ig\n\n**Cost** < $0.01 · **Savings (estimate)** ≈ $0 · **Ratio** –\n\n| Item | Count | ≈ $ |\n|---|---|---|\n| Cold start avoided | 0 | ≈ $0 |\n| New chat, warm and large | 0 | ≈ $0 |\n\n*Models, comparison, days and how it is computed: `/savings detail`*"
    },
    {
@@ -100,8 +109,8 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 16,
-   "$.session.id": 3,
+   "$.store.get": 17,
+   "$.session.id": 4,
    "$.clock.now": 11,
    "$.command.register": 3,
    "$.state.set": 6,
@@ -171,13 +180,16 @@
    "ui.render{component=SessionMode}",
    "command.run{command=savings}",
    "ui.render{component=CommandOutput",
-   "props has {command=savings}}"
+   "props has {command=savings}}",
+   "ui.render{component=CommandOutput",
+   "props has {command=sidekick}}"
   ],
   "calls": [
    "$.clock.every (via later",
    "showBusy)",
    "$.clock.now",
-   "$.command.list (via loadBase)",
+   "$.command.list (via helpCommand",
+   "loadBase)",
    "$.command.register",
    "$.command.run (via freshChat",
    "queueTodos",
@@ -185,16 +197,22 @@
    "$.model.complete (via gate",
    "writeHandoff",
    "writeTodos)",
-   "$.prompt.fill (via useHint)",
-   "$.prompt.submit (via freshChat",
+   "$.model.fork (via runNote)",
+   "$.prompt.fill (via noteToChat",
+   "useHint)",
+   "$.prompt.read (via noteToChat)",
+   "$.prompt.submit (via askInChat",
+   "freshChat",
    "runSplit",
    "writeHandoff)",
    "$.session.id (via bindSession",
    "queueTodos)",
    "$.session.messages (via gate",
    "writeHandoff)",
-   "$.session.root (via projectOf)",
-   "$.session.surfaces (via isOwn)",
+   "$.session.root (via projectOf",
+   "writeHandoff)",
+   "$.session.surfaces (via isOwn",
+   "runNote)",
    "$.session.usage (via gate",
    "loadBase)",
    "$.state.get",
@@ -239,13 +257,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.step, tool.call{tool=Bash|PowerShell}, prompt.submit, skill.prompt, ui.render{component=UserMessage}, ui.render{component=AbovePrompt}, command.run{command=sidekick}, command.run{command=later}, ui.render{component=SessionMode}, command.run{command=savings}, ui.render{component=CommandOutput, props has {command=savings}}",
+      "./register.ts hooks: session.start, turn.step, tool.call{tool=Bash|PowerShell}, prompt.submit, skill.prompt, ui.render{component=UserMessage}, ui.render{component=AbovePrompt}, command.run{command=sidekick}, command.run{command=later}, ui.render{component=SessionMode}, command.run{command=savings}, ui.render{component=CommandOutput, props has {command=savings}}, ui.render{component=CommandOutput, props has {command=sidekick}}",
       "./register.ts gating hook without .catch: tool.call{tool=Bash|PowerShell}",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: command.run{command=sidekick}",
       "./register.ts gating hook without .catch: command.run{command=later}",
       "./register.ts gating hook without .catch: command.run{command=savings}",
-      "./register.ts calls: $.clock.every (via later, showBusy), $.clock.now, $.command.list (via loadBase), $.command.register, $.command.run (via freshChat, queueTodos, useHint), $.model.complete (via gate, writeHandoff, writeTodos), $.prompt.fill (via useHint), $.prompt.submit (via freshChat, runSplit, writeHandoff), $.session.id (via bindSession, queueTodos), $.session.messages (via gate, writeHandoff), $.session.root (via projectOf), $.session.surfaces (via isOwn), $.session.usage (via gate, loadBase), $.state.get, $.state.set (via buddy, pushStatus), $.store.delete (via housekeeping), $.store.get, $.store.keys, $.store.set, $.ui.ask, $.ui.invalidate, $.ui.resolve, $.ui.toast",
+      "./register.ts calls: $.clock.every (via later, showBusy), $.clock.now, $.command.list (via helpCommand, loadBase), $.command.register, $.command.run (via freshChat, queueTodos, useHint), $.model.complete (via gate, writeHandoff, writeTodos), $.model.fork (via runNote), $.prompt.fill (via noteToChat, useHint), $.prompt.read (via noteToChat), $.prompt.submit (via askInChat, freshChat, runSplit, writeHandoff), $.session.id (via bindSession, queueTodos), $.session.messages (via gate, writeHandoff), $.session.root (via projectOf, writeHandoff), $.session.surfaces (via isOwn, runNote), $.session.usage (via gate, loadBase), $.state.get, $.state.set (via buddy, pushStatus), $.store.delete (via housekeeping), $.store.get, $.store.keys, $.store.set, $.ui.ask, $.ui.invalidate, $.ui.resolve, $.ui.toast",
       "./register.ts state writes: sidekick.buddy, sidekick.status",
       "./register.ts state reads: sidekick.status"
      ],
@@ -282,8 +300,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "5eb9325066b1b09f"
+ "sourceHash": "1f48ee271a802ec9"
 }

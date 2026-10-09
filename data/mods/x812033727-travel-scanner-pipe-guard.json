@@ -1,0 +1,8 @@
+{
+ "slug": "x812033727-travel-scanner-pipe-guard",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// A pipeline's exit code is its last command's, so\n// `npm run lint | tail` exits 0 when lint fails. Only tail is\n// handled: head closes the pipe early, and pipefail would turn\n// a pass into exit 141.\nconst CHECKS = [\n  'npm\\\\s+(run\\\\s+)?(lint|test|typecheck|check)[\\\\w:-]*',\n  'npx\\\\s+(tsc|eslint|vitest|playwright)',\n  'pytest',\n  'ruff',\n  'mypy',\n  'tsc',\n  'git\\\\s+(merge|rebase|pull)',\n]\nconst CHECK = new RegExp(`\\\\b(${CHECKS.join('|')})\\\\b`)\nconst INTO_TAIL = /\\|\\s*tail\\b/\nconst ALREADY_SAFE = /pipefail|PIPESTATUS/\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    const isMasked =\n      CHECK.test(e.command) &&\n      INTO_TAIL.test(e.command) &&\n      !ALREADY_SAFE.test(e.command)\n\n    if (!isMasked) {\n      return next(e)\n    }\n\n    $.ui.toast('pipe-guard：加上 pipefail，tail 遮不住失敗')\n\n    const command = `set -o pipefail; ${e.command}`\n\n    return next({ ...e, command })\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"pipe-guard\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Adds pipefail when Claude pipes a check (lint, typecheck, tests, git merge) into tail, so a failed check cannot read as a pass\",\n  \"author\": {\n    \"name\": \"Mokaair\"\n  }\n}"
+ }
+}

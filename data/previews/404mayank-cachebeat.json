@@ -1,0 +1,606 @@
+{
+ "slug": "404mayank-cachebeat",
+ "generatedAt": "2026-10-09T15:32:24.245Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": "clear"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cachebeat"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__cachebeat__state"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__cachebeat__set"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "mcp__cachebeat__state"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "mcp__cachebeat__set"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "props": {
+      "tool": "mcp__cachebeat__state"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "props": {
+      "tool": "mcp__cachebeat__set"
+     }
+    }
+   },
+   {
+    "event": "classic.PostModelSwitch"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "TurnDuration"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "cachebeat-settings"
+    }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "requestId": "cachebeat-settings"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "cachebeat-settings"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "cachebeat-settings"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "cachebeat",
+    "description": "Keep the prompt cache warm while idle",
+    "argumentHint": "[on|off|<minutes>|now|global on|off|settings]",
+    "immediate": true,
+    "output": "off"
+   }
+  ],
+  "tools": [
+   {
+    "name": "state",
+    "description": "cachebeat's state in this session and every setting with its value.\n\n`nextBeat` is `in 42m`, `50m after this turn ends` (as seen mid-turn), `after the next turn` (nothing cached to keep warm yet), or null when off or skipping. `intervalFrom` is `session` when this session has its own interval, `default` when it follows a settings.interval in minutes, and `auto` when it follows an auto one. `cacheTtl` is how long this session's cache lives, `1h` or `5m`, worked out on each call from Claude Code's cache settings and whether a subscription is within its usage; an auto interval beats within it (50 or 4 minutes). `skipping`, when set, says why beats skip this chat (under the skipSmallTokens minimum). `paused`, when set, says why beats wait for the user's next turn (a model switch, a compaction); only that turn ends it, not `set`. `lastBeatReadTokens` is how much the last beat read from the cache. `defaults` has the default of each setting that differs from it."
+   },
+   {
+    "name": "set",
+    "description": "Changes cachebeat, which keeps this session's prompt cache warm while it sits idle by sending a small background request, a beat, shortly before the cache would expire. Change only what the user asks for.\n\n`session` is this session alone. `settings` is saved and used by every session, open ones included: `settings.interval` is the default interval, `settings.defaultOn` whether new sessions start on (open sessions keep theirs). The other settings (the stop rules, skipSmall and skipSmallTokens, the prompt heart, the turn line, alerts) exist only there; when you change one, say it applies to every session. `null` puts a setting back to its default.\n\nA request that names no scope (\"turn it on\", \"beat every 20 minutes\") is for this session. \"Default\", \"new sessions\", \"every session\", \"always\" or \"from now on\" mean `settings`. If you can't tell which the user means, ask.\n\nEach beat counts toward the user's usage. The first time in a conversation a change starts beating or changes how often a beating session beats, say so once.\n\nSetting `intervalMinutes` turns beating on too, unless `enabled: false` comes with it. A session with its own interval keeps it when the default changes: tell the user, and `intervalMinutes: null` makes it follow the default.\n\nNothing changes if any value is invalid, and the refusal names each one. Subagents can read `state` but not call this. Returns what changed, this session's state, and the changed settings."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.store.get": 2,
+   "$.state.get": 20,
+   "$.state.set": 7,
+   "$.command.register": 1,
+   "$.tool.register": 2,
+   "$.clock.now": 1,
+   "$.session.model": 1,
+   "$.env.get": 3,
+   "$.settings.read": 1,
+   "$.session.usage": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine"
+   },
+   "TurnDuration": {
+    "ok": "engine"
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "cachebeat-settings": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "columnGap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "hotkey": "1",
+           "key": "tab:beating",
+           "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Beating"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "hotkey": "2",
+           "key": "tab:limits",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Limits"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "hotkey": "3",
+           "key": "tab:heart",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Prompt heart"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "hotkey": "4",
+           "key": "tab:status",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Turn line"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "hotkey": "5",
+           "key": "tab:alerts",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Alerts"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "────────────────────────────────────────────────────────"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "This session is this session alone; every other setting applies to every session."
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "plain": true,
+         "key": "session",
+         "onPress": "[fn]"
+        },
+        "children": [
+         "This session          off"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "key": "row:defaultOn",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "New sessions start    off"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "key": "row:interval",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Beat after idle       auto · 50m now ›"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "key": "row:onModelSwitch",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "After /model          wait for your next turn"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "plain": true,
+           "key": "row:intervalScope",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "/cachebeat 30 changes this session"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "────────────────────────────────────────────────────────"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "beatNow",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Beat now"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "reset",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Reset all"
+          ]
+         }
+        ]
+       },
+       "",
+       "",
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "↑↓ move · enter changes · 1-5 tabs · esc back to the tabs"
+        ]
+       }
+      ]
+     },
+     "title": "cachebeat-settings"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/cachebeat → off"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end{reason=clear}",
+   "command.run{command=cachebeat}",
+   "tool.call{tool=mcp__cachebeat__state}",
+   "tool.call{tool=mcp__cachebeat__set}",
+   "ui.render{component=ToolUse",
+   "props has {tool=mcp__cachebeat__state}}",
+   "ui.render{component=ToolUse",
+   "props has {tool=mcp__cachebeat__set}}",
+   "ui.render{component=ToolResult",
+   "props has {tool=mcp__cachebeat__state}}",
+   "ui.render{component=ToolResult",
+   "props has {tool=mcp__cachebeat__set}}",
+   "classic.PostModelSwitch",
+   "session.compact",
+   "turn.start",
+   "turn.complete",
+   "ui.render{component=TurnDuration}",
+   "ui.render{component=PromptHint}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.focus{requestId=?}",
+   "ui.scroll{requestId=?}",
+   "ui.close{id=?}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via cacheTtl)",
+   "$.model.fork (via beat)",
+   "$.session.model",
+   "$.session.usage (via beat",
+   "cacheTtl",
+   "chatSize)",
+   "$.settings.read (via cacheTtl)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set (via keepCustoms",
+   "setSettings)",
+   "$.tool.register",
+   "$.ui.focus (via focusOn)",
+   "$.ui.log",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.scroll (via focusOn)",
+   "$.ui.toast (via announce",
+   "beat)"
+  ],
+  "stateReads": [
+   "cachebeat.focus",
+   "cachebeat.frame",
+   "cachebeat.line",
+   "cachebeat.lineFrame",
+   "cachebeat.page",
+   "cachebeat.pulse",
+   "cachebeat.saved",
+   "cachebeat.settings",
+   "cachebeat.tick"
+  ],
+  "stateWrites": [
+   "cachebeat.focus",
+   "cachebeat.frame",
+   "cachebeat.line",
+   "cachebeat.lineFrame",
+   "cachebeat.page",
+   "cachebeat.pulse",
+   "cachebeat.saved",
+   "cachebeat.settings",
+   "cachebeat.tick"
+  ],
+  "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
+   "ENABLE_PROMPT_CACHING_1H",
+   "FORCE_PROMPT_CACHING_5M"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/404mayank-cachebeat/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/404mayank-cachebeat/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: cachebeat.pulse, cachebeat.saved, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.settings, cachebeat.tick, cachebeat.page, cachebeat.focus"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/404mayank-cachebeat/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end{reason=clear}, command.run{command=cachebeat}, tool.call{tool=mcp__cachebeat__state}, tool.call{tool=mcp__cachebeat__set}, ui.render{component=ToolUse, props has {tool=mcp__cachebeat__state}}, ui.render{component=ToolUse, props has {tool=mcp__cachebeat__set}}, ui.render{component=ToolResult, props has {tool=mcp__cachebeat__state}}, ui.render{component=ToolResult, props has {tool=mcp__cachebeat__set}}, classic.PostModelSwitch, session.compact, turn.start, turn.complete, ui.render{component=TurnDuration}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=?}, ui.focus{requestId=?}, ui.scroll{requestId=?}, ui.close{id=?}",
+      "./register.tsx answers its own command: command.run{command=cachebeat}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__cachebeat__state}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__cachebeat__set}",
+      "./register.tsx gating hook without .catch: classic.PostModelSwitch",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: ui.focus{requestId=?}",
+      "./register.tsx gating hook without .catch: ui.scroll{requestId=?}",
+      "./register.tsx gating hook without .catch: ui.close{id=?}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via cacheTtl), $.model.fork (via beat), $.session.model, $.session.usage (via beat, cacheTtl, chatSize), $.settings.read (via cacheTtl), $.state.get, $.state.set, $.store.get, $.store.set (via keepCustoms, setSettings), $.tool.register, $.ui.focus (via focusOn), $.ui.log, $.ui.open, $.ui.resolve, $.ui.scroll (via focusOn), $.ui.toast (via announce, beat)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M",
+      "./register.tsx state writes: cachebeat.focus, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.page, cachebeat.pulse, cachebeat.saved, cachebeat.settings, cachebeat.tick",
+      "./register.tsx state reads: cachebeat.focus, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.page, cachebeat.pulse, cachebeat.saved, cachebeat.settings, cachebeat.tick"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__cachebeat__state}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__cachebeat__set}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostModelSwitch",
+       "hook": "classic.PostModelSwitch",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{requestId=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=?}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "3e37f45e5671835f"
+}

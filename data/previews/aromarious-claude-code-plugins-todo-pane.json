@@ -1,6 +1,6 @@
 {
  "slug": "aromarious-claude-code-plugins-todo-pane",
- "generatedAt": "2026-10-06T14:51:18.962Z",
+ "generatedAt": "2026-10-09T15:33:00.046Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -22,14 +22,23 @@
    {
     "event": "command.run",
     "matcher": {
-     "command": "todo"
+     "command": "todo-pane"
     }
    },
    {
     "event": "command.run",
     "matcher": {
-     "command": "pin"
+     "command": "todo-pane-pinboard"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "todo-pane-wrap"
+    }
+   },
+   {
+    "event": "skill.prompt"
    },
    {
     "event": "ui.render",
@@ -48,14 +57,19 @@
   ],
   "commands": [
    {
-    "name": "todo",
-    "description": "Show the todo list in a side pane",
-    "output": "Created .claude/todo/preview-.md and opened."
+    "name": "todo-pane",
+    "description": "Open, bring forward, or close the TODO pane",
+    "output": "Brought forward."
    },
    {
-    "name": "pin",
-    "description": "Show the pin board in a side pane",
+    "name": "todo-pane-pinboard",
+    "description": "Open, bring forward, or close the pinboard pane",
     "output": "Opened."
+   },
+   {
+    "name": "todo-pane-wrap",
+    "description": "Toggle wrapping long lines in the TODO pane",
+    "output": "Wrap on."
    }
   ],
   "tools": [],
@@ -81,15 +95,17 @@
   "apiCalls": {
    "$.settings.read": 1,
    "$.session.id": 1,
-   "$.process.run": 5,
-   "$.command.register": 2,
-   "$.fs.exists": 6,
+   "$.process.run": 3,
+   "$.store.get": 1,
+   "$.state.get": 8,
+   "$.state.set": 4,
+   "$.fs.exists": 4,
    "$.fs.read": 3,
-   "$.state.get": 5,
-   "$.state.set": 3,
    "$.clock.every": 1,
    "$.ui.open": 3,
-   "$.fs.write": 1,
+   "$.command.register": 3,
+   "$.ui.panes": 2,
+   "$.store.set": 1,
    "$.ui.resolve": 2
   },
   "timers": [
@@ -111,7 +127,7 @@
        {
         "type": "Markdown",
         "props": {
-         "text": "## Now\n\n## Done (2026-10-06)\n"
+         "text": "(No TODO yet)"
         },
         "children": []
        }
@@ -156,13 +172,11 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.process.run(sh -c f=$(ls \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/projects/*/\"$1\".jsonl 2>/dev/…) → exit 0",
-   "$.process.run(mkdir -p .claude/todo) → exit 0",
-   "$.fs.write(.claude/todo/preview-.md)",
    "$.ui.open(todo-pane)",
-   "/todo → Created .claude/todo/preview-.md and opened.",
+   "/todo-pane → Brought forward.",
    "$.ui.open(pin-board)",
-   "/pin → Opened."
+   "/todo-pane-pinboard → Opened.",
+   "/todo-pane-wrap → Wrap on."
   ],
   "console": [],
   "warnings": []
@@ -177,8 +191,10 @@
    "turn.start",
    "tool.call",
    "turn.complete",
-   "command.run{command=todo}",
-   "command.run{command=pin}",
+   "command.run{command=todo-pane}",
+   "command.run{command=todo-pane-pinboard}",
+   "command.run{command=todo-pane-wrap}",
+   "skill.prompt",
    "ui.render{component=Pane, requestId=todo-pane}",
    "ui.render{component=Pane, requestId=pin-board}"
   ],
@@ -194,18 +210,25 @@
    "$.settings.read (via sync)",
    "$.state.get",
    "$.state.set",
-   "$.ui.open",
+   "$.store.get",
+   "$.store.set",
+   "$.ui.close",
+   "$.ui.log",
+   "$.ui.open (via openPane)",
+   "$.ui.panes (via stateOf)",
    "$.ui.resolve",
    "$.ui.status",
    "$.ui.toast"
   ],
   "stateReads": [
    "todo-pane.pin",
-   "todo-pane.text"
+   "todo-pane.text",
+   "todo-pane.wrap"
   ],
   "stateWrites": [
    "todo-pane.pin",
-   "todo-pane.text"
+   "todo-pane.text",
+   "todo-pane.wrap"
   ],
   "envReads": [],
   "raw": {
@@ -219,7 +242,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: todo-pane.text, todo-pane.pin"
+     "types ./types/index.d.ts declares state: todo-pane.text, todo-pane.pin, todo-pane.wrap"
     ],
     "gatingHooks": []
    },
@@ -230,12 +253,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, turn.start, tool.call, turn.complete, command.run{command=todo}, command.run{command=pin}, ui.render{component=Pane, requestId=todo-pane}, ui.render{component=Pane, requestId=pin-board}",
+      "./register.tsx hooks: session.start, prompt.submit, turn.start, tool.call, turn.complete, command.run{command=todo-pane}, command.run{command=todo-pane-pinboard}, command.run{command=todo-pane-wrap}, skill.prompt, ui.render{component=Pane, requestId=todo-pane}, ui.render{component=Pane, requestId=pin-board}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.every, $.command.register, $.fs.exists, $.fs.list (via prevDay), $.fs.read, $.fs.write, $.process.run, $.session.id (via sync), $.settings.read (via sync), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: todo-pane.pin, todo-pane.text",
-      "./register.tsx state reads: todo-pane.pin, todo-pane.text"
+      "./register.tsx gating hook without .catch: command.run{command=todo-pane}",
+      "./register.tsx gating hook without .catch: command.run{command=todo-pane-pinboard}",
+      "./register.tsx gating hook without .catch: command.run{command=todo-pane-wrap}",
+      "./register.tsx calls: $.clock.every, $.command.register, $.fs.exists, $.fs.list (via prevDay), $.fs.read, $.fs.write, $.process.run, $.session.id (via sync), $.settings.read (via sync), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.log, $.ui.open (via openPane), $.ui.panes (via stateOf), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: todo-pane.pin, todo-pane.text, todo-pane.wrap",
+      "./register.tsx state reads: todo-pane.pin, todo-pane.text, todo-pane.wrap"
      ],
      "gatingHooks": [
       {
@@ -249,11 +275,30 @@
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=todo-pane}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=todo-pane-pinboard}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=todo-pane-wrap}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "a73ff132445a6ff1"
+ "sourceHash": "23d11ade0ed03c0a"
 }

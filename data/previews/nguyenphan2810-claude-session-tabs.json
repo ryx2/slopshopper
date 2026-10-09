@@ -1,11 +1,14 @@
 {
  "slug": "nguyenphan2810-claude-session-tabs",
- "generatedAt": "2026-10-08T15:54:30.848Z",
+ "generatedAt": "2026-10-09T15:34:03.339Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "command.run",
@@ -27,8 +30,8 @@
   "commands": [
    {
     "name": "tabs",
-    "description": "Session tabs: toggle the sidebar, open a tab by number or name, close or reopen a tab",
-    "argumentHint": "[N | name | close N | reopen]",
+    "description": "Session tabs: toggle the sidebar, open a tab by number or name, start, close or reopen one",
+    "argumentHint": "[N | name | new | close N | reopen]",
     "immediate": true
    }
   ],
@@ -47,18 +50,19 @@
    "$.env.get": 2,
    "$.fs.exists": 1,
    "$.clock.every": 1,
-   "$.session.id": 1,
-   "$.clock.now": 2,
-   "$.store.get": 3,
+   "$.session.id": 6,
+   "$.clock.now": 6,
+   "$.store.get": 17,
    "$.process.run": 1,
-   "$.store.set": 1,
-   "$.fs.list": 1,
-   "$.store.keys": 1,
+   "$.store.set": 3,
+   "$.fs.list": 5,
+   "$.store.keys": 5,
    "$.ui.invalidate": 1,
-   "$.ui.open": 1,
+   "$.ui.open": 2,
    "$.command.register": 1,
+   "$.session.messages": 1,
+   "$.model.complete": 1,
    "$.ui.panes": 1,
-   "$.ui.close": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -74,8 +78,7 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "column",
-       "rowGap": 1
+       "flexDirection": "column"
       },
       "children": [
        {
@@ -84,8 +87,25 @@
          "dimColor": true
         },
         "children": [
-         "0 tabs",
+         "0 sessions",
          ""
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "rule-top"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "subtle"
+          },
+          "children": [
+           "────────────────────────────────────────────────────────"
+          ]
+         }
         ]
        },
        {
@@ -98,17 +118,36 @@
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "dimColor": true
+         "key": "rule-bottom"
         },
         "children": [
-         "/tabs N · close N · reopen"
+         {
+          "type": "Text",
+          "props": {
+           "color": "subtle"
+          },
+          "children": [
+           "────────────────────────────────────────────────────────"
+          ]
+         }
         ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "new",
+         "label": "+ New session",
+         "plain": true,
+         "dimColor": true,
+         "onPress": "[fn]"
+        },
+        "children": []
        }
       ]
      },
-     "title": "session-tabs"
+     "title": "Sessions"
     }
    }
   },
@@ -126,6 +165,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.ui.open(session-tabs)",
    "/tabs → "
   ],
   "console": [],
@@ -137,6 +177,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "turn.complete",
    "command.run{command=tabs}",
    "ui.close",
    "ui.render{component=Pane, requestId=session-tabs}"
@@ -152,22 +193,28 @@
    "$.fs.read (via isAlive",
    "liveSessions",
    "parentOf)",
+   "$.model.complete (via ensureTitle)",
    "$.process.run (via getRoster",
+   "newSession",
    "openTab",
    "parentOf",
    "switchToPane",
    "taggedPane)",
-   "$.session.id (via load)",
+   "$.session.cwd (via newSession)",
+   "$.session.id (via ensureTitle",
+   "load)",
+   "$.session.messages (via ensureTitle)",
    "$.store.delete (via load",
    "reopenTab)",
    "$.store.get",
    "$.store.keys (via load)",
    "$.store.set",
    "$.ui.close",
-   "$.ui.invalidate (via load)",
+   "$.ui.invalidate (via animate",
+   "load)",
    "$.ui.log",
    "$.ui.open",
-   "$.ui.panes (via isPaneOpen)",
+   "$.ui.panes (via paneState)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
@@ -200,10 +247,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=tabs}, ui.close, ui.render{component=Pane, requestId=session-tabs}",
+      "./register.tsx hooks: session.start, turn.complete, command.run{command=tabs}, ui.close, ui.render{component=Pane, requestId=session-tabs}",
       "./register.tsx answers its own command: command.run{command=tabs}",
       "./register.tsx gating hook with .catch: ui.close",
-      "./register.tsx calls: $.clock.after (via openTab), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists, $.fs.list (via liveSessions), $.fs.read (via isAlive, liveSessions, parentOf), $.process.run (via getRoster, openTab, parentOf, switchToPane, taggedPane), $.session.id (via load), $.store.delete (via load, reopenTab), $.store.get, $.store.keys (via load), $.store.set, $.ui.close, $.ui.invalidate (via load), $.ui.log, $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.after (via openTab), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists, $.fs.list (via liveSessions), $.fs.read (via isAlive, liveSessions, parentOf), $.model.complete (via ensureTitle), $.process.run (via getRoster, newSession, openTab, parentOf, switchToPane, taggedPane), $.session.cwd (via newSession), $.session.id (via ensureTitle, load), $.session.messages (via ensureTitle), $.store.delete (via load, reopenTab), $.store.get, $.store.keys (via load), $.store.set, $.ui.close, $.ui.invalidate (via animate, load), $.ui.log, $.ui.open, $.ui.panes (via paneState), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_NO_FLICKER, CLAUDE_CONFIG_DIR, HOME, PATH, TMUX, TMUX_PANE"
      ],
@@ -216,8 +263,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "676c931f509fbd22"
+ "sourceHash": "496e3753022404d8"
 }

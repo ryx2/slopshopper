@@ -1,0 +1,8 @@
+{
+ "slug": "vibe-commit-claude-context-mods-prompt-timestamp",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Only stamp prompts a person typed: the terminal, or Remote Control.\nconst HUMAN_ORIGINS = new Set(['composer', 'bridge'])\n\nexport const register: Register = on => {\n  on('prompt.submit', async ($, e, next) => {\n    if (!HUMAN_ORIGINS.has(e.origin.kind) || e.text.trim() === '') {\n      return next(e)\n    }\n\n    const stamp = formatStamp(await $.clock.now())\n\n    return next({ ...e, text: `[${stamp}] ${e.text}` })\n  })\n}\n\n// \"10-02 14:03 EDT\" in the machine's local time zone.\nexport function formatStamp(ms: number): string {\n  const parts = new Intl.DateTimeFormat('en-US', {\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    hourCycle: 'h23',\n    timeZoneName: 'short',\n  }).formatToParts(new Date(ms))\n  const get = (type: Intl.DateTimeFormatPartTypes) =>\n    parts.find(p => p.type === type)?.value ?? ''\n\n  return `${get('month')}-${get('day')} ${get('hour')}:${get('minute')} ${get('timeZoneName')}`\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"prompt-timestamp\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Prefixes every prompt you type with the local date and time, visible to you and Claude.\",\n  \"author\": {\n    \"name\": \"Vibe-Commit\"\n  },\n  \"repository\": \"https://github.com/Vibe-Commit/claude-context-mods\",\n  \"license\": \"MIT\",\n  \"keywords\": [\n    \"mod\",\n    \"hooks\",\n    \"timestamp\",\n    \"prompt\"\n  ]\n}"
+ }
+}

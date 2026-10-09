@@ -1,9 +1,15 @@
 {
  "slug": "mrtsvr-techloop-claude-issue-tracker",
- "generatedAt": "2026-10-08T15:54:27.502Z",
+ "generatedAt": "2026-10-09T15:33:58.670Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "state.set",
+    "matcher": {
+     "key": "signal"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -12,6 +18,21 @@
     "matcher": {
      "command": "issues"
     }
+   },
+   {
+    "event": "engine.create"
+   },
+   {
+    "event": "issues.isOpen"
+   },
+   {
+    "event": "issues.open"
+   },
+   {
+    "event": "issues.close"
+   },
+   {
+    "event": "issues.toggle"
    },
    {
     "event": "prompt.submit"
@@ -40,9 +61,8 @@
   "commands": [
    {
     "name": "issues",
-    "description": "Show the project issues pane; \"attach <path or owner/name>\", \"refresh\" or \"close\"",
-    "argumentHint": "[attach <path|owner/name> | refresh | close]",
-    "output": "No project yet. Use \"/issues attach <path or owner/name>\"."
+    "description": "Show the project issues pane; \"attach <path or owner/name>\", \"toggle\" or \"close\"",
+    "argumentHint": "[attach <path|owner/name> | toggle | close]"
    }
   ],
   "tools": [],
@@ -53,11 +73,12 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.state.get": 14,
+   "$.state.set": 1,
    "$.session.cwd": 1,
    "$.process.run": 4,
    "$.fs.list": 1,
    "$.clock.every": 1,
-   "$.state.get": 15,
    "$.ui.panes": 1,
    "$.ui.resolve": 1
   },
@@ -117,7 +138,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/issues → No project yet. Use \"/issues attach <path or owner/name>\"."
+   "command.run: hook threw undefined is not an object (evaluating '$.issues.open')",
+   "/issues → "
   ],
   "console": [],
   "warnings": []
@@ -129,8 +151,14 @@
    "No author information provided. Consider adding author details for plugin attribution"
   ],
   "hooks": [
+   "state.set{key=signal}",
    "session.start",
    "command.run{command=issues}",
+   "engine.create",
+   "issues.isOpen",
+   "issues.open",
+   "issues.close",
+   "issues.toggle",
    "prompt.submit",
    "tool.call",
    "turn.complete",
@@ -144,13 +172,17 @@
    "$.fs.exists (via portsOf)",
    "$.fs.list (via portsOf)",
    "$.http.fetch (via portsOf)",
+   "$.issues.close",
+   "$.issues.isOpen (via obey)",
+   "$.issues.open",
+   "$.issues.toggle",
    "$.process.run (via portsOf)",
    "$.session.cwd",
    "$.state.get",
    "$.state.set",
    "$.store.get (via attach)",
    "$.store.set (via togglePin)",
-   "$.ui.close",
+   "$.ui.close (via closePane)",
    "$.ui.open (via openPane)",
    "$.ui.panes (via isPaneOpen)",
    "$.ui.resolve"
@@ -165,6 +197,7 @@
    "issue-tracker.pinned",
    "issue-tracker.repo",
    "issue-tracker.search",
+   "issue-tracker.signal",
    "issue-tracker.viewing",
    "issue-tracker.working"
   ],
@@ -178,6 +211,7 @@
    "issue-tracker.pinned",
    "issue-tracker.repo",
    "issue-tracker.search",
+   "issue-tracker.signal",
    "issue-tracker.viewing",
    "issue-tracker.working"
   ],
@@ -201,8 +235,8 @@
      }
     ],
     "notes": [
-     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: issue-tracker.repo, issue-tracker.candidates, issue-tracker.access, issue-tracker.feed, issue-tracker.search, issue-tracker.filter, issue-tracker.pinned, issue-tracker.working, issue-tracker.isChoosing, issue-tracker.editing, issue-tracker.viewing"
+     "types ./types/index.d.ts declares on $: $.issues",
+     "types ./types/index.d.ts declares state: issue-tracker.repo, issue-tracker.candidates, issue-tracker.access, issue-tracker.feed, issue-tracker.search, issue-tracker.filter, issue-tracker.pinned, issue-tracker.working, issue-tracker.isChoosing, issue-tracker.editing, issue-tracker.viewing, issue-tracker.signal"
     ],
     "gatingHooks": []
    },
@@ -213,22 +247,57 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=issues}, prompt.submit, tool.call, turn.complete, ui.scroll{component=Pane, requestId=issues}, ui.render{component=Pane, requestId=issues}",
+      "./register.tsx hooks: state.set{key=signal}, session.start, command.run{command=issues}, engine.create, issues.isOpen, issues.open, issues.close, issues.toggle, prompt.submit, tool.call, turn.complete, ui.scroll{component=Pane, requestId=issues}, ui.render{component=Pane, requestId=issues}",
+      "./register.tsx gating hook with .catch: state.set{key=signal}",
       "./register.tsx gating hook without .catch: command.run{command=issues}",
+      "./register.tsx gating hook without .catch: issues.isOpen",
+      "./register.tsx gating hook without .catch: issues.open",
+      "./register.tsx gating hook without .catch: issues.close",
+      "./register.tsx gating hook without .catch: issues.toggle",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=issues}",
-      "./register.tsx calls: $.clock.every, $.command.register, $.env.get (via portsOf), $.fs.exists (via portsOf), $.fs.list (via portsOf), $.http.fetch (via portsOf), $.process.run (via portsOf), $.session.cwd, $.state.get, $.state.set, $.store.get (via attach), $.store.set (via togglePin), $.ui.close, $.ui.open (via openPane), $.ui.panes (via isPaneOpen), $.ui.resolve",
+      "./register.tsx calls: $.clock.every, $.command.register, $.env.get (via portsOf), $.fs.exists (via portsOf), $.fs.list (via portsOf), $.http.fetch (via portsOf), $.issues.close, $.issues.isOpen (via obey), $.issues.open, $.issues.toggle, $.process.run (via portsOf), $.session.cwd, $.state.get, $.state.set, $.store.get (via attach), $.store.set (via togglePin), $.ui.close (via closePane), $.ui.open (via openPane), $.ui.panes (via isPaneOpen), $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: GH_TOKEN, GITHUB_TOKEN",
-      "./register.tsx state writes: issue-tracker.access, issue-tracker.candidates, issue-tracker.editing, issue-tracker.feed, issue-tracker.filter, issue-tracker.isChoosing, issue-tracker.pinned, issue-tracker.repo, issue-tracker.search, issue-tracker.viewing, issue-tracker.working",
-      "./register.tsx state reads: issue-tracker.access, issue-tracker.candidates, issue-tracker.editing, issue-tracker.feed, issue-tracker.filter, issue-tracker.isChoosing, issue-tracker.pinned, issue-tracker.repo, issue-tracker.search, issue-tracker.viewing, issue-tracker.working"
+      "./register.tsx state writes: issue-tracker.access, issue-tracker.candidates, issue-tracker.editing, issue-tracker.feed, issue-tracker.filter, issue-tracker.isChoosing, issue-tracker.pinned, issue-tracker.repo, issue-tracker.search, issue-tracker.signal, issue-tracker.viewing, issue-tracker.working",
+      "./register.tsx state reads: issue-tracker.access, issue-tracker.candidates, issue-tracker.editing, issue-tracker.feed, issue-tracker.filter, issue-tracker.isChoosing, issue-tracker.pinned, issue-tracker.repo, issue-tracker.search, issue-tracker.signal, issue-tracker.viewing, issue-tracker.working"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
+       "pattern": "state.set",
+       "hook": "state.set{key=signal}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "command.run",
        "hook": "command.run{command=issues}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "issues.isOpen",
+       "hook": "issues.isOpen",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "issues.open",
+       "hook": "issues.open",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "issues.close",
+       "hook": "issues.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "issues.toggle",
+       "hook": "issues.toggle",
        "hasCatch": false
       },
       {
@@ -251,8 +320,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "92fb86ef7206f162"
+ "sourceHash": "20160e5b6e4866dd"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "nachx639-context-canary",
- "generatedAt": "2026-10-08T15:54:28.268Z",
+ "generatedAt": "2026-10-09T15:34:00.089Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -19,6 +19,12 @@
       "fork"
      ]
     }
+   },
+   {
+    "event": "classic.SubagentStart"
+   },
+   {
+    "event": "classic.SubagentStop"
    },
    {
     "event": "turn.start"
@@ -49,36 +55,41 @@
    {
     "name": "canary",
     "description": "Canary status, revival and instruction setup",
-    "argumentHint": "[status | revive | setup | remove]",
-    "output": "Canary dead · word: \"🐤\" · streak: 0 · checked: 1\nAutomatic compaction queued for after the turn.\nCanary revived; streak reset."
+    "argumentHint": "[status | log | revive | setup | remove]",
+    "output": "Canary dead · word: \"🐤\" · streak: 0 · checked: 1\nAutomatic compaction queued for after the turn and any background agents.\nCanary revived; streak reset."
    },
    {
     "name": "canario",
     "description": "Canary status, revival and instruction setup",
-    "argumentHint": "[status | revive | setup | remove]",
+    "argumentHint": "[status | log | revive | setup | remove]",
     "output": "Canary alive · word: \"🐤\" · streak: 0 · checked: 0\nThe canary is still alive; streak reset."
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [
-   "The canary died: the final reply did not start with \"🐤\".\nAutomatic compaction queued for after the turn."
+   "The canary died: the final reply did not start with \"🐤\". Automatic compaction queued for after the turn and any background agents."
   ],
   "logs": [],
   "denies": [],
   "rewrites": [
    {
     "event": "turn.complete",
-    "summary": "line under the answer: The canary died: the final reply did not start with \"🐤\".\nAutomatic compaction queued for after the turn."
+    "summary": "line under the answer: The canary died: the final reply did not start with \"🐤\". Automatic compaction queued for after the turn and any background agents."
    }
   ],
   "apiCalls": {
    "$.state.get": 9,
-   "$.store.get": 1,
+   "$.env.get": 1,
+   "$.session.root": 2,
+   "$.fs.exists": 2,
+   "$.fs.read": 1,
    "$.command.register": 2,
    "$.clock.every": 4,
    "$.clock.now": 1,
    "$.state.set": 3,
+   "$.store.get": 2,
+   "$.store.set": 2,
    "$.ui.toast": 1,
    "$.clock.after": 1,
    "$.ui.resolve": 1
@@ -191,6 +202,8 @@
    "session.start",
    "session.end",
    "classic.SessionStart{source=clear|resume|fork}",
+   "classic.SubagentStart",
+   "classic.SubagentStop",
    "turn.start",
    "classic.PostCompact",
    "turn.complete",
@@ -202,15 +215,18 @@
    "$.clock.every (via startClock)",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via instructionFile)",
-   "$.fs.exists (via instructionFile)",
-   "$.fs.read (via instructionFile)",
+   "$.env.get (via instructionPaths)",
+   "$.fs.exists (via instructionFile",
+   "loadCheckpoints)",
+   "$.fs.read (via instructionFile",
+   "loadCheckpoints)",
    "$.fs.write (via instructionFile)",
    "$.session.compact (via scheduleRecovery)",
+   "$.session.root (via projectRoot)",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
-   "$.store.set (via instructionFile)",
+   "$.store.get (via readLog)",
+   "$.store.set (via writeLog)",
    "$.ui.ask (via instructionFile)",
    "$.ui.invalidate (via startClock)",
    "$.ui.resolve",
@@ -248,11 +264,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "../plugins/context-canary/hooks/register.js hooks: session.start, session.end, classic.SessionStart{source=clear|resume|fork}, turn.start, classic.PostCompact, turn.complete, command.run{command=canary|canario}, ui.render{component=AbovePrompt}",
+      "../plugins/context-canary/hooks/register.js hooks: session.start, session.end, classic.SessionStart{source=clear|resume|fork}, classic.SubagentStart, classic.SubagentStop, turn.start, classic.PostCompact, turn.complete, command.run{command=canary|canario}, ui.render{component=AbovePrompt}",
       "../plugins/context-canary/hooks/register.js gating hook without .catch: classic.SessionStart{source=clear|resume|fork}",
+      "../plugins/context-canary/hooks/register.js gating hook without .catch: classic.SubagentStart",
+      "../plugins/context-canary/hooks/register.js gating hook without .catch: classic.SubagentStop",
       "../plugins/context-canary/hooks/register.js gating hook without .catch: classic.PostCompact",
       "../plugins/context-canary/hooks/register.js gating hook without .catch: command.run{command=canary|canario}",
-      "../plugins/context-canary/hooks/register.js calls: $.clock.after (via scheduleRecovery), $.clock.every (via startClock), $.clock.now, $.command.register, $.env.get (via instructionFile), $.fs.exists (via instructionFile), $.fs.read (via instructionFile), $.fs.write (via instructionFile), $.session.compact (via scheduleRecovery), $.state.get, $.state.set, $.store.get, $.store.set (via instructionFile), $.ui.ask (via instructionFile), $.ui.invalidate (via startClock), $.ui.resolve, $.ui.toast",
+      "../plugins/context-canary/hooks/register.js calls: $.clock.after (via scheduleRecovery), $.clock.every (via startClock), $.clock.now, $.command.register, $.env.get (via instructionPaths), $.fs.exists (via instructionFile, loadCheckpoints), $.fs.read (via instructionFile, loadCheckpoints), $.fs.write (via instructionFile), $.session.compact (via scheduleRecovery), $.session.root (via projectRoot), $.state.get, $.state.set, $.store.get (via readLog), $.store.set (via writeLog), $.ui.ask (via instructionFile), $.ui.invalidate (via startClock), $.ui.resolve, $.ui.toast",
       "../plugins/context-canary/hooks/register.js env writes: nothing",
       "../plugins/context-canary/hooks/register.js env reads: HOME, USERPROFILE",
       "../plugins/context-canary/hooks/register.js state writes: context-canary.canary",
@@ -263,6 +281,18 @@
        "module": "../plugins/context-canary/hooks/register.js",
        "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart{source=clear|resume|fork}",
+       "hasCatch": false
+      },
+      {
+       "module": "../plugins/context-canary/hooks/register.js",
+       "pattern": "classic.SubagentStart",
+       "hook": "classic.SubagentStart",
+       "hasCatch": false
+      },
+      {
+       "module": "../plugins/context-canary/hooks/register.js",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
        "hasCatch": false
       },
       {
@@ -279,8 +309,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "be6823f8caff1efd"
+ "sourceHash": "b0d8d68eab1b4d80"
 }

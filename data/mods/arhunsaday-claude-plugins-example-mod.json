@@ -1,0 +1,9 @@
+{
+ "slug": "arhunsaday-claude-plugins-example-mod",
+ "files": {
+  "hooks/register.tsx": "// example-mod: a one-line band above the prompt, toggled by /example-mod.\n\nimport { atom, read, update } from 'claude-code'\nimport type { Register } from 'claude-code'\n\nconst isOpen = atom({ plugin: 'example-mod', key: 'isOpen' } as const, true)\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'example-mod', description: 'Show or hide the example band' })\n    return next(e)\n  })\n\n  on('command.run', { command: 'example-mod' }, async $ => {\n    const was = await read($, isOpen)\n    await update($, isOpen, () => !was)\n    return { text: was ? 'Example band hidden.' : 'Example band shown.' }\n  })\n\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {\n    if (e.props.hasSurvey || !(await read($, isOpen))) return next(e)\n    const { Box, Text } = $.ui.resolve(e)\n    const below = await next(e)\n    const mine = <Text dimColor>example-mod is running</Text>\n    return below ? (\n      <Box flexDirection=\"column\">\n        {mine}\n        {below}\n      </Box>\n    ) : (\n      mine\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"example-mod\",\n  \"version\": \"0.1.0\",\n  \"description\": \"One line: what this mod draws or changes.\",\n  \"author\": {\n    \"name\": \"Arhun Saday\"\n  },\n  \"license\": \"MIT\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "// Contract for example-mod: the values it keeps in $.state.\n\n/** Whether the band above the prompt is shown. */\nexport type ExampleModIsOpen = boolean\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'example-mod': {\n      isOpen: ExampleModIsOpen\n    }\n  }\n}\n"
+ }
+}

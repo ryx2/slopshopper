@@ -1,6 +1,6 @@
 {
  "slug": "mangow314-mango-mods-ctx-relay",
- "generatedAt": "2026-10-08T15:53:31.697Z",
+ "generatedAt": "2026-10-09T15:32:39.672Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -40,6 +40,18 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "ctx-relay-notes"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "ctx-relay-now"
     }
    },
@@ -60,10 +72,20 @@
     "name": "ctx-relay-now",
     "description": "ctx-relay: write a handoff file now and /clear to resume (add yes when background work runs; text after it is passed on)",
     "output": "[ctx-relay] writing a handoff file; then /clear and resume in the new conversation"
+   },
+   {
+    "name": "ctx-relay-notes",
+    "description": "ctx-relay: open or close a pane with the latest handoff file and its session progress (INDEX.md)",
+    "output": "[ctx-relay] opened the notes pane"
    }
   ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "ctx-relay-notes",
+    "title": "ctx-relay notes"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
@@ -72,18 +94,20 @@
    "$.session.usage": 4,
    "$.state.get": 40,
    "$.state.set": 8,
-   "$.session.cwd": 1,
-   "$.process.run": 1,
+   "$.session.cwd": 3,
+   "$.process.run": 3,
    "$.clock.every": 2,
    "$.session.messages": 1,
    "$.ui.invalidate": 4,
-   "$.command.register": 2,
-   "$.ui.resolve": 12,
-   "$.clock.now": 7,
+   "$.command.register": 3,
+   "$.ui.resolve": 13,
+   "$.clock.now": 8,
    "$.env.get": 3,
    "$.settings.read": 1,
    "$.agent.list": 2,
-   "$.clock.after": 1
+   "$.clock.after": 1,
+   "$.ui.panes": 1,
+   "$.ui.open": 1
   },
   "timers": [
    {
@@ -267,6 +291,51 @@
       }
      ]
     }
+   },
+   "Pane": {
+    "ctx-relay-notes": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "backgroundColor": "#181818",
+       "paddingX": 1,
+       "paddingY": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "color": "#e6e9ee"
+        },
+        "children": [
+         "Cannot locate the harness root."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "plain": true,
+           "hotkey": "q",
+           "label": "close",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "ctx-relay notes"
+    }
    }
   },
   "script": [
@@ -282,8 +351,12 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.process.run(bash -c real=$(realpath -m \"$1\" 2>/dev/null) || true\n[ -n \"$real\" ] || exit 0\nco…) → exit 0",
    "/ctx-relay-status → [ctx-relay] context 97400; handoff line 170000 (85% of the compaction point); co…",
-   "/ctx-relay-now → [ctx-relay] writing a handoff file; then /clear and resume in the new conversati…"
+   "/ctx-relay-now → [ctx-relay] writing a handoff file; then /clear and resume in the new conversati…",
+   "$.process.run(bash -c real=$(realpath -m \"$1\" 2>/dev/null) || true\n[ -n \"$real\" ] || exit 0\nco…) → exit 0",
+   "$.ui.open(ctx-relay-notes)",
+   "/ctx-relay-notes → [ctx-relay] opened the notes pane"
   ],
   "console": [],
   "warnings": []
@@ -302,6 +375,8 @@
    "session.compact",
    "skill.prompt{skill=handoff}",
    "command.run{command=ctx-relay-status}",
+   "command.run{command=ctx-relay-notes}",
+   "ui.render{component=Pane}",
    "command.run{command=ctx-relay-now}",
    "ui.render{component=AbovePrompt}"
   ],
@@ -315,21 +390,26 @@
    "$.command.register",
    "$.command.run (via prepare)",
    "$.env.get (via resolveTtl)",
-   "$.fs.exists (via readOr",
+   "$.fs.exists (via loadNotes",
+   "readOr",
    "scanPickup)",
-   "$.fs.list (via scanPickup)",
+   "$.fs.list (via loadNotes",
+   "scanPickup)",
    "$.fs.read (via readOr)",
    "$.fs.write (via markPicked",
-   "prepare)",
+   "prepare",
+   "recordFailure)",
    "$.model.fork (via prepare)",
    "$.process.run (via gitTruth",
    "harnessRoot",
-   "prepare)",
+   "prepare",
+   "recordFailure)",
    "$.prompt.submit (via pickUp",
    "prepare)",
    "$.session.cwd (via harnessRoot",
    "prepare)",
-   "$.session.id (via prepare)",
+   "$.session.id (via prepare",
+   "recordFailure)",
    "$.session.messages",
    "$.session.usage",
    "$.settings.read (via resolveTtl)",
@@ -337,9 +417,14 @@
    "$.state.set",
    "$.store.get (via scanPickup)",
    "$.store.set (via scanPickup)",
+   "$.ui.close",
    "$.ui.invalidate",
    "$.ui.log",
-   "$.ui.resolve"
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.scroll (via showNotes)",
+   "$.ui.toast (via prepare)"
   ],
   "stateReads": [
    "ctx-relay.auto",
@@ -382,13 +467,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.end, session.start, turn.complete, classic.Stop, prompt.submit, turn.start, session.compact, skill.prompt{skill=handoff}, command.run{command=ctx-relay-status}, command.run{command=ctx-relay-now}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.end, session.start, turn.complete, classic.Stop, prompt.submit, turn.start, session.compact, skill.prompt{skill=handoff}, command.run{command=ctx-relay-status}, command.run{command=ctx-relay-notes}, ui.render{component=Pane}, command.run{command=ctx-relay-now}, ui.render{component=AbovePrompt}",
       "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.compact",
       "./register.tsx gating hook without .catch: command.run{command=ctx-relay-status}",
+      "./register.tsx gating hook without .catch: command.run{command=ctx-relay-notes}",
       "./register.tsx gating hook without .catch: command.run{command=ctx-relay-now}",
-      "./register.tsx calls: $.agent.list (via runningWork), $.clock.after, $.clock.every (via arm, startFrames), $.clock.now, $.clock.sleep (via prepare), $.command.register, $.command.run (via prepare), $.env.get (via resolveTtl), $.fs.exists (via readOr, scanPickup), $.fs.list (via scanPickup), $.fs.read (via readOr), $.fs.write (via markPicked, prepare), $.model.fork (via prepare), $.process.run (via gitTruth, harnessRoot, prepare), $.prompt.submit (via pickUp, prepare), $.session.cwd (via harnessRoot, prepare), $.session.id (via prepare), $.session.messages, $.session.usage, $.settings.read (via resolveTtl), $.state.get, $.state.set, $.store.get (via scanPickup), $.store.set (via scanPickup), $.ui.invalidate, $.ui.log, $.ui.resolve",
+      "./register.tsx calls: $.agent.list (via runningWork), $.clock.after, $.clock.every (via arm, startFrames), $.clock.now, $.clock.sleep (via prepare), $.command.register, $.command.run (via prepare), $.env.get (via resolveTtl), $.fs.exists (via loadNotes, readOr, scanPickup), $.fs.list (via loadNotes, scanPickup), $.fs.read (via readOr), $.fs.write (via markPicked, prepare, recordFailure), $.model.fork (via prepare), $.process.run (via gitTruth, harnessRoot, prepare, recordFailure), $.prompt.submit (via pickUp, prepare), $.session.cwd (via harnessRoot, prepare), $.session.id (via prepare, recordFailure), $.session.messages, $.session.usage, $.settings.read (via resolveTtl), $.state.get, $.state.set, $.store.get (via scanPickup), $.store.set (via scanPickup), $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.scroll (via showNotes), $.ui.toast (via prepare)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M",
       "./register.tsx state writes: ctx-relay.auto, ctx-relay.cache, ctx-relay.limits, ctx-relay.readings, ctx-relay.receipt",
@@ -422,13 +508,20 @@
       {
        "module": "./register.tsx",
        "pattern": "command.run",
+       "hook": "command.run{command=ctx-relay-notes}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
        "hook": "command.run{command=ctx-relay-now}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "ffa19ed757bffdcf"
+ "sourceHash": "c2ac14b58f7643f4"
 }
