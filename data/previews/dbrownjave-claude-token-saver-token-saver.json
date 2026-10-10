@@ -1,0 +1,601 @@
+{
+ "slug": "dbrownjave-claude-token-saver-token-saver",
+ "generatedAt": "2026-10-10T14:45:08.840Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tokens"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "loadout"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__token-saver__progress"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "loadout"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "context"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "tokens",
+    "description": "Context pane: window fill, rate limits, cache warmth, Clear / Compact; ? explains it. /tokens list prints it as text; /tokens learn [term] prints the glossary. No model turn.",
+    "output": "Context pane opened. Esc closes it. /tokens list prints the same as text."
+   },
+   {
+    "name": "loadout",
+    "description": "Your skill loadout. Every skill costs tokens each turn: /loadout opens a pane to park, link and bring back skills; /loadout <names…> parks, /loadout back|link|unlink <names…>, /loadout list, /loadout suggest. Takes effect next session.",
+    "output": "Loadout pane opened. Esc closes it. /loadout list prints the same as text."
+   }
+  ],
+  "tools": [
+   {
+    "name": "progress",
+    "description": "Show a progress bar above the prompt for a job with several stages (a build, a migration, a multi-file refactor, a test matrix). Call it when the job starts and again whenever a stage begins, ends, waits or fails; the same id updates the same bar. Fields: id (stable per job), label (what the job is), stage (current stage name), step (1-based stage number), total (stage count), state: running | waiting | failed | done, percent (optional 0-100 override), note (optional short text), remove: true to drop the bar. Keep calls short; this draws UI and returns one line."
+   }
+  ],
+  "panes": [
+   {
+    "id": "context",
+    "title": "Context"
+   },
+   {
+    "id": "loadout",
+    "title": "Loadout"
+   }
+  ],
+  "toasts": [
+   "token-saver is on: cache band above the prompt · /tokens · /loadout · /compact is guarded when the cache is cold",
+   "dev. See /loadout suggest"
+  ],
+  "logs": [
+   "token-saver is on: cache band above the prompt · /tokens · /loadout · /compact is guarded when the cache is cold",
+   "token-saver: dev"
+  ],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 2,
+   "$.fs.read": 5,
+   "$.store.get": 3,
+   "$.store.set": 3,
+   "$.ui.log": 2,
+   "$.ui.toast": 2,
+   "$.command.register": 2,
+   "$.tool.register": 1,
+   "$.clock.every": 3,
+   "$.process.run": 2,
+   "$.session.usage": 3,
+   "$.ui.open": 2,
+   "$.session.cwd": 3,
+   "$.ui.invalidate": 2,
+   "$.ui.resolve": 4,
+   "$.clock.now": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 70
+   },
+   {
+    "kind": "every",
+    "ms": 30000
+   },
+   {
+    "kind": "every",
+    "ms": 15000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "context": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "alignItems": "center",
+           "flexShrink": 1,
+           "overflow": "hidden"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "Context"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "   "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "text"
+            },
+            "children": [
+             "97.4k / 200k tok"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "warning"
+            },
+            "children": [
+             " (49%)"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexGrow": 1
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1,
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "ctx-explain",
+             "label": "?",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "ctx-expand",
+             "label": "More",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Raster",
+        "props": {
+         "key": "ctx-bar",
+         "columns": 54,
+         "rows": 1,
+         "cells": "gCUAABdXbQAXWG4AgCUAABhXbAAXWG4AgCUAABdZcAAXWW8AgCUAABdZcAAWWnEAgCUAABZbcwAVXHQAgCUAABVcdQAWW3MAgCUAABReeAAWXHQAgCUAABVddgAVXnYAgCUAABRgegAUX3gAgCUAABNifAAUYHoAgCUAABNifQASZIAAgCUAABJlggASZoIAgCUAABJmgwATZIAAgCUAABFphgASZoIAgCUAABFohQARaogAgCUAABBsiwAQbIsAgCUAAA9vjwAPbY0AgCUAABBtjQAQbo0AgCUAAA1ylAAOcpQAgCUAAA1zlQAMdJcAgCUAAAp4nQAKeJ0AgCUAAAd7oQAIe6EAgCUAAAWLtwAFi7cAgCUAAAnC/wAJwv8AgCUAAGna/wBp2v8AgCUAAGna/wBp2v8AgCUAAGna/wBp2v8AgCUAABNgegATYHoAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAAiUAALbAwgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAAiUAALbAwgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioAgCUAAC4qKgAuKioA"
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "alignItems": "center",
+           "flexShrink": 1,
+           "overflow": "hidden"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "mini0",
+             "color": "#2e2d29"
+            },
+            "children": [
+             "▪"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "mini1",
+             "color": "#2e2d29"
+            },
+            "children": [
+             "▪"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "mini2",
+             "color": "#2e2d29"
+            },
+            "children": [
+             "▪"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "mini3",
+             "color": "#2e2d29"
+            },
+            "children": [
+             "▪"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "mini4",
+             "color": "#2e2d29"
+            },
+            "children": [
+             "▪"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             " "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "Cache after 1st reply"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             " · "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "0 saved"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexGrow": 1
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1,
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "ctx-clear",
+             "label": "Clear",
+             "onPress": "[fn]",
+             "dimColor": true
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "ctx-compact",
+             "label": "Compact",
+             "onPress": "[fn]",
+             "dimColor": true
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "ctx-later",
+             "label": "Later",
+             "onPress": "[fn]",
+             "variant": "primary",
+             "role": "dismiss"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Context"
+    },
+    "loadout": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         "token-saver: JSON Parse error: Unexpected identifier \"dev\""
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "skills.py needs python3 or python on PATH"
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "refresh",
+         "label": "Refresh",
+         "hotkey": "r",
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "Loadout"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(python3 /plugins/token-saver/scripts/skills.py suggest --brief --project /work/a…) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(context)",
+   "/tokens → Context pane opened. Esc closes it. /tokens list prints the same as text.",
+   "$.process.run(python3 /plugins/token-saver/scripts/skills.py status --json --project /work/app) → exit 0",
+   "$.ui.open(loadout)",
+   "/loadout → Loadout pane opened. Esc closes it. /loadout list prints the same as text."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=tokens}",
+   "command.run{command=loadout}",
+   "tool.call{tool=mcp__token-saver__progress}",
+   "tool.call{tool=Bash}",
+   "turn.start",
+   "turn.complete",
+   "turn.step",
+   "session.compact",
+   "ui.render{component=Pane, requestId=loadout}",
+   "ui.close",
+   "ui.render{component=Pane, requestId=context}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.command.run (via clearSession",
+   "runFromPane)",
+   "$.env.get (via homeDir)",
+   "$.fs.read (via readJson)",
+   "$.model.fork (via tickKeepWarm)",
+   "$.process.run (via runPython)",
+   "$.process.spawn (via spawnPython)",
+   "$.prompt.submit (via compactNow)",
+   "$.session.compact (via compactNow)",
+   "$.session.cwd",
+   "$.session.usage",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.close (via clearSession",
+   "renderContext",
+   "runFromPane)",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "HOME",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/dbrownjave-claude-token-saver-token-saver/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/dbrownjave-claude-token-saver-token-saver/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/dbrownjave-claude-token-saver-token-saver/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.js hooks: session.start, command.run{command=tokens}, command.run{command=loadout}, tool.call{tool=mcp__token-saver__progress}, tool.call{tool=Bash}, turn.start, turn.complete, turn.step, session.compact, ui.render{component=Pane, requestId=loadout}, ui.close, ui.render{component=Pane, requestId=context}, ui.render{component=AbovePrompt}",
+      "./register.js answers its own command: command.run{command=tokens}",
+      "./register.js answers its own command: command.run{command=loadout}",
+      "./register.js gating hook without .catch: tool.call{tool=mcp__token-saver__progress}",
+      "./register.js gating hook without .catch: tool.call{tool=Bash}",
+      "./register.js gating hook without .catch: session.compact",
+      "./register.js gating hook without .catch: ui.close",
+      "./register.js calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via clearSession, runFromPane), $.env.get (via homeDir), $.fs.read (via readJson), $.model.fork (via tickKeepWarm), $.process.run (via runPython), $.process.spawn (via spawnPython), $.prompt.submit (via compactNow), $.session.compact (via compactNow), $.session.cwd, $.session.usage, $.store.get, $.store.set, $.tool.register, $.ui.close (via clearSession, renderContext, runFromPane), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.js env writes: nothing",
+      "./register.js env reads: HOME, USERPROFILE"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__token-saver__progress}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "72fa721f273e8fdd"
+}

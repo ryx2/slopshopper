@@ -1,11 +1,14 @@
 {
  "slug": "jansuthacheeva-claude-code-mods-merge-status",
- "generatedAt": "2026-10-06T14:51:36.125Z",
+ "generatedAt": "2026-10-10T14:45:18.831Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "command.run",
@@ -52,11 +55,11 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 2,
-   "$.store.get": 1,
-   "$.state.get": 13,
-   "$.state.set": 4,
-   "$.process.run": 14,
+   "$.state.get": 14,
    "$.clock.every": 1,
+   "$.state.set": 5,
+   "$.store.get": 1,
+   "$.process.run": 14,
    "$.clock.now": 2,
    "$.store.set": 1
   },
@@ -72,17 +75,17 @@
    }
   },
   "script": [
-   "$.process.run(git rev-parse --show-toplevel --abbrev-ref HEAD) → exit 0",
    "session.start",
+   "$.process.run(git rev-parse --show-toplevel --abbrev-ref HEAD) → exit 0",
    "$.process.run(git rev-parse @{upstream}) → exit 0",
+   "tool.call Read",
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "$.process.run(git branch --show-current) → exit 0",
    "$.process.run(git remote get-url origin) → exit 0",
-   "tool.call Read",
-   "$.process.run(git rev-parse --abbrev-ref @{upstream}) → exit 0",
    "tool.call Grep",
-   "$.process.run(gh pr list --head feat/auth-refresh --state all --json number,state,isDraft,base…) → exit 0",
+   "$.process.run(git rev-parse --abbrev-ref @{upstream}) → exit 0",
    "tool.call Edit",
+   "$.process.run(gh pr list --head feat/auth-refresh --state all --json number,state,isDraft,base…) → exit 0",
    "tool.call Write",
    "tool.call Write",
    "tool.call Bash bun test",
@@ -109,6 +112,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.end",
    "command.run{command=mrs}",
    "command.run{command=mr}",
    "tool.call{tool=Bash}",
@@ -124,20 +128,25 @@
    "$.command.register",
    "$.env.get (via hostPlatform)",
    "$.process.run (via run)",
-   "$.prompt.submit (via reportFailures)",
+   "$.prompt.submit (via reportFinished)",
+   "$.session.append (via reportFinished)",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
-   "$.store.set (via reportFailures",
+   "$.store.get (via reportFinished",
+   "startSession)",
+   "$.store.set (via reportFinished",
    "setVisible)",
+   "$.ui.log (via reportFinished)",
    "$.ui.resolve"
   ],
   "stateReads": [
    "merge-status.branchStatus",
+   "merge-status.isSessionStarted",
    "merge-status.isVisible"
   ],
   "stateWrites": [
    "merge-status.branchStatus",
+   "merge-status.isSessionStarted",
    "merge-status.isVisible"
   ],
   "envReads": [
@@ -154,7 +163,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: merge-status.branchStatus, merge-status.isVisible"
+     "types ./types/index.d.ts declares state: merge-status.branchStatus, merge-status.isVisible, merge-status.isSessionStarted"
     ],
     "gatingHooks": []
    },
@@ -165,13 +174,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=mrs}, command.run{command=mr}, tool.call{tool=Bash}, ui.render{component=PromptHint}",
+      "./register.tsx hooks: session.start, session.end, command.run{command=mrs}, command.run{command=mr}, tool.call{tool=Bash}, ui.render{component=PromptHint}",
+      "./register.tsx answers its own command: command.run{command=mrs}",
+      "./register.tsx answers its own command: command.run{command=mr}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.every, $.clock.now (via load, pollPipelines, recheck, watch, withPipeline), $.command.register, $.env.get (via hostPlatform), $.process.run (via run), $.prompt.submit (via reportFailures), $.state.get, $.state.set, $.store.get, $.store.set (via reportFailures, setVisible), $.ui.resolve",
+      "./register.tsx calls: $.clock.every, $.clock.now (via load, pollPipelines, recheck, watch, withPipeline), $.command.register, $.env.get (via hostPlatform), $.process.run (via run), $.prompt.submit (via reportFinished), $.session.append (via reportFinished), $.state.get, $.state.set, $.store.get (via reportFinished, startSession), $.store.set (via reportFinished, setVisible), $.ui.log (via reportFinished), $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: OS",
-      "./register.tsx state writes: merge-status.branchStatus, merge-status.isVisible",
-      "./register.tsx state reads: merge-status.branchStatus, merge-status.isVisible"
+      "./register.tsx state writes: merge-status.branchStatus, merge-status.isSessionStarted, merge-status.isVisible",
+      "./register.tsx state reads: merge-status.branchStatus, merge-status.isSessionStarted, merge-status.isVisible"
      ],
      "gatingHooks": [
       {
@@ -182,8 +193,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "38d940847a17d1d5"
+ "sourceHash": "3e82c20b9514003a"
 }

@@ -1,11 +1,17 @@
 {
  "slug": "shadowdog007-claude-mods-idle-compact",
- "generatedAt": "2026-10-06T05:30:23.559Z",
+ "generatedAt": "2026-10-10T14:45:48.170Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "idle-compact"
+    }
    },
    {
     "event": "session.end"
@@ -23,7 +29,15 @@
     "event": "classic.Stop"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "idle-compact",
+    "description": "Compact the session when idle: auto (with background work), on (always) or off",
+    "argumentHint": "[auto|on|off]",
+    "immediate": true,
+    "output": "auto: compacts after 59 idle minutes while background work runs, once the context holds 100k tokens (one-hour prompt cache)\nNothing scheduled: the context holds 97k tokens"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -31,9 +45,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.command.register": 1,
    "$.ui.status": 4,
-   "$.state.get": 6,
-   "$.state.set": 3
+   "$.state.get": 12,
+   "$.state.set": 4,
+   "$.env.get": 6,
+   "$.settings.read": 2
   },
   "timers": [],
   "sites": {},
@@ -48,7 +65,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/idle-compact → auto: compacts after 59 idle minutes while background work runs, once the contex…"
   ],
   "console": [],
   "warnings": []
@@ -59,6 +77,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=idle-compact}",
    "session.end",
    "session.measure",
    "turn.start",
@@ -69,7 +88,10 @@
    "$.agent.list (via runningTasks)",
    "$.clock.after (via arm)",
    "$.clock.now",
+   "$.command.register",
+   "$.env.get (via detectLifetime)",
    "$.session.compact (via compactIfIdle)",
+   "$.settings.read (via detectLifetime)",
    "$.state.get",
    "$.state.set",
    "$.ui.log (via compactIfIdle)",
@@ -79,41 +101,61 @@
    "$.ui.toast (via compactIfIdle)"
   ],
   "stateReads": [
+   "idle-compact.mode",
    "idle-compact.tracker"
   ],
   "stateWrites": [
+   "idle-compact.mode",
    "idle-compact.tracker"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
+   "ENABLE_PROMPT_CACHING_1H",
+   "FORCE_PROMPT_CACHING_5M"
+  ],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/shadowdog007-claude-mods-idle-compact/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/shadowdog007-claude-mods-idle-compact/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/shadowdog007-claude-mods-idle-compact/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/shadowdog007-claude-mods-idle-compact/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: idle-compact.tracker"
-    ]
+     "types ./types/index.d.ts declares state: idle-compact.tracker, idle-compact.mode"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/shadowdog007-claude-mods-idle-compact/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/shadowdog007-claude-mods-idle-compact/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.end, session.measure, turn.start, turn.step, classic.Stop",
-      "./register.ts calls: $.agent.list (via runningTasks), $.clock.after (via arm), $.clock.now, $.session.compact (via compactIfIdle), $.state.get, $.state.set, $.ui.log (via compactIfIdle), $.ui.status (via compactIfIdle, disarm, showSchedule), $.ui.toast (via compactIfIdle)",
-      "./register.ts state writes: idle-compact.tracker",
-      "./register.ts state reads: idle-compact.tracker"
+      "./register.ts hooks: session.start, command.run{command=idle-compact}, session.end, session.measure, turn.start, turn.step, classic.Stop",
+      "./register.ts answers its own command: command.run{command=idle-compact}",
+      "./register.ts gating hook with .catch: classic.Stop",
+      "./register.ts calls: $.agent.list (via runningTasks), $.clock.after (via arm), $.clock.now, $.command.register, $.env.get (via detectLifetime), $.session.compact (via compactIfIdle), $.settings.read (via detectLifetime), $.state.get, $.state.set, $.ui.log (via compactIfIdle), $.ui.status (via compactIfIdle, disarm, showSchedule), $.ui.toast (via compactIfIdle)",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M",
+      "./register.ts state writes: idle-compact.mode, idle-compact.tracker",
+      "./register.ts state reads: idle-compact.mode, idle-compact.tracker"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "76908fcc90e719e1"
+ "sourceHash": "350277dc42590b65"
 }

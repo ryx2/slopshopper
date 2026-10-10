@@ -1,9 +1,71 @@
 {
  "slug": "rube-de-cc-skills-mods-toolbox",
- "generatedAt": "2026-10-09T15:31:52.211Z",
+ "generatedAt": "2026-10-10T14:44:14.024Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "session.start",
+    "matcher": {
+     "surface": "/^/"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "toolbox"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": true
+    }
+   },
+   {
+    "event": "classic.Stop",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "model"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "model"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "effort"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "plugin": "mods-toolbox",
+     "component": "AbovePrompt",
+     "element": "/^chat-(model|effort|ultracode)-(.+)$/"
+    }
+   },
    {
     "event": "session.start",
     "matcher": {
@@ -61,14 +123,24 @@
    {
     "event": "ui.render",
     "matcher": {
-     "component": "SessionMode"
+     "component": "Pane",
+     "requestId": "agent-dock"
     }
    },
    {
-    "event": "ui.render",
+    "event": "ui.press",
     "matcher": {
-     "component": "Pane",
-     "requestId": "agent-dock"
+     "plugin": "mods-toolbox",
+     "component": "AbovePrompt",
+     "element": "/^(size-|model-|big-|custom-|toolbox-dock$)/"
+    }
+   },
+   {
+    "event": "ui.input",
+    "matcher": {
+     "plugin": "mods-toolbox",
+     "component": "AbovePrompt",
+     "element": "custom-size"
     }
    },
    {
@@ -136,9 +208,23 @@
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "plugin": "mods-toolbox",
+     "component": "AbovePrompt",
+     "element": "/^cv-(on|off)$/"
+    }
    }
   ],
   "commands": [
+   {
+    "name": "toolbox",
+    "description": "Open or close the Toolbox: Claude's model and effort, Clean View, Team Size, helper model and the Agent Dock",
+    "immediate": true,
+    "output": "Toolbox open above the prompt."
+   },
    {
     "name": "dock",
     "description": "Show or fold the Agent Dock, or set its Team Size (1 to 100)",
@@ -177,12 +263,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 63,
+   "$.command.register": 3,
+   "$.state.get": 101,
+   "$.state.set": 34,
+   "$.config.list": 1,
+   "$.session.model": 1,
+   "$.settings.read": 1,
    "$.store.get": 3,
-   "$.state.set": 27,
    "$.env.get": 4,
    "$.fs.exists": 1,
-   "$.command.register": 2,
    "$.clock.now": 9,
    "$.tool.register": 2,
    "$.ui.status": 1,
@@ -212,13 +301,737 @@
        },
        "children": [
         {
-         "type": "Button",
+         "type": "Box",
          "props": {
-          "key": "toggle",
-          "label": "○ Clean View: OFF",
-          "onPress": "[fn]"
+          "width": 66,
+          "flexDirection": "column",
+          "borderStyle": "round",
+          "borderColor": "#3A3F4B",
+          "paddingX": 1
          },
-         "children": []
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#FF7A66",
+              "bold": true
+             },
+             "children": [
+              "◆  T O O L B O X"
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "gap": 2
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "color": "#8B90A0"
+               },
+               "children": [
+                "Opus 5.5"
+               ]
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "toolbox-close",
+                "plain": true,
+                "role": "dismiss",
+                "label": "✕",
+                "onPress": "[fn]"
+               },
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {},
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3A3F4B"
+             },
+             "children": [
+              "── "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#8B90A0"
+             },
+             "children": [
+              "M O D E L   C O N F I G"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3A3F4B"
+             },
+             "children": [
+              " ───────────────────────────────────"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Box",
+               "props": {
+                "width": 2
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "#8B90A0"
+                 },
+                 "children": [
+                  "◇"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 14
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true
+                 },
+                 "children": [
+                  "Effort"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "color": "#8B90A0"
+               },
+               "children": [
+                "thinking depth"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexWrap": "wrap"
+             },
+             "children": [
+              {
+               "type": "Button",
+               "props": {
+                "key": "chat-effort-low",
+                "plain": true,
+                "label": " Low ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "chat-effort-medium",
+                "plain": true,
+                "label": " Medium ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "chat-effort-high",
+                "plain": true,
+                "label": " High ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "chat-effort-xhigh",
+                "plain": true,
+                "label": " XHigh ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "chat-effort-max",
+                "plain": true,
+                "label": " Max ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Box",
+               "props": {
+                "width": 2
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "#8B90A0"
+                 },
+                 "children": [
+                  "○"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 14
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true
+                 },
+                 "children": [
+                  "Ultracode"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "color": "#8B90A0"
+               },
+               "children": [
+                "workflows on every task"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexWrap": "wrap"
+             },
+             "children": [
+              {
+               "type": "Button",
+               "props": {
+                "key": "chat-ultracode-on",
+                "plain": true,
+                "label": " ○ On ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Text",
+               "props": {
+                "backgroundColor": "#3A3F4B",
+                "bold": true
+               },
+               "children": [
+                " ● Off "
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {},
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3A3F4B"
+             },
+             "children": [
+              "── "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#8B90A0"
+             },
+             "children": [
+              "S E T T I N G S"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3A3F4B"
+             },
+             "children": [
+              " ───────────────────────────────────────────"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Box",
+               "props": {
+                "width": 2
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "#8B90A0"
+                 },
+                 "children": [
+                  "○"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 14
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true
+                 },
+                 "children": [
+                  "Clean View"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "color": "#8B90A0"
+               },
+               "children": [
+                "simple checklist"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexWrap": "wrap"
+             },
+             "children": [
+              {
+               "type": "Button",
+               "props": {
+                "key": "cv-on",
+                "plain": true,
+                "label": " ○ On ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Text",
+               "props": {
+                "backgroundColor": "#3A3F4B",
+                "bold": true
+               },
+               "children": [
+                " ● Off "
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Box",
+               "props": {
+                "width": 2
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "#8B90A0"
+                 },
+                 "children": [
+                  "◇"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 14
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true
+                 },
+                 "children": [
+                  "Team size"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "color": "#8B90A0"
+               },
+               "children": [
+                "per request"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexWrap": "wrap"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "backgroundColor": "#FF7A66",
+                "color": "#16181D",
+                "bold": true
+               },
+               "children": [
+                " 1 "
+               ]
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "size-3",
+                "plain": true,
+                "label": " 3 ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "size-5",
+                "plain": true,
+                "label": " 5 ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "size-10",
+                "plain": true,
+                "label": " 10 ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "size-20",
+                "plain": true,
+                "label": " 20 ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "size-50",
+                "plain": true,
+                "label": " 50 ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "size-100",
+                "plain": true,
+                "label": " 100 ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "size-custom",
+                "plain": true,
+                "label": " Custom ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "justifyContent": "space-between"
+           },
+           "children": [
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row"
+             },
+             "children": [
+              {
+               "type": "Box",
+               "props": {
+                "width": 2
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "color": "#8B90A0"
+                 },
+                 "children": [
+                  "◇"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "width": 14
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "bold": true
+                 },
+                 "children": [
+                  "Helpers"
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "color": "#8B90A0"
+               },
+               "children": [
+                "model they use"
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "flexDirection": "row",
+              "flexWrap": "wrap"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "backgroundColor": "#FF7A66",
+                "color": "#16181D",
+                "bold": true
+               },
+               "children": [
+                " Fast & Cheap "
+               ]
+              },
+              {
+               "type": "Button",
+               "props": {
+                "key": "model-same",
+                "plain": true,
+                "label": " Same as me ",
+                "onPress": "[fn]"
+               },
+               "children": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {},
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3A3F4B"
+             },
+             "children": [
+              "── "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#8B90A0"
+             },
+             "children": [
+              "L A U N C H"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "#3A3F4B"
+             },
+             "children": [
+              " ───────────────────────────────────────────────"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row"
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "toolbox-dock",
+              "plain": true,
+              "onPress": "[fn]"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "color": "#FF7A66"
+               },
+               "children": [
+                "◆"
+               ]
+              },
+              " Agent Dock  ",
+              {
+               "type": "Text",
+               "props": {
+                "color": "#8B90A0"
+               },
+               "children": [
+                "team of 1"
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
         }
        ]
       },
@@ -261,13 +1074,22 @@
       {
        "type": "Button",
        "props": {
-        "key": "dock-button",
+        "key": "toolbox-button",
         "plain": true,
-        "dimColor": true,
-        "label": "◆ Dock",
         "onPress": "[fn]"
        },
-       "children": []
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "color": "#FF7A66"
+         },
+         "children": [
+          "◆"
+         ]
+        },
+        " Toolbox ▴"
+       ]
       }
      ]
     }
@@ -765,6 +1587,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "/toolbox → Toolbox open above the prompt.",
    "$.ui.open(agent-dock)",
    "/dock → Agent Dock toggled. Type /dock again to switch back.",
    "/simple → Clean View is off."
@@ -779,6 +1602,16 @@
    "No version specified. Consider adding a version following semver (e.g., \"1.0.0\")"
   ],
   "hooks": [
+   "session.start{surface=/\"^\"/}",
+   "command.run{command=toolbox}",
+   "ui.render{component=SessionMode}",
+   "ui.render{component=AbovePrompt}",
+   "session.start{isInteractive=true}",
+   "classic.Stop{cwd=/\"^\"/}",
+   "command.run{command=model}",
+   "config.set{key=model}",
+   "command.run{command=effort}",
+   "ui.press{plugin=mods-toolbox, component=AbovePrompt, element=?}",
    "session.start{cwd=/\"^\"/}",
    "command.run{command=dock}",
    "prompt.submit",
@@ -790,8 +1623,9 @@
    "classic.Stop",
    "session.end",
    "ui.close{id=agent-dock}",
-   "ui.render{component=SessionMode}",
    "ui.render{component=Pane, requestId=agent-dock}",
+   "ui.press{plugin=mods-toolbox, component=AbovePrompt, element=/\"^(size-|model-|big-|custom-|toolbox-dock$)\"/}",
+   "ui.input{plugin=mods-toolbox, component=AbovePrompt, element=custom-size}",
    "session.start",
    "command.run{command=simple}",
    "tool.describe",
@@ -799,24 +1633,21 @@
    "classic.UserPromptExpansion",
    "turn.start",
    "tool.call",
-   "classic.Notification",
-   "classic.PermissionRequest",
-   "classic.StopFailure",
-   "turn.complete",
-   "ui.render{component=ToolUse}",
-   "ui.render{component=ToolResult}",
-   "ui.render{component=ToolGroup}",
-   "ui.render{component=ToolProgress}",
-   "ui.render{component=AbovePrompt}"
+   "classic.Notific… [+313 chars]"
   ],
   "calls": [
    "$.agent.list (via activeAgents",
-   "agentStatuses)",
-   "$.clock.after (via nameJob",
-   "scheduleCollapse)",
-   "$.clock.every (via syncTicker)",
+   "agentStatuses",
+   "runningHelpers)",
+   "$.clock.after",
+   "$.clock.every (via syncHelperWatch",
+   "syncTicker)",
    "$.clock.now",
    "$.command.register",
+   "$.command.run (via switchEffort",
+   "switchModel",
+   "switchUltracode)",
+   "$.config.list (via loadPicks)",
    "$.env.get (via readCountFolder",
    "readLimits)",
    "$.fs.exists (via sweepCountFiles)",
@@ -826,6 +1657,11 @@
    "sweepCountFiles",
    "waitForSlot)",
    "$.session.id (via writeCount)",
+   "$.session.model (via drawPopup",
+   "refreshModel",
+   "switchModel)",
+   "$.settings.read (via followModel",
+   "loadPicks)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
@@ -842,6 +1678,13 @@
    "$.ui.toast"
   ],
   "stateReads": [
+   "mods-toolbox.chatEffort",
+   "mods-toolbox.chatEffortPending",
+   "mods-toolbox.chatModel",
+   "mods-toolbox.chatModelOptions",
+   "mods-toolbox.chatModelPending",
+   "mods-toolbox.chatUltracode",
+   "mods-toolbox.chatUltracodePending",
    "mods-toolbox.checklist",
    "mods-toolbox.cleanViewEnabled",
    "mods-toolbox.dockHelperModel",
@@ -851,9 +1694,17 @@
    "mods-toolbox.dockPendingSize",
    "mods-toolbox.dockTeamSize",
    "mods-toolbox.dockTick",
-   "mods-toolbox.tick"
+   "mods-toolbox.tick",
+   "mods-toolbox.toolboxIsOpen"
   ],
   "stateWrites": [
+   "mods-toolbox.chatEffort",
+   "mods-toolbox.chatEffortPending",
+   "mods-toolbox.chatModel",
+   "mods-toolbox.chatModelOptions",
+   "mods-toolbox.chatModelPending",
+   "mods-toolbox.chatUltracode",
+   "mods-toolbox.chatUltracodePending",
    "mods-toolbox.checklist",
    "mods-toolbox.cleanViewEnabled",
    "mods-toolbox.dockHelperModel",
@@ -863,7 +1714,8 @@
    "mods-toolbox.dockPendingSize",
    "mods-toolbox.dockTeamSize",
    "mods-toolbox.dockTick",
-   "mods-toolbox.tick"
+   "mods-toolbox.tick",
+   "mods-toolbox.toolboxIsOpen"
   ],
   "envReads": [
    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS",
@@ -888,7 +1740,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: mods-toolbox.cleanViewEnabled, mods-toolbox.checklist, mods-toolbox.tick, mods-toolbox.dockTeamSize, mods-toolbox.dockHelperModel, mods-toolbox.dockPendingSize, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockTick"
+     "types ./types/index.d.ts declares state: mods-toolbox.cleanViewEnabled, mods-toolbox.checklist, mods-toolbox.tick, mods-toolbox.dockTeamSize, mods-toolbox.dockHelperModel, mods-toolbox.dockPendingSize, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockTick, mods-toolbox.toolboxIsOpen, mods-toolbox.chatModelOptions, mods-toolbox.chatModel, mods-toolbox.chatEffort, mods-toolbox.chatModelPending, mods-toolbox.chatEffortPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending"
     ],
     "gatingHooks": []
    },
@@ -899,9 +1751,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start{cwd=/\"^\"/}, command.run{command=dock}, prompt.submit, session.append{door=response}, tool.call{tool=Agent}, tool.call{tool=/\"__(report_progress|plan_steps)$\"/}, agent.spawn, turn.complete{turnId=/\"^\"/}, classic.Stop, session.end, ui.close{id=agent-dock}, ui.render{component=SessionMode}, ui.render{component=Pane, requestId=agent-dock}, session.start, command.run{command=simple}, tool.describe, prompt.compose, classic.UserPromptExpansion, turn.start, tool.call, classic.Notification, classic.PermissionRequest, classic.StopFailure, turn.complete, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=ToolProgress}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start{surface=/\"^\"/}, command.run{command=toolbox}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, classic.Stop{cwd=/\"^\"/}, command.run{command=model}, config.set{key=model}, command.run{command=effort}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=?}, session.start{cwd=/\"^\"/}, command.run{command=dock}, prompt.submit, session.append{door=response}, tool.call{tool=Agent}, tool.call{tool=/\"__(report_progress|plan_steps)$\"/}, agent.spawn, turn.complete{turnId=/\"^\"/}, classic.Stop, session.end, ui.close{id=agent-dock}, ui.render{component=Pane, requestId=agent-dock}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=/\"^(size-|model-|big-|custom-|toolbox-dock$)\"/}, ui.input{plugin=mods-toolbox, component=AbovePrompt, element=custom-size}, session.start, command.run{command=simple}, tool.describe, prompt.compose, classic.UserPromptExpansion, turn.start, tool.call, classic.Notific… [+313 chars]",
+      "./register.tsx answers its own command: command.run{command=toolbox}",
       "./register.tsx answers its own command: command.run{command=dock}",
       "./register.tsx answers its own command: command.run{command=simple}",
+      "./register.tsx gating hook without .catch: classic.Stop{cwd=/\"^\"/}",
+      "./register.tsx gating hook without .catch: command.run{command=model}",
+      "./register.tsx gating hook without .catch: config.set{key=model}",
+      "./register.tsx gating hook without .catch: command.run{command=effort}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.append{door=response}",
       "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
@@ -914,13 +1771,37 @@
       "./register.tsx gating hook without .catch: classic.Notification",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
       "./register.tsx gating hook without .catch: classic.StopFailure",
-      "./register.tsx calls: $.agent.list (via activeAgents, agentStatuses), $.clock.after (via nameJob, scheduleCollapse), $.clock.every (via syncTicker), $.clock.now, $.command.register, $.env.get (via readCountFolder, readLimits), $.fs.exists (via sweepCountFiles), $.fs.write (via writeCount), $.model.complete (via askForTitle), $.process.run (via removeFile, sweepCountFiles, waitForSlot), $.session.id (via writeCount), $.state.get, $.state.set, $.store.get, $.store.set (via commitSize, pickModel, setEnabled), $.tool.register (via registerTools), $.ui.close (via toggleDock), $.ui.invalidate (via setEnabled), $.ui.open (via showDock), $.ui.panes (via isDockOpen), $.ui.resolve, $.ui.status (via refreshBadge), $.ui.toast",
+      "./register.tsx calls: $.agent.list (via activeAgents, agentStatuses, runningHelpers), $.clock.after, $.clock.every (via syncHelperWatch, syncTicker), $.clock.now, $.command.register, $.command.run (via switchEffort, switchModel, switchUltracode), $.config.list (via loadPicks), $.env.get (via readCountFolder, readLimits), $.fs.exists (via sweepCountFiles), $.fs.write (via writeCount), $.model.complete (via askForTitle), $.process.run (via removeFile, sweepCountFiles, waitForSlot), $.session.id (via writeCount), $.session.model (via drawPopup, refreshModel, switchModel), $.settings.read (via followModel, loadPicks), $.state.get, $.state.set, $.store.get, $.store.set (via commitSize, pickModel, setEnabled), $.tool.register (via registerTools), $.ui.close (via toggleDock), $.ui.invalidate (via setEnabled), $.ui.open (via showDock), $.ui.panes (via isDockOpen), $.ui.resolve, $.ui.status (via refreshBadge), $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY, CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.tick",
-      "./register.tsx state reads: mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.tick"
+      "./register.tsx state writes: mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.tick, mods-toolbox.toolboxIsOpen",
+      "./register.tsx state reads: mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.tick, mods-toolbox.toolboxIsOpen"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop{cwd=/\"^\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=model}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "config.set",
+       "hook": "config.set{key=model}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=effort}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -999,5 +1880,5 @@
    "advice": []
   }
  },
- "sourceHash": "a909241f05ac59dc"
+ "sourceHash": "33185744de08306a"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "mangow314-mango-mods-sitrep",
- "generatedAt": "2026-10-09T15:32:39.765Z",
+ "generatedAt": "2026-10-10T14:44:47.000Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,18 @@
    },
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agents-info"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "command.run",
@@ -73,6 +85,11 @@
     "name": "sitrep-pane",
     "description": "sitrep：開關狀態 pane（需要你、進行中、任務、證據、變更）",
     "output": "sitrep：已打開狀態 pane（實驗中；再打一次 /sitrep-pane 關閉）"
+   },
+   {
+    "name": "agents-info",
+    "description": "sitrep：開關子代理 pane（進行中、已結束，含 model、context、輸出 token、耗時）",
+    "output": "sitrep：已打開子代理 pane（再打一次 /agents-info 關閉）"
    }
   ],
   "tools": [],
@@ -80,6 +97,10 @@
    {
     "id": "sitrep",
     "title": "sitrep"
+   },
+   {
+    "id": "sitrep-agents",
+    "title": "子代理"
    }
   ],
   "toasts": [],
@@ -87,15 +108,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.state.get": 20,
+   "$.command.register": 2,
+   "$.state.get": 22,
    "$.state.set": 9,
    "$.agent.list": 1,
    "$.clock.now": 2,
    "$.process.run": 2,
-   "$.ui.panes": 1,
-   "$.ui.open": 1,
-   "$.ui.resolve": 2
+   "$.ui.panes": 2,
+   "$.ui.open": 2,
+   "$.ui.resolve": 3
   },
   "timers": [],
   "sites": {
@@ -107,7 +128,7 @@
     "tree": {
      "type": "Text",
      "props": {
-      "color": "#7d8794"
+      "color": "inactive"
      },
      "children": [
       "– 本輪結束（無摘要）  42s"
@@ -140,7 +161,7 @@
          {
           "type": "Text",
           "props": {
-           "color": "#7d8794",
+           "color": "inactive",
            "bold": false
           },
           "children": [
@@ -163,7 +184,7 @@
              {
               "type": "Text",
               "props": {
-               "color": "#9aa4b1"
+               "color": "inactive"
               },
               "children": [
                "src/auth.ts"
@@ -180,7 +201,7 @@
              {
               "type": "Text",
               "props": {
-               "color": "#3fc39a"
+               "color": "success"
               },
               "children": [
                "+11"
@@ -191,7 +212,7 @@
            {
             "type": "Text",
             "props": {
-             "color": "#e0745a"
+             "color": "error"
             },
             "children": [
              "−3"
@@ -215,7 +236,7 @@
              {
               "type": "Text",
               "props": {
-               "color": "#7d8794"
+               "color": "inactive"
               },
               "children": [
                "src（不是這次改的）"
@@ -226,7 +247,7 @@
            {
             "type": "Text",
             "props": {
-             "color": "#7d8794"
+             "color": "inactive"
             },
             "children": [
              "1 檔"
@@ -239,6 +260,19 @@
       ]
      },
      "title": "sitrep"
+    },
+    "sitrep-agents": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "color": "inactive"
+      },
+      "children": [
+       "這個 session 還沒派過子代理"
+      ]
+     },
+     "title": "子代理"
     }
    }
   },
@@ -257,7 +291,9 @@
    "$.process.run(git diff HEAD --numstat) → exit 0",
    "turn.complete",
    "$.ui.open(sitrep)",
-   "/sitrep-pane → sitrep：已打開狀態 pane（實驗中；再打一次 /sitrep-pane 關閉）"
+   "/sitrep-pane → sitrep：已打開狀態 pane（實驗中；再打一次 /sitrep-pane 關閉）",
+   "$.ui.open(sitrep-agents)",
+   "/agents-info → sitrep：已打開子代理 pane（再打一次 /agents-info 關閉）"
   ],
   "console": [],
   "warnings": []
@@ -269,6 +305,9 @@
   "hooks": [
    "prompt.compose",
    "session.start",
+   "command.run{command=agents-info}",
+   "agent.spawn",
+   "turn.step",
    "command.run{command=sitrep-pane}",
    "ui.close",
    "tool.call",
@@ -285,19 +324,17 @@
   ],
   "calls": [
    "$.agent.list (via trackAgents)",
-   "$.clock.every",
-   "$.clock.now (via agentRows",
-   "drawPane",
-   "trackAgents)",
+   "$.clock.every (via startTick)",
+   "$.clock.now",
    "$.command.register",
    "$.process.run",
    "$.prompt.fill (via pick)",
    "$.state.get",
    "$.state.set",
    "$.ui.close",
-   "$.ui.invalidate",
+   "$.ui.invalidate (via startTick)",
    "$.ui.log",
-   "$.ui.open (via openPane)",
+   "$.ui.open",
    "$.ui.panes",
    "$.ui.resolve",
    "$.ui.toast (via pick)"
@@ -353,19 +390,27 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: prompt.compose, session.start, command.run{command=sitrep-pane}, ui.close, tool.call, classic.Stop, classic.TaskCreated, classic.TaskCompleted, turn.complete, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane}, ui.render{component=AssistantMessage}, ui.render{component=TurnDuration}, ui.render{component=UserMessage}",
+      "./register.tsx hooks: prompt.compose, session.start, command.run{command=agents-info}, agent.spawn, turn.step, command.run{command=sitrep-pane}, ui.close, tool.call, classic.Stop, classic.TaskCreated, classic.TaskCompleted, turn.complete, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane}, ui.render{component=AssistantMessage}, ui.render{component=TurnDuration}, ui.render{component=UserMessage}",
+      "./register.tsx answers its own command: command.run{command=agents-info}",
       "./register.tsx answers its own command: command.run{command=sitrep-pane}",
+      "./register.tsx gating hook with .catch: agent.spawn",
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: classic.TaskCreated",
       "./register.tsx gating hook without .catch: classic.TaskCompleted",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.agent.list (via trackAgents), $.clock.every, $.clock.now (via agentRows, drawPane, trackAgents), $.command.register, $.process.run, $.prompt.fill (via pick), $.state.get, $.state.set, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.toast (via pick)",
+      "./register.tsx calls: $.agent.list (via trackAgents), $.clock.every (via startTick), $.clock.now, $.command.register, $.process.run, $.prompt.fill (via pick), $.state.get, $.state.set, $.ui.close, $.ui.invalidate (via startTick), $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via pick)",
       "./register.tsx state writes: sitrep.agents, sitrep.answers, sitrep.background, sitrep.changes, sitrep.evidence, sitrep.last, sitrep.open, sitrep.paneOpen, sitrep.pending, sitrep.tasks, sitrep.touched, sitrep.turns",
       "./register.tsx state reads: sitrep.agents, sitrep.answers, sitrep.background, sitrep.changes, sitrep.evidence, sitrep.last, sitrep.open, sitrep.paneOpen, sitrep.pending, sitrep.tasks, sitrep.touched, sitrep.turns"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "ui.close",
@@ -408,5 +453,5 @@
    "advice": []
   }
  },
- "sourceHash": "a35ae3c3003d9645"
+ "sourceHash": "750b238fbabf428d"
 }

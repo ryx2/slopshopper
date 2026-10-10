@@ -1,6 +1,6 @@
 {
  "slug": "christandoh-context-cache",
- "generatedAt": "2026-10-07T15:22:59.264Z",
+ "generatedAt": "2026-10-10T14:44:39.699Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -15,6 +15,9 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "turn.start"
    },
    {
     "event": "classic.Stop"
@@ -87,7 +90,7 @@
    {
     "name": "cache-status",
     "description": "Context & cache panel: where each figure comes from (surfaces, draws, the account usage request, Fable)",
-    "output": "Surfaces attached now: terminal\nClients that attached since load: none seen\nDraw requests received: nothing yet\nPanel hidden: yes; px per cell: 8 (/cache scale <px> changes it)\nContext: 97400 / 200000\nLimits: session 31% (source: response)\nAccount usage request: auth undefined, HTTP —; keys: —; windows: none; Fable matched: none\nCache: last write 2025-10-09T08:53:20.080Z, TTL 60m (default)\nFull report: /work/app/context-cache-status.json"
+    "output": "Surfaces attached now: terminal\nClients that attached since load: none seen\nDraw requests received: nothing yet\nPanel hidden: yes; px per cell: 8 (/cache scale <px> changes it)\nContext: 97400 / 200000\nLimits: session 31% (source: response)\nAccount usage request: auth undefined, HTTP —; keys: —; windows: none; Fable matched: none\nCache: last write 2025-10-09T08:53:20.080Z, TTL 60m (default)\nWarming: off\nFull report: /work/app/context-cache-status.json"
    },
    {
     "name": "cache-pane",
@@ -120,11 +123,11 @@
   "apiCalls": {
    "$.command.register": 5,
    "$.store.get": 2,
-   "$.state.get": 27,
+   "$.state.get": 33,
    "$.clock.now": 7,
    "$.state.set": 11,
    "$.session.surfaces": 2,
-   "$.clock.every": 2,
+   "$.clock.every": 3,
    "$.session.usage": 3,
    "$.session.messages": 2,
    "$.session.authorize": 3,
@@ -143,6 +146,10 @@
    {
     "kind": "every",
     "ms": 300000
+   },
+   {
+    "kind": "every",
+    "ms": 15000
    }
   ],
   "sites": {
@@ -538,7 +545,7 @@
             "color": "#b9b5ab"
            },
            "children": [
-            "Cache warm: next message reuses 97k from cache."
+            "Cache warm: reuses 97k."
            ]
           }
          ]
@@ -567,6 +574,16 @@
             "key": "compact",
             "label": "Compact",
             "hotkey": "k",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "warm",
+            "label": "Warm",
+            "hotkey": "w",
             "onPress": "[fn]"
            },
            "children": []
@@ -971,7 +988,7 @@
              "color": "#b9b5ab"
             },
             "children": [
-             "Cache warm: next message reuses 97k from cache."
+             "Cache warm: reuses 97k."
             ]
            }
           ]
@@ -1000,6 +1017,16 @@
              "key": "compact",
              "label": "Compact",
              "hotkey": "k",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "warm",
+             "label": "Warm",
+             "hotkey": "w",
              "onPress": "[fn]"
             },
             "children": []
@@ -1046,6 +1073,7 @@
    "classic.SessionStart",
    "turn.step",
    "turn.complete",
+   "turn.start",
    "classic.Stop",
    "classic.PostModelSwitch",
    "session.measure",
@@ -1069,8 +1097,8 @@
    "$.fs.stat (via learnTtl)",
    "$.fs.write (via statusReport)",
    "$.http.fetch (via fetchAccount)",
+   "$.model.fork (via warmTick)",
    "$.session.authorize (via fetchAccount)",
-   "$.session.compact (via actionsFor)",
    "$.session.messages (via doRefresh)",
    "$.session.surfaces (via hasMobile",
    "statusReport)",
@@ -1082,19 +1110,21 @@
    "$.ui.close",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.toast (via actionsFor)"
+   "$.ui.toast"
   ],
   "stateReads": [
    "context-cache.isHidden",
    "context-cache.now",
    "context-cache.pxPerCell",
-   "context-cache.snapshot"
+   "context-cache.snapshot",
+   "context-cache.warmUntil"
   ],
   "stateWrites": [
    "context-cache.isHidden",
    "context-cache.now",
    "context-cache.pxPerCell",
-   "context-cache.snapshot"
+   "context-cache.snapshot",
+   "context-cache.warmUntil"
   ],
   "envReads": [],
   "raw": {
@@ -1108,7 +1138,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: context-cache.snapshot, context-cache.isHidden, context-cache.now, context-cache.pxPerCell"
+     "types ./types/index.d.ts declares state: context-cache.snapshot, context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.warmUntil"
     ],
     "gatingHooks": []
    },
@@ -1119,7 +1149,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.SessionStart, turn.step, turn.complete, classic.Stop, classic.PostModelSwitch, session.measure, session.compact, session.end, command.run{command=cache-status}, command.run{command=cache-refresh}, command.run{command=cache-scale}, command.run{command=cache-pane}, command.run{command=cache}, session.attach, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=context-cache}",
+      "./register.tsx hooks: session.start, classic.SessionStart, turn.step, turn.complete, turn.start, classic.Stop, classic.PostModelSwitch, session.measure, session.compact, session.end, command.run{command=cache-status}, command.run{command=cache-refresh}, command.run{command=cache-scale}, command.run{command=cache-pane}, command.run{command=cache}, session.attach, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=context-cache}",
       "./register.tsx gating hook with .catch: classic.SessionStart",
       "./register.tsx gating hook with .catch: classic.Stop",
       "./register.tsx gating hook with .catch: classic.PostModelSwitch",
@@ -1129,9 +1159,9 @@
       "./register.tsx gating hook without .catch: command.run{command=cache-scale}",
       "./register.tsx gating hook without .catch: command.run{command=cache-pane}",
       "./register.tsx gating hook without .catch: command.run{command=cache}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via actionsFor), $.fs.read (via learnTtl), $.fs.stat (via learnTtl), $.fs.write (via statusReport), $.http.fetch (via fetchAccount), $.session.authorize (via fetchAccount), $.session.compact (via actionsFor), $.session.messages (via doRefresh), $.session.surfaces (via hasMobile, statusReport), $.session.usage (via doRefresh), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast (via actionsFor)",
-      "./register.tsx state writes: context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.snapshot",
-      "./register.tsx state reads: context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.snapshot"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via actionsFor), $.fs.read (via learnTtl), $.fs.stat (via learnTtl), $.fs.write (via statusReport), $.http.fetch (via fetchAccount), $.model.fork (via warmTick), $.session.authorize (via fetchAccount), $.session.messages (via doRefresh), $.session.surfaces (via hasMobile, statusReport), $.session.usage (via doRefresh), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.snapshot, context-cache.warmUntil",
+      "./register.tsx state reads: context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.snapshot, context-cache.warmUntil"
      ],
      "gatingHooks": [
       {
@@ -1190,8 +1220,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "8b2ec339f455d612"
+ "sourceHash": "e79166dd7ed53ae0"
 }

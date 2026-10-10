@@ -1,6 +1,6 @@
 {
  "slug": "stalicji-my-mods-agent-panel",
- "generatedAt": "2026-10-09T15:34:28.074Z",
+ "generatedAt": "2026-10-10T14:45:52.117Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -15,6 +15,12 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agents-focus"
+    }
    },
    {
     "event": "command.run",
@@ -45,8 +51,16 @@
   "commands": [
    {
     "name": "agents",
-    "description": "開關子代理面板",
+    "description": "開關子代理面板；/agents focus 把鍵盤交給面板",
+    "argumentHint": "[focus]",
+    "immediate": true,
     "output": "已開啟子代理面板。"
+   },
+   {
+    "name": "agents-focus",
+    "description": "把鍵盤交給子代理面板（同 /agents focus）",
+    "immediate": true,
+    "output": "已要求把鍵盤交給子代理面板：Tab 移動、Enter 按下、Esc 回到輸入框。"
    }
   ],
   "tools": [],
@@ -61,14 +75,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
+   "$.env.get": 1,
+   "$.command.register": 2,
    "$.agent.list": 1,
    "$.clock.now": 1,
-   "$.state.get": 6,
-   "$.state.set": 1,
-   "$.ui.panes": 4,
+   "$.state.get": 10,
+   "$.ui.panes": 6,
+   "$.ui.status": 1,
    "$.ui.close": 1,
-   "$.ui.open": 1,
+   "$.ui.open": 2,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -102,7 +117,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(agent-panel)",
-   "/agents → 已開啟子代理面板。"
+   "/agents → 已開啟子代理面板。",
+   "$.ui.open(agent-panel)",
+   "/agents-focus → 已要求把鍵盤交給子代理面板：Tab 移動、Enter 按下、Esc 回到輸入框。"
   ],
   "console": [],
   "warnings": []
@@ -116,6 +133,7 @@
    "session.end",
    "turn.start",
    "prompt.submit",
+   "command.run{command=agents-focus}",
    "command.run{command=agents}",
    "agent.spawn",
    "turn.step",
@@ -125,26 +143,37 @@
   ],
   "calls": [
    "$.agent.list (via seedFromAgentList)",
-   "$.clock.every (via syncTimer)",
+   "$.clock.every (via syncTimerAndStatus)",
    "$.clock.now",
+   "$.clock.sleep (via selectAgent)",
    "$.command.register",
+   "$.env.get (via readForcesTerminalImages)",
    "$.state.get",
    "$.state.set",
    "$.ui.close (via closePanel)",
    "$.ui.open",
    "$.ui.panes",
    "$.ui.resolve",
+   "$.ui.scroll (via selectAgent)",
+   "$.ui.status (via clearStatus",
+   "showStatus)",
    "$.ui.toast (via openPanel)"
   ],
   "stateReads": [
    "agent-panel.batch",
+   "agent-panel.logs",
+   "agent-panel.selected",
    "agent-panel.tick"
   ],
   "stateWrites": [
    "agent-panel.batch",
+   "agent-panel.logs",
+   "agent-panel.selected",
    "agent-panel.tick"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CODE_FORCE_TERMINAL_IMAGES"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -156,7 +185,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: agent-panel.batch, agent-panel.tick"
+     "types ./types/index.d.ts declares state: agent-panel.batch, agent-panel.tick, agent-panel.logs, agent-panel.selected"
     ],
     "gatingHooks": []
    },
@@ -167,14 +196,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, turn.start, prompt.submit, command.run{command=agents}, agent.spawn, turn.step, tool.call, turn.complete, ui.render{component=Pane, requestId=agent-panel}",
+      "./register.tsx hooks: session.start, session.end, turn.start, prompt.submit, command.run{command=agents-focus}, command.run{command=agents}, agent.spawn, turn.step, tool.call, turn.complete, ui.render{component=Pane, requestId=agent-panel}",
+      "./register.tsx answers its own command: command.run{command=agents-focus}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: command.run{command=agents}",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via seedFromAgentList), $.clock.every (via syncTimer), $.clock.now, $.command.register, $.state.get, $.state.set, $.ui.close (via closePanel), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via openPanel)",
-      "./register.tsx state writes: agent-panel.batch, agent-panel.tick",
-      "./register.tsx state reads: agent-panel.batch, agent-panel.tick"
+      "./register.tsx calls: $.agent.list (via seedFromAgentList), $.clock.every (via syncTimerAndStatus), $.clock.now, $.clock.sleep (via selectAgent), $.command.register, $.env.get (via readForcesTerminalImages), $.state.get, $.state.set, $.ui.close (via closePanel), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.scroll (via selectAgent), $.ui.status (via clearStatus, showStatus), $.ui.toast (via openPanel)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CODE_FORCE_TERMINAL_IMAGES",
+      "./register.tsx state writes: agent-panel.batch, agent-panel.logs, agent-panel.selected, agent-panel.tick",
+      "./register.tsx state reads: agent-panel.batch, agent-panel.logs, agent-panel.selected, agent-panel.tick"
      ],
      "gatingHooks": [
       {
@@ -207,5 +239,5 @@
    "advice": []
   }
  },
- "sourceHash": "2f1e2dd6e06d177c"
+ "sourceHash": "f851576c2a3d5d0f"
 }

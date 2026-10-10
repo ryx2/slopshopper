@@ -1,6 +1,6 @@
 {
  "slug": "juampymdd-claude-code-model-picker",
- "generatedAt": "2026-10-09T15:33:39.541Z",
+ "generatedAt": "2026-10-10T14:45:20.940Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,31 @@
     "event": "turn.step"
    },
    {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "model-picker-stats"
+    }
+   },
+   {
+    "event": "ui.message"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
@@ -26,7 +51,7 @@
   "commands": [
    {
     "name": "modelo",
-    "description": "Elige el modelo de las próximas requests (auto | fable | opus | sonnet | haiku) y su versión: /modelo opus 4.8",
+    "description": "Elige el modelo de las próximas requests (auto | fable | opus | sonnet | haiku) y su versión: /modelo opus 4.8; /modelo stats abre las estadísticas",
     "output": "Modelo: Opus 5.5. Uso: /modelo auto | fable | opus | sonnet | haiku [versión]"
    }
   ],
@@ -38,15 +63,23 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.clock.now": 1,
-   "$.store.get": 1,
+   "$.clock.now": 21,
+   "$.store.get": 2,
+   "$.clock.every": 1,
    "$.http.fetch": 1,
    "$.fs.read": 1,
-   "$.session.model": 2,
-   "$.ui.resolve": 1,
-   "$.state.get": 3
+   "$.state.get": 24,
+   "$.state.set": 11,
+   "$.session.model": 3,
+   "$.ui.resolve": 2,
+   "$.session.usage": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 2000
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": true,
@@ -162,14 +195,21 @@
          ]
         },
         {
-         "type": "Text",
+         "type": "Button",
          "props": {
-          "color": "#FB923C",
-          "italic": true
+          "key": "stats",
+          "plain": true,
+          "dimColor": true,
+          "onPress": "[fn]"
          },
          "children": [
-          "  ",
-          "razonamiento profundo"
+          {
+           "type": "Text",
+           "props": {},
+           "children": [
+            " ▦ stats "
+           ]
+          }
          ]
         }
        ]
@@ -181,18 +221,292 @@
        },
        "children": [
         {
-         "type": "Text",
+         "type": "Client",
          "props": {
-          "dimColor": true,
-          "wrap": "truncate-end"
+          "key": "datos",
+          "module": "./live.tsx",
+          "props": {
+           "tab": "band",
+           "now": 0,
+           "rows": [
+            {
+             "segs": [
+              {
+               "text": "costo, tokens y cache: tras la próxima respuesta",
+               "dim": true
+              }
+             ]
+            }
+           ]
+          }
          },
-         "children": [
-          "costo, tokens y cache: tras la próxima respuesta"
-         ]
+         "children": []
         }
        ]
       }
      ]
+    }
+   },
+   "Pane": {
+    "model-picker-stats": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {},
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "costo",
+           "plain": true,
+           "hotkey": "1",
+           "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "inverse": true
+            },
+            "children": [
+             "Costo "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "modelos",
+           "plain": true,
+           "hotkey": "2",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             ""
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tools",
+           "plain": true,
+           "hotkey": "3",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             ""
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "ritmo",
+           "plain": true,
+           "hotkey": "4",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             ""
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "agentes",
+           "plain": true,
+           "hotkey": "5",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             ""
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "juegos",
+           "plain": true,
+           "hotkey": "6",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Client",
+        "props": {
+         "key": "live",
+         "module": "./live.tsx",
+         "props": {
+          "tab": "costo",
+          "now": 1760000000420,
+          "rows": [
+           {
+            "segs": [
+             {
+              "text": "sesión ",
+              "dim": true
+             },
+             {
+              "text": "30m00s",
+              "fx": "clock",
+              "since": 1759998200000
+             },
+             {
+              "text": " · ",
+              "dim": true
+             },
+             {
+              "text": "~$0.000"
+             },
+             {
+              "text": " · 1 turnos",
+              "dim": true
+             },
+             {
+              "text": " · contexto ",
+              "dim": true
+             },
+             {
+              "text": "",
+              "fx": "meter",
+              "key": "context",
+              "value": 49,
+              "width": 8
+             },
+             {
+              "text": " 49%"
+             },
+             {
+              "text": " · /cost $0.42",
+              "dim": true
+             }
+            ]
+           },
+           {
+            "segs": [
+             {
+              "text": "COSTO POR TURNO · últimos 1 de 1 · máx $0.000",
+              "dim": true
+             }
+            ]
+           },
+           {
+            "key": "cost",
+            "chart": [
+             0
+            ],
+            "height": 3,
+            "max": 0
+           },
+           {
+            "segs": [
+             {
+              "text": "   # costo   ",
+              "dim": true
+             },
+             {
+              "text": "▒ entrada █ salida     ",
+              "dim": true
+             },
+             {
+              "text": " tok         ",
+              "dim": true
+             },
+             {
+              "text": " cache",
+              "dim": true
+             }
+            ]
+           },
+           {
+            "segs": [
+             {
+              "text": "   1 $0.000  "
+             },
+             {
+              "text": "",
+              "dim": true
+             },
+             {
+              "text": ""
+             },
+             {
+              "text": "                       "
+             },
+             {
+              "text": " 0→0         ",
+              "dim": true
+             },
+             {
+              "text": " –    ",
+              "dim": true
+             }
+            ]
+           },
+           {
+            "segs": [
+             {
+              "text": "total ~$0.000 · 0→0 tok · cache –",
+              "dim": true
+             }
+            ]
+           }
+          ]
+         }
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "model-picker-stats"
     }
    }
   },
@@ -222,33 +536,63 @@
    "session.start",
    "command.run{command=modelo}",
    "turn.step",
+   "turn.start",
+   "turn.complete",
+   "agent.spawn",
+   "tool.call",
+   "session.end",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.message",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
-   "$.clock.now (via hostOf)",
+   "$.agent.list (via pollAgents)",
+   "$.clock.after (via switchTo)",
+   "$.clock.every",
+   "$.clock.now",
    "$.command.register",
    "$.fs.exists (via hostOf)",
    "$.fs.read (via hostOf)",
    "$.http.fetch (via hostOf)",
    "$.process.run (via hostOf)",
    "$.session.model (via pickOfSession)",
+   "$.session.usage (via sessionUsage)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via hostOf)",
-   "$.store.set (via hostOf)",
+   "$.store.get",
+   "$.store.set",
+   "$.ui.close (via togglePane)",
    "$.ui.invalidate",
+   "$.ui.open (via togglePane)",
+   "$.ui.panes (via togglePane)",
    "$.ui.resolve",
    "$.ui.toast (via hostOf)"
   ],
   "stateReads": [
+   "model-picker.best",
    "model-picker.choice",
+   "model-picker.flash",
+   "model-picker.game",
+   "model-picker.games",
+   "model-picker.menu",
    "model-picker.open",
-   "model-picker.stats"
+   "model-picker.record",
+   "model-picker.showDone",
+   "model-picker.stats",
+   "model-picker.tab"
   ],
   "stateWrites": [
+   "model-picker.best",
    "model-picker.choice",
+   "model-picker.flash",
+   "model-picker.game",
+   "model-picker.games",
+   "model-picker.menu",
    "model-picker.open",
-   "model-picker.stats"
+   "model-picker.record",
+   "model-picker.showDone",
+   "model-picker.stats",
+   "model-picker.tab"
   ],
   "envReads": [],
   "raw": {
@@ -262,7 +606,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: model-picker.choice, model-picker.open, model-picker.stats"
+     "types ./types/index.d.ts declares state: model-picker.choice, model-picker.open, model-picker.stats, model-picker.record, model-picker.tab, model-picker.showDone, model-picker.flash, model-picker.games, model-picker.game, model-picker.best, model-picker.menu"
     ],
     "gatingHooks": []
    },
@@ -273,11 +617,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=modelo}, turn.step, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=modelo}, turn.step, turn.start, turn.complete, agent.spawn, tool.call, session.end, ui.render{component=Pane, requestId=?}, ui.message, ui.render{component=AbovePrompt}",
       "./register.tsx gating hook without .catch: command.run{command=modelo}",
-      "./register.tsx calls: $.clock.now (via hostOf), $.command.register, $.fs.exists (via hostOf), $.fs.read (via hostOf), $.http.fetch (via hostOf), $.process.run (via hostOf), $.session.model (via pickOfSession), $.state.get, $.state.set, $.store.get (via hostOf), $.store.set (via hostOf), $.ui.invalidate, $.ui.resolve, $.ui.toast (via hostOf)",
-      "./register.tsx state writes: model-picker.choice, model-picker.open, model-picker.stats",
-      "./register.tsx state reads: model-picker.choice, model-picker.open, model-picker.stats"
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx calls: $.agent.list (via pollAgents), $.clock.after (via switchTo), $.clock.every, $.clock.now, $.command.register, $.fs.exists (via hostOf), $.fs.read (via hostOf), $.http.fetch (via hostOf), $.process.run (via hostOf), $.session.model (via pickOfSession), $.session.usage (via sessionUsage), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close (via togglePane), $.ui.invalidate, $.ui.open (via togglePane), $.ui.panes (via togglePane), $.ui.resolve, $.ui.toast (via hostOf)",
+      "./register.tsx state writes: model-picker.best, model-picker.choice, model-picker.flash, model-picker.game, model-picker.games, model-picker.menu, model-picker.open, model-picker.record, model-picker.showDone, model-picker.stats, model-picker.tab",
+      "./register.tsx state reads: model-picker.best, model-picker.choice, model-picker.flash, model-picker.game, model-picker.games, model-picker.menu, model-picker.open, model-picker.record, model-picker.showDone, model-picker.stats, model-picker.tab",
+      "./register.tsx surface modules: hooks/games.tsx, hooks/live.tsx"
      ],
      "gatingHooks": [
       {
@@ -285,6 +632,18 @@
        "pattern": "command.run",
        "hook": "command.run{command=modelo}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
       }
      ]
     }
@@ -292,5 +651,5 @@
    "advice": []
   }
  },
- "sourceHash": "cb99e7f070d9e399"
+ "sourceHash": "833076b6a4397ec6"
 }

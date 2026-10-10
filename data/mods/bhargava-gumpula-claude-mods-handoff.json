@@ -1,0 +1,8 @@
+{
+ "slug": "bhargava-gumpula-claude-mods-handoff",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const prompt = (steps: string, focus: string) =>\n  focus ? `${steps}\\n\\nFocus for this handoff: ${focus}` : steps\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'handoff', description: 'Write the phase handoff: checks, dev log, HANDOFF.md, commit, summary' })\n    return next(e)\n  })\n\n  on('command.run', { command: 'handoff' }, async ($, e) => {\n    const steps = await $.fs.read(`${$.plugin.root}/handoff.md`)\n    void $.prompt.submit({ text: prompt(steps, e.args.trim()) })\n    return { text: 'Writing the handoff…' }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"handoff\",\n  \"version\": \"0.1.0\",\n  \"description\": \"/handoff writes the phase handoff: checks, dev log entry, HANDOFF.md update and a summary\"\n}"
+ }
+}

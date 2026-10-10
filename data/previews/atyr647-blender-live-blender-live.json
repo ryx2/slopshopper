@@ -1,0 +1,418 @@
+{
+ "slug": "atyr647-blender-live-blender-live",
+ "generatedAt": "2026-10-10T14:44:59.219Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "blender"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "blender-pane"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "blender-setup"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__blender-live__blender_step"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__blender-live__blender_configure"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__blender-live__blender_undo"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__blender-live__blender_reset"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__blender-live__blender_finish"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "blender-live"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "blender",
+    "description": "Show the Blender Live view above the prompt",
+    "output": "Blender Live is showing above the prompt."
+   },
+   {
+    "name": "blender-pane",
+    "description": "Open Blender Live in a big side pane",
+    "output": "Blender Live pane opened."
+   },
+   {
+    "name": "blender-setup",
+    "description": "Install Blender for the Blender Live mod (one time, about a minute). Add a version, e.g. 4.2, for that one",
+    "output": "Setup failed:\n\n"
+   }
+  ],
+  "tools": [
+   {
+    "name": "blender_step",
+    "description": "Run one modeling step in Blender (headless) and stream it to the user's live feed.\n\nThe user watches a 3D feed of the scene: a simplified preview streams while your code runs, and when the step finishes the feed swaps in the full-detail model with its real materials (a glTF the step exports, with procedural textures baked into images, lit by the scene's own world/sky). So build in visible steps with short labels (\"Hull\", \"Canopy\", \"Nose gear\"). The scene is saved between calls. Any size works, from N64 low-poly to multi-million-triangle models.\n\n`code` is Python run inside Blender with these ready to use: bpy, bmesh, Vector, math, np (numpy), and\n  mat(name, (r, g, b))  -> get/create a simple material (linear RGB 0..1); any real node material works too\n  paint(obj, material)  -> give an object that material\n  snap(\"what\")          -> take a live frame now (also works inside your own helper functions)\n  focus(\"Armory*\")      -> point the feed camera at these objects (globs, comma separated) from here on\nObjects whose names start with \"_\" are helpers and are hidden. The ground is at z = 0. Folders and prelude files set with blender_configure (an art kit, gear code) are importable/loaded in every step.\n\nLive frames: by default one after every top-level line (and every line directly in a top-level loop) that changes the scene, paced automatically so big scenes stay fast. Options: `mode` \"objects\" (a frame only when parts are added/removed: good for scripts that make hundreds of parts) or \"end\" (one frame per step); `pace` seconds between frames; `focus` to look at part of a big model (everything around it turns see-through in the feed); `render` \"cycles\" (or \"cycles:128:1920x1080\") to also render the step realistically with Cycles.\n\nIf the code raises, nothing is saved and you get the traceback: fix it and call again. On success you get the triangle count, the objects, and a list of files to send to the feed (do that right away, as the result says)."
+   },
+   {
+    "name": "blender_configure",
+    "description": "Change Blender Live settings for this project (kept in config.json, used by every later step). paths: folders to put on sys.path (your helper modules). prelude: .py files run before every step (an art kit). blender: path to a Blender executable to use instead of the bundled bpy (e.g. a 4.2 LTS install). bpy_version: which bundled bpy to use (run /blender-setup <version> first, e.g. 4.2). preview_tris: triangles per live frame (default 12000). pace, mode: live frame defaults. realtime/bake/sky: the realistic feed view (default on). bake_size: baked texture size (default 1024). render: \"cycles\" to render every step, samples, render_size [W, H]."
+   },
+   {
+    "name": "blender_undo",
+    "description": "Undo the last Blender Live step: the scene goes back to how it was before it."
+   },
+   {
+    "name": "blender_reset",
+    "description": "Start a new, empty Blender Live scene (clears every step). Call this before starting a new model."
+   },
+   {
+    "name": "blender_finish",
+    "description": "Finish the Blender Live model: makes a timelapse GIF of all steps, a contact sheet, and exports model.glb. Returns the file paths (scene.blend is there too)."
+   }
+  ],
+  "panes": [
+   {
+    "id": "blender-live",
+    "title": "Blender Live"
+   }
+  ],
+  "toasts": [
+   "Installing Blender... this takes about a minute"
+  ],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 3,
+   "$.tool.register": 5,
+   "$.clock.every": 1,
+   "$.state.get": 23,
+   "$.state.set": 3,
+   "$.clock.now": 4,
+   "$.ui.open": 1,
+   "$.ui.toast": 1,
+   "$.process.run": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 110
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "blender-live": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Waiting for the first step. Ask Claude to model something!"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "prev",
+           "label": "< Prev",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "next",
+           "label": "Next >",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "latest",
+           "label": "Latest",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "replay",
+           "label": "Replay build",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "spin",
+           "label": "Stop spin",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "wire",
+           "label": "Wireframe",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "gap": 1
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "Blender Live"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/blender → Blender Live is showing above the prompt.",
+   "$.ui.open(blender-live)",
+   "/blender-pane → Blender Live pane opened.",
+   "$.process.run(sh /plugins/blender-live/engine/bstep setup) → exit 0",
+   "/blender-setup → Setup failed:\n\n"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=blender}",
+   "command.run{command=blender-pane}",
+   "command.run{command=blender-setup}",
+   "tool.call{tool=mcp__blender-live__blender_step}",
+   "tool.call{tool=mcp__blender-live__blender_configure}",
+   "tool.call{tool=mcp__blender-live__blender_undo}",
+   "tool.call{tool=mcp__blender-live__blender_reset}",
+   "tool.call{tool=mcp__blender-live__blender_finish}",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=ToolResult}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=blender-live}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.read (via loadModel)",
+   "$.fs.stat (via feedInstructions)",
+   "$.process.run (via run)",
+   "$.process.spawn",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "blender-live.angle",
+   "blender-live.busy",
+   "blender-live.flashUntil",
+   "blender-live.frame",
+   "blender-live.frameStart",
+   "blender-live.isBandHidden",
+   "blender-live.isWire",
+   "blender-live.note",
+   "blender-live.queue",
+   "blender-live.revealStart",
+   "blender-live.spinUntil",
+   "blender-live.steps",
+   "blender-live.viewing"
+  ],
+  "stateWrites": [
+   "blender-live.angle",
+   "blender-live.busy",
+   "blender-live.flashUntil",
+   "blender-live.frame",
+   "blender-live.frameStart",
+   "blender-live.isBandHidden",
+   "blender-live.isWire",
+   "blender-live.note",
+   "blender-live.queue",
+   "blender-live.revealStart",
+   "blender-live.spinUntil",
+   "blender-live.steps",
+   "blender-live.viewing"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/atyr647-blender-live-blender-live/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/atyr647-blender-live-blender-live/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: blender-live.steps, blender-live.viewing, blender-live.angle, blender-live.spinUntil, blender-live.isWire, blender-live.busy, blender-live.flashUntil, blender-live.frame, blender-live.frameStart, blender-live.queue, blender-live.revealStart, blender-live.isBandHidden, blender-live.note"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/atyr647-blender-live-blender-live/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=blender}, command.run{command=blender-pane}, command.run{command=blender-setup}, tool.call{tool=mcp__blender-live__blender_step}, tool.call{tool=mcp__blender-live__blender_configure}, tool.call{tool=mcp__blender-live__blender_undo}, tool.call{tool=mcp__blender-live__blender_reset}, tool.call{tool=mcp__blender-live__blender_finish}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=blender-live}",
+      "./register.tsx answers its own command: command.run{command=blender}",
+      "./register.tsx answers its own command: command.run{command=blender-pane}",
+      "./register.tsx answers its own command: command.run{command=blender-setup}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__blender-live__blender_step}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__blender-live__blender_configure}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__blender-live__blender_undo}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__blender-live__blender_reset}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__blender-live__blender_finish}",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.read (via loadModel), $.fs.stat (via feedInstructions), $.process.run (via run), $.process.spawn, $.state.get, $.state.set, $.tool.register, $.ui.open (via openPane), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: blender-live.angle, blender-live.busy, blender-live.flashUntil, blender-live.frame, blender-live.frameStart, blender-live.isBandHidden, blender-live.isWire, blender-live.note, blender-live.queue, blender-live.revealStart, blender-live.spinUntil, blender-live.steps, blender-live.viewing",
+      "./register.tsx state reads: blender-live.angle, blender-live.busy, blender-live.flashUntil, blender-live.frame, blender-live.frameStart, blender-live.isBandHidden, blender-live.isWire, blender-live.note, blender-live.queue, blender-live.revealStart, blender-live.spinUntil, blender-live.steps, blender-live.viewing"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__blender-live__blender_step}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__blender-live__blender_configure}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__blender-live__blender_undo}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__blender-live__blender_reset}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__blender-live__blender_finish}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "bd1b7c43f483bb19"
+}

@@ -1,6 +1,6 @@
 {
  "slug": "funnyq-cc-plugins-runes",
- "generatedAt": "2026-10-07T15:22:20.233Z",
+ "generatedAt": "2026-10-10T14:44:41.920Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -62,6 +62,60 @@
     "event": "ui.render",
     "matcher": {
      "component": "AssistantMessage",
+     "surface": "terminal"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "surface": "terminal"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "answer"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "aborted"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "refusal"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "error"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "surface": "terminal"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "surface": "terminal"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolGroup",
      "surface": "terminal"
     }
    },
@@ -199,7 +253,7 @@
    {
     "name": "runes",
     "description": "Turn runes (UI mods) on or off",
-    "argumentHint": "[on|off|status|reload] or <clawd|transcript|prompt|reply|bash|read|edit|write|agent|skill|peer|minimap|teacher> [on|off]; bare toggles",
+    "argumentHint": "[on|off|status|reload] or <clawd|transcript|prompt|reply|bash|read|edit|write|agent|skill|peer|fold|minimap|teacher> [on|off]; bare toggles",
     "output": "Runes — the edit could not be read back (JSON Parse error: Unexpected identifier \"dev\"), so nothing written"
    }
   ],
@@ -213,13 +267,14 @@
    "$.env.get": 3,
    "$.command.register": 1,
    "$.fs.exists": 2,
-   "$.store.get": 26,
+   "$.store.get": 28,
    "$.fs.write": 2,
-   "$.store.delete": 26,
+   "$.store.delete": 28,
    "$.ui.invalidate": 4,
    "$.ui.resolve": 9,
    "$.state.get": 3,
-   "$.clock.every": 2,
+   "$.clock.every": 11,
+   "$.session.messages": 20,
    "$.process.run": 3
   },
   "timers": [
@@ -230,6 +285,42 @@
    {
     "kind": "every",
     "ms": 250
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 100
    }
   ],
   "sites": {
@@ -696,6 +787,12 @@
    "surface=terminal",
    "props.origin has {kind=composer}}",
    "ui.render{component=AssistantMessage, surface=terminal}",
+   "session.start{surface=terminal}",
+   "tool.call",
+   "turn.complete{reason=answer|aborted|refusal|error}",
+   "ui.render{component=ToolUse, surface=terminal}",
+   "ui.render{component=ToolResult, surface=terminal}",
+   "ui.render{component=ToolGroup, surface=terminal}",
    "ui.render{component=ToolUse",
    "surface=terminal",
    "props has {tool=Bash}}",
@@ -710,16 +807,7 @@
    "props has {tool=?}}",
    "turn.step",
    "ui.render{component=ToolUse",
-   "surface=terminal",
-   "props has {tool=Agent}}",
-   "ui.render{component=ToolUse",
-   "surface=terminal",
-   "props has {tool=Skill}}",
-   "ui.render{component=UserMessage",
-   "surface=terminal",
-   "props.origin has {kind=peer}}",
-   "session.start{isInteractive=true}",
-   "prompt.submit{origin … [+20 chars]"
+   "surface=… [+265 chars]"
   ],
   "calls": [
    "$.clock.after",
@@ -734,6 +822,7 @@
    "$.model.complete",
    "$.process.run",
    "$.session.id",
+   "$.session.messages (via refresh)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via load)",
@@ -747,12 +836,14 @@
   "stateReads": [
    "runes.frame",
    "runes.minimapRows",
-   "runes.minimapShown"
+   "runes.minimapShown",
+   "runes.shimmer"
   ],
   "stateWrites": [
    "runes.frame",
    "runes.minimapRows",
-   "runes.minimapShown"
+   "runes.minimapShown",
+   "runes.shimmer"
   ],
   "envReads": [
    "HOME",
@@ -769,7 +860,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: runes.frame, runes.minimapRows, runes.minimapShown"
+     "types ./types/index.d.ts declares state: runes.frame, runes.minimapRows, runes.minimapShown, runes.shimmer"
     ],
     "gatingHooks": []
    },
@@ -780,7 +871,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=runes}, session.start{isInteractive=true}, prompt.submit, turn.complete, classic.PermissionRequest, classic.PostToolUse, classic.PermissionDenied, classic.SubagentStart, classic.SubagentStop, ui.render{component=AbovePrompt}, ui.render{component=UserMessage, surface=terminal, props.origin has {kind=composer}}, ui.render{component=AssistantMessage, surface=terminal}, ui.render{component=ToolUse, surface=terminal, props has {tool=Bash}}, ui.render{component=ToolUse, surface=terminal, props has {tool=Read}}, ui.render{component=ToolResult, surface=terminal, props has {tool=?}}, ui.render{component=ToolUse, surface=terminal, props has {tool=?}}, turn.step, ui.render{component=ToolUse, surface=terminal, props has {tool=Agent}}, ui.render{component=ToolUse, surface=terminal, props has {tool=Skill}}, ui.render{component=UserMessage, surface=terminal, props.origin has {kind=peer}}, session.start{isInteractive=true}, prompt.submit{origin … [+20 chars]",
+      "./register.tsx hooks: session.start, command.run{command=runes}, session.start{isInteractive=true}, prompt.submit, turn.complete, classic.PermissionRequest, classic.PostToolUse, classic.PermissionDenied, classic.SubagentStart, classic.SubagentStop, ui.render{component=AbovePrompt}, ui.render{component=UserMessage, surface=terminal, props.origin has {kind=composer}}, ui.render{component=AssistantMessage, surface=terminal}, session.start{surface=terminal}, tool.call, turn.complete{reason=answer|aborted|refusal|error}, ui.render{component=ToolUse, surface=terminal}, ui.render{component=ToolResult, surface=terminal}, ui.render{component=ToolGroup, surface=terminal}, ui.render{component=ToolUse, surface=terminal, props has {tool=Bash}}, ui.render{component=ToolUse, surface=terminal, props has {tool=Read}}, ui.render{component=ToolResult, surface=terminal, props has {tool=?}}, ui.render{component=ToolUse, surface=terminal, props has {tool=?}}, turn.step, ui.render{component=ToolUse, surface=… [+265 chars]",
       "./register.tsx answers its own command: command.run{command=runes}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
@@ -788,12 +879,13 @@
       "./register.tsx gating hook without .catch: classic.PermissionDenied",
       "./register.tsx gating hook without .catch: classic.SubagentStart",
       "./register.tsx gating hook without .catch: classic.SubagentStop",
+      "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: prompt.submit{origin has {kind=composer}}",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.command.register, $.env.get, $.fs.exists, $.fs.read, $.fs.stat (via rereadIfChanged), $.fs.write, $.http.fetch, $.model.complete, $.process.run, $.session.id, $.state.get, $.state.set, $.store.delete (via load), $.store.get (via load), $.ui.blit, $.ui.invalidate, $.ui.resolve, $.ui.scroll, $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.command.register, $.env.get, $.fs.exists, $.fs.read, $.fs.stat (via rereadIfChanged), $.fs.write, $.http.fetch, $.model.complete, $.process.run, $.session.id, $.session.messages (via refresh), $.state.get, $.state.set, $.store.delete (via load), $.store.get (via load), $.ui.blit, $.ui.invalidate, $.ui.resolve, $.ui.scroll, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, TYPESAFE_API_KEY",
-      "./register.tsx state writes: runes.frame, runes.minimapRows, runes.minimapShown",
-      "./register.tsx state reads: runes.frame, runes.minimapRows, runes.minimapShown"
+      "./register.tsx state writes: runes.frame, runes.minimapRows, runes.minimapShown, runes.shimmer",
+      "./register.tsx state reads: runes.frame, runes.minimapRows, runes.minimapShown, runes.shimmer"
      ],
      "gatingHooks": [
       {
@@ -834,14 +926,21 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit{origin has {kind=composer}}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "57fb7658405ccc71"
+ "sourceHash": "d7ba960e3c3a4b5b"
 }

@@ -1,0 +1,356 @@
+{
+ "slug": "luwux-keepwarm",
+ "generatedAt": "2026-10-10T14:45:27.113Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__keepwarm__keepwarm"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "keepwarm"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "keepwarm"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "keepwarm",
+    "description": "缓存保温与空闲提醒：on 8h | off | check | panel | alert on/off | status | help（全部用法）",
+    "argumentHint": "[on 8h | off | check | panel | alert on|off | status | help]",
+    "immediate": true,
+    "output": "app（项目策略 ask）\n\n缓存　热，还剩 1h00m · 上下文 97K / 200K · claude-opus-5-5\n保温　关\n提醒　不提醒（上下文不到 250K，或缓存已冷）\n价格　过期后重写一次约 $0.78，保温约 $0.02/小时\n记账　本会话冷写入 0 次 $0.00 · 本次运行 ping 0 次 $0.00\n今天　keepwarm 共花 $0.00：自己主动的 $0.00（上限 $3），你要求的 $0.00\n报警　关\n设置　空闲检查 notify · 提醒门槛 250K · ping 上限 15 次/12 小时 · 冷发送只记账 · 项目策略 ask · 手机推送关\n\n常用　/keepwarm on 8h · off · check · alert on · log · help"
+   }
+  ],
+  "tools": [
+   {
+    "name": "keepwarm",
+    "description": "Keeps this session's 1-hour prompt cache warm while the user is away: 55 minutes after the last request it sends a tool-less fork of this conversation that is billed at the cache-read rate and adds nothing to the transcript, instead of the user paying a full cache re-write when they come back (e.g. 400K tokens on Opus 5.5: ~$0.10/h warm vs ~$3.20 cold). Call action \"start\" when you end a turn with a large context (100K+ tokens) and the user will plausibly return to THIS conversation within the next hours: work is mid-way, you are waiting on their review or answer, or they said they will be back. Pick hours to cover that gap (default 3, max 12). Call \"stop\" when the work is finished, the user is done for the day, or you are about to suggest /clear or a new session. A running window re-arms itself after every turn, so do not call start again each turn; call \"status\" if unsure. The user's /keepwarm command overrides you: if they turned it off, start is refused. Without a window, an idle check at 50 minutes asks the user whether to compact. If something should be checked while the user is away (a training job, a deploy, a service), pass wake_prompt: at each wake the fork first decides, knowing the time, to skip silently, record a one-line note in this conversation, run a real turn with tools (only then does the conversation grow), or stop."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.id": 1,
+   "$.session.cwd": 1,
+   "$.clock.now": 8,
+   "$.store.get": 10,
+   "$.state.get": 6,
+   "$.store.keys": 1,
+   "$.process.run": 1,
+   "$.clock.every": 2,
+   "$.session.usage": 2,
+   "$.session.model": 1,
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.ui.status": 2,
+   "$.store.set": 2,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 10000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "keepwarm": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "缓存还剩 1h00m"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         "没在保温"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "上下文 ",
+         "97K",
+         " · 过期重写 ",
+         "$0.78",
+         " · 保温 ",
+         "$0.02",
+         "/h"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "compact",
+           "hotkey": "1",
+           "label": "compact",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "warm8",
+           "hotkey": "3",
+           "label": "保温 8h",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "hotkey": "0",
+           "label": "收起",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "keepwarm"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(sh -c cat \"$HOME/.claude/keepwarm-bus/$1\" 2>/dev/null kw leave-req) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/keepwarm → app（项目策略 ask）\n\n缓存　热，还剩 1h00m · 上下文 97K / 200K · claude-opus-5-5\n保温　关\n提醒　不提醒（上下文不…"
+  ],
+  "console": [],
+  "status": "缓存 1h00m",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "classic.SessionStart",
+   "tool.call{tool=mcp__keepwarm__keepwarm}",
+   "command.run{command=keepwarm}",
+   "prompt.submit",
+   "turn.step",
+   "turn.complete",
+   "session.compact",
+   "ui.close",
+   "ui.render{component=Pane, requestId=keepwarm}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.after (via arm",
+   "expireAdvice",
+   "ping)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.command.run (via auditedCommand)",
+   "$.model.fork (via auditedFork)",
+   "$.process.run (via auditedRun",
+   "busAll",
+   "busGet",
+   "desktopSession",
+   "idleSeconds",
+   "ntfyConfig",
+   "readReplies)",
+   "$.process.spawn (via caffeinate)",
+   "$.prompt.submit (via auditedSubmit)",
+   "$.session.append (via wakeDecision)",
+   "$.session.compact (via auditedCompact)",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.model",
+   "$.session.surfaces (via notify)",
+   "$.session.usage",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.keys (via loadRuntime)",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.copy (via apply)",
+   "$.ui.log",
+   "$.ui.open (via openPanel)",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast (via apply",
+   "checkBudget",
+   "checkMiss",
+   "lapsedWindow",
+   "notify",
+   "stop",
+   "wakeDecision)"
+  ],
+  "stateReads": [
+   "keepwarm.advice",
+   "keepwarm.leaveAll",
+   "keepwarm.panel"
+  ],
+  "stateWrites": [
+   "keepwarm.advice",
+   "keepwarm.leaveAll",
+   "keepwarm.panel"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/luwux-keepwarm/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/luwux-keepwarm/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: keepwarm.advice, keepwarm.leaveAll, keepwarm.panel"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/luwux-keepwarm/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, classic.SessionStart, tool.call{tool=mcp__keepwarm__keepwarm}, command.run{command=keepwarm}, prompt.submit, turn.step, turn.complete, session.compact, ui.close, ui.render{component=Pane, requestId=keepwarm}, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=keepwarm}",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__keepwarm__keepwarm}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.clock.after (via arm, expireAdvice, ping), $.clock.every, $.clock.now, $.command.register, $.command.run (via auditedCommand), $.model.fork (via auditedFork), $.process.run (via auditedRun, busAll, busGet, desktopSession, idleSeconds, ntfyConfig, readReplies), $.process.spawn (via caffeinate), $.prompt.submit (via auditedSubmit), $.session.append (via wakeDecision), $.session.compact (via auditedCompact), $.session.cwd, $.session.id, $.session.model, $.session.surfaces (via notify), $.session.usage, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys (via loadRuntime), $.store.set, $.tool.register, $.ui.close, $.ui.copy (via apply), $.ui.log, $.ui.open (via openPanel), $.ui.resolve, $.ui.status, $.ui.toast (via apply, checkBudget, checkMiss, lapsedWindow, notify, stop, wakeDecision)",
+      "./register.tsx state writes: keepwarm.advice, keepwarm.leaveAll, keepwarm.panel",
+      "./register.tsx state reads: keepwarm.advice, keepwarm.leaveAll, keepwarm.panel"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__keepwarm__keepwarm}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "ed8475f503ed7c55"
+}

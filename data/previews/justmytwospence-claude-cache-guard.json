@@ -1,6 +1,6 @@
 {
  "slug": "justmytwospence-claude-cache-guard",
- "generatedAt": "2026-10-08T15:54:15.525Z",
+ "generatedAt": "2026-10-10T14:45:21.152Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -23,6 +23,18 @@
     "event": "turn.step"
    },
    {
+    "event": "tool.call"
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "tool-result"
+    }
+   },
+   {
+    "event": "session.compact"
+   },
+   {
     "event": "prompt.submit"
    },
    {
@@ -35,10 +47,10 @@
   "commands": [
    {
     "name": "cache-guard",
-    "description": "cache-guard: prompt cache status, warm (refresh now), on, or off (this session)",
-    "argumentHint": "[status|warm|on|off]",
+    "description": "cache-guard: prompt cache status, warm (refresh now), on/off (this session), compact [focus] (with Jev), jev (set up or check Jev)",
+    "argumentHint": "[status|warm|on|off|compact [focus]|jev]",
     "immediate": true,
-    "output": "No cached request in this session yet (or it was just compacted).\nKeep-warm: idle (no cached request yet).\nWarning: on, from $0.50 at API prices."
+    "output": "No cached request in this session yet (or it was just compacted).\nKeep-warm: idle (no cached request yet).\nWarning: on, from $0.50 at API prices.\nJev: not set up (no TypeSafe API key (the plugin option typesafe_api_key, or TYPESAFE_API_KEY in the environment)); /cache-guard jev."
    }
   ],
   "tools": [],
@@ -48,9 +60,9 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 19,
-   "$.session.root": 3,
-   "$.fs.read": 8,
+   "$.env.get": 22,
+   "$.session.root": 4,
+   "$.fs.read": 12,
    "$.command.register": 1,
    "$.session.id": 3,
    "$.process.run": 3,
@@ -90,6 +102,9 @@
    "turn.start",
    "turn.complete",
    "turn.step",
+   "tool.call",
+   "session.append{door=tool-result}",
+   "session.compact",
    "prompt.submit",
    "command.run{command=?}"
   ],
@@ -97,28 +112,37 @@
    "$.clock.after",
    "$.clock.now",
    "$.command.register",
-   "$.command.run (via startFresh)",
+   "$.command.run (via runCompaction",
+   "runJevCompaction",
+   "startFresh)",
    "$.env.get (via configuredTtl",
    "loadSettings",
+   "outputPath",
    "readTranscript",
-   "reportHerdr)",
-   "$.fs.read (via loadSettings)",
+   "refreshJev",
+   "reportHerdr",
+   "userSettingsFile)",
+   "$.fs.read (via loadSettings",
+   "readPersisted",
+   "saveUserSettings)",
+   "$.fs.write",
+   "$.http.fetch (via askJev)",
    "$.model.fork (via refresh)",
    "$.process.run (via readTranscript",
    "reportHerdr)",
    "$.prompt.fill",
    "$.prompt.submit (via compactThenSend",
+   "compactWithJevThenSend",
    "startFresh)",
-   "$.session.compact (via compactThenSend)",
-   "$.session.id (via readTranscript)",
+   "$.session.id (via outputPath",
+   "readTranscript)",
+   "$.session.messages (via runCompaction)",
    "$.session.model",
    "$.session.root (via loadSettings",
    "readTranscript)",
    "$.session.usage (via configuredTtl)",
    "$.ui.ask",
-   "$.ui.log (via compactThenSend",
-   "refresh",
-   "startFresh)"
+   "$.ui.log"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -135,6 +159,7 @@
    "HERDR_ENV",
    "HERDR_PANE_ID",
    "HOME",
+   "TYPESAFE_API_KEY",
    "XDG_CONFIG_HOME"
   ],
   "raw": {
@@ -156,13 +181,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.end, classic.SessionStart, turn.start, turn.complete, turn.step, prompt.submit, command.run{command=?}",
+      "./register.ts hooks: session.start, session.end, classic.SessionStart, turn.start, turn.complete, turn.step, tool.call, session.append{door=tool-result}, session.compact, prompt.submit, command.run{command=?}",
       "./register.ts gating hook without .catch: classic.SessionStart",
+      "./register.ts gating hook with .catch: tool.call",
+      "./register.ts gating hook with .catch: session.append{door=tool-result}",
+      "./register.ts gating hook with .catch: session.compact",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: command.run{command=?}",
-      "./register.ts calls: $.clock.after, $.clock.now, $.command.register, $.command.run (via startFresh), $.env.get (via configuredTtl, loadSettings, readTranscript, reportHerdr), $.fs.read (via loadSettings), $.model.fork (via refresh), $.process.run (via readTranscript, reportHerdr), $.prompt.fill, $.prompt.submit (via compactThenSend, startFresh), $.session.compact (via compactThenSend), $.session.id (via readTranscript), $.session.model, $.session.root (via loadSettings, readTranscript), $.session.usage (via configuredTtl), $.ui.ask, $.ui.log (via compactThenSend, refresh, startFresh)",
+      "./register.ts calls: $.clock.after, $.clock.now, $.command.register, $.command.run (via runCompaction, runJevCompaction, startFresh), $.env.get (via configuredTtl, loadSettings, outputPath, readTranscript, refreshJev, reportHerdr, userSettingsFile), $.fs.read (via loadSettings, readPersisted, saveUserSettings), $.fs.write, $.http.fetch (via askJev), $.model.fork (via refresh), $.process.run (via readTranscript, reportHerdr), $.prompt.fill, $.prompt.submit (via compactThenSend, compactWithJevThenSend, startFresh), $.session.id (via outputPath, readTranscript), $.session.messages (via runCompaction), $.session.model, $.session.root (via loadSettings, readTranscript), $.session.usage (via configuredTtl), $.ui.ask, $.ui.log",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, CLAUDE_CODE_PROMPT_CACHE_TTL, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, CLAUDE_CONFIG_DIR, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HERDR_ENV, HERDR_PANE_ID, HOME, XDG_CONFIG_HOME"
+      "./register.ts env reads: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, CLAUDE_CODE_PROMPT_CACHE_TTL, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, CLAUDE_CONFIG_DIR, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HERDR_ENV, HERDR_PANE_ID, HOME, TYPESAFE_API_KEY, XDG_CONFIG_HOME"
      ],
      "gatingHooks": [
       {
@@ -170,6 +198,24 @@
        "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.append",
+       "hook": "session.append{door=tool-result}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
       },
       {
        "module": "./register.ts",
@@ -185,8 +231,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "447a983ae6361c57"
+ "sourceHash": "1d5145df80640ad"
 }

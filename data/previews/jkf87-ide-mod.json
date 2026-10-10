@@ -1,6 +1,6 @@
 {
  "slug": "jkf87-ide-mod",
- "generatedAt": "2026-10-09T15:31:55.597Z",
+ "generatedAt": "2026-10-10T14:44:23.188Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -108,12 +108,12 @@
     "name": "handoff",
     "description": "이 세션을 다른 에이전트 세션에 넘깁니다 (세션 ID·대화 기록·요청 목록)",
     "argumentHint": "[세션 이름 또는 ref] [메모]",
-    "output": "[핸드오프] Claude Code 세션을 이어받아 주세요.\n\n세션 ID: preview-session\n작업 폴더: /work/app\n대화 기록: (찾지 못함)\n이어서 열기: cd /work/app && claude --resume preview-session --fork-session\n\n사용자가 보낸 요청 1개 (오래된 것부터):\n1. [15:31 · 진행 중] fix the failing auth test and add an audit log call\n\n에이전트가 마지막에 하던 일: Done. I made `refresh` reject expired claims, added an audit call, and created `src/audit.ts`. One test still fails (`r…\n\n먼저 대화 기록 파일을 읽어 맥락을 잡고, 이어서 할 일을 정리해 알려 주세요.\n\n(/ide 창의 핸드오프 화면에서 보낼 세션을 고르거나 c로 복사하세요. /handoff <세션 이름> [메모]로 바로 보낼 수도 있어요.)"
+    "output": "[핸드오프] Claude Code 세션을 이어받아 주세요.\n\n세션 ID: preview-session\n작업 폴더: /work/app\n대화 기록: (찾지 못함)\n이어서 열기: cd /work/app && claude --resume preview-session --fork-session\n\n사용자가 보낸 요청 1개 (오래된 것부터):\n1. [14:44 · 진행 중] fix the failing auth test and add an audit log call\n\n에이전트가 마지막에 하던 일: Done. I made `refresh` reject expired claims, added an audit call, and created `src/audit.ts`. One test still fails (`r…\n\n먼저 대화 기록 파일을 읽어 맥락을 잡고, 이어서 할 일을 정리해 알려 주세요.\n\n(/ide 창의 핸드오프 화면에서 보낼 세션을 고르거나 c로 복사하세요. /handoff <세션 이름> [메모]로 바로 보낼 수도 있어요.)"
    },
    {
     "name": "limits",
-    "description": "입력창 위 사용 한도 띠 (Claude·Codex·Antigravity)",
-    "argumentHint": "[full|compact|off|refresh]",
+    "description": "입력창 위 사용 한도 띠 (세션·Claude·Codex·Antigravity)",
+    "argumentHint": "[line|rows|off|refresh]",
     "output": "이 세션: 컨텍스트 49%\nClaude: 5시간 31% (곧 리셋) [사용량 API 연결 실패]\nCodex: 받지 못함\nAntigravity: 받지 못함 (agy 미설치 또는 로그인 전)\n사용법: /limits [line|rows|off|refresh]"
    },
    {
@@ -137,24 +137,26 @@
   "apiCalls": {
    "$.command.register": 6,
    "$.clock.every": 4,
-   "$.session.id": 5,
-   "$.state.get": 90,
+   "$.session.id": 6,
+   "$.state.get": 93,
    "$.store.get": 2,
-   "$.store.keys": 1,
-   "$.state.set": 22,
+   "$.session.root": 4,
+   "$.env.get": 9,
+   "$.store.keys": 2,
+   "$.fs.exists": 3,
+   "$.process.run": 3,
+   "$.state.set": 23,
    "$.ui.open": 3,
    "$.store.set": 1,
    "$.fs.stat": 3,
    "$.session.cwd": 3,
-   "$.session.root": 2,
-   "$.env.get": 4,
-   "$.fs.exists": 2,
    "$.fs.list": 2,
    "$.tool.call": 1,
    "$.session.usage": 1,
    "$.session.authorize": 1,
    "$.http.fetch": 1,
-   "$.process.run": 2,
+   "$.fs.read": 1,
+   "$.fs.write": 1,
    "$.clock.after": 2,
    "$.ui.resolve": 8
   },
@@ -763,6 +765,7 @@
    }
   },
   "script": [
+   "$.process.run(node /plugins/ide-mod/bin/prompts.mjs --json --only codex --cwd /work/app 100) → exit 0",
    "$.ui.open(ide-mod)",
    "session.start",
    "turn.start: hook threw undefined is not an object (evaluating 'text.replace')",
@@ -784,7 +787,8 @@
    "/handoff → [핸드오프] Claude Code 세션을 이어받아 주세요.\n\n세션 ID: preview-session\n작업 폴더: /work/app\n대화 기록:…",
    "$.http.fetch(https://api.anthropic.com/api/oauth/usage) → blocked in preview",
    "$.process.run(node /plugins/ide-mod/bin/codex-limits.mjs) → exit 0",
-   "$.process.run(/bin/sh -c for p in \"$HOME/.local/bin/agy\" /opt/homebrew/bin/agy /usr/local/bin/…) → exit 0",
+   "$.process.run(/bin/sh /plugins/ide-mod/bin/agy-usage.sh 60) → exit 0",
+   "$.fs.write(/Users/dev/.cache/ide-mod/limits.json)",
    "/limits → 이 세션: 컨텍스트 49%\nClaude: 5시간 31% (곧 리셋) [사용량 API 연결 실패]\nCodex: 받지 못함\nAntigravity: …",
    "/style-gate → 자동 검사 켜짐. 아직 검사한 원고가 없어요. 사용법: /style-gate <파일> 또는 on/off"
   ],
@@ -816,24 +820,34 @@
   ],
   "calls": [
    "$.agent.list (via reconcile)",
-   "$.clock.after (via drawLimits",
+   "$.clock.after (via drawExplorer",
+   "drawLimits",
    "drawSys",
    "loadHwp)",
    "$.clock.every (via startTimers)",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via resolvePath",
+   "$.env.get (via agyPrompts",
+   "loadPastRequests",
+   "resolvePath",
+   "sessionInfo",
+   "shareLimits)",
+   "$.fs.exists (via agyPrompts",
+   "loadPastRequests",
    "sessionInfo)",
-   "$.fs.exists (via sessionInfo)",
    "$.fs.list (via buildTree",
    "sessionInfo)",
-   "$.fs.read (via pngData",
+   "$.fs.read (via agyPrompts",
+   "pngData",
    "readLines",
-   "runGate)",
+   "runGate",
+   "shareLimits)",
    "$.fs.stat",
+   "$.fs.write (via shareLimits)",
    "$.http.fetch (via refreshLimits)",
    "$.model.complete (via recapStale)",
-   "$.process.run (via openHwpPreview",
+   "$.process.run (via codexPrompts",
+   "openHwpPreview",
    "refreshLimits",
    "refreshSys",
    "runRhwp)",
@@ -843,22 +857,17 @@
    "openFile",
    "openIde)",
    "$.session.id (via drawBoard",
+   "loadPastRequests",
    "loadRequests",
    "saveRequests",
    "sessionInfo)",
-   "$.session.root (via sessionInfo)",
+   "$.session.root (via loadPastRequests",
+   "saveRequests",
+   "sessionInfo)",
    "$.session.send (via sendHandoff)",
    "$.session.usage (via notePerf",
    "refreshLimits)",
-   "$.state.get",
-   "$.state.set",
-   "$.store.delete (via loadRequests)",
-   "$.store.get (via isAutoOpenOn",
-   "loadRequests)",
-   "$.store.keys (via loadRequests)",
-   "$.store.set",
-   "$.tool.call (via loadPeers)",
-   "$.ui.copy (via drawExplore… [+125 chars]"
+   "$.… [+367 chars]"
   ],
   "stateReads": [
    "ide-mod.active",
@@ -882,6 +891,7 @@
    "ide-mod.limitsLayout",
    "ide-mod.mode",
    "ide-mod.offsets",
+   "ide-mod.pastRequests",
    "ide-mod.peers",
    "ide-mod.perf",
    "ide-mod.requestOffset",
@@ -920,6 +930,7 @@
    "ide-mod.limitsLayout",
    "ide-mod.mode",
    "ide-mod.offsets",
+   "ide-mod.pastRequests",
    "ide-mod.peers",
    "ide-mod.perf",
    "ide-mod.requestOffset",
@@ -938,7 +949,8 @@
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
-   "HOME"
+   "HOME",
+   "XDG_CACHE_HOME"
   ],
   "raw": {
    "success": true,
@@ -951,7 +963,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ide-mod.root, ide-mod.expanded, ide-mod.tabs, ide-mod.active, ide-mod.treeOffset, ide-mod.offsets, ide-mod.mode, ide-mod.rev, ide-mod.touched, ide-mod.isTreeHidden, ide-mod.agents, ide-mod.tick, ide-mod.isBoardFolded, ide-mod.hideDone, ide-mod.isRecapOn, ide-mod.leftMode, ide-mod.requests, ide-mod.selectedRequest, ide-mod.requestOffset, ide-mod.requestView, ide-mod.sys, ide-mod.showProcs, ide-mod.limits, ide-mod.limitsLayout, ide-mod.perf, ide-mod.autoOpened, ide-mod.peers, ide-mod.selfName, ide-mod.handoffSent, ide-mod.hwpView, ide-mod.hwpPages, ide-mod.isLecture, ide-mod.caption, ide-mod.gate, ide-mod.isGateOn, ide-mod.isGateOpen"
+     "types ./types/index.d.ts declares state: ide-mod.root, ide-mod.expanded, ide-mod.tabs, ide-mod.active, ide-mod.treeOffset, ide-mod.offsets, ide-mod.mode, ide-mod.rev, ide-mod.touched, ide-mod.isTreeHidden, ide-mod.agents, ide-mod.tick, ide-mod.isBoardFolded, ide-mod.hideDone, ide-mod.isRecapOn, ide-mod.leftMode, ide-mod.requests, ide-mod.pastRequests, ide-mod.selectedRequest, ide-mod.requestOffset, ide-mod.requestView, ide-mod.sys, ide-mod.showProcs, ide-mod.limits, ide-mod.limitsLayout, ide-mod.perf, ide-mod.autoOpened, ide-mod.peers, ide-mod.selfName, ide-mod.handoffSent, ide-mod.hwpView, ide-mod.hwpPages, ide-mod.isLecture, ide-mod.caption, ide-mod.gate, ide-mod.isGateOn, ide-mod.isGateOpen"
     ],
     "gatingHooks": []
    },
@@ -973,11 +985,11 @@
       "./register.tsx gating hook with .catch: agent.spawn",
       "./register.tsx gating hook with .catch: ui.scroll{component=Pane, requestId=ide-mod}",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via reconcile), $.clock.after (via drawLimits, drawSys, loadHwp), $.clock.every (via startTimers), $.clock.now, $.command.register, $.env.get (via resolvePath, sessionInfo), $.fs.exists (via sessionInfo), $.fs.list (via buildTree, sessionInfo), $.fs.read (via pngData, readLines, runGate), $.fs.stat, $.http.fetch (via refreshLimits), $.model.complete (via recapStale), $.process.run (via openHwpPreview, refreshLimits, refreshSys, runRhwp), $.prompt.fill (via drawExplorer), $.session.authorize (via refreshLimits), $.session.cwd (via drawExplorer, openFile, openIde), $.session.id (via drawBoard, loadRequests, saveRequests, sessionInfo), $.session.root (via sessionInfo), $.session.send (via sendHandoff), $.session.usage (via notePerf, refreshLimits), $.state.get, $.state.set, $.store.delete (via loadRequests), $.store.get (via isAutoOpenOn, loadRequests), $.store.keys (via loadRequests), $.store.set, $.tool.call (via loadPeers), $.ui.copy (via drawExplore… [+125 chars]",
+      "./register.tsx calls: $.agent.list (via reconcile), $.clock.after (via drawExplorer, drawLimits, drawSys, loadHwp), $.clock.every (via startTimers), $.clock.now, $.command.register, $.env.get (via agyPrompts, loadPastRequests, resolvePath, sessionInfo, shareLimits), $.fs.exists (via agyPrompts, loadPastRequests, sessionInfo), $.fs.list (via buildTree, sessionInfo), $.fs.read (via agyPrompts, pngData, readLines, runGate, shareLimits), $.fs.stat, $.fs.write (via shareLimits), $.http.fetch (via refreshLimits), $.model.complete (via recapStale), $.process.run (via codexPrompts, openHwpPreview, refreshLimits, refreshSys, runRhwp), $.prompt.fill (via drawExplorer), $.session.authorize (via refreshLimits), $.session.cwd (via drawExplorer, openFile, openIde), $.session.id (via drawBoard, loadPastRequests, loadRequests, saveRequests, sessionInfo), $.session.root (via loadPastRequests, saveRequests, sessionInfo), $.session.send (via sendHandoff), $.session.usage (via notePerf, refreshLimits), $.… [+367 chars]",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: ide-mod.active, ide-mod.agents, ide-mod.autoOpened, ide-mod.caption, ide-mod.expanded, ide-mod.gate, ide-mod.handoffSent, ide-mod.hideDone, ide-mod.hwpPages, ide-mod.hwpView, ide-mod.isBoardFolded, ide-mod.isGateOn, ide-mod.isGateOpen, ide-mod.isLecture, ide-mod.isRecapOn, ide-mod.isTreeHidden, ide-mod.leftMode, ide-mod.limits, ide-mod.limitsLayout, ide-mod.mode, ide-mod.offsets, ide-mod.peers, ide-mod.perf, ide-mod.requestOffset, ide-mod.requestView, ide-mod.requests, ide-mod.rev, ide-mod.root, ide-mod.selectedRequest, ide-mod.selfName, ide-mod.showProcs, ide-mod.sys, ide-mod.tabs, ide-mod.tick, ide-mod.touched, ide-mod.treeOffset",
-      "./register.tsx state reads: ide-mod.active, ide-mod.agents, ide-mod.autoOpened, ide-mod.caption, ide-mod.expanded, ide-mod.gate, ide-mod.handoffSent, ide-mod.hideDone, ide-mod.hwpPages, ide-mod.hwpView, ide-mod.isBoardFolded, ide-mod.isGateOn, ide-mod.isGateOpen, ide-mod.isLecture, ide-mod.isRecapOn, ide-mod.isTreeHidden, ide-mod.leftMode, ide-mod.limits, ide-mod.limitsLayout, ide-mod.mode, ide-mod.offsets, ide-mod.peers, ide-mod.perf, ide-mod.requestOffset, ide-mod.requestView, ide-mod.requests, ide-mod.rev, ide-mod.root, ide-mod.selectedRequest, ide-mod.selfName, ide-mod.showProcs, ide-mod.sys, ide-mod.tabs, ide-mod.tick, ide-mod.touched, ide-mod.treeOffset"
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, XDG_CACHE_HOME",
+      "./register.tsx state writes: ide-mod.active, ide-mod.agents, ide-mod.autoOpened, ide-mod.caption, ide-mod.expanded, ide-mod.gate, ide-mod.handoffSent, ide-mod.hideDone, ide-mod.hwpPages, ide-mod.hwpView, ide-mod.isBoardFolded, ide-mod.isGateOn, ide-mod.isGateOpen, ide-mod.isLecture, ide-mod.isRecapOn, ide-mod.isTreeHidden, ide-mod.leftMode, ide-mod.limits, ide-mod.limitsLayout, ide-mod.mode, ide-mod.offsets, ide-mod.pastRequests, ide-mod.peers, ide-mod.perf, ide-mod.requestOffset, ide-mod.requestView, ide-mod.requests, ide-mod.rev, ide-mod.root, ide-mod.selectedRequest, ide-mod.selfName, ide-mod.showProcs, ide-mod.sys, ide-mod.tabs, ide-mod.tick, ide-mod.touched, ide-mod.treeOffset",
+      "./register.tsx state reads: ide-mod.active, ide-mod.agents, ide-mod.autoOpened, ide-mod.caption, ide-mod.expanded, ide-mod.gate, ide-mod.handoffSent, ide-mod.hideDone, ide-mod.hwpPages, ide-mod.hwpView, ide-mod.isBoardFolded, ide-mod.isGateOn, ide-mod.isGateOpen, ide-mod.isLecture, ide-mod.isRecapOn, ide-mod.isTreeHidden, ide-mod.leftMode, ide-mod.limits, ide-mod.limitsLayout, ide-mod.mode, ide-mod.offsets, ide-mod.pastRequests, ide-mod.peers, ide-mod.perf, ide-mod.requestOffset, ide-mod.requestView, ide-mod.requests, ide-mod.rev, ide-mod.root, ide-mod.selectedRequest, ide-mod.selfName, ide-mod.showProcs, ide-mod.sys, ide-mod.tabs, ide-mod.tick, ide-mod.touched, ide-mod.treeOffset"
      ],
      "gatingHooks": [
       {
@@ -1016,5 +1028,5 @@
    "advice": []
   }
  },
- "sourceHash": "d1dec53ba6aaed4f"
+ "sourceHash": "30ab6cb5a3390470"
 }

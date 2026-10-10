@@ -1,0 +1,8 @@
+{
+ "slug": "bhargava-gumpula-claude-mods-chat-roster",
+ "files": {
+  "hooks/register.ts": "import type { EngineInterface, Register } from 'claude-code'\n\n// The org chart lives in its own floating Mac window (dashboard/OrgChart.app), built on\n// first use and started once: a window already running from any copy of the mod is kept.\nconst openDashboard = async ($: EngineInterface) => {\n  const running = await $.process.run(['pgrep', '-f', 'OrgChart.app/Contents/MacOS/OrgChart'])\n  if (running.exitCode === 0) return\n  const dir = `${$.plugin.root}/dashboard`\n  if (!(await $.fs.exists(`${dir}/OrgChart.app/Contents/MacOS/OrgChart`))) {\n    await $.process.run(['sh', `${dir}/build.sh`], { timeoutMs: 180_000 })\n  }\n  await $.process.run(['open', '-g', `${dir}/OrgChart.app`])\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const ran = await next(e)\n    await openDashboard($).catch(() => {})\n    return ran\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"chat-roster\",\n  \"version\": \"0.2.0\",\n  \"description\": \"A floating Mac window with your Claude chats as an org chart of dots (filled = working, hover for the title)\"\n}"
+ }
+}

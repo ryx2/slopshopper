@@ -1,6 +1,6 @@
 {
  "slug": "pkkid-claude-mods-aitools",
- "generatedAt": "2026-10-07T15:23:45.713Z",
+ "generatedAt": "2026-10-10T14:45:41.462Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -44,6 +44,12 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "askme"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -75,6 +81,19 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "worktrees"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "worktrees"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -96,6 +115,12 @@
    },
    {
     "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "AskUserQuestion"
+    }
    },
    {
     "event": "tool.call",
@@ -165,9 +190,19 @@
     "output": "Subagents open: Default, subagents run as usual."
    },
    {
+    "name": "worktrees",
+    "description": "Open or close the Worktrees pane",
+    "output": "Worktrees open."
+   },
+   {
     "name": "handoff",
     "description": "Print a handoff brief for a fresh session and copy it",
     "output": "Handoff brief\n\nOK"
+   },
+   {
+    "name": "askme",
+    "description": "Ask the questions from the last answer as pop-up choices with a recommendation",
+    "argumentHint": "[note]"
    }
   ],
   "tools": [
@@ -184,6 +219,10 @@
    {
     "id": "subagents",
     "title": "Subagents"
+   },
+   {
+    "id": "worktrees",
+    "title": "Worktrees"
    }
   ],
   "toasts": [
@@ -194,24 +233,26 @@
   "rewrites": [],
   "apiCalls": {
    "$.store.get": 10,
-   "$.state.get": 104,
-   "$.state.set": 25,
+   "$.state.get": 123,
+   "$.state.set": 32,
    "$.session.usage": 3,
    "$.session.id": 1,
-   "$.clock.every": 1,
-   "$.command.register": 5,
+   "$.clock.every": 2,
+   "$.command.register": 7,
    "$.ui.status": 4,
+   "$.session.messages": 2,
    "$.session.surfaces": 12,
-   "$.clock.after": 2,
+   "$.clock.after": 3,
    "$.store.set": 5,
-   "$.clock.now": 2,
+   "$.clock.now": 3,
    "$.tool.register": 2,
-   "$.session.messages": 1,
-   "$.ui.open": 1,
+   "$.ui.open": 2,
+   "$.session.cwd": 1,
+   "$.process.run": 2,
    "$.model.fork": 1,
    "$.ui.copy": 1,
    "$.ui.toast": 1,
-   "$.ui.resolve": 5
+   "$.ui.resolve": 6
   },
   "timers": [
    {
@@ -221,6 +262,14 @@
    {
     "kind": "after",
     "ms": 0
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   },
+   {
+    "kind": "every",
+    "ms": 10000
    },
    {
     "kind": "after",
@@ -485,6 +534,17 @@
                {
                 "type": "Button",
                 "props": {
+                 "key": "team-8",
+                 "label": "8",
+                 "plain": true,
+                 "dimColor": true,
+                 "onPress": "[fn]"
+                },
+                "children": []
+               },
+               {
+                "type": "Button",
+                "props": {
                  "key": "team-10",
                  "label": "10",
                  "plain": true,
@@ -498,17 +558,6 @@
                 "props": {
                  "key": "team-20",
                  "label": "20",
-                 "plain": true,
-                 "dimColor": true,
-                 "onPress": "[fn]"
-                },
-                "children": []
-               },
-               {
-                "type": "Button",
-                "props": {
-                 "key": "team-30",
-                 "label": "30",
                  "plain": true,
                  "dimColor": true,
                  "onPress": "[fn]"
@@ -582,6 +631,45 @@
      },
      "title": "Subagents"
     },
+    "worktrees": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "flexShrink": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "error",
+             "dimColor": true
+            },
+            "children": [
+             "Git didn't list any worktrees."
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Worktrees"
+    },
     "handoff": {
      "ok": true,
      "tree": {
@@ -627,7 +715,12 @@
    "/cleanview → Clean View on.",
    "$.ui.open(subagents)",
    "/subagents → Subagents open: Default, subagents run as usual.",
-   "/handoff → Handoff brief\n\nOK"
+   "$.ui.open(worktrees)",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "/worktrees → Worktrees open.",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "/handoff → Handoff brief\n\nOK",
+   "/askme → "
   ],
   "console": [],
   "status": "Clean View",
@@ -647,17 +740,21 @@
    "command.run{command=taskview}",
    "command.run{command=cleanview}",
    "command.run{command=handoff}",
+   "command.run{command=askme}",
    "ui.render{component=Pane, requestId=handoff}",
    "prompt.submit",
    "agent.spawn",
    "tool.call{tool=Workflow}",
    "tool.call{tool=?}",
    "command.run{command=subagents}",
+   "command.run{command=worktrees}",
+   "ui.render{component=Pane, requestId=?}",
    "ui.render{component=Pane, requestId=?}",
    "ui.render{component=Pane, requestId=notes}",
    "ui.message",
    "ui.close",
    "tool.call",
+   "tool.call{tool=?}",
    "tool.call{tool=?}",
    "ui.render{component=ToolUse}",
    "ui.render{component=ToolResult}",
@@ -669,9 +766,7 @@
   "calls": [
    "$.agent.list (via noticeAgent",
    "settleCards)",
-   "$.clock.after (via showMascot",
-   "startScan",
-   "waitAtMost)",
+   "$.clock.after",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
@@ -682,7 +777,14 @@
    "scanIO)",
    "$.fs.write (via saveNotes)",
    "$.model.fork (via writeBrief)",
-   "$.process.run (via scanIO)",
+   "$.process.run (via git",
+   "readGithub",
+   "scanIO)",
+   "$.prompt.fill (via askFromBar)",
+   "$.prompt.read (via askFromBar)",
+   "$.prompt.submit",
+   "$.session.cwd (via confirmWorktrees",
+   "readWorktrees)",
    "$.session.id (via measure",
    "rememberCacheAt",
    "restoreCacheAt",
@@ -696,7 +798,8 @@
    "$.store.get",
    "$.store.set",
    "$.tool.register (via registerTool)",
-   "$.ui.close (via setDockOpen)",
+   "$.ui.close (via setDockOpen",
+   "setWorktreesOpen)",
    "$.ui.copy (via copyBrief",
    "copyNotes",
    "handoff)",
@@ -708,10 +811,7 @@
    "$.ui.panes",
    "$.ui.resolve",
    "$.ui.status (via showStatus)",
-   "$.ui.toast (via copyBrief",
-   "copyNotes",
-   "handoff",
-   "showHandoff)"
+   "$.ui.toas… [+50 chars]"
   ],
   "stateReads": [
    "aitools.agentRun",
@@ -724,6 +824,7 @@
    "aitools.finals",
    "aitools.helpers",
    "aitools.hideAfter",
+   "aitools.isAskable",
    "aitools.isDockOpen",
    "aitools.isHandingOff",
    "aitools.isHidden",
@@ -731,6 +832,7 @@
    "aitools.isQuestionOpen",
    "aitools.isSettingsOpen",
    "aitools.isToolsOpen",
+   "aitools.isWorktreesOpen",
    "aitools.mainEffort",
    "aitools.mascot",
    "aitools.month",
@@ -742,7 +844,9 @@
    "aitools.team",
    "aitools.tick",
    "aitools.turnBaseline",
-   "aitools.viewMode"
+   "aitools.viewMode",
+   "aitools.worktreeAction",
+   "aitools.worktrees"
   ],
   "stateWrites": [
    "aitools.agentRun",
@@ -755,6 +859,7 @@
    "aitools.finals",
    "aitools.helpers",
    "aitools.hideAfter",
+   "aitools.isAskable",
    "aitools.isDockOpen",
    "aitools.isHandingOff",
    "aitools.isHidden",
@@ -762,6 +867,7 @@
    "aitools.isQuestionOpen",
    "aitools.isSettingsOpen",
    "aitools.isToolsOpen",
+   "aitools.isWorktreesOpen",
    "aitools.mainEffort",
    "aitools.mascot",
    "aitools.month",
@@ -773,7 +879,9 @@
    "aitools.team",
    "aitools.tick",
    "aitools.turnBaseline",
-   "aitools.viewMode"
+   "aitools.viewMode",
+   "aitools.worktreeAction",
+   "aitools.worktrees"
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
@@ -790,7 +898,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: aitools.snapshot, aitools.month, aitools.projection, aitools.cacheAt, aitools.turnBaseline, aitools.tick, aitools.settings, aitools.isSettingsOpen, aitools.isHidden, aitools.isHandingOff, aitools.isToolsOpen, aitools.brief, aitools.viewMode, aitools.checklist, aitools.finals, aitools.isDockOpen, aitools.isNotesOpen, aitools.notes, aitools.team, aitools.helpers, aitools.agentShowing, aitools.hideAfter, aitools.requestAt, aitools.agentRun, aitools.mainEffort, aitools.dockTick, aitools.mascot, aitools.asking, aitools.isQuestionOpen"
+     "types ./types/index.d.ts declares state: aitools.snapshot, aitools.month, aitools.projection, aitools.cacheAt, aitools.turnBaseline, aitools.tick, aitools.settings, aitools.isSettingsOpen, aitools.isHidden, aitools.isHandingOff, aitools.isToolsOpen, aitools.brief, aitools.viewMode, aitools.checklist, aitools.finals, aitools.isDockOpen, aitools.isNotesOpen, aitools.notes, aitools.team, aitools.helpers, aitools.agentShowing, aitools.hideAfter, aitools.requestAt, aitools.agentRun, aitools.mainEffort, aitools.dockTick, aitools.mascot, aitools.asking, aitools.isQuestionOpen, aitools.isAskable, aitools.isWorktreesOpen, aitools.worktrees, aitools.worktreeAction"
     ],
     "gatingHooks": []
    },
@@ -801,12 +909,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, session.measure, turn.step, turn.complete, command.run{command=aitools}, command.run{command=taskview}, command.run{command=cleanview}, command.run{command=handoff}, ui.render{component=Pane, requestId=handoff}, prompt.submit, agent.spawn, tool.call{tool=Workflow}, tool.call{tool=?}, command.run{command=subagents}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=notes}, ui.message, ui.close, tool.call, tool.call{tool=?}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=ToolProgress}, ui.render{component=AssistantMessage}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, turn.start, session.measure, turn.step, turn.complete, command.run{command=aitools}, command.run{command=taskview}, command.run{command=cleanview}, command.run{command=handoff}, command.run{command=askme}, ui.render{component=Pane, requestId=handoff}, prompt.submit, agent.spawn, tool.call{tool=Workflow}, tool.call{tool=?}, command.run{command=subagents}, command.run{command=worktrees}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=notes}, ui.message, ui.close, tool.call, tool.call{tool=?}, tool.call{tool=?}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=ToolProgress}, ui.render{component=AssistantMessage}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=aitools}",
       "./register.tsx answers its own command: command.run{command=taskview}",
       "./register.tsx answers its own command: command.run{command=cleanview}",
       "./register.tsx answers its own command: command.run{command=handoff}",
+      "./register.tsx answers its own command: command.run{command=askme}",
       "./register.tsx answers its own command: command.run{command=subagents}",
+      "./register.tsx answers its own command: command.run{command=worktrees}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call{tool=Workflow}",
@@ -814,11 +924,12 @@
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=?}",
-      "./register.tsx calls: $.agent.list (via noticeAgent, settleCards), $.clock.after (via showMascot, startScan, waitAtMost), $.clock.every, $.clock.now, $.command.register, $.env.get (via projectsRoot), $.fs.exists (via loadNotes), $.fs.list (via scanIO), $.fs.read (via loadNotes, scanIO), $.fs.write (via saveNotes), $.model.fork (via writeBrief), $.process.run (via scanIO), $.session.id (via measure, rememberCacheAt, restoreCacheAt, scan), $.session.messages, $.session.root (via notesPath), $.session.surfaces (via isMascotOn), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register (via registerTool), $.ui.close (via setDockOpen), $.ui.copy (via copyBrief, copyNotes, handoff), $.ui.focus (via openNotes), $.ui.log (via logScanError, registerTool, saveNotes), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via showStatus), $.ui.toast (via copyBrief, copyNotes, handoff, showHandoff)",
+      "./register.tsx gating hook without .catch: tool.call{tool=?}",
+      "./register.tsx calls: $.agent.list (via noticeAgent, settleCards), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via projectsRoot), $.fs.exists (via loadNotes), $.fs.list (via scanIO), $.fs.read (via loadNotes, scanIO), $.fs.write (via saveNotes), $.model.fork (via writeBrief), $.process.run (via git, readGithub, scanIO), $.prompt.fill (via askFromBar), $.prompt.read (via askFromBar), $.prompt.submit, $.session.cwd (via confirmWorktrees, readWorktrees), $.session.id (via measure, rememberCacheAt, restoreCacheAt, scan), $.session.messages, $.session.root (via notesPath), $.session.surfaces (via isMascotOn), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register (via registerTool), $.ui.close (via setDockOpen, setWorktreesOpen), $.ui.copy (via copyBrief, copyNotes, handoff), $.ui.focus (via openNotes), $.ui.log (via logScanError, registerTool, saveNotes), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via showStatus), $.ui.toas… [+50 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: aitools.agentRun, aitools.agentShowing, aitools.asking, aitools.brief, aitools.cacheAt, aitools.checklist, aitools.dockTick, aitools.finals, aitools.helpers, aitools.hideAfter, aitools.isDockOpen, aitools.isHandingOff, aitools.isHidden, aitools.isNotesOpen, aitools.isQuestionOpen, aitools.isSettingsOpen, aitools.isToolsOpen, aitools.mainEffort, aitools.mascot, aitools.month, aitools.notes, aitools.projection, aitools.requestAt, aitools.settings, aitools.snapshot, aitools.team, aitools.tick, aitools.turnBaseline, aitools.viewMode",
-      "./register.tsx state reads: aitools.agentRun, aitools.agentShowing, aitools.asking, aitools.brief, aitools.cacheAt, aitools.checklist, aitools.dockTick, aitools.finals, aitools.helpers, aitools.hideAfter, aitools.isDockOpen, aitools.isHandingOff, aitools.isHidden, aitools.isNotesOpen, aitools.isQuestionOpen, aitools.isSettingsOpen, aitools.isToolsOpen, aitools.mainEffort, aitools.mascot, aitools.month, aitools.notes, aitools.projection, aitools.requestAt, aitools.settings, aitools.snapshot, aitools.team, aitools.tick, aitools.turnBaseline, aitools.viewMode",
+      "./register.tsx state writes: aitools.agentRun, aitools.agentShowing, aitools.asking, aitools.brief, aitools.cacheAt, aitools.checklist, aitools.dockTick, aitools.finals, aitools.helpers, aitools.hideAfter, aitools.isAskable, aitools.isDockOpen, aitools.isHandingOff, aitools.isHidden, aitools.isNotesOpen, aitools.isQuestionOpen, aitools.isSettingsOpen, aitools.isToolsOpen, aitools.isWorktreesOpen, aitools.mainEffort, aitools.mascot, aitools.month, aitools.notes, aitools.projection, aitools.requestAt, aitools.settings, aitools.snapshot, aitools.team, aitools.tick, aitools.turnBaseline, aitools.viewMode, aitools.worktreeAction, aitools.worktrees",
+      "./register.tsx state reads: aitools.agentRun, aitools.agentShowing, aitools.asking, aitools.brief, aitools.cacheAt, aitools.checklist, aitools.dockTick, aitools.finals, aitools.helpers, aitools.hideAfter, aitools.isAskable, aitools.isDockOpen, aitools.isHandingOff, aitools.isHidden, aitools.isNotesOpen, aitools.isQuestionOpen, aitools.isSettingsOpen, aitools.isToolsOpen, aitools.isWorktreesOpen, aitools.mainEffort, aitools.mascot, aitools.month, aitools.notes, aitools.projection, aitools.requestAt, aitools.settings, aitools.snapshot, aitools.team, aitools.tick, aitools.turnBaseline, aitools.viewMode, aitools.worktreeAction, aitools.worktrees",
       "./register.tsx surface modules: src/noteseditor.tsx"
      ],
      "gatingHooks": [
@@ -863,11 +974,18 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=?}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "7776eb45137296bb"
+ "sourceHash": "252bea9310f37158"
 }

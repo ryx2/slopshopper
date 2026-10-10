@@ -1,6 +1,6 @@
 {
  "slug": "mmedum-glimt",
- "generatedAt": "2026-10-09T15:33:57.298Z",
+ "generatedAt": "2026-10-10T14:45:31.191Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -60,6 +60,21 @@
     "event": "tool.call"
    },
    {
+    "event": "classic.PermissionRequest"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "classic.PostToolUse"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "TaskCreate"
@@ -109,11 +124,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.clock.every": 5,
+   "$.clock.every": 6,
    "$.ui.open": 2,
    "$.env.get": 2,
-   "$.state.get": 49,
-   "$.state.set": 29,
+   "$.state.get": 55,
+   "$.state.set": 30,
    "$.session.id": 1,
    "$.process.run": 1,
    "$.tool.call": 1,
@@ -125,6 +140,10 @@
    {
     "kind": "every",
     "ms": 100
+   },
+   {
+    "kind": "every",
+    "ms": 5000
    },
    {
     "kind": "every",
@@ -518,6 +537,11 @@
    "agent.spawn",
    "turn.step",
    "tool.call",
+   "classic.PermissionRequest",
+   "classic.UserPromptSubmit",
+   "classic.PostToolUse",
+   "classic.Stop",
+   "session.measure",
    "tool.call{tool=TaskCreate}",
    "tool.call{tool=TaskUpdate}",
    "tool.call{tool=TodoWrite}",
@@ -525,6 +549,7 @@
    "ui.render{component=Pane, requestId=?}"
   ],
   "calls": [
+   "$.agent.list (via settleAgents)",
    "$.agent.spawn (via spawnAgent)",
    "$.clock.every",
    "$.clock.now",
@@ -537,8 +562,10 @@
    "transcriptOf)",
    "$.fs.read (via metaOf)",
    "$.process.run (via answerStop",
+   "branchOf",
    "loadRemoteTask",
    "readSessions",
+   "readTitles",
    "spawnAgent",
    "tailFeed)",
    "$.session.cwd (via spawnAgent)",
@@ -555,11 +582,12 @@
    "$.store.set (via renameSession",
    "share)",
    "$.tool.call (via seedSteps",
+   "stopAgent",
    "toggle)",
    "$.ui.close",
    "$.ui.copy (via attachSession)",
    "$.ui.focus",
-   "$.ui.notify (via tellWaiting)",
+   "$.ui.notify (via tell)",
    "$.ui.open (via openPane)",
    "$.ui.resolve",
    "$.ui.toast (via answerStop",
@@ -567,19 +595,23 @@
    "renameSession",
    "sendMessage",
    "spawnAgent",
-   "tellWaiting)"
+   "stopAgent",
+   "tell)"
   ],
   "stateReads": [
    "glimt.agents",
    "glimt.clearing",
    "glimt.composer",
    "glimt.cursor",
+   "glimt.engine",
    "glimt.expanded",
    "glimt.feed",
    "glimt.focus",
    "glimt.hasTaskList",
    "glimt.help",
    "glimt.isShown",
+   "glimt.limits",
+   "glimt.mode",
    "glimt.now",
    "glimt.opened",
    "glimt.phases",
@@ -591,19 +623,23 @@
    "glimt.sessionsError",
    "glimt.shared",
    "glimt.steps",
-   "glimt.stopping"
+   "glimt.stopping",
+   "glimt.titles"
   ],
   "stateWrites": [
    "glimt.agents",
    "glimt.clearing",
    "glimt.composer",
    "glimt.cursor",
+   "glimt.engine",
    "glimt.expanded",
    "glimt.feed",
    "glimt.focus",
    "glimt.hasTaskList",
    "glimt.help",
    "glimt.isShown",
+   "glimt.limits",
+   "glimt.mode",
    "glimt.now",
    "glimt.opened",
    "glimt.phases",
@@ -615,7 +651,8 @@
    "glimt.sessionsError",
    "glimt.shared",
    "glimt.steps",
-   "glimt.stopping"
+   "glimt.stopping",
+   "glimt.titles"
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
@@ -632,7 +669,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: glimt.focus, glimt.plan, glimt.steps, glimt.agents, glimt.now, glimt.isShown, glimt.expanded, glimt.cursor, glimt.sessions, glimt.sessionsError, glimt.phases, glimt.hasTaskList, glimt.stopping, glimt.self, glimt.shared, glimt.composer, glimt.clearing, glimt.opened, glimt.feed, glimt.remote, glimt.remoteTasks, glimt.help"
+     "types ./types/index.d.ts declares state: glimt.focus, glimt.plan, glimt.steps, glimt.agents, glimt.now, glimt.isShown, glimt.expanded, glimt.cursor, glimt.sessions, glimt.sessionsError, glimt.phases, glimt.hasTaskList, glimt.mode, glimt.limits, glimt.engine, glimt.titles, glimt.stopping, glimt.self, glimt.shared, glimt.composer, glimt.clearing, glimt.opened, glimt.feed, glimt.remote, glimt.remoteTasks, glimt.help"
     ],
     "gatingHooks": []
    },
@@ -643,7 +680,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, command.run{command=glimt}, ui.close, ui.focus, prompt.compose, ui.render{component=ToolUse}, session.end, prompt.submit, turn.start, turn.complete, agent.spawn, turn.step, tool.call, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, tool.call{tool=ExitPlanMode}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, command.run{command=glimt}, ui.close, ui.focus, prompt.compose, ui.render{component=ToolUse}, session.end, prompt.submit, turn.start, turn.complete, agent.spawn, turn.step, tool.call, classic.PermissionRequest, classic.UserPromptSubmit, classic.PostToolUse, classic.Stop, session.measure, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=TodoWrite}, tool.call{tool=ExitPlanMode}, ui.render{component=Pane, requestId=?}",
       "./register.tsx answers its own command: command.run{command=glimt}",
       "./register.tsx gating hook without .catch: classic.SessionStart{source=clear|resume|fork}",
       "./register.tsx gating hook without .catch: ui.close",
@@ -651,15 +688,19 @@
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: classic.PermissionRequest",
+      "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
+      "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskCreate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskUpdate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite}",
       "./register.tsx gating hook without .catch: tool.call{tool=ExitPlanMode}",
-      "./register.tsx calls: $.agent.spawn (via spawnAgent), $.clock.every, $.clock.now, $.command.register, $.command.run (via answerClear, renameSelf), $.env.get, $.fs.exists (via transcriptOf), $.fs.list (via remoteAgentsOf, transcriptOf), $.fs.read (via metaOf), $.process.run (via answerStop, loadRemoteTask, readSessions, spawnAgent, tailFeed), $.session.cwd (via spawnAgent), $.session.id (via learnSelf), $.session.messages (via agentFeed), $.session.send (via sendMessage), $.session.usage, $.state.get, $.state.set, $.store.delete, $.store.get (via loadShared, share), $.store.keys (via loadShared), $.store.set (via renameSession, share), $.tool.call (via seedSteps, toggle), $.ui.close, $.ui.copy (via attachSession), $.ui.focus, $.ui.notify (via tellWaiting), $.ui.open (via openPane), $.ui.resolve, $.ui.toast (via answerStop, attachSession, renameSession, sendMessage, spawnAgent, tellWaiting)",
+      "./register.tsx calls: $.agent.list (via settleAgents), $.agent.spawn (via spawnAgent), $.clock.every, $.clock.now, $.command.register, $.command.run (via answerClear, renameSelf), $.env.get, $.fs.exists (via transcriptOf), $.fs.list (via remoteAgentsOf, transcriptOf), $.fs.read (via metaOf), $.process.run (via answerStop, branchOf, loadRemoteTask, readSessions, readTitles, spawnAgent, tailFeed), $.session.cwd (via spawnAgent), $.session.id (via learnSelf), $.session.messages (via agentFeed), $.session.send (via sendMessage), $.session.usage, $.state.get, $.state.set, $.store.delete, $.store.get (via loadShared, share), $.store.keys (via loadShared), $.store.set (via renameSession, share), $.tool.call (via seedSteps, stopAgent, toggle), $.ui.close, $.ui.copy (via attachSession), $.ui.focus, $.ui.notify (via tell), $.ui.open (via openPane), $.ui.resolve, $.ui.toast (via answerStop, attachSession, renameSession, sendMessage, spawnAgent, stopAgent, tell)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: glimt.agents, glimt.clearing, glimt.composer, glimt.cursor, glimt.expanded, glimt.feed, glimt.focus, glimt.hasTaskList, glimt.help, glimt.isShown, glimt.now, glimt.opened, glimt.phases, glimt.plan, glimt.remote, glimt.remoteTasks, glimt.self, glimt.sessions, glimt.sessionsError, glimt.shared, glimt.steps, glimt.stopping",
-      "./register.tsx state reads: glimt.agents, glimt.clearing, glimt.composer, glimt.cursor, glimt.expanded, glimt.feed, glimt.focus, glimt.hasTaskList, glimt.help, glimt.isShown, glimt.now, glimt.opened, glimt.phases, glimt.plan, glimt.remote, glimt.remoteTasks, glimt.self, glimt.sessions, glimt.sessionsError, glimt.shared, glimt.steps, glimt.stopping"
+      "./register.tsx state writes: glimt.agents, glimt.clearing, glimt.composer, glimt.cursor, glimt.engine, glimt.expanded, glimt.feed, glimt.focus, glimt.hasTaskList, glimt.help, glimt.isShown, glimt.limits, glimt.mode, glimt.now, glimt.opened, glimt.phases, glimt.plan, glimt.remote, glimt.remoteTasks, glimt.self, glimt.sessions, glimt.sessionsError, glimt.shared, glimt.steps, glimt.stopping, glimt.titles",
+      "./register.tsx state reads: glimt.agents, glimt.clearing, glimt.composer, glimt.cursor, glimt.engine, glimt.expanded, glimt.feed, glimt.focus, glimt.hasTaskList, glimt.help, glimt.isShown, glimt.limits, glimt.mode, glimt.now, glimt.opened, glimt.phases, glimt.plan, glimt.remote, glimt.remoteTasks, glimt.self, glimt.sessions, glimt.sessionsError, glimt.shared, glimt.steps, glimt.stopping, glimt.titles"
      ],
      "gatingHooks": [
       {
@@ -700,6 +741,30 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "classic.PermissionRequest",
+       "hook": "classic.PermissionRequest",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=TaskCreate}",
        "hasCatch": false
@@ -728,5 +793,5 @@
    "advice": []
   }
  },
- "sourceHash": "e7746ebb75299b00"
+ "sourceHash": "a276462dd0c69dc0"
 }

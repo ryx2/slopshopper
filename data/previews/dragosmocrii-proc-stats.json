@@ -1,11 +1,35 @@
 {
  "slug": "dragosmocrii-proc-stats",
- "generatedAt": "2026-10-09T15:33:19.503Z",
+ "generatedAt": "2026-10-10T14:45:11.198Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Monitor"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Monitor"
+    }
    },
    {
     "event": "command.run",
@@ -25,12 +49,19 @@
      "component": "Pane",
      "requestId": "proc-stats"
     }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "requestId": "proc-stats"
+    }
    }
   ],
   "commands": [
    {
     "name": "proc-stats",
-    "description": "Show Claude Code and the processes it started in a task-manager pane",
+    "description": "Show Claude Code and the processes it started in a task-manager pane, or a report",
+    "argumentHint": "[report]",
     "output": "Processes pane opened."
    }
   ],
@@ -47,11 +78,13 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.clock.now": 9,
+   "$.state.get": 17,
+   "$.state.set": 11,
+   "$.env.set": 1,
    "$.env.get": 1,
-   "$.state.get": 4,
    "$.process.run": 2,
    "$.ui.status": 1,
-   "$.state.set": 2,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -109,35 +142,68 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=Monitor}",
+   "tool.check{tool=Bash}",
+   "tool.check{tool=Monitor}",
    "command.run{command=proc-stats}",
    "ui.close{id=proc-stats}",
-   "ui.render{component=Pane, requestId=proc-stats}"
+   "ui.render{component=Pane, requestId=proc-stats}",
+   "ui.focus{requestId=proc-stats}"
   ],
   "calls": [
+   "$.agent.list (via agentOf)",
+   "$.clock.after",
    "$.clock.every (via startSampling)",
-   "$.clock.now (via startSampling)",
+   "$.clock.now (via aliveTargets",
+   "markSession",
+   "readLinux",
+   "readMac",
+   "recordCall",
+   "report",
+   "settleCall",
+   "startSampling)",
    "$.command.register",
    "$.env.get (via detectPlatform)",
-   "$.fs.read (via linuxProc",
-   "readLinux)",
-   "$.process.run (via detectPlatform",
+   "$.env.set (via markSession)",
+   "$.fs.read (via aliveTargets",
+   "linuxDetached",
+   "linuxStart",
+   "readLinux",
+   "readLinuxChild)",
+   "$.process.run (via aliveTargets",
+   "detectPlatform",
    "enginePid",
+   "macDetached",
    "psTable",
-   "readWindows)",
+   "readWindows",
+   "signal)",
    "$.state.get",
    "$.state.set",
-   "$.ui.log",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.status (via startSampling)"
+   "$.ui.status (via startSampling)",
+   "$.ui.toast (via paneHandlers",
+   "startSampling",
+   "toast)"
   ],
   "stateReads": [
+   "proc-stats.alerts",
+   "proc-stats.history",
    "proc-stats.isOpen",
-   "proc-stats.reading"
+   "proc-stats.origins",
+   "proc-stats.pane",
+   "proc-stats.reading",
+   "proc-stats.session"
   ],
   "stateWrites": [
+   "proc-stats.alerts",
+   "proc-stats.history",
    "proc-stats.isOpen",
-   "proc-stats.reading"
+   "proc-stats.origins",
+   "proc-stats.pane",
+   "proc-stats.reading",
+   "proc-stats.session"
   ],
   "envReads": [
    "OS"
@@ -153,7 +219,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: proc-stats.reading, proc-stats.isOpen"
+     "types ./types/index.d.ts declares state: proc-stats.reading, proc-stats.isOpen, proc-stats.history, proc-stats.alerts, proc-stats.pane, proc-stats.origins, proc-stats.session"
     ],
     "gatingHooks": []
    },
@@ -164,27 +230,62 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=proc-stats}, ui.close{id=proc-stats}, ui.render{component=Pane, requestId=proc-stats}",
-      "./register.ts gating hook without .catch: command.run{command=proc-stats}",
-      "./register.ts gating hook without .catch: ui.close{id=proc-stats}",
-      "./register.ts calls: $.clock.every (via startSampling), $.clock.now (via startSampling), $.command.register, $.env.get (via detectPlatform), $.fs.read (via linuxProc, readLinux), $.process.run (via detectPlatform, enginePid, psTable, readWindows), $.state.get, $.state.set, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status (via startSampling)",
-      "./register.ts env writes: nothing",
+      "./register.ts hooks: session.start, tool.call{tool=Bash}, tool.call{tool=Monitor}, tool.check{tool=Bash}, tool.check{tool=Monitor}, command.run{command=proc-stats}, ui.close{id=proc-stats}, ui.render{component=Pane, requestId=proc-stats}, ui.focus{requestId=proc-stats}",
+      "./register.ts gating hook with .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook with .catch: tool.call{tool=Monitor}",
+      "./register.ts gating hook with .catch: tool.check{tool=Bash}",
+      "./register.ts gating hook with .catch: tool.check{tool=Monitor}",
+      "./register.ts gating hook with .catch: command.run{command=proc-stats}",
+      "./register.ts gating hook with .catch: ui.close{id=proc-stats}",
+      "./register.ts gating hook with .catch: ui.focus{requestId=proc-stats}",
+      "./register.ts calls: $.agent.list (via agentOf), $.clock.after, $.clock.every (via startSampling), $.clock.now (via aliveTargets, markSession, readLinux, readMac, recordCall, report, settleCall, startSampling), $.command.register, $.env.get (via detectPlatform), $.env.set (via markSession), $.fs.read (via aliveTargets, linuxDetached, linuxStart, readLinux, readLinuxChild), $.process.run (via aliveTargets, detectPlatform, enginePid, macDetached, psTable, readWindows, signal), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status (via startSampling), $.ui.toast (via paneHandlers, startSampling, toast)",
+      "./register.ts env writes: PROC_STATS_SESSION",
       "./register.ts env reads: OS",
-      "./register.ts state writes: proc-stats.isOpen, proc-stats.reading",
-      "./register.ts state reads: proc-stats.isOpen, proc-stats.reading"
+      "./register.ts state writes: proc-stats.alerts, proc-stats.history, proc-stats.isOpen, proc-stats.origins, proc-stats.pane, proc-stats.reading, proc-stats.session",
+      "./register.ts state reads: proc-stats.alerts, proc-stats.history, proc-stats.isOpen, proc-stats.origins, proc-stats.pane, proc-stats.reading, proc-stats.session"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Monitor}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Monitor}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
        "pattern": "command.run",
        "hook": "command.run{command=proc-stats}",
-       "hasCatch": false
+       "hasCatch": true
       },
       {
        "module": "./register.ts",
        "pattern": "ui.close",
        "hook": "ui.close{id=proc-stats}",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=proc-stats}",
+       "hasCatch": true
       }
      ]
     }
@@ -192,5 +293,5 @@
    "advice": []
   }
  },
- "sourceHash": "7edc38575204739e"
+ "sourceHash": "7b1e70c61b300179"
 }

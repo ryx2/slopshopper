@@ -1,6 +1,6 @@
 {
  "slug": "chrisluo5311-squad-chat-squad-chat",
- "generatedAt": "2026-10-09T15:32:29.596Z",
+ "generatedAt": "2026-10-10T14:44:39.789Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -56,6 +56,18 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "lofi"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "snippet"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane"
@@ -98,8 +110,8 @@
   "commands": [
    {
     "name": "chat",
-    "description": "squad-chat: open the pane: chat, or the Usage, Git and Agents rooms (notify, dnd, rooms: settings)",
-    "argumentHint": "[usage|git|agents | rooms <list> | notify on|off | dnd on|off|auto]",
+    "description": "squad-chat: open the pane: chat, or a room such as Usage, Git, Agents or Snippets (notify, dnd, rooms: settings)",
+    "argumentHint": "[usage|git|agents|snippet|monitor|weather|news|stock|lofi | rooms <list> | set <room> <setting> <value> | store [words] | install|update|uninstall <room> | notify on|off | dnd on|off|auto]",
     "immediate": true
    },
    {
@@ -141,6 +153,18 @@
     "name": "chat-logout",
     "description": "squad-chat: sign out on this computer",
     "immediate": true
+   },
+   {
+    "name": "lofi",
+    "description": "squad-chat: music in the background (lo-fi streams, YouTube, your files) through mpv, in the Lo-fi room",
+    "argumentHint": "play [name] | pause | next | prev | stop | vol <0-100> | add <url or path> | remove <name> | import",
+    "immediate": true
+   },
+   {
+    "name": "snippet",
+    "description": "squad-chat: save code you reuse (the selection, or Claude's last code block), then copy or share it from the Snippet room",
+    "argumentHint": "add <name> | rename <old> -> <new> | delete <name> | copy <name> | share <name> [#room]",
+    "immediate": true
    }
   ],
   "tools": [],
@@ -157,23 +181,26 @@
    "Sign in with your email (/chat-login you@example.com) or a name of 1-24 letters, digits, - or _.",
    "could not run `node --version`",
    "could not run `node --version`",
-   "Not signed in."
+   "Not signed in.",
+   "The Lo-fi room hasn't loaded yet. Try again in a moment.",
+   "The Snippet room hasn't loaded yet. Try again in a moment."
   ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 8,
-   "$.store.get": 4,
+   "$.command.register": 10,
+   "$.store.get": 5,
+   "$.store.set": 1,
    "$.session.id": 1,
    "$.session.cwd": 3,
    "$.session.model": 1,
    "$.session.usage": 2,
    "$.process.run": 19,
-   "$.clock.sleep": 168,
+   "$.clock.sleep": 176,
    "$.ui.invalidate": 28,
    "$.ui.status": 5,
    "$.ui.open": 2,
-   "$.ui.log": 6,
+   "$.ui.log": 8,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -392,7 +419,9 @@
    "/chat-login → ",
    "/chat-share → ",
    "/chat-name → ",
-   "/chat-logout → "
+   "/chat-logout → ",
+   "/lofi → ",
+   "/snippet → "
   ],
   "console": [],
   "warnings": []
@@ -411,6 +440,8 @@
    "command.run{command=chat-share}",
    "command.run{command=chat-name}",
    "command.run{command=chat-logout}",
+   "command.run{command=lofi}",
+   "command.run{command=snippet}",
    "ui.render{component=Pane}",
    "ui.render{component=AbovePrompt}",
    "turn.start",
@@ -439,7 +470,8 @@
    "$.session.usage (via refreshUsage)",
    "$.store.get",
    "$.store.set",
-   "$.ui.copy (via copySnippet)",
+   "$.ui.copy (via copySnippet",
+   "copyText)",
    "$.ui.focus (via keepFocusAcrossRoomChange)",
    "$.ui.invalidate",
    "$.ui.log",
@@ -476,7 +508,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./squad-chat.mjs hooks: session.start, command.run{command=chat}, command.run{command=say}, command.run{command=room}, command.run{command=who}, command.run{command=chat-login}, command.run{command=chat-share}, command.run{command=chat-name}, command.run{command=chat-logout}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, turn.start, turn.complete, session.measure, tool.call, agent.spawn, ui.close, session.append{door=command}, session.end",
+      "./squad-chat.mjs hooks: session.start, command.run{command=chat}, command.run{command=say}, command.run{command=room}, command.run{command=who}, command.run{command=chat-login}, command.run{command=chat-share}, command.run{command=chat-name}, command.run{command=chat-logout}, command.run{command=lofi}, command.run{command=snippet}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, turn.start, turn.complete, session.measure, tool.call, agent.spawn, ui.close, session.append{door=command}, session.end",
       "./squad-chat.mjs gating hook without .catch: command.run{command=chat}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=say}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=room}",
@@ -485,11 +517,13 @@
       "./squad-chat.mjs gating hook without .catch: command.run{command=chat-share}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=chat-name}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=chat-logout}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=lofi}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=snippet}",
       "./squad-chat.mjs gating hook with .catch: tool.call",
       "./squad-chat.mjs gating hook with .catch: agent.spawn",
       "./squad-chat.mjs gating hook without .catch: ui.close",
       "./squad-chat.mjs gating hook with .catch: session.append{door=command}",
-      "./squad-chat.mjs calls: $.agent.list (via tick), $.clock.now (via runBridge), $.clock.sleep, $.command.register, $.http.fetch (via callBridge), $.process.run (via nodeProblem, refreshGit, shareSources), $.process.spawn (via runBridge), $.session.cwd, $.session.id, $.session.messages (via shareSources), $.session.model, $.session.usage (via refreshUsage), $.store.get, $.store.set, $.ui.copy (via copySnippet), $.ui.focus (via keepFocusAcrossRoomChange), $.ui.invalidate, $.ui.log, $.ui.open (via keepFocusAcrossRoomChange, openPane), $.ui.panes, $.ui.resolve, $.ui.selection (via shareSources), $.ui.status (via afterChange), $.ui.toast (via afterChange, openPane, quietChanged, refreshGit)"
+      "./squad-chat.mjs calls: $.agent.list (via tick), $.clock.now (via runBridge), $.clock.sleep, $.command.register, $.http.fetch (via callBridge), $.process.run (via nodeProblem, refreshGit, shareSources), $.process.spawn (via runBridge), $.session.cwd, $.session.id, $.session.messages (via shareSources), $.session.model, $.session.usage (via refreshUsage), $.store.get, $.store.set, $.ui.copy (via copySnippet, copyText), $.ui.focus (via keepFocusAcrossRoomChange), $.ui.invalidate, $.ui.log, $.ui.open (via keepFocusAcrossRoomChange, openPane), $.ui.panes, $.ui.resolve, $.ui.selection (via shareSources), $.ui.status (via afterChange), $.ui.toast (via afterChange, openPane, quietChanged, refreshGit)"
      ],
      "gatingHooks": [
       {
@@ -542,6 +576,18 @@
       },
       {
        "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=lofi}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=snippet}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": true
@@ -570,5 +616,5 @@
    "advice": []
   }
  },
- "sourceHash": "27e0b6b7dd48e9bd"
+ "sourceHash": "33a93916a9c054b0"
 }

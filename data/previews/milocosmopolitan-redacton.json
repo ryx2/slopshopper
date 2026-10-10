@@ -1,6 +1,6 @@
 {
  "slug": "milocosmopolitan-redacton",
- "generatedAt": "2026-10-09T15:33:55.693Z",
+ "generatedAt": "2026-10-10T14:44:47.052Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -27,6 +27,7 @@
     "matcher": {
      "command": [
       "redact:status",
+      "redactconfig",
       "redact:config",
       "redact:add-rule",
       "redact:remove-rule"
@@ -40,8 +41,7 @@
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
-     "requestId": "redact-config",
-     "surface": "terminal"
+     "requestId": "redact-config"
     }
    },
    {
@@ -79,16 +79,29 @@
    {
     "name": "redacton",
     "description": "Request local credential protection for new operations",
-    "output": "Redacton ON. Protection unavailable; selected content will be withheld."
+    "immediate": true,
+    "output": "Redacton ON. Protection unavailable; selected content will be withheld. Settings: INVALID_SETTINGS_RESPONSE. Remove the local fault, then run /redacton for one recovery attempt."
    },
    {
     "name": "redactoff",
     "description": "Disable credential protection for new operations in this session",
+    "immediate": true,
     "output": "Warning: Redacton is OFF. Credentials may reach Claude unchanged."
+   },
+   {
+    "name": "redactconfig",
+    "description": "Open local configuration, including during an active tool",
+    "immediate": true,
+    "output": "Redacton local panel opened. No credentials or exact secret values. Changes require validation, synthetic preview, then Apply."
    }
   ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "redact-config",
+    "title": "Redacton local configuration"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [
@@ -121,10 +134,13 @@
   ],
   "apiCalls": {
    "$.session.id": 1,
-   "$.command.register": 2,
-   "$.process.run": 1,
-   "$.ui.invalidate": 3,
-   "$.ui.resolve": 4
+   "$.command.register": 3,
+   "$.process.run": 2,
+   "$.ui.invalidate": 4,
+   "$.ui.resolve": 5,
+   "$.prompt.fill": 1,
+   "$.ui.open": 1,
+   "$.ui.focus": 1
   },
   "timers": [],
   "sites": {
@@ -155,82 +171,284 @@
       },
       "children": [
        {
-        "type": "Text",
-        "props": {},
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
         "children": [
-         "⚠ Redacton OFF · credentials may reach Claude unchanged"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "Configuration cfg-2-1 · defaults/defaults · custom rules 0. Built-in credentials remain enabled. Zero findings is not a safety guarantee."
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "WARNING: local panel is not focused. Do not type patterns into the composer. Focus this panel before editing."
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "Local declarative patterns only. Never enter a credential or exact secret. Nothing is saved until an explicit Save."
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "INVALID_SETTINGS_RESPONSE"
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "⚠ Redacton OFF · credentials may reach Claude unchanged"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "Supported: prompt text/context, Read text, Bash stdout/stderr. Unprotected: Grep, Glob paths, WebFetch, Write arguments/effects, MCP, other tools and existing history. Encoded/base64 credentials can be missed."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "Configuration cfg-2-1 · defaults/defaults · custom rules 0. Built-in credentials remain enabled. Zero findings is not a safety guarantee."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "WARNING: local panel is not focused. Do not type patterns into the composer. Focus this panel before editing."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "Local declarative patterns only. Never enter a credential or exact secret. Nothing is saved until an explicit Save."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "INVALID_SETTINGS_RESPONSE"
+          ]
+         }
         ]
        },
        {
         "type": "Box",
-        "props": {},
+        "props": {
+         "flexDirection": "column"
+        },
         "children": [
          {
-          "type": "Button",
-          "props": {
-           "key": "edit-add",
-           "onPress": "[fn]"
-          },
+          "type": "Box",
+          "props": {},
           "children": [
-           "Add rule"
+           {
+            "type": "Button",
+            "props": {
+             "key": "edit-add",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Add rule"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "edit-remove",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Remove rule"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "revert",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Revert"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "cancel",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Cancel / close"
+            ]
+           }
           ]
          },
          {
-          "type": "Button",
-          "props": {
-           "key": "edit-remove",
-           "onPress": "[fn]"
-          },
+          "type": "Text",
+          "props": {},
           "children": [
-           "Remove rule"
+           ""
           ]
          },
          {
-          "type": "Button",
-          "props": {
-           "key": "revert",
-           "onPress": "[fn]"
-          },
+          "type": "Text",
+          "props": {},
           "children": [
-           "Revert"
+           "Editing any inherited custom rule creates a session override. Personal and project files stay unchanged until explicit scoped Save."
           ]
          },
          {
-          "type": "Button",
-          "props": {
-           "key": "cancel",
-           "onPress": "[fn]"
-          },
+          "type": "Box",
+          "props": {},
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
           "children": [
-           "Cancel / close"
+           "Personal defaults restore at session boundaries. Project settings require explicit load and trust. Precedence: session override, trusted project, personal, defaults. Project trust lasts this session."
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {},
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "load-personal",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Load personal"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "load-project",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Load project"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {},
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "save-personal",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Save personal"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "save-project",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Save project"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {},
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "reset-personal",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Reset personal"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "reset-project",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Reset project"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "Portable transfer files contain rule definitions only. Export may reveal internal names or prefixes. Review before sharing; no history, OFF state, matched input is exported. Never put actual credentials in rule fields; unknown sensitive values cannot always be recognized."
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {},
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "import-personal",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Import personal"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "import-project",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Import project"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {},
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "export-personal",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Export personal transfer file"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "export-project",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Export project transfer file"
+            ]
+           }
           ]
          }
         ]
@@ -243,224 +461,69 @@
         ]
        },
        {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "Editing any inherited custom rule creates a session override. Personal and project files stay unchanged until explicit scoped Save."
-        ]
-       },
-       {
         "type": "Box",
-        "props": {},
-        "children": []
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "Personal defaults restore at session boundaries. Project settings require explicit load and trust. Precedence: session override, trusted project, personal, defaults. Project trust lasts this session."
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
+        "props": {
+         "flexDirection": "column"
+        },
         "children": [
          {
-          "type": "Button",
-          "props": {
-           "key": "load-personal",
-           "onPress": "[fn]"
-          },
+          "type": "Text",
+          "props": {},
           "children": [
-           "Load personal"
+           "No pending draft"
           ]
          },
          {
-          "type": "Button",
-          "props": {
-           "key": "load-project",
-           "onPress": "[fn]"
-          },
+          "type": "Box",
+          "props": {},
           "children": [
-           "Load project"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Button",
-          "props": {
-           "key": "save-personal",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Save personal"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "save-project",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Save project"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Button",
-          "props": {
-           "key": "reset-personal",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Reset personal"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "reset-project",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Reset project"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "Portable transfer files contain rule definitions only. Export may reveal internal names or prefixes. Review before sharing; no history, OFF state, matched input is exported. Never put actual credentials in rule fields; unknown sensitive values cannot always be recognized."
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Button",
-          "props": {
-           "key": "import-personal",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Import personal"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "import-project",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Import project"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Button",
-          "props": {
-           "key": "export-personal",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Export personal transfer file"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "export-project",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Export project transfer file"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         ""
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "No pending draft"
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Button",
-          "props": {
-           "key": "validate",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Validate"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "preview",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Synthetic preview"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "apply",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Apply session"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "reset",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "Reset session rules"
+           {
+            "type": "Button",
+            "props": {
+             "key": "validate",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Validate"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "preview",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Synthetic preview"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "apply",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Apply session"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "reset",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Reset session rules"
+            ]
+           }
           ]
          }
         ]
        }
       ]
      },
-     "title": "redact-config"
+     "title": "Redacton local configuration"
     }
    }
   },
@@ -477,8 +540,11 @@
    "tool.call Bash denied: REDACTON_UNAVAILABLE",
    "tool.call Bash denied: REDACTON_UNAVAILABLE",
    "turn.complete",
-   "/redacton → Redacton ON. Protection unavailable; selected content will be withheld.",
-   "/redactoff → Warning: Redacton is OFF. Credentials may reach Claude unchanged."
+   "$.process.run(node /plugins/redact/helper/dist/index.js) → exit 0",
+   "/redacton → Redacton ON. Protection unavailable; selected content will be withheld. Settings…",
+   "/redactoff → Warning: Redacton is OFF. Credentials may reach Claude unchanged.",
+   "$.ui.open(redact-config)",
+   "/redactconfig → Redacton local panel opened. No credentials or exact secret values. Changes requ…"
   ],
   "console": [],
   "warnings": [
@@ -527,5 +593,5 @@
    "advice": []
   }
  },
- "sourceHash": "4ec6f5d7fbbf0f5"
+ "sourceHash": "2464b6df48585bf3"
 }

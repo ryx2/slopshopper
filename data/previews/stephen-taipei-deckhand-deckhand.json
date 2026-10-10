@@ -1,6 +1,6 @@
 {
  "slug": "stephen-taipei-deckhand-deckhand",
- "generatedAt": "2026-10-09T15:34:29.985Z",
+ "generatedAt": "2026-10-10T14:45:52.349Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -26,6 +26,12 @@
     }
    },
    {
+    "event": "ui.close",
+    "matcher": {
+     "id": "deckhand-settings"
+    }
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "deckhand"
@@ -36,6 +42,19 @@
     "matcher": {
      "component": "Pane",
      "requestId": "deckhand-settings"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "sub5-clean"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "deckhand-sub5-clean"
     }
    },
    {
@@ -123,6 +142,9 @@
     }
    },
    {
+    "event": "classic.PostModelSwitch"
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "usage-raw"
@@ -180,6 +202,11 @@
     "output": "Sub5 is about to start."
    },
    {
+    "name": "sub5-clean",
+    "description": "List the worktrees and branches interrupted Sub5 runs left behind, and remove the safe ones after you confirm",
+    "output": "Could not list the leftovers: dev"
+   },
+   {
     "name": "delegate",
     "description": "Hand a task to another AI model (cL/cS/cA/cR/gF, same as the buttons), read-only; Claude integrates and summarizes",
     "argumentHint": "<cL|cS|cA|cR|gF> [task]",
@@ -213,6 +240,10 @@
     "title": "Codex inbox"
    },
    {
+    "id": "deckhand-sub5-clean",
+    "title": "Sub5 leftovers"
+   },
+   {
     "id": "deckhand-delegates",
     "title": "Delegate records"
    },
@@ -227,26 +258,28 @@
   "rewrites": [],
   "apiCalls": {
    "$.settings.read": 1,
-   "$.store.get": 2,
-   "$.state.get": 122,
-   "$.state.set": 28,
-   "$.command.register": 10,
+   "$.store.get": 4,
+   "$.state.get": 139,
+   "$.state.set": 33,
+   "$.ui.panes": 1,
+   "$.command.register": 11,
    "$.agent.register": 1,
    "$.tool.register": 1,
    "$.ui.status": 1,
    "$.env.get": 2,
-   "$.process.run": 10,
+   "$.process.run": 11,
    "$.fs.exists": 6,
    "$.clock.now": 9,
    "$.session.usage": 2,
    "$.session.model": 2,
+   "$.store.set": 1,
    "$.session.authorize": 2,
    "$.model.fork": 1,
-   "$.session.cwd": 2,
-   "$.ui.open": 3,
+   "$.session.cwd": 3,
+   "$.ui.open": 4,
    "$.session.root": 2,
    "$.clock.after": 1,
-   "$.ui.resolve": 5
+   "$.ui.resolve": 6
   },
   "timers": [
    {
@@ -838,7 +871,7 @@
          "props": {
           "key": "gear",
           "label": "⚙",
-          "variant": "secondary",
+          "variant": "primary",
           "hover": {
            "scope": "deckhand-tip-gear"
           },
@@ -910,6 +943,66 @@
       ]
      },
      "title": "Codex inbox"
+    },
+    "deckhand-sub5-clean": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Removed: worktrees with no uncommitted change, and branches merged into the base. Anything uncommitted, unmerged, locked, checked out or used in the last hour stays."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "red"
+        },
+        "children": [
+         "Could not list the leftovers: dev"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "Refresh",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "Close",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Sub5 leftovers"
     },
     "deckhand-delegates": {
      "ok": true,
@@ -1318,6 +1411,9 @@
    "$.process.run(python3 /plugins/deckhand/bin/handoff-state.py check --from codex --to claude --…) → exit 0",
    "/handoff-in → The handoff check failed: dev",
    "/sub5 → Sub5 is about to start.",
+   "$.ui.open(deckhand-sub5-clean)",
+   "$.process.run(python3 /plugins/deckhand/bin/sub5.py list --format json --cwd /work/app --lang …) → exit 0",
+   "/sub5-clean → Could not list the leftovers: dev",
    "/delegate → Usage: /delegate <target> [task]\n  cL  Codex (GPT-6 Luna, effort max)\n  cS  Code…",
    "$.ui.open(deckhand-delegates)",
    "$.process.run(python3 /plugins/deckhand/bin/delegate.py list --format json --lang en) → exit 0",
@@ -1338,8 +1434,11 @@
    "command.run{command=watch-deploy}",
    "tool.call{tool=mcp__deckhand__watch_deploy}",
    "ui.render{component=AbovePrompt}",
+   "ui.close{id=deckhand-settings}",
    "command.run{command=deckhand}",
    "ui.render{component=Pane, requestId=deckhand-settings}",
+   "command.run{command=sub5-clean}",
+   "ui.render{component=Pane, requestId=deckhand-sub5-clean}",
    "ui.render{component=Pane, requestId=deckhand-recap}",
    "command.run{command=delegates}",
    "ui.render{component=Pane, requestId=deckhand-delegates}",
@@ -1355,6 +1454,7 @@
    "session.measure",
    "classic.Stop",
    "command.run{command=model}",
+   "classic.PostModelSwitch",
    "command.run{command=usage-raw}",
    "command.run{command=sub5}",
    "command.run{command=delegate}",
@@ -1370,13 +1470,19 @@
    "$.command.run (via pressModel",
    "restoreEffort)",
    "$.env.get (via resolveBin",
+   "settingsFilePath",
    "syncSharedTool)",
-   "$.fs.exists (via resolveBin",
+   "$.fs.exists (via exportSettings",
+   "readImport",
+   "resolveBin",
    "syncSharedTool)",
    "$.fs.read (via noteTaskEnded",
    "readAnswer",
+   "readImport",
+   "readRunUsage",
    "syncSharedTool)",
-   "$.fs.write (via syncSharedTool)",
+   "$.fs.write (via exportSettings",
+   "syncSharedTool)",
    "$.http.fetch (via checkWatch",
    "refreshAccountUsage)",
    "$.model.fork",
@@ -1386,23 +1492,20 @@
    "listRecords",
    "loadCodexThreads",
    "runAssist",
+   "runLeftovers",
    "syncSharedTool)",
    "$.prompt.fill",
    "$.prompt.read (via answerToPrompt",
    "pressModel",
    "startDelegate)",
-   "$.prompt.submit (via startDelegate",
-   "startSub5)",
-   "$.session.append (via runCheck)",
+   "$.prompt.submit (via handOver)",
+   "$.session.append (via handOver",
+   "runCheck)",
    "$.session.authorize (via refreshAccountUsage)",
    "$.session.cwd (via handoffTool",
+   "runLeftovers",
    "startWatch)",
-   "$.session.model (via pressModel",
-   "refreshModel)",
-   "$.session.root (via loadCodexThreads)",
-   "$.session.usage (via loadUsage)",
-   "$.settings.read",
-   "… [+264 chars]"
+   "$.session.model (via pressM… [+365 chars]"
   ],
   "stateReads": [
    "deckhand.accountLimits",
@@ -1422,12 +1525,15 @@
    "deckhand.isBandHidden",
    "deckhand.isCodexLoading",
    "deckhand.isDelegateRecordsLoading",
+   "deckhand.isSettingsOpen",
    "deckhand.knownScoped",
    "deckhand.locale",
    "deckhand.model",
    "deckhand.recap",
    "deckhand.settings",
+   "deckhand.settingsFile",
    "deckhand.settingsView",
+   "deckhand.sub5Leftovers",
    "deckhand.watches"
   ],
   "stateWrites": [
@@ -1448,12 +1554,15 @@
    "deckhand.isBandHidden",
    "deckhand.isCodexLoading",
    "deckhand.isDelegateRecordsLoading",
+   "deckhand.isSettingsOpen",
    "deckhand.knownScoped",
    "deckhand.locale",
    "deckhand.model",
    "deckhand.recap",
    "deckhand.settings",
+   "deckhand.settingsFile",
    "deckhand.settingsView",
+   "deckhand.sub5Leftovers",
    "deckhand.watches"
   ],
   "envReads": [
@@ -1470,7 +1579,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: deckhand.watches, deckhand.isBandHidden, deckhand.codexThreads, deckhand.codexError, deckhand.isCodexLoading, deckhand.codexAllProjects, deckhand.engineLimits, deckhand.accountLimits, deckhand.contextPercent, deckhand.contextTokens, deckhand.model, deckhand.effort, deckhand.settings, deckhand.locale, deckhand.recap, deckhand.settingsView, deckhand.bins, deckhand.knownScoped, deckhand.delegateRuns, deckhand.delegateTick, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.isDelegateRecordsLoading, deckhand.delegateAnswer"
+     "types ./types/index.d.ts declares state: deckhand.watches, deckhand.isBandHidden, deckhand.codexThreads, deckhand.codexError, deckhand.isCodexLoading, deckhand.codexAllProjects, deckhand.engineLimits, deckhand.accountLimits, deckhand.contextPercent, deckhand.contextTokens, deckhand.model, deckhand.effort, deckhand.settings, deckhand.locale, deckhand.recap, deckhand.settingsView, deckhand.isSettingsOpen, deckhand.settingsFile, deckhand.sub5Leftovers, deckhand.bins, deckhand.knownScoped, deckhand.delegateRuns, deckhand.delegateTick, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.isDelegateRecordsLoading, deckhand.delegateAnswer"
     ],
     "gatingHooks": []
    },
@@ -1481,9 +1590,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=watch-deploy}, tool.call{tool=mcp__deckhand__watch_deploy}, ui.render{component=AbovePrompt}, command.run{command=deckhand}, ui.render{component=Pane, requestId=deckhand-settings}, ui.render{component=Pane, requestId=deckhand-recap}, command.run{command=delegates}, ui.render{component=Pane, requestId=deckhand-delegates}, command.run{command=handoff-in}, command.run{command=handoff}, command.run{command=codex}, command.run{command=codex-latest}, ui.render{component=Pane, requestId=deckhand-codex}, prompt.submit, tool.call{tool=Bash}, tool.call{tool=mcp__deckhand__translate}, tool.call{tool=mcp__deckhand__search}, session.measure, classic.Stop, command.run{command=model}, command.run{command=usage-raw}, command.run{command=sub5}, command.run{command=delegate}, prompt.compose",
+      "./register.tsx hooks: session.start, command.run{command=watch-deploy}, tool.call{tool=mcp__deckhand__watch_deploy}, ui.render{component=AbovePrompt}, ui.close{id=deckhand-settings}, command.run{command=deckhand}, ui.render{component=Pane, requestId=deckhand-settings}, command.run{command=sub5-clean}, ui.render{component=Pane, requestId=deckhand-sub5-clean}, ui.render{component=Pane, requestId=deckhand-recap}, command.run{command=delegates}, ui.render{component=Pane, requestId=deckhand-delegates}, command.run{command=handoff-in}, command.run{command=handoff}, command.run{command=codex}, command.run{command=codex-latest}, ui.render{component=Pane, requestId=deckhand-codex}, prompt.submit, tool.call{tool=Bash}, tool.call{tool=mcp__deckhand__translate}, tool.call{tool=mcp__deckhand__search}, session.measure, classic.Stop, command.run{command=model}, classic.PostModelSwitch, command.run{command=usage-raw}, command.run{command=sub5}, command.run{command=delegate}, prompt.compose",
       "./register.tsx answers its own command: command.run{command=watch-deploy}",
       "./register.tsx answers its own command: command.run{command=deckhand}",
+      "./register.tsx answers its own command: command.run{command=sub5-clean}",
       "./register.tsx answers its own command: command.run{command=delegates}",
       "./register.tsx answers its own command: command.run{command=handoff-in}",
       "./register.tsx answers its own command: command.run{command=handoff}",
@@ -1493,17 +1603,19 @@
       "./register.tsx answers its own command: command.run{command=sub5}",
       "./register.tsx answers its own command: command.run{command=delegate}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__deckhand__watch_deploy}",
+      "./register.tsx gating hook without .catch: ui.close{id=deckhand-settings}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__deckhand__translate}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__deckhand__search}",
       "./register.tsx gating hook with .catch: classic.Stop",
       "./register.tsx gating hook with .catch: command.run{command=model}",
-      "./register.tsx calls: $.agent.register (via registerWorker), $.clock.after, $.clock.every (via syncRunTimers), $.clock.now, $.command.list (via restoreEffort), $.command.register (via registerCommands), $.command.run (via pressModel, restoreEffort), $.env.get (via resolveBin, syncSharedTool), $.fs.exists (via resolveBin, syncSharedTool), $.fs.read (via noteTaskEnded, readAnswer, syncSharedTool), $.fs.write (via syncSharedTool), $.http.fetch (via checkWatch, refreshAccountUsage), $.model.fork, $.process.run (via checkBins, checkWatch, handoffTool, listRecords, loadCodexThreads, runAssist, syncSharedTool), $.prompt.fill, $.prompt.read (via answerToPrompt, pressModel, startDelegate), $.prompt.submit (via startDelegate, startSub5), $.session.append (via runCheck), $.session.authorize (via refreshAccountUsage), $.session.cwd (via handoffTool, startWatch), $.session.model (via pressModel, refreshModel), $.session.root (via loadCodexThreads), $.session.usage (via loadUsage), $.settings.read, … [+264 chars]",
+      "./register.tsx gating hook with .catch: classic.PostModelSwitch",
+      "./register.tsx calls: $.agent.register (via registerWorker), $.clock.after, $.clock.every (via syncRunTimers), $.clock.now, $.command.list (via restoreEffort), $.command.register (via registerCommands), $.command.run (via pressModel, restoreEffort), $.env.get (via resolveBin, settingsFilePath, syncSharedTool), $.fs.exists (via exportSettings, readImport, resolveBin, syncSharedTool), $.fs.read (via noteTaskEnded, readAnswer, readImport, readRunUsage, syncSharedTool), $.fs.write (via exportSettings, syncSharedTool), $.http.fetch (via checkWatch, refreshAccountUsage), $.model.fork, $.process.run (via checkBins, checkWatch, handoffTool, listRecords, loadCodexThreads, runAssist, runLeftovers, syncSharedTool), $.prompt.fill, $.prompt.read (via answerToPrompt, pressModel, startDelegate), $.prompt.submit (via handOver), $.session.append (via handOver, runCheck), $.session.authorize (via refreshAccountUsage), $.session.cwd (via handoffTool, runLeftovers, startWatch), $.session.model (via pressM… [+365 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.delegateAnswer, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.delegateRuns, deckhand.delegateTick, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.isDelegateRecordsLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches",
-      "./register.tsx state reads: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.delegateAnswer, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.delegateRuns, deckhand.delegateTick, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.isDelegateRecordsLoading, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsView, deckhand.watches"
+      "./register.tsx state writes: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.delegateAnswer, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.delegateRuns, deckhand.delegateTick, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.isDelegateRecordsLoading, deckhand.isSettingsOpen, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsFile, deckhand.settingsView, deckhand.sub5Leftovers, deckhand.watches",
+      "./register.tsx state reads: deckhand.accountLimits, deckhand.bins, deckhand.codexAllProjects, deckhand.codexError, deckhand.codexThreads, deckhand.contextPercent, deckhand.contextTokens, deckhand.delegateAnswer, deckhand.delegateRecords, deckhand.delegateRecordsError, deckhand.delegateRuns, deckhand.delegateTick, deckhand.effort, deckhand.engineLimits, deckhand.isBandHidden, deckhand.isCodexLoading, deckhand.isDelegateRecordsLoading, deckhand.isSettingsOpen, deckhand.knownScoped, deckhand.locale, deckhand.model, deckhand.recap, deckhand.settings, deckhand.settingsFile, deckhand.settingsView, deckhand.sub5Leftovers, deckhand.watches"
      ],
      "gatingHooks": [
       {
@@ -1511,6 +1623,12 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__deckhand__watch_deploy}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=deckhand-settings}",
+       "hasCatch": false
       },
       {
        "module": "./register.tsx",
@@ -1547,6 +1665,12 @@
        "pattern": "command.run",
        "hook": "command.run{command=model}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostModelSwitch",
+       "hook": "classic.PostModelSwitch",
+       "hasCatch": true
       }
      ]
     }
@@ -1554,5 +1678,5 @@
    "advice": []
   }
  },
- "sourceHash": "12977900e3378c8c"
+ "sourceHash": "508f5022a9c76a5a"
 }

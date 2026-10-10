@@ -1,0 +1,994 @@
+{
+ "slug": "ying-kai-liao-flow",
+ "generatedAt": "2026-10-10T14:45:59.721Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "flow"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "flow-tasks"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "flow:continue"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__handover"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__release"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__reviewer"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__queue"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__plan"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__test_slot"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__guard_tests"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__ask"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__fyi"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__preflight"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__answer"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__standing"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__check"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__note"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__clean"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__migrations"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__session"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__deploy"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__push"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flow__status"
+    }
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "theme"
+    }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "requestId": "flow"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "flow"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "flow",
+    "description": "Show the flow in a pane: managers, their workers, the reviewer and handed-over PRs. /flow inbox lists the open questions and the decisions agents made (/flow inbox decisions lists them all, /flow inbox <id> shows one in full), /flow ok keeps every open decision (/flow ok <id|owner|topic> takes those, or the default of a question), /flow no <id> [what instead] undoes a decision, /flow answer <id> <choice> answers any question addressed to main, /flow status shows what the agents cost (estimates at API list prices), /flow checks lists the after-deploy checks that need a person (pass or fail them), /flow preflight shows the current pre-flight round, /flow close closes it, /flow resume picks up unfinished flow work, /flow approve <pr> lets the reviewer merge a PR that awaits your approval, /flow push starts the push of the batch the reviewer checked and saved (push_mode confirm; /flow push back <pr> sends one PR back, /flow push drop returns them all), /flow hold <target> [batch|released] keeps a deploy target from deploying and /flow release <target> lets it, /flow clean lists leftover worktrees and branches (--yes removes them)",
+    "argumentHint": "[inbox [all|<id>]|ok [<id|owner|topic>...]|no <id> [what instead]|answer <id> <choice>|checks|status|preflight|close|resume|approve <pr>|push [back <pr>|drop]|clean]",
+    "output": "Flow pane opened."
+   },
+   {
+    "name": "flow-tasks",
+    "description": "Pick tasks from a task source (.claude/flow/sources/<name>.md) and start a manager for each",
+    "argumentHint": "[source] [ids or filter]",
+    "output": "Picking tasks."
+   }
+  ],
+  "tools": [
+   {
+    "name": "handover",
+    "description": "Hand an approved PR to the flow reviewer. Records the PR at its current head and starts a reviewer if none is running. Managers call this after reviewing a worker's PR; leave the branch alone afterwards. Refused unless the PR description has a ## Verification section (Ran, Exercised, Not verified); the refusal shows the format."
+   },
+   {
+    "name": "release",
+    "description": "Release at merge (the release setting must be on). The reviewer calls this once per batch, after the full check and before the push: it moves the changelog's ## [Unreleased] lines into a new version section, bumps the version in the release files (patch, or the highest of the PRs' handover release field and flow:minor / flow:major labels) and returns the commit command. It does not commit or push. A second call for the same PRs is refused as already released. With action \"publish\" (release_github on, after the release commit is pushed) it tags v<version>, pushes the tag and creates the GitHub Release from the changelog section; failures come back as a \"Not published\" line and never throw."
+   },
+   {
+    "name": "ask",
+    "description": "Ask a structured question (a batch) instead of asking in prose. A worker's questions go to its manager, a manager's to main. Give options and the default you recommend. Non-blocking: go ahead on the default now and say in your report that you assumed it; you get a message if the answer differs. Blocking: end your turn; the answer arrives by message. Main cannot ask. Give a recurring kind of question a short stable kebab-case topic (e.g. version-bump, test-approach): the user can answer a topic once, and a standing answer then answers it for you at once (the result line says so)."
+   },
+   {
+    "name": "fyi",
+    "description": "Record a decision you took yourself on a reversible choice (a threshold, wording, a name, a default, styling within the existing design) as a non-blocking decision the user can keep or undo: \"I decided X because Y; say if wrong\". The tool is named fyi for compatibility; the items are decisions with ids d1, d2, ... A worker's decisions go to its manager, a manager's to main. Never stop for it: carry on. You get a message only if it is undone; then change your work. Irreversible or product-defining choices (what customers pay for, who receives data, deleting data) are asks, not decisions. Main cannot call it."
+   },
+   {
+    "name": "preflight",
+    "description": "Managers only. File your pre-flight after looking over your task (read the code, the history and open PRs; no workers yet): the plugin refuses your worker starts until you have, and, if you ask blocking questions, until they are answered. Main gets one combined round from all managers started together. questions are stored in the decision inbox for main, like mcp__flow__ask but without a toast. Filing again replaces your earlier filing."
+   },
+   {
+    "name": "answer",
+    "description": "Answer questions addressed to you in the decision inbox: a manager answers its workers' asks, main answers the managers'. Decisions (mcp__flow__fyi, ids d1, d2, ...) are answered the same way: the choice Keep, or defaults: true, keeps them; any other choice or free text undoes the decision and messages the owner. Main may answer any decision. An old q-id of a decision still works. answers: [{id, choice}] (choice is an option's letter, number or text, or free text). defaults: true takes every default of your open questions, or only those in ids."
+   },
+   {
+    "name": "standing",
+    "description": "Main only. Standing answers: rules that answer a recurring decision-inbox question at once. action \"list\": the rules (id, file, match, answer, how often used) and suggestions (questions you answered the same way 3 or more times). \"add\": topic or match (a case-insensitive regex on the question text), answer, optional blocking (default false: blocking questions are left to you) and from (asker name). \"remove\": id. Rules without an id are named by file and position: personal:1, repo:2. Instead of an answer, escalate: true makes matching questions blocking and the user's alone; answer \"default\" takes the question's own default (non-blocking only). \"list\" with no rules also offers a few suggested starting rules (not applied); accept with \"add\" and seed (an id) or seeds (ids)."
+   },
+   {
+    "name": "check",
+    "description": "Main only (the reviewer may close checks that carry a verify command). Person checks: the after-deploy checks that need a person, kept across restarts. action \"list\": the open checks grouped by the plugin version they need, and the open follow-ups. \"pass\": id or ids. \"fail\": id and a note (required); it creates a follow-up for you to start a manager on. \"skip\": id or ids and a note (required): the check no longer applies (superseded, cannot be run); no follow-up, main only. \"started\": id of a failed check and manager (the follow-up has a manager now)."
+   },
+   {
+    "name": "note",
+    "description": "A manager's notes on disk, kept across restarts. With text, appends a dated line (kind \"decision\" for what the user decided, else \"progress\"). Without text, returns the notes."
+   },
+   {
+    "name": "reviewer",
+    "description": "The reviewer's worklist. action \"list\": pending and taken handovers in arrival order. \"take\" (pr), \"done\" (pr, sha, report) or \"back\" (pr, reason) record what the reviewer did. With push_mode confirm, \"ready\" (prs, sha, base_sha, check, version?) records the checked batch under refs/flow/push/<id> for the user's /flow push instead of pushing it. Only the reviewer calls this."
+   },
+   {
+    "name": "queue",
+    "description": "(The old name of the reviewer tool; use reviewer.) The reviewer's worklist. action \"list\": pending and taken handovers in arrival order. \"take\" (pr), \"done\" (pr, sha, report) or \"back\" (pr, reason) record what the reviewer did. With push_mode confirm, \"ready\" (prs, sha, base_sha, check, version?) records the checked batch under refs/flow/push/<id> for the user's /flow push instead of pushing it. Only the reviewer calls this."
+   },
+   {
+    "name": "push",
+    "description": "Main only, on the user's word: release the batch the reviewer built, checked and saved because push_mode is confirm. action \"list\": the ready batch. \"push\": release it (a reviewer pushes it, deploys and marks the PRs done). \"send-back\" (pr): return one PR of the batch; the rest is rebuilt, re-checked and asked again. \"drop\": discard the batch and return every PR. Managers, workers and the reviewer are refused. The user can also run /flow push, or answer the push item in /flow inbox."
+   },
+   {
+    "name": "status",
+    "description": "The flow at a glance: managers, workers and reviewer with their status and last report, and handed-over PRs. Scoped by caller: a manager sees its own subtree and PRs, a worker itself and its manager, main and the reviewer everything. Only the newest 5 finished PRs are listed. With pr, that PR in full: its handover line, owner and log lines."
+   },
+   {
+    "name": "deploy",
+    "description": "Per-target deploy gates. The reviewer calls action \"gate\" (target, sha) before each deploy target and gets exactly one of \"Go\", \"Held: <why>\" or \"Awaits approval: <qid>\"; on the last two it skips that target for this batch and goes on. A confirm target opens one inbox item for the user; only the user's \"deploy\" answer lets that sha through. The reviewer calls \"deployed\" (target, sha, ok) after each target. Main only, on the user's word: \"hold\" (target, until \"batch\" or \"released\", reason?) and \"release\" (target; it also drops env changes the user declined); \"demo only, hold production\" is a hold on production. \"list\" shows every target with mode, hold, last deployed sha, how far behind, any approval and pending env changes. Env changes a handed-over PR declared come first in the gate: \"Awaits env: <qids>\" (the user has not answered; skip the target), \"Held: env change NAME declined\" (skip it until main releases it), or \"Go, first apply env:\" with one exact command per change: run each (a non-zero exit fails the target), call \"env-applied\" (target, names), then deploy."
+   },
+   {
+    "name": "clean",
+    "description": "Leftover worktrees under .claude/worktrees/ and local branches of finished work. Without apply, a dry run: what would be removed and what is kept and why. With apply true, removes only clean work that is on the base or in a merged PR (or pushed with its PR closed); uncommitted, unpushed, locked and live work is never touched."
+   },
+   {
+    "name": "migrations",
+    "description": "Read-only. Reports migration-number clashes and the next free number, for the migrations_dir setting. Shows the highest number on the base and at ref, and for each PR the migrations it adds: ok, clash (same number as another migration on the base, at ref or in an earlier PR of the list) or at-or-below (not above the base's highest). For each non-ok one: the next free number (highest + 1, no gap filling), the git mv to run, and where the PR's own files mention the old number. Fetches only; changes nothing."
+   },
+   {
+    "name": "plan",
+    "description": "Declare which packages (or, for main, tasks) wait for others, so the plugin can refuse to start them early and tell you when they are ready. action \"add\": nodes [{id, title, after?, until?}]; id is the agent name you will start (or its prefix before -N), after lists node ids, until is \"merged\" (default: the PR is merged) or \"reported\" (the agent reported back). \"list\": your graph (main may pass owner). \"done\" (id, note?) / \"block\" (id, reason): set a node by hand. \"remove\" (id): drop a waiting or ready node nothing depends on."
+   },
+   {
+    "name": "test_slot",
+    "description": "A lock on heavy test runs, so only test_slots of them run at once across all worktrees of this session. action \"acquire\" before a whole suite or any run over about a minute (waits a few seconds; if it says queued, wait as the answer tells you (grant file or grant message), then call acquire once to confirm), \"release\" when the run is over or failed, \"status\" to see holders and waiters."
+   },
+   {
+    "name": "guard_tests",
+    "description": "The repo-wide tests the guard_tests setting requires for your diff. Call it before gh pr create with no arguments: it works out your changed files itself (origin/<base>...HEAD plus uncommitted and untracked changes in your worktree). Run each test it lists under mcp__flow__test_slot and list each under `Ran:` in the PR's ## Verification section; handover refuses otherwise."
+   },
+   {
+    "name": "session",
+    "description": "Workers outside this session: another harness (codex, gemini, opencode, claude, or your own command line) in an Orca terminal or a tmux session the user can watch. action \"start\" (name, brief, harness, host?, command?) makes a worktree on flow/<name> from the base and starts the harness with the worker rules and the brief; its report comes back to you as a \"flow session:\" message. The same controls work for every harness: \"send\" (name, text) types a message and submits it, \"keys\" (name, keys) presses keys (\"1\", \"y enter\", \"escape\", \"interrupt\", \"down enter\"), \"read\" (name, lines?) shows the end of its terminal, \"restart\" (name) starts it again in its worktree (resuming its conversation where the harness can), \"list\" all sessions, \"stop\" (name, remove_worktree?) closes it. A harness that goes quiet without a report is told to you as idle."
+   }
+  ],
+  "panes": [
+   {
+    "id": "flow",
+    "title": "Flow"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.process.run": 21,
+   "$.fs.read": 1,
+   "$.fs.stat": 2,
+   "$.fs.exists": 2,
+   "$.command.register": 2,
+   "$.agent.register": 5,
+   "$.tool.register": 20,
+   "$.clock.every": 3,
+   "$.clock.now": 3,
+   "$.state.get": 30,
+   "$.state.set": 2,
+   "$.session.cwd": 7,
+   "$.session.usage": 2,
+   "$.clock.after": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 3000
+   },
+   {
+    "kind": "every",
+    "ms": 300000
+   },
+   {
+    "kind": "every",
+    "ms": 1000
+   },
+   {
+    "kind": "after",
+    "ms": 3000
+   },
+   {
+    "kind": "after",
+    "ms": 1
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "flow": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "height": 42
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "0",
+         " agents · ",
+         "0",
+         " live",
+         "",
+         ""
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "◆",
+           " main ",
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " super manager"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": false
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "0",
+             "dimColor": false,
+             "color": "warning"
+            },
+            "children": [
+             "█"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "1",
+             "dimColor": false,
+             "color": "warning"
+            },
+            "children": [
+             "█"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "2",
+             "dimColor": false,
+             "color": "warning"
+            },
+            "children": [
+             "█"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "3",
+             "dimColor": false,
+             "color": "warning"
+            },
+            "children": [
+             "█"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "4",
+             "dimColor": false,
+             "color": "text"
+            },
+            "children": [
+             "│"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "5",
+             "dimColor": false,
+             "color": "warning"
+            },
+            "children": [
+             "█"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "6",
+             "dimColor": false,
+             "color": "inactive"
+            },
+            "children": [
+             "░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "7",
+             "dimColor": false,
+             "color": "inactive"
+            },
+            "children": [
+             "░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "8",
+             "dimColor": false,
+             "color": "inactive"
+            },
+            "children": [
+             "░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "9",
+             "dimColor": false,
+             "color": "inactive"
+            },
+            "children": [
+             "░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "10",
+             "dimColor": false,
+             "color": "inactive"
+            },
+            "children": [
+             "░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "11",
+             "dimColor": false,
+             "color": "inactive"
+            },
+            "children": [
+             "░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "warning",
+             "dimColor": false
+            },
+            "children": [
+             " ",
+             "49",
+             "%"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "   0s · ↓ 97.4k tokens"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "lim-claude-5h",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "claude 5h   "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "success"
+            },
+            "children": [
+             "████████"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "inactive"
+            },
+            "children": [
+             "░░░░"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "success"
+            },
+            "children": [
+             " ",
+             "69",
+             "% left"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "  Nothing running. Ask Claude to start managers or a worker, e.g. \"start a manager for X\"."
+        ]
+       }
+      ]
+     },
+     "title": "Flow"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git fetch origin --prune) → exit 0",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(sh -c rm -rf \"$1\" && mkdir -p \"$1\" sh a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0/f…) → exit 0",
+   "$.process.run(gh pr list --state open --json number,title,headRefName,isDraft,url,updatedAt --…) → exit 0",
+   "$.process.run(git fetch origin --prune) → exit 0",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "tool.call Edit",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "tool.call Write",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "turn.complete",
+   "$.ui.open(flow)",
+   "/flow → Flow pane opened.",
+   "/flow-tasks → Picking tasks."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=flow}",
+   "command.run{command=flow-tasks}",
+   "agent.offer{agent=flow:continue}",
+   "agent.spawn",
+   "tool.call",
+   "tool.call{tool=mcp__flow__handover}",
+   "tool.call{tool=mcp__flow__release}",
+   "tool.call{tool=mcp__flow__reviewer|mcp__flow__queue}",
+   "tool.call{tool=mcp__flow__plan}",
+   "tool.call{tool=mcp__flow__test_slot}",
+   "tool.call{tool=mcp__flow__guard_tests}",
+   "tool.call{tool=mcp__flow__ask}",
+   "tool.call{tool=mcp__flow__fyi}",
+   "tool.call{tool=mcp__flow__preflight}",
+   "tool.call{tool=mcp__flow__answer}",
+   "tool.call{tool=mcp__flow__standing}",
+   "tool.call{tool=mcp__flow__check}",
+   "tool.call{tool=mcp__flow__note}",
+   "tool.call{tool=mcp__flow__clean}",
+   "tool.call{tool=mcp__flow__migrations}",
+   "tool.call{tool=mcp__flow__session}",
+   "tool.call{tool=mcp__flow__deploy}",
+   "tool.call{tool=mcp__flow__push}",
+   "tool.call{tool=mcp__flow__status}",
+   "turn.step",
+   "turn.complete",
+   "config.set{key=theme}",
+   "ui.focus{requestId=flow}",
+   "ui.render{component=Pane, requestId=flow}"
+  ],
+  "calls": [
+   "$.agent.list",
+   "$.agent.register (via registerAgents)",
+   "$.agent.spawn (via startQueue)",
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.clock.sleep",
+   "$.command.register",
+   "$.fs.exists",
+   "$.fs.list (via loadHandovers)",
+   "$.fs.read",
+   "$.fs.stat (via sessionIoOf",
+   "signature)",
+   "$.fs.write",
+   "$.process.run",
+   "$.prompt.fill",
+   "$.prompt.submit",
+   "$.session.cwd",
+   "$.session.messages (via mainHasAnswer",
+   "recordHandoff)",
+   "$.session.send (via ioOf)",
+   "$.session.usage",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.focus",
+   "$.ui.invalidate",
+   "$.ui.log (via best",
+   "sendWrapUp",
+   "warn",
+   "warnMain)",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.status (via refresh)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "flow.activity",
+   "flow.armed",
+   "flow.behind",
+   "flow.checks",
+   "flow.cursor",
+   "flow.deploys",
+   "flow.folded",
+   "flow.forwarded",
+   "flow.graphFocus",
+   "flow.handoffs",
+   "flow.handovers",
+   "flow.harnessLimits",
+   "flow.hinted",
+   "flow.inbox",
+   "flow.inboxCursor",
+   "flow.inboxDraft",
+   "flow.inboxNote",
+   "flow.ledger",
+   "flow.leftovers",
+   "flow.now",
+   "flow.overrideView",
+   "flow.plan",
+   "flow.prCache",
+   "flow.preflight",
+   "flow.push",
+   "flow.queueRuns",
+   "flow.reviewerWork",
+   "flow.roster",
+   "flow.seen-agents",
+   "flow.selected",
+   "flow.sessions",
+   "flow.testSlots",
+   "flow.viewMode"
+  ],
+  "stateWrites": [
+   "flow.activity",
+   "flow.armed",
+   "flow.behind",
+   "flow.checks",
+   "flow.cursor",
+   "flow.deploys",
+   "flow.folded",
+   "flow.forwarded",
+   "flow.graphFocus",
+   "flow.handoffs",
+   "flow.handovers",
+   "flow.harnessLimits",
+   "flow.hinted",
+   "flow.inbox",
+   "flow.inboxCursor",
+   "flow.inboxDraft",
+   "flow.inboxNote",
+   "flow.ledger",
+   "flow.leftovers",
+   "flow.now",
+   "flow.overrideView",
+   "flow.plan",
+   "flow.prCache",
+   "flow.preflight",
+   "flow.push",
+   "flow.queueRuns",
+   "flow.reviewerWork",
+   "flow.roster",
+   "flow.seen-agents",
+   "flow.selected",
+   "flow.sessions",
+   "flow.testSlots",
+   "flow.viewMode"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ying-kai-liao-flow/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ying-kai-liao-flow/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: flow.roster, flow.activity, flow.selected, flow.cursor, flow.folded, flow.now, flow.handovers, flow.seen-agents, flow.inbox, flow.checks, flow.ledger, flow.queueRuns, flow.reviewerWork, flow.prCache, flow.deploys, flow.behind, flow.push, flow.plan, flow.Record, flow.testSlots, flow.viewMode, flow.inboxCursor, flow.inboxDraft, flow.inboxNote, flow.graphFocus, flow.overrideView, flow.hinted, flow.handoffs, flow.preflight, flow.leftovers, flow.sessions, flow.harnessLimits, flow.armed, flow.forwarded"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ying-kai-liao-flow/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=flow}, command.run{command=flow-tasks}, agent.offer{agent=flow:continue}, agent.spawn, tool.call, tool.call{tool=mcp__flow__handover}, tool.call{tool=mcp__flow__release}, tool.call{tool=mcp__flow__reviewer|mcp__flow__queue}, tool.call{tool=mcp__flow__plan}, tool.call{tool=mcp__flow__test_slot}, tool.call{tool=mcp__flow__guard_tests}, tool.call{tool=mcp__flow__ask}, tool.call{tool=mcp__flow__fyi}, tool.call{tool=mcp__flow__preflight}, tool.call{tool=mcp__flow__answer}, tool.call{tool=mcp__flow__standing}, tool.call{tool=mcp__flow__check}, tool.call{tool=mcp__flow__note}, tool.call{tool=mcp__flow__clean}, tool.call{tool=mcp__flow__migrations}, tool.call{tool=mcp__flow__session}, tool.call{tool=mcp__flow__deploy}, tool.call{tool=mcp__flow__push}, tool.call{tool=mcp__flow__status}, turn.step, turn.complete, config.set{key=theme}, ui.focus{requestId=flow}, ui.render{component=Pane, requestId=flow}",
+      "./register.tsx answers its own command: command.run{command=flow}",
+      "./register.tsx answers its own command: command.run{command=flow-tasks}",
+      "./register.tsx gating hook without .catch: agent.offer{agent=flow:continue}",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__handover}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__release}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__reviewer|mcp__flow__queue}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__plan}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__test_slot}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__guard_tests}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__ask}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__fyi}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__preflight}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__answer}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__standing}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__check}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__note}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__clean}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__migrations}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__session}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__deploy}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__push}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__flow__status}",
+      "./register.tsx gating hook without .catch: config.set{key=theme}",
+      "./register.tsx gating hook without .catch: ui.focus{requestId=flow}",
+      "./register.tsx calls: $.agent.list, $.agent.register (via registerAgents), $.agent.spawn (via startQueue), $.clock.after, $.clock.every, $.clock.now, $.clock.sleep, $.command.register, $.fs.exists, $.fs.list (via loadHandovers), $.fs.read, $.fs.stat (via sessionIoOf, signature), $.fs.write, $.process.run, $.prompt.fill, $.prompt.submit, $.session.cwd, $.session.messages (via mainHasAnswer, recordHandoff), $.session.send (via ioOf), $.session.usage, $.state.get, $.state.set, $.tool.register, $.ui.close, $.ui.focus, $.ui.invalidate, $.ui.log (via best, sendWrapUp, warn, warnMain), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via refresh), $.ui.toast",
+      "./register.tsx state writes: flow.activity, flow.armed, flow.behind, flow.checks, flow.cursor, flow.deploys, flow.folded, flow.forwarded, flow.graphFocus, flow.handoffs, flow.handovers, flow.harnessLimits, flow.hinted, flow.inbox, flow.inboxCursor, flow.inboxDraft, flow.inboxNote, flow.ledger, flow.leftovers, flow.now, flow.overrideView, flow.plan, flow.prCache, flow.preflight, flow.push, flow.queueRuns, flow.reviewerWork, flow.roster, flow.seen-agents, flow.selected, flow.sessions, flow.testSlots, flow.viewMode",
+      "./register.tsx state reads: flow.activity, flow.armed, flow.behind, flow.checks, flow.cursor, flow.deploys, flow.folded, flow.forwarded, flow.graphFocus, flow.handoffs, flow.handovers, flow.harnessLimits, flow.hinted, flow.inbox, flow.inboxCursor, flow.inboxDraft, flow.inboxNote, flow.ledger, flow.leftovers, flow.now, flow.overrideView, flow.plan, flow.prCache, flow.preflight, flow.push, flow.queueRuns, flow.reviewerWork, flow.roster, flow.seen-agents, flow.selected, flow.sessions, flow.testSlots, flow.viewMode"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=flow:continue}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__handover}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__release}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__reviewer|mcp__flow__queue}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__plan}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__test_slot}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__guard_tests}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__ask}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__fyi}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__preflight}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__answer}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__standing}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__check}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__note}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__clean}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__migrations}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__session}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__deploy}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__push}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flow__status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "config.set",
+       "hook": "config.set{key=theme}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=flow}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "fcae2fc4244ed68"
+}

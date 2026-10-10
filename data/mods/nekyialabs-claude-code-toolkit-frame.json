@@ -1,0 +1,8 @@
+{
+ "slug": "nekyialabs-claude-code-toolkit-frame",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// frame: appends a markdown file to the system prompt of sessions that were not launched with it.\n// FRAME_FILE: path to the file (default: ~/.claude/frame.md).\n// FRAME_SKIP=1: do nothing in this session (use it in a launcher that already passes the file with --system-prompt-file).\n\nlet frame: string | undefined\n\nexport const register: Register = on => {\n  on('prompt.compose', async ($, e, next) => {\n    const composed = await next(e)\n    if ((await $.env.get('FRAME_SKIP')) === '1') return composed\n    if (frame === undefined) {\n      try {\n        let file = await $.env.get('FRAME_FILE')\n        if (!file) file = `${(await $.env.get('HOME')) ?? ''}/.claude/frame.md`\n        frame = await $.fs.read(file)\n      } catch { frame = '' }\n    }\n    if (!frame) return composed\n    return { sections: [...composed.sections, { id: 'frame:frame', text: frame, scope: 'session' as const }] }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"frame\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Adds your own operating frame (a markdown file) to the system prompt in sessions that were not launched with it.\",\n  \"author\": {\n    \"name\": \"Nekyia Labs\"\n  }\n}"
+ }
+}

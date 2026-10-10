@@ -1,6 +1,6 @@
 {
  "slug": "mlopian-claude-plugins-session-panel",
- "generatedAt": "2026-10-09T15:33:57.117Z",
+ "generatedAt": "2026-10-10T14:45:30.549Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -34,7 +34,8 @@
   "commands": [
    {
     "name": "session-panel",
-    "description": "Show the current session transcript, changes, activity, stats, environment and scratch directory in a side pane",
+    "description": "Show the current session transcript, changes, activity, stats, environment, scratch directory and tool result files in a side pane",
+    "immediate": true,
     "output": "Session panel opened."
    }
   ],
@@ -54,8 +55,8 @@
    "$.session.id": 1,
    "$.session.cwd": 1,
    "$.env.get": 1,
-   "$.process.run": 3,
-   "$.state.get": 14,
+   "$.process.run": 4,
+   "$.state.get": 15,
    "$.state.set": 3,
    "$.clock.every": 1,
    "$.session.repo": 2,
@@ -1035,6 +1036,7 @@
   },
   "script": [
    "$.process.run(id -u) → exit 0",
+   "$.process.run(sh -c ls -d \"$1\"/.claude/projects/*/\"$2\".jsonl 2>/dev/null | head -1 sh /Users/d…) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -1074,13 +1076,15 @@
    "$.env.get (via openInEditor",
    "sessionPaths)",
    "$.fs.exists (via listOr",
-   "readOr",
+   "loadTranscript",
    "showDiff)",
    "$.fs.list (via listOr)",
    "$.fs.read",
+   "$.fs.stat (via loadTranscript)",
    "$.process.run",
    "$.session.cwd (via sessionPaths)",
-   "$.session.id (via sessionPaths)",
+   "$.session.id (via refreshLiveTab",
+   "sessionPaths)",
    "$.session.model",
    "$.session.repo",
    "$.session.turns",
@@ -1096,6 +1100,7 @@
    "$.ui.toast (via openInEditor)"
   ],
   "stateReads": [
+   "session-panel.agentView",
    "session-panel.diff",
    "session-panel.dir",
    "session-panel.git",
@@ -1108,6 +1113,7 @@
    "session-panel.tick"
   ],
   "stateWrites": [
+   "session-panel.agentView",
    "session-panel.diff",
    "session-panel.dir",
    "session-panel.git",
@@ -1143,7 +1149,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-panel.tab, session-panel.dir, session-panel.tick, session-panel.offset, session-panel.isErrorsOnly, session-panel.selectedTool, session-panel.listOffset, session-panel.diff, session-panel.git, session-panel.paths"
+     "types ./types/index.d.ts declares state: session-panel.tab, session-panel.dir, session-panel.tick, session-panel.offset, session-panel.isErrorsOnly, session-panel.selectedTool, session-panel.listOffset, session-panel.diff, session-panel.git, session-panel.paths, session-panel.agentView"
     ],
     "gatingHooks": []
    },
@@ -1157,11 +1163,11 @@
       "./register.tsx hooks: session.start, command.run{command=session-panel}, turn.complete, ui.scroll{component=Pane, requestId=session-panel}, ui.render{component=Pane, requestId=session-panel}",
       "./register.tsx answers its own command: command.run{command=session-panel}",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=session-panel}",
-      "./register.tsx calls: $.agent.list, $.clock.every, $.command.register, $.env.get (via openInEditor, sessionPaths), $.fs.exists (via listOr, readOr, showDiff), $.fs.list (via listOr), $.fs.read, $.process.run, $.session.cwd (via sessionPaths), $.session.id (via sessionPaths), $.session.model, $.session.repo, $.session.turns, $.session.usage, $.session.version, $.state.get, $.state.set, $.ui.copy (via openInEditor), $.ui.open, $.ui.panes (via refreshLiveTab), $.ui.resolve, $.ui.scroll, $.ui.toast (via openInEditor)",
+      "./register.tsx calls: $.agent.list, $.clock.every, $.command.register, $.env.get (via openInEditor, sessionPaths), $.fs.exists (via listOr, loadTranscript, showDiff), $.fs.list (via listOr), $.fs.read, $.fs.stat (via loadTranscript), $.process.run, $.session.cwd (via sessionPaths), $.session.id (via refreshLiveTab, sessionPaths), $.session.model, $.session.repo, $.session.turns, $.session.usage, $.session.version, $.state.get, $.state.set, $.ui.copy (via openInEditor), $.ui.open, $.ui.panes (via refreshLiveTab), $.ui.resolve, $.ui.scroll, $.ui.toast (via openInEditor)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: EDITOR, HERDR_PANE_ID, HOME, TMUX, VISUAL",
-      "./register.tsx state writes: session-panel.diff, session-panel.dir, session-panel.git, session-panel.isErrorsOnly, session-panel.listOffset, session-panel.offset, session-panel.paths, session-panel.selectedTool, session-panel.tab, session-panel.tick",
-      "./register.tsx state reads: session-panel.diff, session-panel.dir, session-panel.git, session-panel.isErrorsOnly, session-panel.listOffset, session-panel.offset, session-panel.paths, session-panel.selectedTool, session-panel.tab, session-panel.tick"
+      "./register.tsx state writes: session-panel.agentView, session-panel.diff, session-panel.dir, session-panel.git, session-panel.isErrorsOnly, session-panel.listOffset, session-panel.offset, session-panel.paths, session-panel.selectedTool, session-panel.tab, session-panel.tick",
+      "./register.tsx state reads: session-panel.agentView, session-panel.diff, session-panel.dir, session-panel.git, session-panel.isErrorsOnly, session-panel.listOffset, session-panel.offset, session-panel.paths, session-panel.selectedTool, session-panel.tab, session-panel.tick"
      ],
      "gatingHooks": [
       {
@@ -1176,5 +1182,5 @@
    "advice": []
   }
  },
- "sourceHash": "4fd08cd6146a4e7c"
+ "sourceHash": "1941ffe2ef7543c2"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "newkayak12-claude-skills-session",
- "generatedAt": "2026-10-08T15:53:12.873Z",
+ "generatedAt": "2026-10-10T14:44:28.418Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -88,13 +88,6 @@
     }
    },
    {
-    "event": "ui.render",
-    "matcher": {
-     "component": "Pane",
-     "requestId": "recap"
-    }
-   },
-   {
     "event": "turn.complete",
     "matcher": {
      "reason": "answer"
@@ -120,6 +113,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "board"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "session"
     }
    },
@@ -137,6 +136,13 @@
     "matcher": {
      "component": "Pane",
      "requestId": "session"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "board"
     }
    }
   ],
@@ -159,22 +165,27 @@
    {
     "name": "handoff",
     "description": "Recap this session now and keep it for the next start; /handoff <session> also sends it there",
-    "output": "OK"
+    "output": "Recap kept, on the board."
    },
    {
     "name": "recap",
     "description": "Print this project's last recap (smart-compact or /handoff)",
-    "output": "Recap from 0m ago:\n\nOK"
+    "output": "Recap opened on the board."
    },
    {
     "name": "lessons",
     "description": "Corrections collected from recaps; /lessons clear empties them",
-    "output": "No lessons yet: they come from the Corrections section of each recap."
+    "output": "Lessons opened on the board."
    },
    {
     "name": "task",
     "description": "Time a task: /task <name> starts, /task done stops, /task log shows today",
     "output": "No task running. /task <name> starts one."
+   },
+   {
+    "name": "board",
+    "description": "Open sessions: branch, context %, cost, task, harness/graph/teams runs; tabs for recap, lessons, today",
+    "output": "Board opened."
    },
    {
     "name": "session",
@@ -193,6 +204,10 @@
     "title": "Denied calls"
    },
    {
+    "id": "board",
+    "title": "Board"
+   },
+   {
     "id": "session",
     "title": "Session"
    }
@@ -209,24 +224,26 @@
   ],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 17,
-   "$.state.get": 32,
-   "$.state.set": 18,
-   "$.command.register": 8,
-   "$.session.root": 15,
-   "$.clock.now": 19,
-   "$.session.surfaces": 11,
+   "$.store.get": 18,
+   "$.state.get": 39,
+   "$.state.set": 23,
+   "$.command.register": 9,
+   "$.session.surfaces": 18,
+   "$.clock.now": 22,
+   "$.session.id": 6,
+   "$.session.usage": 5,
+   "$.session.root": 17,
+   "$.process.run": 11,
+   "$.fs.list": 9,
+   "$.store.set": 5,
    "$.session.cwd": 7,
    "$.env.get": 9,
-   "$.process.run": 5,
    "$.ui.ask": 1,
-   "$.store.set": 2,
    "$.ui.toast": 1,
    "$.ui.status": 2,
-   "$.session.usage": 2,
-   "$.ui.open": 3,
+   "$.ui.open": 7,
    "$.model.fork": 1,
-   "$.session.id": 1,
+   "$.store.keys": 1,
    "$.ui.resolve": 4
   },
   "timers": [],
@@ -307,7 +324,7 @@
        {
         "type": "Box",
         "props": {
-         "key": "d-1760000000200-1",
+         "key": "d-1760000000220-1",
          "flexDirection": "column"
         },
         "children": [
@@ -364,7 +381,7 @@
            {
             "type": "Button",
             "props": {
-             "key": "copy-1760000000200-1",
+             "key": "copy-1760000000220-1",
              "label": "Copy rule",
              "onPress": "[fn]"
             },
@@ -387,6 +404,223 @@
       ]
      },
      "title": "Denied calls"
+    },
+    "board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "borderStyle": "round",
+         "borderColor": "claude",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "key": "title",
+           "bold": true
+          },
+          "children": [
+           "board"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-sessions",
+           "label": "Sessions [1]",
+           "hotkey": "1",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-recap",
+           "label": "Recap [2]",
+           "hotkey": "2",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-lessons",
+           "label": "Lessons [3]",
+           "hotkey": "3",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-today",
+           "label": "Today [4]",
+           "hotkey": "4",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "refresh [r]",
+           "hotkey": "r",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "claude"
+        },
+        "children": [
+         "sessions (1)"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "s-preview-session",
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "claude",
+             "bold": true
+            },
+            "children": [
+             "● this"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "feat/auth-refresh"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {},
+              "children": [
+               "49%"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {},
+              "children": [
+               "$0.42"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 2,
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "preview-session-harness",
+             "dimColor": true
+            },
+            "children": [
+             "harness –"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "preview-session-graph",
+             "dimColor": true
+            },
+            "children": [
+             "graph –"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "preview-session-teams",
+             "dimColor": true
+            },
+            "children": [
+             "teams –"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-start"
+          },
+          "children": [
+           "  /work/app"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Board"
     },
     "session": {
      "ok": true,
@@ -546,30 +780,12 @@
       ]
      },
      "title": "Session"
-    },
-    "recap": {
-     "ok": true,
-     "tree": {
-      "type": "Box",
-      "props": {
-       "flexDirection": "column",
-       "paddingX": 1
-      },
-      "children": [
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "OK"
-        ]
-       }
-      ]
-     },
-     "title": "recap"
     }
    }
   },
   "script": [
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -584,16 +800,25 @@
    "tool.call Bash cat .env",
    "$.process.run(git diff --numstat -- /work/app/src/auth.ts /work/app/src/audit.ts /work/app/src…) → exit 0",
    "$.process.run(sh -c echo $PPID) → exit 0",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
    "turn.complete",
    "$.ui.open(memo)",
    "/memo → Memo pane opened.",
    "$.ui.open(guard-denials)",
    "/session-denials → Denials pane opened.",
    "/smart-compact → recap + compact at 70%. Change it with /smart-compact <10-95>.",
-   "/handoff → OK",
-   "/recap → Recap from 0m ago:\n\nOK",
-   "/lessons → No lessons yet: they come from the Corrections section of each recap.",
+   "$.ui.open(board)",
+   "/handoff → Recap kept, on the board.",
+   "$.ui.open(board)",
+   "/recap → Recap opened on the board.",
+   "$.ui.open(board)",
+   "/lessons → Lessons opened on the board.",
    "/task → No task running. /task <name> starts one.",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.ui.open(board)",
+   "/board → Board opened.",
    "$.process.run(git diff --numstat -- /work/app/src/auth.ts /work/app/src/audit.ts /work/app/src…) → exit 0",
    "$.process.run(sh -c echo $PPID) → exit 0",
    "$.ui.open(session)",
@@ -626,15 +851,16 @@
    "command.run{command=handoff}",
    "command.run{command=recap}",
    "command.run{command=lessons}",
-   "ui.render{component=Pane, requestId=recap}",
    "turn.complete{reason=answer}",
    "prompt.submit{origin has {kind=composer}}",
    "turn.complete",
    "command.run{command=task}",
+   "command.run{command=board}",
    "command.run{command=session}",
    "session.end",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=session}"
+   "ui.render{component=Pane, requestId=session}",
+   "ui.render{component=Pane, requestId=?}"
   ],
   "calls": [
    "$.clock.now",
@@ -643,8 +869,11 @@
    "$.config.set",
    "$.env.get (via envOf",
    "isWindows)",
+   "$.fs.list (via listOf)",
+   "$.fs.read (via jsonOf)",
    "$.model.fork (via recapNow)",
    "$.process.run (via engineOf",
+   "gitOut",
    "judge",
    "pollOrphans",
    "refreshStats",
@@ -652,7 +881,7 @@
    "tryRun)",
    "$.session.compact",
    "$.session.cwd (via envOf)",
-   "$.session.id (via recapNow)",
+   "$.session.id",
    "$.session.root",
    "$.session.send",
    "$.session.surfaces",
@@ -661,6 +890,7 @@
    "$.state.set",
    "$.store.delete",
    "$.store.get",
+   "$.store.keys (via allRows)",
    "$.store.set",
    "$.ui.ask (via askOrDeny",
    "stopOrphan)",
@@ -671,6 +901,8 @@
   ],
   "stateReads": [
    "session.band",
+   "session.boardRows",
+   "session.boardTab",
    "session.engine",
    "session.guard",
    "session.guardCopy",
@@ -684,6 +916,8 @@
   ],
   "stateWrites": [
    "session.band",
+   "session.boardRows",
+   "session.boardTab",
    "session.engine",
    "session.guard",
    "session.guardCopy",
@@ -716,7 +950,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session.ledger, session.orphans, session.tab, session.engine, session.band, session.stats, session.guard, session.guardCopy, session.memo, session.last, session.recap"
+     "types ./types/index.d.ts declares state: session.ledger, session.orphans, session.tab, session.engine, session.band, session.stats, session.guard, session.guardCopy, session.memo, session.last, session.recap, session.boardTab, session.boardRows"
     ],
     "gatingHooks": []
    },
@@ -727,7 +961,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mod.tsx hooks: session.start, tool.call, tool.call{tool=Bash}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.check, command.run{command=session-denials}, ui.render{component=Pane, requestId=guard-denials}, command.run{command=memo}, prompt.submit, classic.SessionStart, ui.render{component=Pane, requestId=memo}, command.run{command=smart-compact}, command.run{command=handoff}, command.run{command=recap}, command.run{command=lessons}, ui.render{component=Pane, requestId=recap}, turn.complete{reason=answer}, prompt.submit{origin has {kind=composer}}, turn.complete, command.run{command=task}, command.run{command=session}, session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=session}",
+      "./mod.tsx hooks: session.start, tool.call, tool.call{tool=Bash}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.check, command.run{command=session-denials}, ui.render{component=Pane, requestId=guard-denials}, command.run{command=memo}, prompt.submit, classic.SessionStart, ui.render{component=Pane, requestId=memo}, command.run{command=smart-compact}, command.run{command=handoff}, command.run{command=recap}, command.run{command=lessons}, turn.complete{reason=answer}, prompt.submit{origin has {kind=composer}}, turn.complete, command.run{command=task}, command.run{command=board}, command.run{command=session}, session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=session}, ui.render{component=Pane, requestId=?}",
       "./mod.tsx gating hook with .catch: tool.call",
       "./mod.tsx gating hook with .catch: tool.call{tool=Bash}",
       "./mod.tsx gating hook with .catch: tool.call{tool=Write}",
@@ -743,12 +977,13 @@
       "./mod.tsx gating hook with .catch: command.run{command=lessons}",
       "./mod.tsx gating hook with .catch: prompt.submit{origin has {kind=composer}}",
       "./mod.tsx gating hook with .catch: command.run{command=task}",
+      "./mod.tsx gating hook with .catch: command.run{command=board}",
       "./mod.tsx gating hook with .catch: command.run{command=session}",
-      "./mod.tsx calls: $.clock.now, $.clock.sleep, $.command.register, $.config.set, $.env.get (via envOf, isWindows), $.model.fork (via recapNow), $.process.run (via engineOf, judge, pollOrphans, refreshStats, stopOrphan, tryRun), $.session.compact, $.session.cwd (via envOf), $.session.id (via recapNow), $.session.root, $.session.send, $.session.surfaces, $.session.usage, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.ui.ask (via askOrDeny, stopOrphan), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./mod.tsx calls: $.clock.now, $.clock.sleep, $.command.register, $.config.set, $.env.get (via envOf, isWindows), $.fs.list (via listOf), $.fs.read (via jsonOf), $.model.fork (via recapNow), $.process.run (via engineOf, gitOut, judge, pollOrphans, refreshStats, stopOrphan, tryRun), $.session.compact, $.session.cwd (via envOf), $.session.id, $.session.root, $.session.send, $.session.surfaces, $.session.usage, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys (via allRows), $.store.set, $.ui.ask (via askOrDeny, stopOrphan), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
       "./mod.tsx env writes: nothing",
       "./mod.tsx env reads: HOME, OS",
-      "./mod.tsx state writes: session.band, session.engine, session.guard, session.guardCopy, session.last, session.ledger, session.memo, session.orphans, session.recap, session.stats, session.tab",
-      "./mod.tsx state reads: session.band, session.engine, session.guard, session.guardCopy, session.last, session.ledger, session.memo, session.orphans, session.recap, session.stats, session.tab"
+      "./mod.tsx state writes: session.band, session.boardRows, session.boardTab, session.engine, session.guard, session.guardCopy, session.last, session.ledger, session.memo, session.orphans, session.recap, session.stats, session.tab",
+      "./mod.tsx state reads: session.band, session.boardRows, session.boardTab, session.engine, session.guard, session.guardCopy, session.last, session.ledger, session.memo, session.orphans, session.recap, session.stats, session.tab"
      ],
      "gatingHooks": [
       {
@@ -844,13 +1079,20 @@
       {
        "module": "./mod.tsx",
        "pattern": "command.run",
+       "hook": "command.run{command=board}",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod.tsx",
+       "pattern": "command.run",
        "hook": "command.run{command=session}",
        "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "114571eaf266e8a2"
+ "sourceHash": "a65cdeda38a00200"
 }

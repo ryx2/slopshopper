@@ -1,6 +1,6 @@
 {
  "slug": "vladleus-claude-mods-autopilot",
- "generatedAt": "2026-10-09T15:34:39.576Z",
+ "generatedAt": "2026-10-10T14:44:36.155Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -31,6 +31,12 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "mcp__autopilot__wait_for"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__autopilot__restart_session"
     }
    },
@@ -45,7 +51,7 @@
    {
     "name": "autopilot",
     "description": "Run this session on autopilot with a fixed role; no args shows status, \"0 0 stop\" hands back",
-    "argumentHint": "<time> <threshold%> [max restarts] \"<role>\" [--goal \"…\"] [--5h 95] [--week 80] | 0 0 stop",
+    "argumentHint": "<time> <threshold%> [max restarts] \"<role>\" [--goal \"…\"] [--5h 95] [--week 80] [--ask-user] | 0 0 stop",
     "output": "Autopilot is off."
    }
   ],
@@ -53,6 +59,10 @@
    {
     "name": "restart_session",
     "description": "Autopilot only: after writing a handoff with /create-handoff-doc at the context threshold, call this with the handoff path. It clears the session and resumes from the handoff. Refused when autopilot is not wrapping up."
+   },
+   {
+    "name": "wait_for",
+    "description": "Autopilot only: declares that this session is waiting for something (another session, a subagent, a workflow, a background task, the person), so autopilot stops nudging it. End your turn right after calling it; any new message wakes the session."
    }
   ],
   "panes": [],
@@ -67,7 +77,7 @@
    "$.store.get": 1,
    "$.session.usage": 1,
    "$.command.register": 1,
-   "$.tool.register": 1,
+   "$.tool.register": 2,
    "$.clock.every": 1,
    "$.clock.now": 1
   },
@@ -110,6 +120,7 @@
    "classic.Stop",
    "session.compact{trigger=auto}",
    "turn.start",
+   "tool.call{tool=?}",
    "tool.call{tool=mcp__autopilot__restart_session}",
    "tool.call",
    "turn.complete"
@@ -172,10 +183,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=autopilot}, prompt.compose, classic.Stop, session.compact{trigger=auto}, turn.start, tool.call{tool=mcp__autopilot__restart_session}, tool.call, turn.complete",
+      "./register.tsx hooks: session.start, command.run{command=autopilot}, prompt.compose, classic.Stop, session.compact{trigger=auto}, turn.start, tool.call{tool=?}, tool.call{tool=mcp__autopilot__restart_session}, tool.call, turn.complete",
       "./register.tsx gating hook with .catch: command.run{command=autopilot}",
       "./register.tsx gating hook with .catch: classic.Stop",
       "./register.tsx gating hook with .catch: session.compact{trigger=auto}",
+      "./register.tsx gating hook with .catch: tool.call{tool=?}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__autopilot__restart_session}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.list, $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.read (via log), $.fs.write (via log, save), $.process.run, $.process.spawn (via grepTranscript), $.prompt.submit, $.session.id, $.session.root, $.session.usage, $.store.delete (via save, syncId), $.store.get, $.store.set (via save), $.tool.register, $.ui.status, $.ui.toast",
@@ -204,6 +216,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__autopilot__restart_session}",
        "hasCatch": true
       },
@@ -219,5 +237,5 @@
    "advice": []
   }
  },
- "sourceHash": "b341848642742819"
+ "sourceHash": "a54c2b351f81a56c"
 }

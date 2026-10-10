@@ -1,0 +1,276 @@
+{
+ "slug": "shaharz-local-review",
+ "generatedAt": "2026-10-10T14:45:48.502Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "local-review"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__local-review__open_review"
+    }
+   },
+   {
+    "event": "ui.message",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "local-review"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "local-review"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "local-review",
+    "description": "Review a local diff with inline comments: [staged | <commit> | <a>..<b> | branch[:<base>]] [--cwd <dir>]",
+    "argumentHint": "[staged|<commit>|<a>..<b>|branch[:<base>]] [--cwd <dir>]",
+    "output": "Opened review of uncommitted changes in app: 1 file(s)."
+   }
+  ],
+  "tools": [
+   {
+    "name": "open_review",
+    "description": "Open the user's local review pane on a diff so they can leave inline comments and suggestions, which arrive later as a prompt. Use it after finishing a change the user should review. target: '' or 'uncommitted' (working tree vs HEAD, with untracked files), 'staged', a commit-ish, a range 'a..b', or 'branch' / 'branch:<base>' (merge-base with base, default origin/main, to the working tree). cwd: the repo or worktree directory, default the session's."
+   }
+  ],
+  "panes": [
+   {
+    "id": "local-review",
+    "title": "Review"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.state.get": 10,
+   "$.session.cwd": 1,
+   "$.process.run": 3,
+   "$.state.set": 4,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "local-review": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Client",
+        "props": {
+         "key": "viewer",
+         "module": "./viewer.tsx",
+         "props": {
+          "label": "uncommitted changes in app",
+          "fileIndex": 0,
+          "files": [
+           {
+            "path": "src/auth.ts",
+            "status": "modified",
+            "comments": 0
+           }
+          ],
+          "file": {
+           "path": "src/auth.ts",
+           "status": "modified",
+           "rows": [
+            {
+             "k": "hunk",
+             "t": "@@ -3,4 +3,5 @@"
+            },
+            {
+             "k": "ctx",
+             "t": "export async function refresh(token: string) {",
+             "o": 3,
+             "n": 3
+            },
+            {
+             "k": "ctx",
+             "t": "  const claims = await verify(token)",
+             "o": 4,
+             "n": 4
+            },
+            {
+             "k": "del",
+             "t": "  if (!claims) throw new Error('invalid token')",
+             "o": 5
+            },
+            {
+             "k": "add",
+             "t": "  if (!claims || claims.exp < Date.now() / 1000) throw new Error('invalid token')",
+             "n": 5
+            },
+            {
+             "k": "add",
+             "t": "  await audit('refresh', claims.sub)",
+             "n": 6
+            },
+            {
+             "k": "ctx",
+             "t": "  return issue(claims.sub)",
+             "o": 6,
+             "n": 7
+            }
+           ]
+          },
+          "comments": [],
+          "total": 0,
+          "cancelSeq": 0
+         },
+         "height": 30
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "Review"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git diff --no-color --no-ext-diff -M --src-prefix=a/ --dst-prefix=b/ HEAD) → exit 0",
+   "$.process.run(git ls-files --others --exclude-standard -z) → exit 0",
+   "$.ui.open(local-review)",
+   "/local-review → Opened review of uncommitted changes in app: 1 file(s)."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=local-review}",
+   "tool.call{tool=mcp__local-review__open_review}",
+   "ui.message{component=Pane, requestId=local-review}",
+   "turn.complete",
+   "ui.close",
+   "ui.render{component=Pane, requestId=local-review}"
+  ],
+  "calls": [
+   "$.command.register",
+   "$.process.run (via git)",
+   "$.prompt.fill (via send)",
+   "$.prompt.submit (via send)",
+   "$.session.cwd",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.open (via openReview)",
+   "$.ui.resolve",
+   "$.ui.toast (via send)"
+  ],
+  "stateReads": [
+   "local-review.cancelSeq",
+   "local-review.comments",
+   "local-review.fileIndex",
+   "local-review.isEditing",
+   "local-review.isOpen",
+   "local-review.review"
+  ],
+  "stateWrites": [
+   "local-review.cancelSeq",
+   "local-review.comments",
+   "local-review.fileIndex",
+   "local-review.isEditing",
+   "local-review.isOpen",
+   "local-review.review"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/shaharz-local-review/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/shaharz-local-review/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: local-review.review, local-review.comments, local-review.fileIndex, local-review.isOpen, local-review.isEditing, local-review.cancelSeq"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/shaharz-local-review/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=local-review}, tool.call{tool=mcp__local-review__open_review}, ui.message{component=Pane, requestId=local-review}, turn.complete, ui.close, ui.render{component=Pane, requestId=local-review}",
+      "./register.tsx answers its own command: command.run{command=local-review}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__local-review__open_review}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.command.register, $.process.run (via git), $.prompt.fill (via send), $.prompt.submit (via send), $.session.cwd, $.state.get, $.state.set, $.tool.register, $.ui.close, $.ui.open (via openReview), $.ui.resolve, $.ui.toast (via send)",
+      "./register.tsx state writes: local-review.cancelSeq, local-review.comments, local-review.fileIndex, local-review.isEditing, local-review.isOpen, local-review.review",
+      "./register.tsx state reads: local-review.cancelSeq, local-review.comments, local-review.fileIndex, local-review.isEditing, local-review.isOpen, local-review.review",
+      "./register.tsx surface modules: hooks/viewer.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__local-review__open_review}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "3ef621639bff7b1d"
+}

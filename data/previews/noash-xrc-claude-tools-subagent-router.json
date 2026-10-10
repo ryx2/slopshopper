@@ -1,6 +1,6 @@
 {
  "slug": "noash-xrc-claude-tools-subagent-router",
- "generatedAt": "2026-10-08T15:53:13.735Z",
+ "generatedAt": "2026-10-10T14:44:29.297Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,7 +14,44 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "orchestrate"
+    }
+   },
+   {
     "event": "agent.spawn"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__subagent-router__update_tasks"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__subagent-router__await_approval"
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "orchestrate"
+    }
    }
   ],
   "commands": [
@@ -23,6 +60,12 @@
     "description": "Show, or turn on or off, routing subagents to cheaper models",
     "argumentHint": "[on | off]",
     "output": "subagent-router is on: Explore on haiku, general-purpose on sonnet."
+   },
+   {
+    "name": "orchestrate",
+    "description": "Split a big task across scout, worker and reviewer subagents",
+    "argumentHint": "<task> | <level> | stop",
+    "output": "Usage: /orchestrate <task>"
    }
   ],
   "tools": [],
@@ -32,10 +75,28 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1
+   "$.command.register": 2,
+   "$.state.get": 7,
+   "$.ui.resolve": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "Pane": {
+    "orchestrate": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No orchestration. /orchestrate <task> starts one."
+      ]
+     },
+     "title": "orchestrate"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -48,7 +109,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/subagent-router → subagent-router is on: Explore on haiku, general-purpose on sonnet."
+   "/subagent-router → subagent-router is on: Explore on haiku, general-purpose on sonnet.",
+   "/orchestrate → Usage: /orchestrate <task>"
   ],
   "console": [],
   "warnings": []
@@ -60,18 +122,40 @@
   "hooks": [
    "session.start",
    "command.run{command=subagent-router}",
-   "agent.spawn"
+   "command.run{command=orchestrate}",
+   "agent.spawn",
+   "turn.step",
+   "turn.complete",
+   "tool.call{tool=mcp__subagent-router__update_tasks}",
+   "tool.call{tool=mcp__subagent-router__await_approval}",
+   "turn.start",
+   "session.measure",
+   "ui.render{component=Pane, requestId=orchestrate}"
   ],
   "calls": [
+   "$.agent.register (via registerRoles)",
    "$.command.register",
+   "$.prompt.submit (via approve",
+   "start)",
    "$.state.get",
-   "$.state.set"
+   "$.state.set",
+   "$.tool.register (via registerRoles)",
+   "$.ui.close (via stop)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
-   "subagent-router.routed"
+   "subagent-router.agents",
+   "subagent-router.routed",
+   "subagent-router.run",
+   "subagent-router.tasks"
   ],
   "stateWrites": [
-   "subagent-router.routed"
+   "subagent-router.agents",
+   "subagent-router.routed",
+   "subagent-router.run",
+   "subagent-router.tasks"
   ],
   "envReads": [],
   "raw": {
@@ -85,7 +169,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: subagent-router.routed"
+     "types ./types/index.d.ts declares state: subagent-router.routed, subagent-router.run, subagent-router.tasks, subagent-router.agents"
     ],
     "gatingHooks": []
    },
@@ -96,24 +180,40 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=subagent-router}, agent.spawn",
-      "./register.ts answers its own command: command.run{command=subagent-router}",
-      "./register.ts gating hook with .catch: agent.spawn",
-      "./register.ts calls: $.command.register, $.state.get, $.state.set",
-      "./register.ts state writes: subagent-router.routed",
-      "./register.ts state reads: subagent-router.routed"
+      "./register.tsx hooks: session.start, command.run{command=subagent-router}, command.run{command=orchestrate}, agent.spawn, turn.step, turn.complete, tool.call{tool=mcp__subagent-router__update_tasks}, tool.call{tool=mcp__subagent-router__await_approval}, turn.start, session.measure, ui.render{component=Pane, requestId=orchestrate}",
+      "./register.tsx answers its own command: command.run{command=subagent-router}",
+      "./register.tsx answers its own command: command.run{command=orchestrate}",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__subagent-router__update_tasks}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__subagent-router__await_approval}",
+      "./register.tsx calls: $.agent.register (via registerRoles), $.command.register, $.prompt.submit (via approve, start), $.state.get, $.state.set, $.tool.register (via registerRoles), $.ui.close (via stop), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: subagent-router.agents, subagent-router.routed, subagent-router.run, subagent-router.tasks",
+      "./register.tsx state reads: subagent-router.agents, subagent-router.routed, subagent-router.run, subagent-router.tasks"
      ],
      "gatingHooks": [
       {
-       "module": "./register.ts",
+       "module": "./register.tsx",
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__subagent-router__update_tasks}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__subagent-router__await_approval}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "4a62cf2d89010e47"
+ "sourceHash": "de0d56319848f78c"
 }

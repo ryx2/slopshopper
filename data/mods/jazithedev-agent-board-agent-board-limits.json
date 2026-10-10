@@ -1,0 +1,8 @@
+{
+ "slug": "jazithedev-agent-board-agent-board-limits",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\ntype Window = { kind: string; percentUsed: number; resetsAt?: string }\n\nexport const snapshot = (windows: Window[], now: number): string =>\n  JSON.stringify({ updatedAt: now, windows }, null, 2)\n\nexport const homeOf = (pluginRoot: string): string =>\n  pluginRoot.includes('/.claude/') ? pluginRoot.split('/.claude/')[0] : ''\n\nexport const register: Register = on => {\n  on('turn.complete', async ($, e, next) => {\n    const answer = await next(e)\n\n    try {\n      const { rateLimits } = await $.session.usage()\n      const home = homeOf($.plugin.root)\n\n      if (rateLimits.length > 0 && home !== '') {\n        await $.fs.write(`${home}/.cache/agent-board/limits.json`, snapshot(rateLimits, await $.clock.now()))\n      }\n    } catch {\n      // the reading is a convenience; a failed write must never disturb the turn\n    }\n\n    return answer\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"agent-board-limits\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Writes your account's 5-hour and weekly rate-limit usage to ~/.cache/agent-board/limits.json after every turn, so Jazi's Agent Board can show it.\",\n  \"author\": {\n    \"name\": \"Krzysztof Trzos (Jazi)\",\n    \"url\": \"https://github.com/jazithedev\"\n  },\n  \"homepage\": \"https://github.com/jazithedev/agent-board\",\n  \"repository\": \"https://github.com/jazithedev/agent-board\",\n  \"license\": \"MIT\"\n}"
+ }
+}

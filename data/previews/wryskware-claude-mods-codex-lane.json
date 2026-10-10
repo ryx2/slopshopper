@@ -1,0 +1,296 @@
+{
+ "slug": "wryskware-claude-mods-codex-lane",
+ "generatedAt": "2026-10-10T14:45:58.107Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__codex-lane__dispatch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__codex-lane__result"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__codex-lane__cancel"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Agent"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "codex"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "codex-lane"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "codex",
+    "description": "Show Codex jobs and Claude subagents in a pane",
+    "output": "Workers pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "dispatch",
+    "description": "Start a worker job on Codex (OpenAI; the model in ~/.codex/config.toml unless `model` is given) in the background: the Codex equivalent of spawning a background Agent worker.\n\nReturns a job id at once. When the job finishes, its final report arrives as a new message, as a finished background agent's does: do not poll, sleep or wait for it.\n\n`brief` must be self-contained, exactly as for an Agent worker: objective, deliverable, relevant files, constraints, decision authority, verification method, return format. Codex sees none of this conversation.\n\n`effort` is Codex's reasoning effort (low, medium, high, xhigh). It runs in `cwd` (default: the session's) under the workspace-write sandbox, unless that workspace's .claude/codex-lane.json says otherwise. Set `worktree: true` to run it in a separate git worktree instead of the working tree."
+   },
+   {
+    "name": "result",
+    "description": "Read a Codex job's status and its full final report. Only needed when the completion message cut the report short, or to check a job on request; never to poll."
+   },
+   {
+    "name": "cancel",
+    "description": "Cancel a running Codex job (kills its whole process tree)."
+   }
+  ],
+  "panes": [
+   {
+    "id": "codex-lane",
+    "title": "Workers"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 3,
+   "$.command.register": 1,
+   "$.clock.every": 1,
+   "$.process.run": 2,
+   "$.session.id": 2,
+   "$.fs.list": 2,
+   "$.ui.status": 2,
+   "$.agent.list": 2,
+   "$.state.get": 9,
+   "$.state.set": 6,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 5000
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "codex-lane": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Codex"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "  No Codex jobs this session."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Claude"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "  No subagents this session."
+        ]
+       }
+      ]
+     },
+     "title": "Workers"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(ai-usagebar usage --json) → exit 0",
+   "$.process.run(printenv HOME) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(codex-lane)",
+   "/codex → Workers pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__codex-lane__dispatch}",
+   "tool.call{tool=mcp__codex-lane__result}",
+   "tool.call{tool=mcp__codex-lane__cancel}",
+   "prompt.submit",
+   "tool.call{tool=Agent}",
+   "command.run{command=codex}",
+   "ui.render{component=Pane, requestId=codex-lane}"
+  ],
+  "calls": [
+   "$.agent.list (via tick)",
+   "$.clock.every",
+   "$.command.register",
+   "$.fs.exists",
+   "$.fs.list (via tick)",
+   "$.fs.read (via readText)",
+   "$.fs.stat (via tick)",
+   "$.fs.write",
+   "$.process.run",
+   "$.prompt.submit (via notify)",
+   "$.session.id",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via tick)"
+  ],
+  "stateReads": [
+   "codex-lane.agents",
+   "codex-lane.jobs",
+   "codex-lane.now"
+  ],
+  "stateWrites": [
+   "codex-lane.agents",
+   "codex-lane.jobs",
+   "codex-lane.now"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/wryskware-claude-mods-codex-lane/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/wryskware-claude-mods-codex-lane/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: codex-lane.jobs, codex-lane.agents, codex-lane.now"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/wryskware-claude-mods-codex-lane/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__codex-lane__dispatch}, tool.call{tool=mcp__codex-lane__result}, tool.call{tool=mcp__codex-lane__cancel}, prompt.submit, tool.call{tool=Agent}, command.run{command=codex}, ui.render{component=Pane, requestId=codex-lane}",
+      "./register.tsx answers its own command: command.run{command=codex}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__codex-lane__dispatch}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__codex-lane__result}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__codex-lane__cancel}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
+      "./register.tsx calls: $.agent.list (via tick), $.clock.every, $.command.register, $.fs.exists, $.fs.list (via tick), $.fs.read (via readText), $.fs.stat (via tick), $.fs.write, $.process.run, $.prompt.submit (via notify), $.session.id, $.state.get, $.state.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.status (via tick)",
+      "./register.tsx state writes: codex-lane.agents, codex-lane.jobs, codex-lane.now",
+      "./register.tsx state reads: codex-lane.agents, codex-lane.jobs, codex-lane.now"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__codex-lane__dispatch}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__codex-lane__result}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__codex-lane__cancel}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "6d37d87534614770"
+}

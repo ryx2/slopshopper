@@ -1,0 +1,291 @@
+{
+ "slug": "brianleach-phi-delegate",
+ "generatedAt": "2026-10-10T14:45:02.648Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "phi-guard"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "phi-review"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^(Read|Edit|Write|Bash|Grep|Glob|MultiEdit|NotebookEdit)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^(Bash|BashOutput|TaskOutput|Read|Grep|mcp__.+)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__phi-delegate__delegate"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__phi-delegate__delegate"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "phi-review"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "phi-guard",
+    "description": "Show the phi-delegate guardrail, or turn it on or off for this session",
+    "argumentHint": "[on|off]",
+    "output": "phi-delegate guardrail: on. Use /phi-guard on or /phi-guard off for this session."
+   },
+   {
+    "name": "phi-review",
+    "description": "Open the phi-delegate review pane",
+    "output": "phi-delegate review pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "delegate",
+    "description": "Run a PHI-free task spec in the covered BAA/zero-data-retention delegate session (scripts/delegate.sh). Returns only the diff stat, the PHI scan verdicts, and the scanned handoff, then opens a review pane where the human merges, rejects, or opens a PR. Runs up to 30 minutes. Never merge yourself."
+   }
+  ],
+  "panes": [
+   {
+    "id": "phi-review",
+    "title": "phi-delegate review"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 4,
+   "$.state.get": 18,
+   "$.fs.exists": 13,
+   "$.command.register": 2,
+   "$.tool.register": 1,
+   "$.ui.status": 1,
+   "$.fs.stat": 10,
+   "$.session.cwd": 10,
+   "$.process.run": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "phi-review": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No delegate runs this session."
+        ]
+       }
+      ]
+     },
+     "title": "phi-delegate review"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/phi-guard → phi-delegate guardrail: on. Use /phi-guard on or /phi-guard off for this session…",
+   "$.ui.open(phi-review)",
+   "/phi-review → phi-delegate review pane opened."
+  ],
+  "console": [],
+  "status": "PHI shield on · 0 flagged",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=phi-guard}",
+   "command.run{command=phi-review}",
+   "tool.call{tool=/\"^(Read|Edit|Write|Bash|Grep|Glob|MultiEdit|NotebookEdit)$\"/}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=?}",
+   "tool.call{tool=mcp__phi-delegate__delegate}",
+   "tool.check{tool=mcp__phi-delegate__delegate}",
+   "prompt.submit",
+   "ui.render{component=Pane, requestId=phi-review}"
+  ],
+  "calls": [
+   "$.clock.now (via stagePrivateInput)",
+   "$.command.register",
+   "$.env.get (via isCovered",
+   "startingState)",
+   "$.fs.exists",
+   "$.fs.list (via stagePrivateInput)",
+   "$.fs.read",
+   "$.fs.stat (via realPath)",
+   "$.fs.write (via stagePrivateInput)",
+   "$.process.run (via repoRoot",
+   "runCollect",
+   "stagePrivateInput)",
+   "$.process.spawn",
+   "$.session.cwd",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register (via activate)",
+   "$.ui.ask",
+   "$.ui.log (via allowEntries)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "phi-delegate.flagged",
+   "phi-delegate.reviews",
+   "phi-delegate.sessionGuard"
+  ],
+  "stateWrites": [
+   "phi-delegate.flagged",
+   "phi-delegate.reviews",
+   "phi-delegate.sessionGuard"
+  ],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "PHI_DELEGATE_GUARDRAIL",
+   "PHI_DELEGATE_SESSION"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/brianleach-phi-delegate/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/brianleach-phi-delegate/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: phi-delegate.flagged, phi-delegate.reviews, phi-delegate.sessionGuard"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/brianleach-phi-delegate/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=phi-guard}, command.run{command=phi-review}, tool.call{tool=/\"^(Read|Edit|Write|Bash|Grep|Glob|MultiEdit|NotebookEdit)$\"/}, tool.call{tool=Bash}, tool.call{tool=?}, tool.call{tool=mcp__phi-delegate__delegate}, tool.check{tool=mcp__phi-delegate__delegate}, prompt.submit, ui.render{component=Pane, requestId=phi-review}",
+      "./register.tsx answers its own command: command.run{command=phi-guard}",
+      "./register.tsx answers its own command: command.run{command=phi-review}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^(Read|Edit|Write|Bash|Grep|Glob|MultiEdit|NotebookEdit)$\"/}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.call{tool=?}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__phi-delegate__delegate}",
+      "./register.tsx gating hook with .catch: tool.check{tool=mcp__phi-delegate__delegate}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx calls: $.clock.now (via stagePrivateInput), $.command.register, $.env.get (via isCovered, startingState), $.fs.exists, $.fs.list (via stagePrivateInput), $.fs.read, $.fs.stat (via realPath), $.fs.write (via stagePrivateInput), $.process.run (via repoRoot, runCollect, stagePrivateInput), $.process.spawn, $.session.cwd, $.state.get, $.state.set, $.tool.register (via activate), $.ui.ask, $.ui.log (via allowEntries), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, PHI_DELEGATE_GUARDRAIL, PHI_DELEGATE_SESSION",
+      "./register.tsx state writes: phi-delegate.flagged, phi-delegate.reviews, phi-delegate.sessionGuard",
+      "./register.tsx state reads: phi-delegate.flagged, phi-delegate.reviews, phi-delegate.sessionGuard"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^(Read|Edit|Write|Bash|Grep|Glob|MultiEdit|NotebookEdit)$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__phi-delegate__delegate}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__phi-delegate__delegate}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "8ee9f100d0322586"
+}
