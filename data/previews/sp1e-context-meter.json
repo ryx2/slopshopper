@@ -1,6 +1,6 @@
 {
  "slug": "sp1e-context-meter",
- "generatedAt": "2026-10-07T15:23:55.577Z",
+ "generatedAt": "2026-10-16T14:21:44.887Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -21,6 +21,9 @@
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "turn.start"
    },
    {
     "event": "turn.complete"
@@ -58,18 +61,18 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 41,
-   "$.state.set": 17,
+   "$.state.get": 54,
+   "$.state.set": 20,
    "$.command.register": 1,
-   "$.session.id": 7,
+   "$.session.id": 9,
    "$.env.get": 26,
    "$.clock.every": 2,
    "$.fs.read": 5,
    "$.process.run": 1,
-   "$.session.usage": 4,
+   "$.session.usage": 6,
    "$.session.cwd": 3,
    "$.session.model": 3,
-   "$.clock.now": 12,
+   "$.clock.now": 15,
    "$.session.messages": 1,
    "$.ui.open": 1,
    "$.fs.write": 4,
@@ -93,7 +96,9 @@
     "tree": {
      "type": "Box",
      "props": {
-      "flexDirection": "column"
+      "flexDirection": "column",
+      "paddingX": 2,
+      "paddingY": 1
      },
      "children": [
       {
@@ -149,27 +154,37 @@
        "type": "Box",
        "props": {
         "flexDirection": "row",
-        "gap": 2
+        "justifyContent": "space-between",
+        "marginTop": 1
        },
        "children": [
         {
-         "type": "Button",
+         "type": "Box",
          "props": {
-          "key": "context-meter-compact",
-          "label": "Compact now",
-          "onPress": "[fn]"
+          "flexDirection": "row",
+          "gap": 3
          },
-         "children": []
-        },
-        {
-         "type": "Button",
-         "props": {
-          "key": "context-meter-auto",
-          "plain": true,
-          "label": "☐ Auto-compact 50%",
-          "onPress": "[fn]"
-         },
-         "children": []
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "context-meter-compact",
+            "label": "Compact now",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "context-meter-auto",
+            "plain": true,
+            "label": "☐ Custom autocomp. 50%",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
         },
         {
          "type": "Button",
@@ -264,6 +279,7 @@
    "command.run{command=context-meter}",
    "ui.close",
    "ui.render{component=AbovePrompt}",
+   "turn.start",
    "turn.complete",
    "session.compact",
    "session.end",
@@ -272,30 +288,28 @@
   "calls": [
    "$.clock.after",
    "$.clock.every",
-   "$.clock.now (via autoCompact",
-   "beat",
-   "readJsonDir",
-   "refresh",
-   "writeRequest)",
+   "$.clock.now",
    "$.command.register",
    "$.command.run (via compactWith)",
    "$.env.get (via homeDir)",
    "$.fs.list (via readJsonDir)",
    "$.fs.read (via loadPrefs",
    "readJsonDir)",
-   "$.fs.write (via beat",
+   "$.fs.write (via archiveSummary",
+   "beat",
    "savePrefs",
    "writeRequest)",
    "$.process.run (via scan)",
-   "$.prompt.submit (via compactWith",
-   "takeRequest)",
+   "$.prompt.submit (via compactWith)",
    "$.session.compact (via compactWith)",
-   "$.session.cwd (via beat)",
+   "$.session.cwd (via archiveSummary",
+   "beat)",
    "$.session.id",
-   "$.session.messages",
+   "$.session.messages (via labelFor)",
    "$.session.model (via beat)",
    "$.session.usage (via autoCompact",
    "beat",
+   "idleCompact",
    "scan)",
    "$.state.get",
    "$.state.set",
@@ -306,10 +320,11 @@
   "stateReads": [
    "context-meter.beats",
    "context-meter.isAutoCompact",
-   "context-meter.isAwaitingSummary",
    "context-meter.isBandHidden",
    "context-meter.isOptionsOpen",
    "context-meter.isPaneOpen",
+   "context-meter.isTurnRunning",
+   "context-meter.lastTurnAt",
    "context-meter.prefs",
    "context-meter.requests",
    "context-meter.scanned",
@@ -318,10 +333,11 @@
   "stateWrites": [
    "context-meter.beats",
    "context-meter.isAutoCompact",
-   "context-meter.isAwaitingSummary",
    "context-meter.isBandHidden",
    "context-meter.isOptionsOpen",
    "context-meter.isPaneOpen",
+   "context-meter.isTurnRunning",
+   "context-meter.lastTurnAt",
    "context-meter.prefs",
    "context-meter.requests",
    "context-meter.scanned",
@@ -342,7 +358,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: context-meter.beats, context-meter.scanned, context-meter.selfId, context-meter.requests, context-meter.isAwaitingSummary, context-meter.isPaneOpen, context-meter.isBandHidden, context-meter.isAutoCompact, context-meter.isOptionsOpen, context-meter.prefs"
+     "types ./types/index.d.ts declares state: context-meter.beats, context-meter.scanned, context-meter.selfId, context-meter.requests, context-meter.isPaneOpen, context-meter.isBandHidden, context-meter.isAutoCompact, context-meter.isOptionsOpen, context-meter.prefs, context-meter.lastTurnAt, context-meter.isTurnRunning"
     ],
     "gatingHooks": []
    },
@@ -353,15 +369,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=context-meter}, ui.close, ui.render{component=AbovePrompt}, turn.complete, session.compact, session.end, ui.render{component=Pane, requestId=context-meter}",
+      "./register.tsx hooks: session.start, command.run{command=context-meter}, ui.close, ui.render{component=AbovePrompt}, turn.start, turn.complete, session.compact, session.end, ui.render{component=Pane, requestId=context-meter}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=context-meter}",
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now (via autoCompact, beat, readJsonDir, refresh, writeRequest), $.command.register, $.command.run (via compactWith), $.env.get (via homeDir), $.fs.list (via readJsonDir), $.fs.read (via loadPrefs, readJsonDir), $.fs.write (via beat, savePrefs, writeRequest), $.process.run (via scan), $.prompt.submit (via compactWith, takeRequest), $.session.compact (via compactWith), $.session.cwd (via beat), $.session.id, $.session.messages, $.session.model (via beat), $.session.usage (via autoCompact, beat, scan), $.state.get, $.state.set, $.ui.close (via setPane), $.ui.open, $.ui.resolve",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via compactWith), $.env.get (via homeDir), $.fs.list (via readJsonDir), $.fs.read (via loadPrefs, readJsonDir), $.fs.write (via archiveSummary, beat, savePrefs, writeRequest), $.process.run (via scan), $.prompt.submit (via compactWith), $.session.compact (via compactWith), $.session.cwd (via archiveSummary, beat), $.session.id, $.session.messages (via labelFor), $.session.model (via beat), $.session.usage (via autoCompact, beat, idleCompact, scan), $.state.get, $.state.set, $.ui.close (via setPane), $.ui.open, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, USERPROFILE",
-      "./register.tsx state writes: context-meter.beats, context-meter.isAutoCompact, context-meter.isAwaitingSummary, context-meter.isBandHidden, context-meter.isOptionsOpen, context-meter.isPaneOpen, context-meter.prefs, context-meter.requests, context-meter.scanned, context-meter.selfId",
-      "./register.tsx state reads: context-meter.beats, context-meter.isAutoCompact, context-meter.isAwaitingSummary, context-meter.isBandHidden, context-meter.isOptionsOpen, context-meter.isPaneOpen, context-meter.prefs, context-meter.requests, context-meter.scanned, context-meter.selfId"
+      "./register.tsx state writes: context-meter.beats, context-meter.isAutoCompact, context-meter.isBandHidden, context-meter.isOptionsOpen, context-meter.isPaneOpen, context-meter.isTurnRunning, context-meter.lastTurnAt, context-meter.prefs, context-meter.requests, context-meter.scanned, context-meter.selfId",
+      "./register.tsx state reads: context-meter.beats, context-meter.isAutoCompact, context-meter.isBandHidden, context-meter.isOptionsOpen, context-meter.isPaneOpen, context-meter.isTurnRunning, context-meter.lastTurnAt, context-meter.prefs, context-meter.requests, context-meter.scanned, context-meter.selfId"
      ],
      "gatingHooks": [
       {
@@ -378,8 +395,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "bce727c0e1275ab7"
+ "sourceHash": "796298b3a6bc277c"
 }

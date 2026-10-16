@@ -1,6 +1,6 @@
 {
  "slug": "leeovery-portal-workflow-gates",
- "generatedAt": "2026-10-08T15:53:12.054Z",
+ "generatedAt": "2026-10-16T14:16:22.203Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -45,6 +45,32 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash",
+     "command": "/\\.claude\\/skills\\/workflow-engine\\/scripts\\/engine\\.cjs\"?\\s+(?:boot|session\\s+(?:label|repair)|task\\s+(?:start|complete))\\b/"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Spinner"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Write",
+      "Edit",
+      "NotebookEdit"
+     ]
+    }
+   },
+   {
+    "event": "session.compact"
    }
   ],
   "commands": [],
@@ -55,14 +81,17 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 10,
-   "$.session.id": 5,
+   "$.env.get": 14,
+   "$.session.id": 6,
    "$.fs.exists": 4,
    "$.session.messages": 1
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Spinner": {
     "ok": "engine"
    }
   },
@@ -99,27 +128,48 @@
    "ui.render{component=AbovePrompt}",
    "ui.message{element=gate}",
    "prompt.submit",
-   "turn.start"
+   "turn.start",
+   "tool.call{tool=Bash, command=/\"\\\\.claude\\\\/skills\\\\/workflow-engine\\\\/scripts\\\\/engine\\\\.cjs\\\"?\\\\s+(?:boot|session\\\\s+(?:label|repair)|task\\\\s+(?:start|complete)\"[+3 chars]/}",
+   "ui.render{component=Spinner}",
+   "tool.call{tool=Write|Edit|NotebookEdit}",
+   "session.compact"
   ],
   "calls": [
    "$.clock.after",
    "$.command.run (via handOff)",
-   "$.env.get (via folderOf",
+   "$.env.get (via absoluteOf",
+   "folderOf",
    "harnessOff",
    "harnessOn",
    "isAnnounced",
-   "isApplicable)",
+   "isApplicable",
+   "isWorkflow",
+   "sayNow",
+   "workflowFolder)",
    "$.env.set",
-   "$.fs.exists (via markedFolder)",
-   "$.fs.read (via keptIn)",
+   "$.fs.exists (via isWorkflow",
+   "markedFolder",
+   "sayNow",
+   "workflowFolder)",
+   "$.fs.read (via keptIn",
+   "record",
+   "sayNow)",
+   "$.fs.stat (via landing)",
    "$.fs.write (via deliver",
    "keep",
-   "readBack)",
-   "$.prompt.fill (via fill)",
+   "readBack",
+   "record)",
+   "$.process.run (via positionNow)",
+   "$.prompt.fill (via fill",
+   "sendContinuation)",
    "$.prompt.read (via unpick)",
-   "$.prompt.submit (via deliver)",
+   "$.prompt.submit (via deliver",
+   "sendContinuation)",
+   "$.session.cwd (via absoluteOf)",
    "$.session.id",
    "$.session.messages (via placeOf)",
+   "$.session.root (via isManifest",
+   "positionNow)",
    "$.session.surfaces (via isForBand)",
    "$.session.version (via isApplicable)",
    "$.ui.invalidate",
@@ -157,11 +207,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.end, tool.call, tool.call{tool=Bash}, tool.describe{tool=SendUserMessage}, turn.complete, ui.render{component=AbovePrompt}, ui.message{element=gate}, prompt.submit, turn.start",
+      "./register.ts hooks: session.start, session.end, tool.call, tool.call{tool=Bash}, tool.describe{tool=SendUserMessage}, turn.complete, ui.render{component=AbovePrompt}, ui.message{element=gate}, prompt.submit, turn.start, tool.call{tool=Bash, command=/\"\\\\.claude\\\\/skills\\\\/workflow-engine\\\\/scripts\\\\/engine\\\\.cjs\\\"?\\\\s+(?:boot|session\\\\s+(?:label|repair)|task\\\\s+(?:start|complete)\"[+3 chars]/}, ui.render{component=Spinner}, tool.call{tool=Write|Edit|NotebookEdit}, session.compact",
+      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.call{tool=Bash}",
       "./register.ts gating hook with .catch: prompt.submit",
-      "./register.ts calls: $.clock.after, $.command.run (via handOff), $.env.get (via folderOf, harnessOff, harnessOn, isAnnounced, isApplicable), $.env.set, $.fs.exists (via markedFolder), $.fs.read (via keptIn), $.fs.write (via deliver, keep, readBack), $.prompt.fill (via fill), $.prompt.read (via unpick), $.prompt.submit (via deliver), $.session.id, $.session.messages (via placeOf), $.session.surfaces (via isForBand), $.session.version (via isApplicable), $.ui.invalidate, $.ui.resolve, $.ui.toast (via handOff)",
+      "./register.ts gating hook with .catch: tool.call{tool=Bash, command=/\"\\\\.claude\\\\/skills\\\\/workflow-engine\\\\/scripts\\\\/engine\\\\.cjs\\\"?\\\\s+(?:boot|session\\\\s+(?:label|repair)|task\\\\s+(?:start|complete)\"[+3 chars]/}",
+      "./register.ts gating hook with .catch: tool.call{tool=Write|Edit|NotebookEdit}",
+      "./register.ts gating hook with .catch: session.compact",
+      "./register.ts calls: $.clock.after, $.command.run (via handOff), $.env.get (via absoluteOf, folderOf, harnessOff, harnessOn, isAnnounced, isApplicable, isWorkflow, sayNow, workflowFolder), $.env.set, $.fs.exists (via isWorkflow, markedFolder, sayNow, workflowFolder), $.fs.read (via keptIn, record, sayNow), $.fs.stat (via landing), $.fs.write (via deliver, keep, readBack, record), $.process.run (via positionNow), $.prompt.fill (via fill, sendContinuation), $.prompt.read (via unpick), $.prompt.submit (via deliver, sendContinuation), $.session.cwd (via absoluteOf), $.session.id, $.session.messages (via placeOf), $.session.root (via isManifest, positionNow), $.session.surfaces (via isForBand), $.session.version (via isApplicable), $.ui.invalidate, $.ui.resolve, $.ui.toast (via handOff)",
       "./register.ts env writes: CLAUDE_CODE_PEWTER_OWL_TOOL, CLAUDE_CODE_SILENT_TURN_REMINDER, CLAUDE_CODE_THINKING_DISPLAY_UPDATES, WORKFLOWS_GATE_SURFACE, WORKFLOWS_HANDOFF, WORKFLOWS_HARNESS_REPLACED",
       "./register.ts env reads: CLAUDE_CODE_ENTRYPOINT, CLAUDE_CODE_REMOTE, CLAUDE_CODE_SILENT_TURN_REMINDER, CLAUDE_CODE_THINKING_DISPLAY_UPDATES, HOME, WORKFLOWS_CONFIG_DIR, WORKFLOWS_GATE_SURFACE, WORKFLOWS_HARNESS_REPLACED",
       "./register.ts surface modules: hooks/board.ts"
@@ -184,11 +238,30 @@
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash, command=/\"\\\\.claude\\\\/skills\\\\/workflow-engine\\\\/scripts\\\\/engine\\\\.cjs\\\"?\\\\s+(?:boot|session\\\\s+(?:label|repair)|task\\\\s+(?:start|complete)\"[+3 chars]/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write|Edit|NotebookEdit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "cd744ea7aad77eb"
+ "sourceHash": "ec83eaeeb9cf35c9"
 }

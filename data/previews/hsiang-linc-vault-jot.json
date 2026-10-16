@@ -1,6 +1,6 @@
 {
  "slug": "hsiang-linc-vault-jot",
- "generatedAt": "2026-10-06T14:51:34.637Z",
+ "generatedAt": "2026-10-16T14:17:31.619Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -29,9 +29,34 @@
     }
    },
    {
+    "event": "prompt.edit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "prompt.context"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "recall"
+    }
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "incubate"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "jot-draft"
     }
    },
    {
@@ -46,7 +71,7 @@
    {
     "name": "jot",
     "description": "Capture a thought into the vault inbox",
-    "argumentHint": "[idea|improve|read|til|pitfall|plugin|note:] <text>, nothing to draft one, or ingest",
+    "argumentHint": "[idea|improve|read|til|pitfall|plugin|note:] [text] | summary | ingest",
     "immediate": true,
     "output": "draft is in your prompt. Edit it and press Enter to save, or clear it."
    },
@@ -55,6 +80,12 @@
     "description": "Browse vault ideas and reading, and decide what to do with them",
     "argumentHint": "[idea title]",
     "output": "cannot open incubate: vaultPath is not set; set it in /config under vault-jot"
+   },
+   {
+    "name": "recall",
+    "description": "Ask the vault a question in the background; the answer waits in the incubate pane",
+    "argumentHint": "<question>, or nothing to open the answers",
+    "output": "cannot open recall: vaultPath is not set; set it in /config under vault-jot"
    }
   ],
   "tools": [],
@@ -64,24 +95,40 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
+   "$.command.register": 3,
    "$.ui.status": 2,
-   "$.state.get": 8,
-   "$.state.set": 4,
+   "$.state.get": 13,
+   "$.state.set": 7,
    "$.ui.invalidate": 1,
    "$.model.fork": 1,
    "$.prompt.fill": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 2
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
    },
+   "PromptHint": {
+    "ok": "engine"
+   },
    "SessionMode": {
     "ok": "engine"
    },
    "Pane": {
+    "jot-draft": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "Summarizing the discussion…"
+      ]
+     },
+     "title": "jot-draft"
+    },
     "incubate": {
      "ok": true,
      "tree": {
@@ -111,7 +158,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/jot → draft is in your prompt. Edit it and press Enter to save, or clear it.",
-   "/incubate → cannot open incubate: vaultPath is not set; set it in /config under vault-jot"
+   "/incubate → cannot open incubate: vaultPath is not set; set it in /config under vault-jot",
+   "/recall → cannot open recall: vaultPath is not set; set it in /config under vault-jot"
   ],
   "console": [],
   "status": "vault-jot: vaultPath is not set; set it in /config under vault-jot",
@@ -127,31 +175,36 @@
    "turn.complete",
    "ui.render{component=SessionMode}",
    "ui.render{component=AbovePrompt}",
+   "prompt.edit",
+   "ui.render{component=PromptHint}",
+   "prompt.context",
+   "command.run{command=recall}",
    "command.run{command=incubate}",
+   "ui.render{component=Pane, requestId=jot-draft}",
    "ui.render{component=Pane, requestId=incubate}"
   ],
   "calls": [
+   "$.agent.spawn (via dispatch)",
    "$.clock.now",
    "$.command.register",
    "$.env.get (via resolveVault)",
    "$.fs.exists",
-   "$.fs.list (via ingest",
-   "loadShelf",
-   "refresh)",
-   "$.fs.read (via loadShelf)",
+   "$.fs.list",
+   "$.fs.read",
    "$.fs.stat (via resolveVault)",
    "$.fs.write (via capture)",
-   "$.model.fork (via draft)",
+   "$.model.fork (via requestDraft)",
    "$.process.run (via gitBranch)",
    "$.prompt.fill",
-   "$.prompt.submit",
+   "$.session.append",
    "$.session.cwd (via capture)",
    "$.session.id (via capture)",
    "$.session.repo",
    "$.state.get",
    "$.state.set",
+   "$.ui.close",
    "$.ui.invalidate",
-   "$.ui.log (via gitBranch)",
+   "$.ui.log",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.status (via refresh)",
@@ -159,14 +212,24 @@
   ],
   "stateReads": [
    "vault-jot.backlog",
+   "vault-jot.draftHint",
    "vault-jot.isHidden",
+   "vault-jot.knownTargets",
    "vault-jot.openForRepo",
+   "vault-jot.problem",
+   "vault-jot.recalls",
+   "vault-jot.summary",
    "vault-jot.view"
   ],
   "stateWrites": [
    "vault-jot.backlog",
+   "vault-jot.draftHint",
    "vault-jot.isHidden",
+   "vault-jot.knownTargets",
    "vault-jot.openForRepo",
+   "vault-jot.problem",
+   "vault-jot.recalls",
+   "vault-jot.summary",
    "vault-jot.view"
   ],
   "envReads": [
@@ -183,7 +246,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: vault-jot.backlog, vault-jot.isHidden, vault-jot.view, vault-jot.openForRepo"
+     "types ./types/index.d.ts declares state: vault-jot.backlog, vault-jot.problem, vault-jot.isHidden, vault-jot.view, vault-jot.openForRepo, vault-jot.recalls, vault-jot.summary, vault-jot.draftHint, vault-jot.knownTargets"
     ],
     "gatingHooks": []
    },
@@ -194,17 +257,35 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=jot}, turn.complete, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, command.run{command=incubate}, ui.render{component=Pane, requestId=incubate}",
-      "./register.tsx calls: $.clock.now, $.command.register, $.env.get (via resolveVault), $.fs.exists, $.fs.list (via ingest, loadShelf, refresh), $.fs.read (via loadShelf), $.fs.stat (via resolveVault), $.fs.write (via capture), $.model.fork (via draft), $.process.run (via gitBranch), $.prompt.fill, $.prompt.submit, $.session.cwd (via capture), $.session.id (via capture), $.session.repo, $.state.get, $.state.set, $.ui.invalidate, $.ui.log (via gitBranch), $.ui.open, $.ui.resolve, $.ui.status (via refresh), $.ui.toast",
+      "./register.tsx hooks: session.start, command.run{command=jot}, turn.complete, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, prompt.edit, ui.render{component=PromptHint}, prompt.context, command.run{command=recall}, command.run{command=incubate}, ui.render{component=Pane, requestId=jot-draft}, ui.render{component=Pane, requestId=incubate}",
+      "./register.tsx hooks on prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=jot}",
+      "./register.tsx gating hook without .catch: command.run{command=recall}",
+      "./register.tsx gating hook without .catch: command.run{command=incubate}",
+      "./register.tsx calls: $.agent.spawn (via dispatch), $.clock.now, $.command.register, $.env.get (via resolveVault), $.fs.exists, $.fs.list, $.fs.read, $.fs.stat (via resolveVault), $.fs.write (via capture), $.model.fork (via requestDraft), $.process.run (via gitBranch), $.prompt.fill, $.session.append, $.session.cwd (via capture), $.session.id (via capture), $.session.repo, $.state.get, $.state.set, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status (via refresh), $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: vault-jot.backlog, vault-jot.isHidden, vault-jot.openForRepo, vault-jot.view",
-      "./register.tsx state reads: vault-jot.backlog, vault-jot.isHidden, vault-jot.openForRepo, vault-jot.view"
+      "./register.tsx state writes: vault-jot.backlog, vault-jot.draftHint, vault-jot.isHidden, vault-jot.knownTargets, vault-jot.openForRepo, vault-jot.problem, vault-jot.recalls, vault-jot.summary, vault-jot.view",
+      "./register.tsx state reads: vault-jot.backlog, vault-jot.draftHint, vault-jot.isHidden, vault-jot.knownTargets, vault-jot.openForRepo, vault-jot.problem, vault-jot.recalls, vault-jot.summary, vault-jot.view"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=recall}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=incubate}",
+       "hasCatch": false
+      }
+     ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "c6a05ecb75c479db"
+ "sourceHash": "b4466142f8dd8a97"
 }

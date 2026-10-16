@@ -1,0 +1,255 @@
+{
+ "slug": "ntucker-user-kit-pr-steward",
+ "generatedAt": "2026-10-16T14:21:05.762Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "pr"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "land"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__pr-steward__pr_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "pr-steward"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "pr",
+    "description": "Show this branch's pull request: CI, review threads, preview",
+    "output": "Opened the pull request pane."
+   },
+   {
+    "name": "land",
+    "description": "Drive this branch's pull request to mergeable",
+    "output": "Could not read the PR: JSON Parse error: Unexpected EOF"
+   }
+  ],
+  "tools": [
+   {
+    "name": "pr_status",
+    "description": "Current state of this branch's pull request, read fresh from GitHub: merge state, failing and running checks with links, unresolved review threads with their first line and link, and the preview link when the repo configures one. Use it instead of re-querying GitHub when checking whether a PR is ready."
+   }
+  ],
+  "panes": [
+   {
+    "id": "pr-steward",
+    "title": "Pull request"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.tool.register": 1,
+   "$.clock.every": 1,
+   "$.state.get": 4,
+   "$.process.run": 11,
+   "$.state.set": 3,
+   "$.ui.status": 3,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "pr-steward": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Could not read the PR: JSON Parse error: Unexpected EOF"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "actions",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "Refresh",
+           "hotkey": "r",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Pull request"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git rev-parse --show-toplevel --abbrev-ref HEAD) → exit 0",
+   "$.process.run(gh api graphql -f query=query($owner: String!, $name: String!, $branch: String!)…) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "tool.call Bash bun test",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "tool.call Bash git status --porcelain",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(pr-steward)",
+   "$.process.run(git rev-parse --show-toplevel --abbrev-ref HEAD) → exit 0",
+   "$.process.run(gh api graphql -f query=query($owner: String!, $name: String!, $branch: String!)…) → exit 0",
+   "/pr → Opened the pull request pane.",
+   "$.process.run(git rev-parse --show-toplevel --abbrev-ref HEAD) → exit 0",
+   "$.process.run(gh api graphql -f query=query($owner: String!, $name: String!, $branch: String!)…) → exit 0",
+   "/land → Could not read the PR: JSON Parse error: Unexpected EOF"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=pr}",
+   "command.run{command=land}",
+   "tool.call{tool=mcp__pr-steward__pr_status}",
+   "tool.call{tool=Bash}",
+   "ui.render{component=Pane, requestId=pr-steward}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.command.register",
+   "$.fs.read (via refresh)",
+   "$.process.run (via checkBranch",
+   "markReady",
+   "refresh)",
+   "$.prompt.submit (via land)",
+   "$.state.get",
+   "$.state.set (via refresh)",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via refresh)",
+   "$.ui.toast (via announce",
+   "markReady)"
+  ],
+  "stateReads": [
+   "pr-steward.snapshot"
+  ],
+  "stateWrites": [
+   "pr-steward.snapshot"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ntucker-user-kit-pr-steward/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ntucker-user-kit-pr-steward/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: pr-steward.snapshot"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ntucker-user-kit-pr-steward/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=pr}, command.run{command=land}, tool.call{tool=mcp__pr-steward__pr_status}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=pr-steward}",
+      "./register.tsx answers its own command: command.run{command=land}",
+      "./register.tsx gating hook without .catch: command.run{command=pr}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__pr-steward__pr_status}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.command.register, $.fs.read (via refresh), $.process.run (via checkBranch, markReady, refresh), $.prompt.submit (via land), $.state.get, $.state.set (via refresh), $.tool.register, $.ui.open, $.ui.resolve, $.ui.status (via refresh), $.ui.toast (via announce, markReady)",
+      "./register.tsx state writes: pr-steward.snapshot",
+      "./register.tsx state reads: pr-steward.snapshot"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=pr}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__pr-steward__pr_status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "ef0d54603742201e"
+}

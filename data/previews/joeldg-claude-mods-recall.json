@@ -1,6 +1,6 @@
 {
  "slug": "joeldg-claude-mods-recall",
- "generatedAt": "2026-10-08T15:54:11.341Z",
+ "generatedAt": "2026-10-16T14:17:36.448Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -64,6 +64,12 @@
     "event": "turn.complete"
    },
    {
+    "event": "session.append"
+   },
+   {
+    "event": "prompt.context"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -83,7 +89,7 @@
     "description": "Search and sum up past sessions: /recall <words>, last, timeline, decisions, commands, files, prs, ask (one Haiku call), stats, forget",
     "argumentHint": "<words> | last [n] | timeline | decisions | commands | files | prs | ask <question> | stats | help",
     "immediate": true,
-    "output": "Usage: /recall <words>   search past sessions, this project first; the hits open in the Recall pane\n  last [n]                       where this project's last session(s) left off, with Send to Claude\n  timeline [7d|30d|90d] [all]    sessions by day, in this project or in all of them\n  decisions | commands | files | prs | commits | issues | urls | tasks | notes [words]   one kind, newest first\n  ask <question>                 an answer from past sessions with citations: one Haiku call (claude-haiku-4-5-20251001), billed to your usage\n  stats                          the index: its size, sessions, sources and freshness\n  reindex                        re-read every session file now (notes stay)\n  forget session <id> | project <name> | before <date or 90d>   drop extracts from the index (asks to confirm)\n  search <words>                 a search for words that begin with one of the verbs above\nQueries: words (all must match), \"exact phrases\", OR, -exclude, kind:decision, since:7d, project:name, routines:include.\n/remember <note> keeps a note for this project; /remember list; /remember forget <ref>.\nClaude searches, expands, recaps and lists past sessions itself with the recall tools; nothing but /recall ask calls a model."
+    "output": "Usage: /recall <words>   search past sessions, this project first; the hits open in the Recall pane\n  last [n]                       where this project's last session(s) left off, with Send to Claude\n  ledger                         what this session has settled so far: goal, open tasks, questions answered, files, PRs and commits; it comes back after a compaction\n  timeline [7d|30d|90d] [all]    sessions by day, in this project or in all of them\n  decisions | commands | files | prs | commits | issues | urls | tasks | notes [words]   one kind, newest first\n  ask <question>                 an answer from past sessions with citations: one Haiku call (claude-haiku-4-5-20251001), billed to your usage\n  stats                          the index: its size, sessions, sources and freshness\n  reindex                        re-read every session file now (notes stay)\n  forget session <id> | project <name> | before <date or 90d>   drop extracts from the index (asks to confirm)\n  search <words>                 a search for words that begin with one of the verbs above\nQueries: words (all must match), \"exact phrases\", OR, -exclude, kind:decision, since:7d, project:name, routines:include.\n/remember <note> keeps a note for this project; /remember list; /remember forget <ref>.\nClaude searches, expands, recaps and lists past sessions itself with the recall tools; nothing but /recall ask calls a model."
    },
    {
     "name": "remember",
@@ -202,6 +208,8 @@
    "command.run{command=remember}",
    "prompt.submit",
    "turn.complete",
+   "session.append",
+   "prompt.context",
    "ui.render{component=Pane, requestId=recall}",
    "ui.render{component=AbovePrompt}"
   ],
@@ -211,10 +219,15 @@
    "$.clock.now",
    "$.command.register",
    "$.env.get (via dbFile)",
+   "$.fs.exists (via niceness)",
+   "$.fs.read (via freshUpdate",
+   "loadLedger)",
+   "$.fs.write (via persistLedger)",
    "$.model.complete (via runAsk)",
    "$.process.run (via engine",
    "here",
-   "leaveUpdate)",
+   "leaveUpdate",
+   "persistLedger)",
    "$.process.spawn (via buildIndex)",
    "$.prompt.fill (via fillPrompt)",
    "$.prompt.read (via fillPrompt)",
@@ -280,7 +293,8 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, tool.check{tool=mcp__recall__search|mcp__recall__expand|mcp__recall__recap|mcp__recall__list}, tool.call{tool=mcp__recall__search}, tool.call{tool=mcp__recall__expand}, tool.call{tool=mcp__recall__recap}, tool.call{tool=mcp__recall__list}, command.run{command=recall}, command.run{command=remember}, prompt.submit, turn.complete, ui.render{component=Pane, requestId=recall}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, session.end, tool.check{tool=mcp__recall__search|mcp__recall__expand|mcp__recall__recap|mcp__recall__list}, tool.call{tool=mcp__recall__search}, tool.call{tool=mcp__recall__expand}, tool.call{tool=mcp__recall__recap}, tool.call{tool=mcp__recall__list}, command.run{command=recall}, command.run{command=remember}, prompt.submit, turn.complete, session.append, prompt.context, ui.render{component=Pane, requestId=recall}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=recall}",
       "./register.tsx answers its own command: command.run{command=remember}",
       "./register.tsx gating hook without .catch: tool.check{tool=mcp__recall__search|mcp__recall__expand|mcp__recall__recap|mcp__recall__list}",
@@ -289,7 +303,8 @@
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__recall__recap}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__recall__list}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after, $.clock.every (via ensureTimer), $.clock.now, $.command.register, $.env.get (via dbFile), $.model.complete (via runAsk), $.process.run (via engine, here, leaveUpdate), $.process.spawn (via buildIndex), $.prompt.fill (via fillPrompt), $.prompt.read (via fillPrompt), $.session.cwd (via here), $.session.id (via currentSession), $.session.turns (via prepareLastBand), $.state.get, $.state.set, $.tool.register (via registerTools), $.ui.close (via paneActions), $.ui.copy (via copyResume), $.ui.log, $.ui.open (via showView), $.ui.resolve, $.ui.status (via showStatus), $.ui.toast (via attachRef, attachRelated, buildIndex, confirmForget, copyResume, rememberCommand, runAsk, sendAnswer, sendRecap, warn)",
+      "./register.tsx gating hook without .catch: session.append",
+      "./register.tsx calls: $.clock.after, $.clock.every (via ensureTimer), $.clock.now, $.command.register, $.env.get (via dbFile), $.fs.exists (via niceness), $.fs.read (via freshUpdate, loadLedger), $.fs.write (via persistLedger), $.model.complete (via runAsk), $.process.run (via engine, here, leaveUpdate, persistLedger), $.process.spawn (via buildIndex), $.prompt.fill (via fillPrompt), $.prompt.read (via fillPrompt), $.session.cwd (via here), $.session.id (via currentSession), $.session.turns (via prepareLastBand), $.state.get, $.state.set, $.tool.register (via registerTools), $.ui.close (via paneActions), $.ui.copy (via copyResume), $.ui.log, $.ui.open (via showView), $.ui.resolve, $.ui.status (via showStatus), $.ui.toast (via attachRef, attachRelated, buildIndex, confirmForget, copyResume, rememberCommand, runAsk, sendAnswer, sendRecap, warn)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
       "./register.tsx state writes: recall.armed, recall.dismissed, recall.lastBand, recall.relatedBand, recall.view",
@@ -331,11 +346,18 @@
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "38129455fa28fd2f"
+ "sourceHash": "5174193853b28f2f"
 }

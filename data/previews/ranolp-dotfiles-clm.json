@@ -1,6 +1,6 @@
 {
  "slug": "ranolp-dotfiles-clm",
- "generatedAt": "2026-10-08T15:53:36.874Z",
+ "generatedAt": "2026-10-16T14:18:01.835Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,7 +14,19 @@
     "event": "clm.issues"
    },
    {
+    "event": "clm.status"
+   },
+   {
+    "event": "clm.resume"
+   },
+   {
     "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
    },
    {
     "event": "command.run",
@@ -23,13 +35,28 @@
     }
    },
    {
+    "event": "turn.start"
+   },
+   {
     "event": "turn.complete"
    },
    {
     "event": "session.compact"
    },
    {
-    "event": "tool.call"
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__clm__clm_recall"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__clm__clm_task"
+    }
    },
    {
     "event": "tool.call",
@@ -68,66 +95,84 @@
     }
    },
    {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
     "event": "prompt.compose"
+   },
+   {
+    "event": "prompt.submit"
    }
   ],
   "commands": [
    {
     "name": "clm",
-    "description": "Show the clm ledger, budget use and recent decisions; `board` opens the issue board in the browser, `link <id>` brings another repo's issue into this session (shown to you only).",
+    "description": "Show the clm ledger, budget use and recent decisions; `board` opens the issue board in the browser, `link <id>` brings another repo's issue into this session, `drop <id…|all>` drops open issues of this session (shown to you only).",
     "immediate": true
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "clm_recall",
+    "description": "Read original transcript rows by address @xxxxxxxx or an ancestor range @first..@last. Includes rows folded from the live context and rows on rewound branches."
+   },
+   {
+    "name": "clm_task",
+    "description": "Update a task you are working on: mark it doing when you start, done when a tool result shows it finished (cite that row and a verbatim quote), uncertain when you cannot verify it, dropped when the user abandons it. Create a child task for a sub-step you will do yourself."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [
-   "clm steps: no update (reply has no <ops>)",
-   "clm steps: no update (reply has no <ops>)",
-   "clm steps: no update (reply has no <ops>)",
-   "clm steps: no update (reply has no <ops>)",
-   "clm: fold failed, TypeError: undefined is not an object (evaluating 'u.tool.length')",
-   "clm steps: no update (reply has no <ops>)"
+   "clm intent: later classification failed (Error: reply is not JSON (SyntaxError: JSON Parse error: Unexpected identifier \"OK\"))",
+   "clm intent: request classification failed (Error: reply is not JSON (SyntaxError: JSON Parse error: Unexpected identifier \"OK\"))",
+   "clm intent: focus classification failed (Error: reply is not JSON (SyntaxError: JSON Parse error: Unexpected identifier \"OK\"))",
+   "clm: fold failed, TypeError: undefined is not an object (evaluating 'u.tool.length')"
   ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.tool.register": 2,
    "$.command.register": 1,
-   "$.session.id": 31,
-   "$.store.get": 13,
-   "$.session.messages": 8,
-   "$.session.cwd": 5,
-   "$.process.run": 10,
-   "$.env.get": 8,
-   "$.fs.exists": 8,
-   "$.model.complete": 6,
-   "$.ui.log": 6,
-   "$.session.usage": 1
+   "$.store.set": 2,
+   "$.session.id": 13,
+   "$.session.messages": 5,
+   "$.store.get": 6,
+   "$.state.get": 11,
+   "$.state.set": 6,
+   "$.session.cwd": 3,
+   "$.process.run": 6,
+   "$.env.get": 5,
+   "$.fs.exists": 5,
+   "$.model.complete": 2,
+   "$.ui.log": 4
   },
   "timers": [],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "UserMessage": {
     "ok": "engine"
    }
   },
   "script": [
    "session.start",
-   "tool.call Read",
    "$.process.run(git remote get-url origin) → exit 0",
    "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git remote get-url origin) → exit 0",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
-   "$.process.run(git remote get-url origin) → exit 0",
    "tool.call Write",
-   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
    "tool.call Write",
    "tool.call Bash bun test",
-   "$.process.run(git remote get-url origin) → exit 0",
-   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
-   "$.process.run(git remote get-url origin) → exit 0",
-   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
    "tool.call Bash cat .env",
    "$.process.run(git remote get-url origin) → exit 0",
    "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
@@ -146,60 +191,94 @@
    "engine.create",
    "clm.track",
    "clm.issues",
+   "clm.status",
+   "clm.resume",
    "session.start",
+   "classic.SessionStart",
+   "classic.UserPromptSubmit",
    "command.run{command=clm}",
+   "turn.start",
    "turn.complete",
    "session.compact",
-   "tool.call",
+   "tool.call{tool=mcp__clm__clm_recall}",
+   "agent.spawn",
+   "tool.call{tool=?}",
    "tool.call{tool=TaskCreate}",
    "tool.call{tool=TaskUpdate}",
    "tool.describe{tool=TaskCreate}",
    "tool.describe{tool=TaskUpdate}",
    "prompt.attachment{type=todo_reminder}",
    "ui.render{component=UserMessage}",
-   "prompt.compose"
+   "ui.render{component=AbovePrompt}",
+   "prompt.compose",
+   "prompt.submit"
   ],
   "calls": [
    "$.clock.now",
    "$.command.register",
    "$.env.get (via basePath",
-   "trackerDir)",
-   "$.fs.exists (via pruneWithheld",
-   "readAll",
-   "readText",
-   "writeEvents)",
-   "$.fs.list (via pruneWithheld",
-   "readAll)",
-   "$.fs.read (via readAll",
-   "readText",
-   "writeEvents)",
-   "$.fs.write",
-   "$.model.complete (via fold",
-   "reviewFold",
-   "showTurnChanges",
-   "stepOnce)",
-   "$.process.run (via git",
-   "openBoard",
-   "pruneWithheld)",
-   "$.session.compact (via maybeClear)",
-   "$.session.cwd (via captureOrigin)",
-   "$.session.id (via captureOrigin",
+   "eventsIo)",
+   "$.fs.exists (via addressRuntimeIo",
+   "eventsIo",
+   "foldJobIo",
+   "readText)",
+   "$.fs.list (via eventsIo",
+   "foldJobIo)",
+   "$.fs.read (via addressRuntimeIo",
+   "eventsIo",
+   "readText)",
+   "$.fs.write (via eventsIo",
+   "foldJobIo",
+   "panelIo",
+   "rewindIo)",
+   "$.model.complete (via foldJobIo",
+   "foldRuntimeIo",
+   "heldIo",
+   "intentIo)",
+   "$.process.run (via eventsIo",
+   "foldJobIo",
+   "panelIo)",
+   "$.prompt.submit (via workflowIo)",
+   "$.session.compact (via foldJobIo)",
+   "$.session.cwd (via eventsIo)",
+   "$.session.id (via addressRuntimeIo",
+   "clmStatusIo",
+   "eventsIo",
+   "foldJobIo",
+   "panelIo",
    "sid)",
    "$.session.messages",
    "$.session.usage (via usageReading)",
-   "$.store.delete",
-   "$.store.get",
-   "$.store.set (via maybeClear",
-   "stepOnce",
-   "updateHeld",
-   "writeMeta)",
-   "$.tool.call (via createTask",
-   "updateTask)",
-   "$.ui.log",
-   "$.ui.resolve"
+   "$.state.get (via readWorkflow",
+   "workflowStateIo)",
+   "$.state.set",
+   "$.store.delete (via foldJobIo",
+   "heldIo",
+   "rewindIo)",
+   "$.store.get (via addressRuntimeIo",
+   "clmStatusIo",
+   "foldRuntimeIo",
+   "heldIo",
+   "intentIo",
+   "panelIo",
+   "readMeta",
+   "readRequests",
+   "residentIo",
+   "rewindIo",
+   "storedTopics)",
+   "$.store.set (via addressRuntimeIo",
+   "foldJobIo",
+   "heldIo",
+   "intentIo",
+   "panelIo",
+   "re… [+98 chars]"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "clm.workflow"
+  ],
+  "stateWrites": [
+   "clm.workflow"
+  ],
   "envReads": [
    "HOME"
   ],
@@ -213,7 +292,8 @@
     "errors": [],
     "warnings": [],
     "notes": [
-     "types ./types/index.d.ts declares on $: $.clm"
+     "types ./types/index.d.ts declares on $: $.clm",
+     "types ./types/index.d.ts declares state: clm.workflow"
     ],
     "gatingHooks": []
    },
@@ -224,17 +304,27 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: engine.create, clm.track, clm.issues, session.start, command.run{command=clm}, turn.complete, session.compact, tool.call, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.describe{tool=TaskCreate}, tool.describe{tool=TaskUpdate}, prompt.attachment{type=todo_reminder}, ui.render{component=UserMessage}, prompt.compose",
+      "./register.ts hooks: engine.create, clm.track, clm.issues, clm.status, clm.resume, session.start, classic.SessionStart, classic.UserPromptSubmit, command.run{command=clm}, turn.start, turn.complete, session.compact, tool.call{tool=mcp__clm__clm_recall}, agent.spawn, tool.call{tool=?}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.describe{tool=TaskCreate}, tool.describe{tool=TaskUpdate}, prompt.attachment{type=todo_reminder}, ui.render{component=UserMessage}, ui.render{component=AbovePrompt}, prompt.compose, prompt.submit",
+      "./register.ts hooks on classic.SessionStart, classic.UserPromptSubmit, session.compact, prompt.attachment, prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=clm}",
       "./register.ts gating hook without .catch: clm.track",
       "./register.ts gating hook without .catch: clm.issues",
+      "./register.ts gating hook without .catch: clm.status",
+      "./register.ts gating hook without .catch: clm.resume",
+      "./register.ts gating hook without .catch: classic.SessionStart",
+      "./register.ts gating hook without .catch: classic.UserPromptSubmit",
       "./register.ts gating hook without .catch: session.compact",
-      "./register.ts gating hook without .catch: tool.call",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__clm__clm_recall}",
+      "./register.ts gating hook without .catch: agent.spawn",
+      "./register.ts gating hook without .catch: tool.call{tool=?}",
       "./register.ts gating hook without .catch: tool.call{tool=TaskCreate}",
       "./register.ts gating hook without .catch: tool.call{tool=TaskUpdate}",
-      "./register.ts calls: $.clock.now, $.command.register, $.env.get (via basePath, trackerDir), $.fs.exists (via pruneWithheld, readAll, readText, writeEvents), $.fs.list (via pruneWithheld, readAll), $.fs.read (via readAll, readText, writeEvents), $.fs.write, $.model.complete (via fold, reviewFold, showTurnChanges, stepOnce), $.process.run (via git, openBoard, pruneWithheld), $.session.compact (via maybeClear), $.session.cwd (via captureOrigin), $.session.id (via captureOrigin, sid), $.session.messages, $.session.usage (via usageReading), $.store.delete, $.store.get, $.store.set (via maybeClear, stepOnce, updateHeld, writeMeta), $.tool.call (via createTask, updateTask), $.ui.log, $.ui.resolve",
+      "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts calls: $.clock.now, $.command.register, $.env.get (via basePath, eventsIo), $.fs.exists (via addressRuntimeIo, eventsIo, foldJobIo, readText), $.fs.list (via eventsIo, foldJobIo), $.fs.read (via addressRuntimeIo, eventsIo, readText), $.fs.write (via eventsIo, foldJobIo, panelIo, rewindIo), $.model.complete (via foldJobIo, foldRuntimeIo, heldIo, intentIo), $.process.run (via eventsIo, foldJobIo, panelIo), $.prompt.submit (via workflowIo), $.session.compact (via foldJobIo), $.session.cwd (via eventsIo), $.session.id (via addressRuntimeIo, clmStatusIo, eventsIo, foldJobIo, panelIo, sid), $.session.messages, $.session.usage (via usageReading), $.state.get (via readWorkflow, workflowStateIo), $.state.set, $.store.delete (via foldJobIo, heldIo, rewindIo), $.store.get (via addressRuntimeIo, clmStatusIo, foldRuntimeIo, heldIo, intentIo, panelIo, readMeta, readRequests, residentIo, rewindIo, storedTopics), $.store.set (via addressRuntimeIo, foldJobIo, heldIo, intentIo, panelIo, re… [+98 chars]",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME"
+      "./register.ts env reads: HOME",
+      "./register.ts state writes: clm.workflow",
+      "./register.ts state reads: clm.workflow"
      ],
      "gatingHooks": [
       {
@@ -251,6 +341,30 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "clm.status",
+       "hook": "clm.status",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "clm.resume",
+       "hook": "clm.resume",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "session.compact",
        "hook": "session.compact",
        "hasCatch": false
@@ -258,7 +372,19 @@
       {
        "module": "./register.ts",
        "pattern": "tool.call",
-       "hook": "tool.call",
+       "hook": "tool.call{tool=mcp__clm__clm_recall}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
        "hasCatch": false
       },
       {
@@ -272,11 +398,18 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=TaskUpdate}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "445f4bcfabf5f318"
+ "sourceHash": "3557b6422412edb2"
 }

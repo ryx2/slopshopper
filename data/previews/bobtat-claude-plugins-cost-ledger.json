@@ -1,6 +1,6 @@
 {
  "slug": "bobtat-claude-plugins-cost-ledger",
- "generatedAt": "2026-10-07T15:21:56.412Z",
+ "generatedAt": "2026-10-16T14:16:42.126Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -60,8 +60,8 @@
   "commands": [
    {
     "name": "costs",
-    "description": "Show session, weekly and monthly Claude Code costs; \"export\" writes a CSV, \"doctor\" checks the setup",
-    "argumentHint": "[export|doctor]",
+    "description": "Show session, weekly and monthly Claude Code costs; \"export\" writes a CSV, \"doctor\" checks the setup, \"keepalive on|off\" keeps this session's prompt cache warm",
+    "argumentHint": "[export|doctor|keepalive on|off]",
     "output": "Costs pane opened."
    }
   ],
@@ -81,11 +81,11 @@
    "$.clock.now": 17,
    "$.store.keys": 6,
    "$.clock.every": 1,
-   "$.session.usage": 2,
-   "$.state.get": 45,
+   "$.session.usage": 4,
+   "$.state.get": 47,
    "$.state.set": 24,
    "$.ui.status": 3,
-   "$.store.get": 20,
+   "$.store.get": 21,
    "$.session.id": 8,
    "$.store.set": 8,
    "$.ui.open": 1,
@@ -1218,6 +1218,7 @@
    "ui.render{component=Pane, requestId=cost-ledger}"
   ],
   "calls": [
+   "$.clock.after (via armKeepAlive)",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
@@ -1227,12 +1228,15 @@
    "$.fs.list (via readOwnStoreFiles)",
    "$.fs.read (via readOwnStoreFiles)",
    "$.fs.write (via writeExport)",
+   "$.model.fork (via keepAlivePing)",
    "$.process.run (via hostLocalTime)",
    "$.session.id (via finishActiveTurn",
+   "recordPing",
    "recordSpend",
    "recordStep",
    "recordToolResult)",
    "$.session.root (via finishActiveTurn",
+   "recordPing",
    "recordSpend",
    "recordStep)",
    "$.session.usage",
@@ -1243,10 +1247,14 @@
    "runDoctor)",
    "$.store.get (via cacheTtl",
    "checkBudgets",
+   "coldCost",
    "compactStore",
    "finishActiveTurn",
+   "learnTtlFromTurn",
    "loadEntries",
+   "noteSharedPrefix",
    "noteUnpricedModel",
+   "recordPing",
    "recordSpend",
    "recordStep",
    "recordToolResult",
@@ -1263,10 +1271,12 @@
   "stateReads": [
    "cost-ledger.activeTurn",
    "cost-ledger.context",
+   "cost-ledger.keepAlive",
    "cost-ledger.lastUsd",
    "cost-ledger.loops",
    "cost-ledger.monthOffset",
    "cost-ledger.shadeBy",
+   "cost-ledger.sharedPrefix",
    "cost-ledger.tick",
    "cost-ledger.totals",
    "cost-ledger.turnPrompts"
@@ -1274,10 +1284,12 @@
   "stateWrites": [
    "cost-ledger.activeTurn",
    "cost-ledger.context",
+   "cost-ledger.keepAlive",
    "cost-ledger.lastUsd",
    "cost-ledger.loops",
    "cost-ledger.monthOffset",
    "cost-ledger.shadeBy",
+   "cost-ledger.sharedPrefix",
    "cost-ledger.tick",
    "cost-ledger.totals",
    "cost-ledger.turnPrompts"
@@ -1299,7 +1311,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: cost-ledger.totals, cost-ledger.lastUsd, cost-ledger.monthOffset, cost-ledger.context, cost-ledger.shadeBy, cost-ledger.tick, cost-ledger.activeTurn, cost-ledger.turnPrompts, cost-ledger.loops"
+     "types ./types/index.d.ts declares state: cost-ledger.totals, cost-ledger.lastUsd, cost-ledger.monthOffset, cost-ledger.context, cost-ledger.shadeBy, cost-ledger.tick, cost-ledger.activeTurn, cost-ledger.turnPrompts, cost-ledger.loops, cost-ledger.keepAlive, cost-ledger.sharedPrefix"
     ],
     "gatingHooks": []
    },
@@ -1311,17 +1323,18 @@
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, classic.SessionStart, classic.PreModelSwitch, classic.PostModelSwitch, session.end, prompt.submit, turn.start, turn.step, turn.complete, tool.call, session.measure, command.run{command=costs}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=cost-ledger}",
+      "./register.tsx hooks on classic.SessionStart, classic.PreModelSwitch, classic.PostModelSwitch do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=costs}",
       "./register.tsx gating hook without .catch: classic.SessionStart",
       "./register.tsx gating hook without .catch: classic.PreModelSwitch",
       "./register.tsx gating hook without .catch: classic.PostModelSwitch",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via hostLocalTime, readOwnStoreFiles, writeExport), $.fs.list (via readOwnStoreFiles), $.fs.read (via readOwnStoreFiles), $.fs.write (via writeExport), $.process.run (via hostLocalTime), $.session.id (via finishActiveTurn, recordSpend, recordStep, recordToolResult), $.session.root (via finishActiveTurn, recordSpend, recordStep), $.session.usage, $.state.get, $.state.set, $.store.delete (via compactStore, pruneBudgetKeys, runDoctor), $.store.get (via cacheTtl, checkBudgets, compactStore, finishActiveTurn, loadEntries, noteUnpricedModel, recordSpend, recordStep, recordToolResult, runDoctor), $.store.keys (via loadEntries, pruneBudgetKeys, runDoctor), $.store.set, $.ui.open, $.ui.resolve, $.ui.status (via updateStatus), $.ui.toast",
+      "./register.tsx calls: $.clock.after (via armKeepAlive), $.clock.every, $.clock.now, $.command.register, $.env.get (via hostLocalTime, readOwnStoreFiles, writeExport), $.fs.list (via readOwnStoreFiles), $.fs.read (via readOwnStoreFiles), $.fs.write (via writeExport), $.model.fork (via keepAlivePing), $.process.run (via hostLocalTime), $.session.id (via finishActiveTurn, recordPing, recordSpend, recordStep, recordToolResult), $.session.root (via finishActiveTurn, recordPing, recordSpend, recordStep), $.session.usage, $.state.get, $.state.set, $.store.delete (via compactStore, pruneBudgetKeys, runDoctor), $.store.get (via cacheTtl, checkBudgets, coldCost, compactStore, finishActiveTurn, learnTtlFromTurn, loadEntries, noteSharedPrefix, noteUnpricedModel, recordPing, recordSpend, recordStep, recordToolResult, runDoctor), $.store.keys (via loadEntries, pruneBudgetKeys, runDoctor), $.store.set, $.ui.open, $.ui.resolve, $.ui.status (via updateStatus), $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, OS, USERPROFILE",
-      "./register.tsx state writes: cost-ledger.activeTurn, cost-ledger.context, cost-ledger.lastUsd, cost-ledger.loops, cost-ledger.monthOffset, cost-ledger.shadeBy, cost-ledger.tick, cost-ledger.totals, cost-ledger.turnPrompts",
-      "./register.tsx state reads: cost-ledger.activeTurn, cost-ledger.context, cost-ledger.lastUsd, cost-ledger.loops, cost-ledger.monthOffset, cost-ledger.shadeBy, cost-ledger.tick, cost-ledger.totals, cost-ledger.turnPrompts"
+      "./register.tsx state writes: cost-ledger.activeTurn, cost-ledger.context, cost-ledger.keepAlive, cost-ledger.lastUsd, cost-ledger.loops, cost-ledger.monthOffset, cost-ledger.shadeBy, cost-ledger.sharedPrefix, cost-ledger.tick, cost-ledger.totals, cost-ledger.turnPrompts",
+      "./register.tsx state reads: cost-ledger.activeTurn, cost-ledger.context, cost-ledger.keepAlive, cost-ledger.lastUsd, cost-ledger.loops, cost-ledger.monthOffset, cost-ledger.shadeBy, cost-ledger.sharedPrefix, cost-ledger.tick, cost-ledger.totals, cost-ledger.turnPrompts"
      ],
      "gatingHooks": [
       {
@@ -1356,8 +1369,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "3456202fc9db5340"
+ "sourceHash": "b7919c92b795a5f6"
 }

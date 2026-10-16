@@ -1,6 +1,6 @@
 {
  "slug": "imaimai86-production-retail-and-wholesale-sdlc-monitor",
- "generatedAt": "2026-10-10T14:45:17.429Z",
+ "generatedAt": "2026-10-16T14:19:55.107Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,12 @@
     "event": "command.run",
     "matcher": {
      "command": "sdlc-monitor"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "sdlc-config"
     }
    },
    {
@@ -31,6 +37,13 @@
      "component": "Pane",
      "requestId": "sdlc"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "config"
+    }
    }
   ],
   "commands": [
@@ -38,6 +51,11 @@
     "name": "sdlc-monitor",
     "description": "Open the SDLC control pane: start, watch, answer and stop pipelines",
     "output": "SDLC control opened: 0 running · 0 paused, 0 pending."
+   },
+   {
+    "name": "sdlc-config",
+    "description": "Open the CONFIG pane: providers and models of the model registry",
+    "output": "CONFIG opened: providers and models."
    }
   ],
   "tools": [],
@@ -45,6 +63,10 @@
    {
     "id": "sdlc",
     "title": "SDLC control"
+   },
+   {
+    "id": "config",
+    "title": "CONFIG"
    }
   ],
   "toasts": [],
@@ -52,21 +74,25 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.clock.every": 1,
+   "$.command.register": 2,
+   "$.clock.every": 2,
+   "$.state.get": 50,
+   "$.state.set": 14,
    "$.clock.now": 1,
-   "$.process.run": 2,
+   "$.process.run": 6,
    "$.fs.list": 2,
-   "$.state.get": 12,
-   "$.state.set": 2,
    "$.agent.list": 1,
-   "$.ui.open": 1,
-   "$.ui.resolve": 2
+   "$.ui.open": 2,
+   "$.ui.resolve": 3
   },
   "timers": [
    {
     "kind": "every",
-    "ms": 2000
+    "ms": 250
+   },
+   {
+    "kind": "every",
+    "ms": 20000
    }
   ],
   "sites": {
@@ -75,26 +101,43 @@
     "tree": {
      "type": "Box",
      "props": {
-      "gap": 1
+      "flexDirection": "column"
      },
      "children": [
       {
-       "type": "Button",
+       "type": "Box",
        "props": {
-        "key": "sdlc-open",
-        "label": "SDLC",
-        "variant": "primary",
-        "onPress": "[fn]"
-       },
-       "children": []
-      },
-      {
-       "type": "Text",
-       "props": {
-        "dimColor": true
+        "gap": 1
        },
        "children": [
-        "0 pending"
+        {
+         "type": "Button",
+         "props": {
+          "key": "sdlc-open",
+          "label": "SDLC",
+          "variant": "primary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "config-open",
+          "label": "CONFIG",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "0 pending"
+         ]
+        }
        ]
       }
      ]
@@ -106,66 +149,107 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "column",
-       "paddingX": 1,
-       "gap": 1
+       "flexDirection": "row",
+       "minHeight": 30,
+       "backgroundColor": "#14181f"
       },
       "children": [
        {
-        "type": "Text",
-        "props": {
-         "bold": true
-        },
-        "children": [
-         "SDLC control ",
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           " ",
-           "0 running · 0 paused",
-           " · up to ",
-           "2",
-           " at once"
-          ]
-         }
-        ]
-       },
-       "",
-       {
         "type": "Box",
         "props": {
-         "flexDirection": "column"
+         "flexDirection": "column",
+         "width": 56,
+         "backgroundColor": "#14181f"
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "bold": true
+           "gap": 1,
+           "paddingX": 1,
+           "flexWrap": "wrap",
+           "backgroundColor": "#14181f"
           },
           "children": [
-           "Pending (",
-           "0",
-           "): select one or more"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "Nothing pending in Docs/backlog/index.md."
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "#e6edf3",
+             "backgroundColor": "#14181f"
+            },
+            "children": [
+             "SDLC control"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#8b949e",
+             "backgroundColor": "#14181f"
+            },
+            "children": [
+             "0 running · 0 paused",
+             " · up to ",
+             "2",
+             " at once"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "refresh",
+             "label": "Refresh",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
           ]
          },
          {
           "type": "Box",
           "props": {
-           "gap": 1
+           "gap": 1,
+           "paddingX": 1,
+           "flexWrap": "wrap",
+           "backgroundColor": "#14181f"
           },
           "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "board-left",
+             "label": "◀",
+             "hotkey": "h",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "board-right",
+             "label": "▶",
+             "hotkey": "l",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#8b949e",
+             "backgroundColor": "#14181f"
+            },
+            "children": [
+             "columns ",
+             "1",
+             "-",
+             "2",
+             " of ",
+             "7"
+            ]
+           },
            {
             "type": "Button",
             "props": {
@@ -188,38 +272,132 @@
            {
             "type": "Text",
             "props": {
-             "dimColor": true
+             "color": "#8b949e",
+             "backgroundColor": "#14181f"
             },
             "children": [
              "2 slot(s) free"
             ]
            }
           ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Pipelines"
-          ]
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "gap": 1,
+           "backgroundColor": "#14181f"
           },
           "children": [
-           "None yet. Select items above and press Run selected."
+           {
+            "type": "Box",
+            "props": {
+             "key": "col-0",
+             "flexDirection": "column",
+             "width": 27,
+             "borderStyle": "single",
+             "borderColor": "#2d333b",
+             "backgroundColor": "#10141a"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "justifyContent": "space-between",
+               "paddingX": 1,
+               "backgroundColor": "#10141a"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true,
+                 "color": "#e6edf3",
+                 "backgroundColor": "#10141a"
+                },
+                "children": [
+                 "Backlog"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#8b949e",
+                 "backgroundColor": "#10141a"
+                },
+                "children": [
+                 "0"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "#8b949e",
+               "backgroundColor": "#10141a"
+              },
+              "children": [
+               " ",
+               "Nothing pending"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "col-1",
+             "flexDirection": "column",
+             "width": 27,
+             "borderStyle": "single",
+             "borderColor": "#2d333b",
+             "backgroundColor": "#10141a"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "justifyContent": "space-between",
+               "paddingX": 1,
+               "backgroundColor": "#10141a"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true,
+                 "color": "#e6edf3",
+                 "backgroundColor": "#10141a"
+                },
+                "children": [
+                 "Spec"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#8b949e",
+                 "backgroundColor": "#10141a"
+                },
+                "children": [
+                 "0"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "#8b949e",
+               "backgroundColor": "#10141a"
+              },
+              "children": [
+               " ",
+               "nothing here"
+              ]
+             }
+            ]
+           }
           ]
          }
         ]
@@ -227,6 +405,63 @@
       ]
      },
      "title": "SDLC control"
+    },
+    "config": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "paddingX": 1,
+       "gap": 1,
+       "minHeight": 30,
+       "backgroundColor": "#14181f"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1,
+         "flexWrap": "wrap",
+         "backgroundColor": "#14181f"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#d0d7de",
+           "backgroundColor": "#14181f"
+          },
+          "children": [
+           "CONFIG"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "config-add-new",
+           "label": "Add provider",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#ff7b72",
+         "backgroundColor": "#14181f"
+        },
+        "children": [
+         "model list --json: unexpected output"
+        ]
+       }
+      ]
+     },
+     "title": "CONFIG"
     }
    }
   },
@@ -242,10 +477,16 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.process.run(git rev-parse --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
    "$.process.run(node scripts/backlog-list.cjs pending --json) → exit 0",
    "$.ui.open(sdlc)",
-   "/sdlc-monitor → SDLC control opened: 0 running · 0 paused, 0 pending."
+   "/sdlc-monitor → SDLC control opened: 0 running · 0 paused, 0 pending.",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(bash scripts/sdlc-mod.sh model list --json) → exit 0",
+   "$.ui.open(config)",
+   "/sdlc-config → CONFIG opened: providers and models."
   ],
   "console": [],
   "warnings": []
@@ -259,58 +500,88 @@
   "hooks": [
    "session.start",
    "command.run{command=sdlc-monitor}",
+   "command.run{command=sdlc-config}",
    "tool.call",
    "turn.complete",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=sdlc}"
+   "ui.render{component=Pane, requestId=sdlc}",
+   "ui.render{component=Pane, requestId=config}"
   ],
   "calls": [
    "$.agent.list (via sweepAgents)",
    "$.clock.every",
    "$.clock.now (via collect",
-   "startRun)",
+   "startNow)",
+   "$.clock.sleep (via settled)",
    "$.command.register",
    "$.fs.list (via names)",
    "$.fs.read (via readText)",
    "$.fs.write (via saveManualInput",
-   "submitAnswers)",
-   "$.process.run (via discardRun",
+   "submitNow)",
+   "$.process.run (via decideNow",
    "isAlive",
    "launch",
    "loadChanges",
    "loadPending",
-   "registryDir",
-   "stopRun)",
+   "repoInfo",
+   "runModel",
+   "wrapperChange)",
    "$.state.get",
    "$.state.set",
+   "$.ui.copy (via copyText)",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.status",
-   "$.ui.toast"
+   "$.ui.status (via tick)",
+   "$.ui.toast (via copyText",
+   "notify)"
   ],
   "stateReads": [
    "sdlc-monitor.agents",
+   "sdlc-monitor.boardOffset",
+   "sdlc-monitor.busy",
+   "sdlc-monitor.configConfirmModel",
+   "sdlc-monitor.configConfirmProvider",
+   "sdlc-monitor.configEditing",
+   "sdlc-monitor.configError",
+   "sdlc-monitor.configForm",
+   "sdlc-monitor.configList",
+   "sdlc-monitor.configView",
    "sdlc-monitor.confirmDiscard",
    "sdlc-monitor.confirmStop",
    "sdlc-monitor.draft",
+   "sdlc-monitor.frame",
    "sdlc-monitor.launching",
    "sdlc-monitor.notice",
    "sdlc-monitor.queue",
+   "sdlc-monitor.refreshing",
    "sdlc-monitor.selected",
    "sdlc-monitor.snapshot",
-   "sdlc-monitor.view"
+   "sdlc-monitor.view",
+   "sdlc-monitor.working"
   ],
   "stateWrites": [
    "sdlc-monitor.agents",
+   "sdlc-monitor.boardOffset",
+   "sdlc-monitor.busy",
+   "sdlc-monitor.configConfirmModel",
+   "sdlc-monitor.configConfirmProvider",
+   "sdlc-monitor.configEditing",
+   "sdlc-monitor.configError",
+   "sdlc-monitor.configForm",
+   "sdlc-monitor.configList",
+   "sdlc-monitor.configView",
    "sdlc-monitor.confirmDiscard",
    "sdlc-monitor.confirmStop",
    "sdlc-monitor.draft",
+   "sdlc-monitor.frame",
    "sdlc-monitor.launching",
    "sdlc-monitor.notice",
    "sdlc-monitor.queue",
+   "sdlc-monitor.refreshing",
    "sdlc-monitor.selected",
    "sdlc-monitor.snapshot",
-   "sdlc-monitor.view"
+   "sdlc-monitor.view",
+   "sdlc-monitor.working"
   ],
   "envReads": [],
   "raw": {
@@ -330,7 +601,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: sdlc-monitor.snapshot, sdlc-monitor.agents, sdlc-monitor.view, sdlc-monitor.selected, sdlc-monitor.queue, sdlc-monitor.confirmStop, sdlc-monitor.confirmDiscard, sdlc-monitor.launching, sdlc-monitor.draft, sdlc-monitor.notice"
+     "types ./types/index.d.ts declares state: sdlc-monitor.snapshot, sdlc-monitor.agents, sdlc-monitor.view, sdlc-monitor.selected, sdlc-monitor.queue, sdlc-monitor.confirmStop, sdlc-monitor.confirmDiscard, sdlc-monitor.launching, sdlc-monitor.draft, sdlc-monitor.boardOffset, sdlc-monitor.notice, sdlc-monitor.busy, sdlc-monitor.working, sdlc-monitor.frame, sdlc-monitor.refreshing, sdlc-monitor.configList, sdlc-monitor.configError, sdlc-monitor.configForm, sdlc-monitor.configView, sdlc-monitor.configEditing, sdlc-monitor.configConfirmProvider, sdlc-monitor.configConfirmModel"
     ],
     "gatingHooks": []
    },
@@ -341,12 +612,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=sdlc-monitor}, tool.call, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=sdlc}",
+      "./register.tsx hooks: session.start, command.run{command=sdlc-monitor}, command.run{command=sdlc-config}, tool.call, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=sdlc}, ui.render{component=Pane, requestId=config}",
       "./register.tsx answers its own command: command.run{command=sdlc-monitor}",
+      "./register.tsx answers its own command: command.run{command=sdlc-config}",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via sweepAgents), $.clock.every, $.clock.now (via collect, startRun), $.command.register, $.fs.list (via names), $.fs.read (via readText), $.fs.write (via saveManualInput, submitAnswers), $.process.run (via discardRun, isAlive, launch, loadChanges, loadPending, registryDir, stopRun), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: sdlc-monitor.agents, sdlc-monitor.confirmDiscard, sdlc-monitor.confirmStop, sdlc-monitor.draft, sdlc-monitor.launching, sdlc-monitor.notice, sdlc-monitor.queue, sdlc-monitor.selected, sdlc-monitor.snapshot, sdlc-monitor.view",
-      "./register.tsx state reads: sdlc-monitor.agents, sdlc-monitor.confirmDiscard, sdlc-monitor.confirmStop, sdlc-monitor.draft, sdlc-monitor.launching, sdlc-monitor.notice, sdlc-monitor.queue, sdlc-monitor.selected, sdlc-monitor.snapshot, sdlc-monitor.view"
+      "./register.tsx calls: $.agent.list (via sweepAgents), $.clock.every, $.clock.now (via collect, startNow), $.clock.sleep (via settled), $.command.register, $.fs.list (via names), $.fs.read (via readText), $.fs.write (via saveManualInput, submitNow), $.process.run (via decideNow, isAlive, launch, loadChanges, loadPending, repoInfo, runModel, wrapperChange), $.state.get, $.state.set, $.ui.copy (via copyText), $.ui.open, $.ui.resolve, $.ui.status (via tick), $.ui.toast (via copyText, notify)",
+      "./register.tsx state writes: sdlc-monitor.agents, sdlc-monitor.boardOffset, sdlc-monitor.busy, sdlc-monitor.configConfirmModel, sdlc-monitor.configConfirmProvider, sdlc-monitor.configEditing, sdlc-monitor.configError, sdlc-monitor.configForm, sdlc-monitor.configList, sdlc-monitor.configView, sdlc-monitor.confirmDiscard, sdlc-monitor.confirmStop, sdlc-monitor.draft, sdlc-monitor.frame, sdlc-monitor.launching, sdlc-monitor.notice, sdlc-monitor.queue, sdlc-monitor.refreshing, sdlc-monitor.selected, sdlc-monitor.snapshot, sdlc-monitor.view, sdlc-monitor.working",
+      "./register.tsx state reads: sdlc-monitor.agents, sdlc-monitor.boardOffset, sdlc-monitor.busy, sdlc-monitor.configConfirmModel, sdlc-monitor.configConfirmProvider, sdlc-monitor.configEditing, sdlc-monitor.configError, sdlc-monitor.configForm, sdlc-monitor.configList, sdlc-monitor.configView, sdlc-monitor.confirmDiscard, sdlc-monitor.confirmStop, sdlc-monitor.draft, sdlc-monitor.frame, sdlc-monitor.launching, sdlc-monitor.notice, sdlc-monitor.queue, sdlc-monitor.refreshing, sdlc-monitor.selected, sdlc-monitor.snapshot, sdlc-monitor.view, sdlc-monitor.working"
      ],
      "gatingHooks": [
       {
@@ -361,5 +633,5 @@
    "advice": []
   }
  },
- "sourceHash": "ad159f75415f993a"
+ "sourceHash": "55071373780a2b94"
 }

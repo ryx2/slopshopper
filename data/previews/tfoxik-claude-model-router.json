@@ -1,0 +1,2769 @@
+{
+ "slug": "tfoxik-claude-model-router",
+ "generatedAt": "2026-10-16T14:18:16.965Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "prompt.attachment"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "EnterPlanMode"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ExitPlanMode"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "command.run"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "route"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "model-router"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "model-router-ctx"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "model-router-cost"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "model-router-last"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "model-router-stats"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "model-router-handoffs"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "route",
+    "description": "Model router: open the pane, or one of the verbs",
+    "argumentHint": "[cost [last|session|history] | last | stats [clear | text on|off] | context | learn [on|off | mute|unmute <topic>] | handoffs [on|off | auto on|off] | next on|off | away | unused | preset <name> | set <route> <model> [effort] | on | off | band on|off | guard refuse|warn|off | ttl 5|60]",
+    "output": "Routes pane opened."
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "model-router",
+    "title": "Routes"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.store.get": 13,
+   "$.session.repo": 1,
+   "$.state.get": 59,
+   "$.state.set": 10,
+   "$.store.set": 2,
+   "$.session.id": 2,
+   "$.env.get": 2,
+   "$.command.list": 2,
+   "$.clock.now": 11,
+   "$.fs.exists": 1,
+   "$.session.messages": 1,
+   "$.ui.status": 1,
+   "$.clock.every": 1,
+   "$.ui.panes": 2,
+   "$.fs.read": 2,
+   "$.command.register": 1,
+   "$.tool.list": 1,
+   "$.settings.read": 1,
+   "$.fs.list": 2,
+   "$.session.usage": 3,
+   "$.ui.open": 1,
+   "$.ui.resolve": 8,
+   "$.session.model": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "band-route",
+        "flexDirection": "row",
+        "gap": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "bold": true,
+          "dimColor": false
+         },
+         "children": [
+          "▸ waiting for first request"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true,
+          "wrap": "truncate-end"
+         },
+         "children": [
+          "│ ",
+          {
+           "type": "Text",
+           "props": {
+            "color": "planMode"
+           },
+           "children": [
+            "plan"
+           ]
+          },
+          " ",
+          "inherit",
+          " · ",
+          {
+           "type": "Text",
+           "props": {
+            "color": "claude"
+           },
+           "children": [
+            "main"
+           ]
+          },
+          " ",
+          "inherit",
+          " ·",
+          " ",
+          {
+           "type": "Text",
+           "props": {
+            "color": "suggestion"
+           },
+           "children": [
+            "sub"
+           ]
+          },
+          " ",
+          "inherit"
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "band-health",
+        "height": 1
+       },
+       "children": []
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "band-actions",
+        "flexDirection": "row",
+        "justifyContent": "flex-end",
+        "gap": 1
+       },
+       "children": [
+        {
+         "type": "Button",
+         "props": {
+          "key": "ctx",
+          "label": "Context",
+          "plain": true,
+          "dimColor": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "band-cost",
+          "label": "Cost",
+          "plain": true,
+          "dimColor": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "band-open",
+          "label": "Routes",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "SessionMode": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row",
+      "flexShrink": 0
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "auto-accept edits  "
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "stats",
+        "label": "▤ today $0.0000",
+        "plain": true,
+        "dimColor": true,
+        "onPress": "[fn]"
+       },
+       "children": []
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "model-router": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "⚙ Routes"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1,
+           "alignItems": "center"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "success"
+            },
+            "children": [
+             "● on"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "toggle",
+             "label": "Turn off",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "subtle",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "subtle"
+            },
+            "children": [
+             "▸ waiting for the first request"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "$0.0000"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "plan mode ",
+           "off",
+           " · context ",
+           "97k",
+           " tokens",
+           " · plan toggle keeps cache"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexGrow": 1,
+           "flexShrink": 1,
+           "minWidth": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "dimColor": true
+            },
+            "children": [
+             "PRESET"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "width": 22,
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Select",
+            "props": {
+             "key": "preset",
+             "options": [
+              {
+               "value": "inherit",
+               "label": "Inherit (track only)"
+              },
+              {
+               "value": "mine",
+               "label": "Mine"
+              },
+              {
+               "value": "balanced",
+               "label": "Balanced (auto)"
+              },
+              {
+               "value": "frugal",
+               "label": "Frugal"
+              },
+              {
+               "value": "max",
+               "label": "Max quality"
+              }
+             ],
+             "value": "inherit",
+             "onSelect": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderDimColor": true,
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "g:Main loop",
+           "flexDirection": "column",
+           "marginBottom": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "dimColor": true
+            },
+            "children": [
+             "MAIN LOOP"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:plan",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "planMode",
+                 "bold": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Plan mode"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:plan",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:plan",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "auto",
+                   "label": "auto"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:main",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "claude",
+                 "bold": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Normal work"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:main",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:main",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "auto",
+                   "label": "auto"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "g:Subagents",
+           "flexDirection": "column",
+           "marginBottom": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "dimColor": true
+            },
+            "children": [
+             "SUBAGENTS"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:sub:*",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "suggestion",
+                 "bold": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Default"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:sub:*",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:sub:*",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:sub:Explore",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "└ Explore"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:sub:Explore",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:sub:Explore",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:sub:Plan",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "└ Plan agent"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:sub:Plan",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:sub:Plan",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:sub:general-purpose",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "└ General"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:sub:general-purpose",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:sub:general-purpose",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:workflow",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "└ Workflow"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:workflow",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:workflow",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "row:teammate",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "subtle"
+              },
+              "children": [
+               " "
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "└ Teammates"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 11,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "m:teammate",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "fable",
+                   "label": "Fable"
+                  },
+                  {
+                   "value": "opus",
+                   "label": "Opus"
+                  },
+                  {
+                   "value": "sonnet",
+                   "label": "Sonnet"
+                  },
+                  {
+                   "value": "haiku",
+                   "label": "Haiku"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Select",
+                "props": {
+                 "key": "e:teammate",
+                 "options": [
+                  {
+                   "value": "inherit",
+                   "label": "inherit"
+                  },
+                  {
+                   "value": "low",
+                   "label": "low"
+                  },
+                  {
+                   "value": "medium",
+                   "label": "medium"
+                  },
+                  {
+                   "value": "high",
+                   "label": "high"
+                  },
+                  {
+                   "value": "xhigh",
+                   "label": "xhigh"
+                  },
+                  {
+                   "value": "max",
+                   "label": "max"
+                  }
+                 ],
+                 "value": "inherit",
+                 "onSelect": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "inherit → falls back to the row above, then the session · forks always use the parent's model"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Changes above are a draft until you press Apply."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderDimColor": true,
+         "paddingX": 1,
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "dimColor": true
+          },
+          "children": [
+           "SETTINGS"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "sg:Coaching",
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "Coaching"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-learn",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Learn mode",
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "subtle"
+                  },
+                  "children": [
+                   " ○ off"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "explains cache misses and model costs with your own numbers, when they happen"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "learn-toggle",
+                 "label": "Turn on",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-next",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Next-step advice",
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "success"
+                  },
+                  "children": [
+                   " ● on"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "next-toggle",
+                 "label": "Turn off",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "sg:Handoffs",
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "Handoffs"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-handoffs",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Handoffs",
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "success"
+                  },
+                  "children": [
+                   " ● on"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "handoffs-toggle",
+                 "label": "Turn off",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "handoffs-open",
+                 "label": "Open",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-handoff",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 2
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Auto-handoff",
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "subtle"
+                  },
+                  "children": [
+                   " ○ off"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "saves a handoff while the cache is warm, before it goes cold with work open"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "handoff-toggle",
+                 "label": "Turn on",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "sg:Cache and display",
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "Cache and display"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-guard",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Cold-cache guard"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "a send onto a cold cache: held once with its price, sent with it, or not checked"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 12
+                },
+                "children": [
+                 {
+                  "type": "Select",
+                  "props": {
+                   "key": "guard",
+                   "options": [
+                    {
+                     "value": "refuse",
+                     "label": "refuse"
+                    },
+                    {
+                     "value": "warn",
+                     "label": "warn"
+                    },
+                    {
+                     "value": "off",
+                     "label": "off"
+                    }
+                   ],
+                   "value": "refuse",
+                   "onSelect": "[fn]"
+                  },
+                  "children": []
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-ttl",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Cache lifetime"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "the prompt-cache TTL the warm/cold timer counts down"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 12
+                },
+                "children": [
+                 {
+                  "type": "Select",
+                  "props": {
+                   "key": "ttl",
+                   "options": [
+                    {
+                     "value": "60",
+                     "label": "60 min"
+                    },
+                    {
+                     "value": "5",
+                     "label": "5 min"
+                    }
+                   ],
+                   "value": "60",
+                   "onSelect": "[fn]"
+                  },
+                  "children": []
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-text",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Keep prompt text",
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "success"
+                  },
+                  "children": [
+                   " ● on"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "the first 120 characters of each prompt, for Cost › History; off also removes text already kept"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "text-toggle",
+                 "label": "Turn off",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "set-band",
+             "flexDirection": "row",
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "gap": 1,
+             "paddingLeft": 0
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "flexShrink": 1,
+               "minWidth": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "Band",
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "success"
+                  },
+                  "children": [
+                   " ● shown"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "the route, cache and cost lines above the prompt; routing works either way"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "gap": 1,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "band-toggle",
+                 "label": "Hide",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Routes"
+    },
+    "model-router-ctx": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No context breakdown available yet."
+      ]
+     },
+     "title": "model-router-ctx"
+    },
+    "model-router-cost": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "Cost"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-last",
+           "label": "Last prompt",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-session",
+           "label": "Session",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-history",
+           "label": "History",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No requests in this prompt yet."
+        ]
+       }
+      ]
+     },
+     "title": "model-router-cost"
+    },
+    "model-router-last": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "Cost"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-last",
+           "label": "Last prompt",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-session",
+           "label": "Session",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-history",
+           "label": "History",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No requests in this prompt yet."
+        ]
+       }
+      ]
+     },
+     "title": "model-router-last"
+    },
+    "model-router-stats": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "Cost"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-last",
+           "label": "Last prompt",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-session",
+           "label": "Session",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-history",
+           "label": "History",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No requests in this prompt yet."
+        ]
+       }
+      ]
+     },
+     "title": "model-router-stats"
+    },
+    "model-router-handoffs": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "claude"
+          },
+          "children": [
+           "Handoffs · ",
+           "app"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "scope-repo",
+             "label": "This repo",
+             "plain": true,
+             "dimColor": false,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "scope-all",
+             "label": "All",
+             "plain": true,
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "No handoffs in app. Auto-handoff saves them here when it's on; so does /handoff."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "~/.claude/handoffs/app"
+        ]
+       }
+      ]
+     },
+     "title": "model-router-handoffs"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "turn.start: hook threw undefined is not an object (evaluating 'raw.replace')",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(model-router)",
+   "/route → Routes pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "prompt.attachment",
+   "tool.call{tool=EnterPlanMode}",
+   "tool.call{tool=ExitPlanMode}",
+   "tool.call",
+   "session.compact",
+   "agent.spawn",
+   "prompt.submit",
+   "command.run",
+   "session.end",
+   "turn.start",
+   "turn.step",
+   "turn.complete",
+   "command.run{command=route}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.render{component=SessionMode}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.agent.list (via maybeAutoHandoff",
+   "routeOfAgent)",
+   "$.clock.every",
+   "$.clock.now (via nowOf)",
+   "$.command.list (via listCommands)",
+   "$.command.register",
+   "$.command.run (via renderCtxPane)",
+   "$.env.get",
+   "$.fs.exists (via listHandoffs",
+   "ownSkills)",
+   "$.fs.list (via listHandoffs",
+   "ownSkills",
+   "refreshHandoffs)",
+   "$.fs.read (via noteVersion",
+   "ownSkills",
+   "refreshHandoffs)",
+   "$.fs.write (via finishHandoff)",
+   "$.model.classify",
+   "$.prompt.fill (via renderCtxPane",
+   "renderHandoffsPane)",
+   "$.prompt.read (via maybeAutoHandoff)",
+   "$.prompt.submit (via maybeAutoHandoff)",
+   "$.session.id",
+   "$.session.messages (via backfillUsage)",
+   "$.session.model (via renderPane",
+   "setPlan)",
+   "$.session.repo",
+   "$.session.root",
+   "$.session.surfaces (via isCardDrawn)",
+   "$.session.usage (via awayFacts",
+   "coldSend",
+   "decideMain",
+   "fetchLoaded",
+   "noteExploration",
+   "refreshStatus",
+   "renderCtxPane",
+   "renderPane",
+   "setPlan",
+   "unusedReport)",
+   "$.settings.read (via fetchLoaded)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via load)",
+   "$.store.set (via flushUsage",
+   "save)",
+   "$.tool.… [+243 chars]"
+  ],
+  "stateReads": [
+   "model-router.active",
+   "model-router.carried",
+   "model-router.config",
+   "model-router.costTab",
+   "model-router.draft",
+   "model-router.handoffClosedShown",
+   "model-router.handoffScope",
+   "model-router.handoffs",
+   "model-router.health",
+   "model-router.history",
+   "model-router.isBandShown",
+   "model-router.isPlan",
+   "model-router.lastUsage",
+   "model-router.learnCard",
+   "model-router.lessons",
+   "model-router.promptCost",
+   "model-router.spend",
+   "model-router.statsScope"
+  ],
+  "stateWrites": [
+   "model-router.active",
+   "model-router.carried",
+   "model-router.config",
+   "model-router.costTab",
+   "model-router.draft",
+   "model-router.handoffClosedShown",
+   "model-router.handoffScope",
+   "model-router.handoffs",
+   "model-router.health",
+   "model-router.history",
+   "model-router.isBandShown",
+   "model-router.isPlan",
+   "model-router.lastUsage",
+   "model-router.learnCard",
+   "model-router.lessons",
+   "model-router.promptCost",
+   "model-router.spend",
+   "model-router.statsScope"
+  ],
+  "envReads": [
+   "HOME",
+   "MODEL_ROUTER_IDLE_DEV"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/tfoxik-claude-model-router/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/tfoxik-claude-model-router/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: model-router.config, model-router.spend, model-router.isPlan, model-router.active, model-router.isBandShown, model-router.draft, model-router.lastUsage, model-router.health, model-router.promptCost, model-router.history, model-router.statsScope, model-router.costTab, model-router.lessons, model-router.learnCard, model-router.carried, model-router.handoffs, model-router.handoffScope, model-router.handoffClosedShown"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/tfoxik-claude-model-router/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, prompt.attachment, tool.call{tool=EnterPlanMode}, tool.call{tool=ExitPlanMode}, tool.call, session.compact, agent.spawn, prompt.submit, command.run, session.end, turn.start, turn.step, turn.complete, command.run{command=route}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on prompt.attachment, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=route}",
+      "./register.tsx gating hook with .catch: tool.call{tool=EnterPlanMode}",
+      "./register.tsx gating hook with .catch: tool.call{tool=ExitPlanMode}",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook with .catch: session.compact",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: command.run",
+      "./register.tsx calls: $.agent.list (via maybeAutoHandoff, routeOfAgent), $.clock.every, $.clock.now (via nowOf), $.command.list (via listCommands), $.command.register, $.command.run (via renderCtxPane), $.env.get, $.fs.exists (via listHandoffs, ownSkills), $.fs.list (via listHandoffs, ownSkills, refreshHandoffs), $.fs.read (via noteVersion, ownSkills, refreshHandoffs), $.fs.write (via finishHandoff), $.model.classify, $.prompt.fill (via renderCtxPane, renderHandoffsPane), $.prompt.read (via maybeAutoHandoff), $.prompt.submit (via maybeAutoHandoff), $.session.id, $.session.messages (via backfillUsage), $.session.model (via renderPane, setPlan), $.session.repo, $.session.root, $.session.surfaces (via isCardDrawn), $.session.usage (via awayFacts, coldSend, decideMain, fetchLoaded, noteExploration, refreshStatus, renderCtxPane, renderPane, setPlan, unusedReport), $.settings.read (via fetchLoaded), $.state.get, $.state.set, $.store.get (via load), $.store.set (via flushUsage, save), $.tool.… [+243 chars]",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, MODEL_ROUTER_IDLE_DEV",
+      "./register.tsx state writes: model-router.active, model-router.carried, model-router.config, model-router.costTab, model-router.draft, model-router.handoffClosedShown, model-router.handoffScope, model-router.handoffs, model-router.health, model-router.history, model-router.isBandShown, model-router.isPlan, model-router.lastUsage, model-router.learnCard, model-router.lessons, model-router.promptCost, model-router.spend, model-router.statsScope",
+      "./register.tsx state reads: model-router.active, model-router.carried, model-router.config, model-router.costTab, model-router.draft, model-router.handoffClosedShown, model-router.handoffScope, model-router.handoffs, model-router.health, model-router.history, model-router.isBandShown, model-router.isPlan, model-router.lastUsage, model-router.learnCard, model-router.lessons, model-router.promptCost, model-router.spend, model-router.statsScope"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=EnterPlanMode}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=ExitPlanMode}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "5148232d6c2e517"
+}

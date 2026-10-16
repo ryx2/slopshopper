@@ -1,6 +1,6 @@
 {
  "slug": "vampik33-claude-plugins-fleet",
- "generatedAt": "2026-10-06T14:52:08.252Z",
+ "generatedAt": "2026-10-16T14:21:59.999Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -76,9 +76,10 @@
    "$.command.register": 1,
    "$.process.run": 2,
    "$.session.cwd": 1,
+   "$.clock.now": 3,
+   "$.state.get": 10,
+   "$.state.set": 5,
    "$.ui.panes": 1,
-   "$.state.get": 8,
-   "$.state.set": 3,
    "$.clock.every": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 2
@@ -151,19 +152,27 @@
     "fleet": {
      "ok": true,
      "tree": {
-      "type": "Client",
+      "type": "Box",
       "props": {
-       "key": "fleet-body",
-       "module": "./pane.tsx",
-       "props": {
-        "repo": "app",
-        "width": 56,
-        "agents": [],
-        "shells": [],
-        "trees": []
-       }
+       "flexDirection": "column"
       },
-      "children": []
+      "children": [
+       {
+        "type": "Client",
+        "props": {
+         "key": "fleet-body",
+         "module": "./pane.tsx",
+         "props": {
+          "repo": "app",
+          "width": 56,
+          "agents": [],
+          "shells": [],
+          "trees": []
+         }
+        },
+        "children": []
+       }
+      ]
      },
      "title": "Fleet · app"
     }
@@ -211,27 +220,35 @@
    "$.agent.list (via tick)",
    "$.clock.after (via settle)",
    "$.clock.every",
+   "$.clock.now",
    "$.command.register",
    "$.env.get (via sendTelegram)",
+   "$.fs.stat (via watchShells)",
    "$.http.fetch (via sendTelegram)",
    "$.process.run",
    "$.session.cwd",
    "$.state.get",
    "$.state.set",
+   "$.tool.call (via stopShell)",
    "$.ui.close (via togglePane)",
+   "$.ui.invalidate (via watchShells)",
    "$.ui.log (via sendTelegram)",
    "$.ui.open (via openPane)",
    "$.ui.panes (via isPaneDrawn)",
    "$.ui.resolve",
    "$.ui.toast (via announce",
-   "settle)"
+   "settle",
+   "stopShell",
+   "watchShells)"
   ],
   "stateReads": [
    "fleet.fleet",
+   "fleet.lastPrompt",
    "fleet.pane"
   ],
   "stateWrites": [
    "fleet.fleet",
+   "fleet.lastPrompt",
    "fleet.pane"
   ],
   "envReads": [
@@ -249,7 +266,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: fleet.fleet, fleet.pane"
+     "types ./types/index.d.ts declares state: fleet.fleet, fleet.pane, fleet.lastPrompt"
     ],
     "gatingHooks": []
    },
@@ -261,17 +278,19 @@
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, session.end, command.run{command=fleet}, prompt.submit, agent.spawn, tool.call, session.append, classic.Stop, turn.complete, ui.render{component=Pane, requestId=fleet}, ui.render{component=AbovePrompt}, ui.close{id=fleet}",
+      "./register.tsx hooks on classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=fleet}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: session.append",
       "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: ui.close{id=fleet}",
-      "./register.tsx calls: $.agent.list (via tick), $.clock.after (via settle), $.clock.every, $.command.register, $.env.get (via sendTelegram), $.http.fetch (via sendTelegram), $.process.run, $.session.cwd, $.state.get, $.state.set, $.ui.close (via togglePane), $.ui.log (via sendTelegram), $.ui.open (via openPane), $.ui.panes (via isPaneDrawn), $.ui.resolve, $.ui.toast (via announce, settle)",
+      "./register.tsx calls: $.agent.list (via tick), $.clock.after (via settle), $.clock.every, $.clock.now, $.command.register, $.env.get (via sendTelegram), $.fs.stat (via watchShells), $.http.fetch (via sendTelegram), $.process.run, $.session.cwd, $.state.get, $.state.set, $.tool.call (via stopShell), $.ui.close (via togglePane), $.ui.invalidate (via watchShells), $.ui.log (via sendTelegram), $.ui.open (via openPane), $.ui.panes (via isPaneDrawn), $.ui.resolve, $.ui.toast (via announce, settle, stopShell, watchShells)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID",
-      "./register.tsx state writes: fleet.fleet, fleet.pane",
-      "./register.tsx state reads: fleet.fleet, fleet.pane",
+      "./register.tsx state writes: fleet.fleet, fleet.lastPrompt, fleet.pane",
+      "./register.tsx state reads: fleet.fleet, fleet.lastPrompt, fleet.pane",
       "./register.tsx surface modules: hooks/pane.tsx"
      ],
      "gatingHooks": [
@@ -313,8 +332,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "7708bf25e21e7795"
+ "sourceHash": "374e06d9b1d858dd"
 }

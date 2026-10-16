@@ -1,9 +1,15 @@
 {
  "slug": "oakoss-claude-plugins-review-cycle",
- "generatedAt": "2026-10-09T15:34:08.004Z",
+ "generatedAt": "2026-10-16T14:21:07.336Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "review-cycle.modelCheck"
+    }
+   },
    {
     "event": "config.set",
     "matcher": {
@@ -20,6 +26,12 @@
     "event": "config.set",
     "matcher": {
      "key": "review-cycle.nudge"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "review-cycle.unaskedNotice"
     }
    },
    {
@@ -147,7 +159,7 @@
   "tools": [
    {
     "name": "ledger",
-    "description": "Findings earlier review cycles in this repository settled without fixing: deferred, rebutted, left alone on purpose, or raised as questions. Each entry has an id, path, line, kind, finding, reason, source, `date` (when a cycle last settled it), `blob` (the file as the last cycle to carry it reviewed it), `current` (the file now), `changed` (whether the two differ; null when the working tree could not be read), and `stale` (settled more than 90 days ago). `unreadable` counts stored entries this version cannot read; the next record drops them. Pass `paths` to get only the entries for those repository-relative paths. Read-only."
+    "description": "Findings earlier review cycles in this repository settled without fixing: deferred, rebutted, left alone on purpose, or raised as questions. Each entry has an id, path, line, kind, finding, reason, source, `date` (when a cycle last settled it), `changed` (whether its file differs from what the last cycle to carry it reviewed; null when the working tree could not be read), and `stale` (settled more than 90 days ago); unless `changed` is false it also has `blob` and `current`, short ids for `git diff <blob> <current>`. Entries come ranked, in an answer of at most 8000 characters unless its first entry and the answer's header together are longer: first every stale entry, query or not, since it is open again, then those holding the most `query` words, then the newest. `reopened` counts the stale entries, `matched` the rest, and `next`, when present, is the `offset` that reads on. `unreadable` counts stored entries this version cannot read; the next record drops them. Read-only."
    },
    {
     "name": "ledger_record",
@@ -176,21 +188,42 @@
   "denies": [
    {
     "tool": "Bash: rm -rf build && git push --force origin main",
-    "reason": "review-cycle: `rm` alongside a commit or push. Run the commit as its own command, optionally after `git add …` and read-only git commands, joined with && (for example `git add -A && git commit -m …`)."
+    "reason": "review-cycle: `rm` alongside `git push`, which the gate checks as a commit or push. Run the commit as its own command, optionally after `git add …` and read-only git commands, joined with && (for example `git add -A && git commit -m …`)."
    }
   ],
   "rewrites": [],
   "apiCalls": {
    "$.tool.register": 6,
+   "$.state.get": 3,
+   "$.clock.after": 3,
+   "$.clock.every": 1,
    "$.session.cwd": 6,
    "$.process.run": 10,
    "$.env.get": 15,
    "$.fs.exists": 4,
+   "$.state.set": 2,
    "$.fs.stat": 1,
    "$.fs.read": 1,
    "$.fs.list": 4
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 5000
+   },
+   {
+    "kind": "every",
+    "ms": 1000
+   },
+   {
+    "kind": "after",
+    "ms": 5000
+   },
+   {
+    "kind": "after",
+    "ms": 5000
+   }
+  ],
   "sites": {},
   "script": [
    "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
@@ -212,7 +245,7 @@
    "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
    "tool.call: hook threw git rev-parse failed: exit 0",
    "tool.call Bash git status --porcelain",
-   "tool.call Bash denied: review-cycle: `rm` alongside a commit or push. Run the commit as its own command, optionally after `…",
+   "tool.call Bash denied: review-cycle: `rm` alongside `git push`, which the gate checks as a commit or push. Run the commit a…",
    "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-common-dir) → exit 0",
    "tool.call: hook threw git rev-parse failed: exit 0",
    "tool.call Bash cat .env",
@@ -226,9 +259,11 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "config.set{key=\"review-cycle.modelCheck\"}",
    "config.set{key=\"review-cycle.enabled\"}",
    "config.set{key=\"review-cycle.stopBefore\"}",
    "config.set{key=\"review-cycle.nudge\"}",
+   "config.set{key=\"review-cycle.unaskedNotice\"}",
    "tool.call{tool=Edit}",
    "tool.call{tool=Write}",
    "session.start",
@@ -255,10 +290,15 @@
   ],
   "calls": [
    "$.agent.list (via nudgeReview)",
-   "$.clock.after",
+   "$.clock.after (via onAgentSpawn",
+   "recall",
+   "within)",
+   "$.clock.every",
    "$.clock.now",
    "$.clock.sleep",
-   "$.env.get",
+   "$.env.get (via loadShellAliases",
+   "onScratch",
+   "readOwnAliases)",
    "$.fs.exists (via currentText",
    "readOwnAliases",
    "slopNote)",
@@ -267,6 +307,7 @@
    "loadShellAliases",
    "slopNote)",
    "$.fs.stat (via slopNote)",
+   "$.model.complete (via askModel)",
    "$.process.run (via ghRead",
    "readOwnAliases",
    "run)",
@@ -275,15 +316,23 @@
    "$.session.cwd (via ensureRoot)",
    "$.settings.read (via ladderOf",
    "nudgeWanted)",
+   "$.state.get",
+   "$.state.set",
    "$.store.delete (via storeOf)",
    "$.store.get (via storeOf)",
    "$.store.keys (via storeOf)",
    "$.store.set (via storeOf)",
    "$.tool.register",
-   "$.ui.log (via ranUnasked)"
+   "$.ui.log (via modelRan",
+   "ranUnasked)",
+   "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "review-cycle.gate"
+  ],
+  "stateWrites": [
+   "review-cycle.gate"
+  ],
   "envReads": [
    "CLAUDE_CODE_SHELL",
    "CLAUDE_CONFIG_DIR",
@@ -300,7 +349,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: review-cycle.gate"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -310,10 +362,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: config.set{key=\"review-cycle.enabled\"}, config.set{key=\"review-cycle.stopBefore\"}, config.set{key=\"review-cycle.nudge\"}, tool.call{tool=Edit}, tool.call{tool=Write}, session.start, tool.call{tool=mcp__review-cycle__ledger}, tool.call{tool=mcp__review-cycle__ledger_record}, tool.call{tool=mcp__review-cycle__scratch}, tool.call{tool=mcp__review-cycle__sweep}, tool.call{tool=mcp__review-cycle__status}, prompt.submit, agent.spawn, turn.complete, tool.call{tool=Skill}, tool.call{tool=Bash}, tool.call{tool=?}, tool.call{tool=Bash}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=NotebookEdit}, tool.call{tool=Monitor}, tool.call{tool=mcp__review-cycle__status}, tool.call{tool=mcp__review-cycle__misses}",
+      "./register.ts hooks: config.set{key=\"review-cycle.modelCheck\"}, config.set{key=\"review-cycle.enabled\"}, config.set{key=\"review-cycle.stopBefore\"}, config.set{key=\"review-cycle.nudge\"}, config.set{key=\"review-cycle.unaskedNotice\"}, tool.call{tool=Edit}, tool.call{tool=Write}, session.start, tool.call{tool=mcp__review-cycle__ledger}, tool.call{tool=mcp__review-cycle__ledger_record}, tool.call{tool=mcp__review-cycle__scratch}, tool.call{tool=mcp__review-cycle__sweep}, tool.call{tool=mcp__review-cycle__status}, prompt.submit, agent.spawn, turn.complete, tool.call{tool=Skill}, tool.call{tool=Bash}, tool.call{tool=?}, tool.call{tool=Bash}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=NotebookEdit}, tool.call{tool=Monitor}, tool.call{tool=mcp__review-cycle__status}, tool.call{tool=mcp__review-cycle__misses}",
+      "./register.ts gating hook without .catch: config.set{key=\"review-cycle.modelCheck\"}",
       "./register.ts gating hook without .catch: config.set{key=\"review-cycle.enabled\"}",
       "./register.ts gating hook without .catch: config.set{key=\"review-cycle.stopBefore\"}",
       "./register.ts gating hook without .catch: config.set{key=\"review-cycle.nudge\"}",
+      "./register.ts gating hook without .catch: config.set{key=\"review-cycle.unaskedNotice\"}",
       "./register.ts gating hook without .catch: tool.call{tool=Edit}",
       "./register.ts gating hook without .catch: tool.call{tool=Write}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__ledger}",
@@ -335,11 +389,19 @@
       "./register.ts gating hook with .catch: tool.call{tool=Monitor}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__status}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__misses}",
-      "./register.ts calls: $.agent.list (via nudgeReview), $.clock.after, $.clock.now, $.clock.sleep, $.env.get, $.fs.exists (via currentText, readOwnAliases, slopNote), $.fs.list (via loadShellAliases), $.fs.read (via currentText, loadShellAliases, slopNote), $.fs.stat (via slopNote), $.process.run (via ghRead, readOwnAliases, run), $.prompt.submit (via nudgeReview, overBudget), $.session.cwd (via ensureRoot), $.settings.read (via ladderOf, nudgeWanted), $.store.delete (via storeOf), $.store.get (via storeOf), $.store.keys (via storeOf), $.store.set (via storeOf), $.tool.register, $.ui.log (via ranUnasked)",
+      "./register.ts calls: $.agent.list (via nudgeReview), $.clock.after (via onAgentSpawn, recall, within), $.clock.every, $.clock.now, $.clock.sleep, $.env.get (via loadShellAliases, onScratch, readOwnAliases), $.fs.exists (via currentText, readOwnAliases, slopNote), $.fs.list (via loadShellAliases), $.fs.read (via currentText, loadShellAliases, slopNote), $.fs.stat (via slopNote), $.model.complete (via askModel), $.process.run (via ghRead, readOwnAliases, run), $.prompt.submit (via nudgeReview, overBudget), $.session.cwd (via ensureRoot), $.settings.read (via ladderOf, nudgeWanted), $.state.get, $.state.set, $.store.delete (via storeOf), $.store.get (via storeOf), $.store.keys (via storeOf), $.store.set (via storeOf), $.tool.register, $.ui.log (via modelRan, ranUnasked), $.ui.toast",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: CLAUDE_CODE_SHELL, CLAUDE_CONFIG_DIR, HOME, SHELL, TMPDIR"
+      "./register.ts env reads: CLAUDE_CODE_SHELL, CLAUDE_CONFIG_DIR, HOME, SHELL, TMPDIR",
+      "./register.ts state writes: review-cycle.gate",
+      "./register.ts state reads: review-cycle.gate"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "config.set",
+       "hook": "config.set{key=\"review-cycle.modelCheck\"}",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "config.set",
@@ -356,6 +418,12 @@
        "module": "./register.ts",
        "pattern": "config.set",
        "hook": "config.set{key=\"review-cycle.nudge\"}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "config.set",
+       "hook": "config.set{key=\"review-cycle.unaskedNotice\"}",
        "hasCatch": false
       },
       {
@@ -490,5 +558,5 @@
    "advice": []
   }
  },
- "sourceHash": "1b6eda87ae4ece54"
+ "sourceHash": "7fe49f47ee43ad03"
 }

@@ -1,9 +1,15 @@
 {
  "slug": "lorenzh-rabe",
- "generatedAt": "2026-10-10T14:44:46.556Z",
+ "generatedAt": "2026-10-16T14:16:56.158Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
    {
     "event": "session.start",
     "matcher": {
@@ -26,6 +32,12 @@
     "event": "turn.step",
     "matcher": {
      "agentId": "/^/"
+    }
+   },
+   {
+    "event": "turn.step",
+    "matcher": {
+     "model": "/^/"
     }
    },
    {
@@ -66,14 +78,25 @@
    {
     "event": "session.start",
     "matcher": {
-     "isInteractive": true
+     "isInteractive": [
+      true,
+      false
+     ]
     }
    },
    {
     "event": "command.run",
     "matcher": {
-     "command": "rabe-stop",
-     "args": "/^\\s*codex:/"
+     "command": "rabe-stop"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": [
+      true,
+      false
+     ]
     }
    },
    {
@@ -134,10 +157,7 @@
    {
     "event": "session.start",
     "matcher": {
-     "isInteractive": [
-      true,
-      false
-     ]
+     "isInteractive": true
     }
    },
    {
@@ -176,18 +196,35 @@
     }
    },
    {
-    "event": "session.start",
+    "event": "session.append",
     "matcher": {
-     "isInteractive": [
-      true,
-      false
+     "door": "prompt"
+    }
+   },
+   {
+    "event": "turn.step",
+    "matcher": {
+     "index": 0
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": [
+      "answer",
+      "aborted",
+      "error",
+      "refusal"
      ]
     }
    },
    {
     "event": "session.start",
     "matcher": {
-     "isInteractive": true
+     "isInteractive": [
+      true,
+      false
+     ]
     }
    },
    {
@@ -206,15 +243,50 @@
     }
    },
    {
+    "event": "ui.close",
+    "matcher": {
+     "id": "rabe",
+     "origin": {
+      "kind": "person"
+     }
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "rabe"
+    }
+   },
+   {
     "event": "session.end",
     "matcher": {
      "reason": "/^/"
     }
    },
    {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": "/^/"
+     }
+    }
+   },
+   {
     "event": "ui.focus",
     "matcher": {
-     "requestId": "rabe"
+     "requestId": "rabe",
+     "origin": {
+      "kind": "plugin"
+     }
+    }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "requestId": "rabe",
+     "origin": {
+      "kind": "person"
+     }
     }
    },
    {
@@ -243,6 +315,27 @@
     }
    },
    {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": [
+      true,
+      false
+     ]
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "rabe-diag"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "rabe:report-bug"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "PromptHint"
@@ -259,13 +352,20 @@
    {
     "name": "rabe",
     "description": "Show background work: agents, Codex jobs, shells, monitors, cron jobs and workflows",
-    "output": "Rabe opened."
+    "immediate": true
+   },
+   {
+    "name": "rabe-diag",
+    "description": "Show what each Rabe source read last, without private data",
+    "immediate": true,
+    "output": "Rabe n/a, Claude Code 2.1.289\nOptions: pricesFile: not set, hideBuiltinTasks: true, timelineHours: 4\nItems: shell failed 1, shell done 3\nLast poll per source:\n- agents: 0 ms, 0 files, 0 chars, 0 bytes, 0 skipped, 0 errors\n- codex: no poll recorded (not due, inactive session, or hook unavailable)\n- shells: no poll recorded (not due, inactive session, or hook unavailable)\n- ports: no poll recorded (not due, inactive session, or hook unavailable)\n- monitors: no poll recorded (not due, inactive session, or hook unavailable)\n- worktrees: 0 ms, 1 files, 0 chars, 0 bytes, 0 skipped, 0 errors\n- crons, workflows: event sources, no polls"
    },
    {
     "name": "rabe-stop",
-    "description": "Stop a background item that Rabe shows, by its id",
-    "argumentHint": "<item id>",
-    "immediate": true
+    "description": "Stop a running Codex job that Rabe shows, by its job id",
+    "argumentHint": "codex:<job id>",
+    "immediate": true,
+    "output": "Usage: /rabe-stop codex:<job id>. Use the Codex job id shown in Rabe, not the thread id. To stop other items, use x in the pane."
    }
   ],
   "tools": [],
@@ -280,21 +380,24 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.clock.every": 6,
-   "$.agent.list": 1,
-   "$.clock.now": 3,
-   "$.state.get": 20,
    "$.tool.call": 1,
-   "$.command.register": 2,
+   "$.state.get": 45,
+   "$.command.register": 3,
+   "$.clock.every": 1,
+   "$.clock.now": 26,
+   "$.agent.list": 1,
    "$.process.run": 1,
-   "$.env.get": 4,
+   "$.state.set": 13,
+   "$.env.get": 8,
+   "$.clock.sleep": 5,
    "$.session.cwd": 3,
-   "$.clock.sleep": 1,
    "$.fs.stat": 1,
    "$.fs.list": 1,
-   "$.state.set": 2,
+   "$.session.surfaces": 1,
    "$.ui.open": 1,
    "$.clock.after": 1,
+   "$.session.version": 1,
+   "$.fs.read": 1,
    "$.ui.resolve": 1,
    "$.session.usage": 1,
    "$.store.get": 1,
@@ -303,31 +406,11 @@
   "timers": [
    {
     "kind": "every",
-    "ms": 3000
-   },
-   {
-    "kind": "every",
-    "ms": 2000
-   },
-   {
-    "kind": "every",
-    "ms": 2000
-   },
-   {
-    "kind": "every",
     "ms": 1000
    },
    {
-    "kind": "every",
-    "ms": 10000
-   },
-   {
-    "kind": "every",
-    "ms": 2000
-   },
-   {
     "kind": "after",
-    "ms": 1500
+    "ms": 50
    }
   ],
   "sites": {
@@ -369,7 +452,7 @@
           "props": {
            "key": "tab-items",
            "plain": true,
-           "label": "Items 0",
+           "label": "Items 4",
            "hotkey": "1",
            "onPress": "[fn]"
           },
@@ -549,6 +632,17 @@
            "onPress": "[fn]"
           },
           "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "clear-search",
+           "label": "k",
+           "hotkey": "k",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
          }
         ]
        },
@@ -568,9 +662,33 @@
        {
         "type": "Box",
         "props": {
+         "key": "line:group-failed",
          "flexDirection": "row"
         },
         "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(167)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "▾ "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "group-failed",
+           "plain": true,
+           "label": "FAILED",
+           "hover": {
+            "bold": true
+           },
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
          {
           "type": "Text",
           "props": {
@@ -578,7 +696,7 @@
            "wrap": "truncate"
           },
           "children": [
-           " Nothing runs in the background."
+           " 1"
           ]
          },
          {
@@ -587,7 +705,364 @@
            "wrap": "truncate"
           },
           "children": [
-           "                        "
+           "                                              "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "line:row:shell:fg-toolu_06",
+         "flexDirection": "row",
+         "backgroundColor": "ansi256(238)"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(173)",
+           "backgroundColor": "ansi256(238)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "▌"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(167)",
+           "backgroundColor": "ansi256(238)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "✗"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "backgroundColor": "ansi256(238)",
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "row:shell:fg-toolu_06",
+           "plain": true,
+           "label": "Run the test suite · foreground",
+           "autoFocus": true,
+           "hover": {
+            "bold": true
+           },
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "backgroundColor": "ansi256(238)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "      "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "backgroundColor": "ansi256(238)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "failed just now "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           "                                                        "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "line:group-shells",
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(179)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "▾ "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "group-shells",
+           "plain": true,
+           "label": "SHELLS",
+           "hover": {
+            "bold": true
+           },
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(245)",
+           "wrap": "truncate"
+          },
+          "children": [
+           " 3 ended"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           "                                        "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "line:row:shell:fg-toolu_09",
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(173)",
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(107)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "✓"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "row:shell:fg-toolu_09",
+           "plain": true,
+           "label": "Show environment file · foreground",
+           "dimColor": true,
+           "hover": {
+            "bold": true
+           },
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           "     "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(245)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "done just now "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "line:row:shell:fg-toolu_08",
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(173)",
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(107)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "✓"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "row:shell:fg-toolu_08",
+           "plain": true,
+           "label": "Clean build output and push · foregro…",
+           "dimColor": true,
+           "hover": {
+            "bold": true
+           },
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(245)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "done just now "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "line:row:shell:fg-toolu_07",
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(173)",
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(107)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "✓"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "row:shell:fg-toolu_07",
+           "plain": true,
+           "label": "Show working tree status · foreground",
+           "dimColor": true,
+           "hover": {
+            "bold": true
+           },
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           "  "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "ansi256(245)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "done just now "
           ]
          }
         ]
@@ -835,104 +1310,72 @@
        {
         "type": "Box",
         "props": {
-         "flexDirection": "row"
+         "flexDirection": "row",
+         "backgroundColor": "ansi256(236)"
         },
         "children": [
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "color": "ansi256(167)",
+           "backgroundColor": "ansi256(236)",
+           "wrap": "truncate"
+          },
+          "children": [
+           "✗"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "backgroundColor": "ansi256(236)",
+           "wrap": "truncate"
+          },
           "children": [
            " "
           ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
+         },
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "color": "ansi256(255)",
+           "backgroundColor": "ansi256(236)",
+           "wrap": "truncate"
+          },
           "children": [
-           " "
+           "Run the test suite · foreground"
           ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
+         },
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "color": "ansi256(245)",
+           "backgroundColor": "ansi256(236)",
+           "wrap": "truncate"
+          },
           "children": [
-           " "
+           " · "
           ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
+         },
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "color": "ansi256(167)",
+           "backgroundColor": "ansi256(236)",
+           "wrap": "truncate"
+          },
           "children": [
-           " "
+           "failed"
           ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
+         },
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "backgroundColor": "ansi256(236)",
+           "wrap": "truncate"
+          },
           "children": [
-           " "
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           " "
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "row"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           " "
+           "              "
           ]
          }
         ]
@@ -984,8 +1427,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(rabe)",
-   "/rabe → Rabe opened.",
-   "/rabe-stop → "
+   "/rabe → ",
+   "/rabe-diag → Rabe n/a, Claude Code 2.1.289\nOptions: pricesFile: not set, hideBuiltinTasks: tr…",
+   "/rabe-stop → Usage: /rabe-stop codex:<job id>. Use the Codex job id shown in Rabe, not the th…"
   ],
   "console": [],
   "warnings": []
@@ -996,16 +1440,19 @@
   "warnings": [],
   "hooks": [
    "session.start{cwd=/\"^\"/}",
+   "session.start{cwd=/\"^\"/}",
    "agent.spawn{subagentType=/\"^\"/}",
    "classic.SubagentStart{agent_id=/\"^\"/}",
    "turn.step{agentId=/\"^\"/}",
+   "turn.step{model=/\"^\"/}",
    "tool.call{tool=Edit|Write}",
    "tool.call{tool=Bash}",
    "turn.complete{agentId=/\"^\"/}",
    "tool.call{tool=Workflow}",
    "prompt.submit{origin has {kind=task-notification}}",
-   "session.start{isInteractive=true}",
-   "command.run{command=rabe-stop, args=/\"^\\\\s*codex:\"/}",
+   "session.start{isInteractive=true|false}",
+   "command.run{command=rabe-stop}",
+   "session.start{isInteractive=true|false}",
    "tool.call{tool=Bash}",
    "prompt.submit{origin has {kind=task-notification}}",
    "classic.Stop{stop_hook_active=true|false}",
@@ -1013,88 +1460,103 @@
    "tool.call{tool=Monitor}",
    "prompt.submit{origin has {kind=task-notification}}",
    "classic.Stop{stop_hook_active=true|false}",
-   "session.start{isInteractive=true|false}",
+   "session.start{isInteractive=true}",
    "tool.call{tool=CronCreate}",
    "tool.call{tool=CronDelete}",
    "tool.call{tool=ScheduleWakeup}",
    "prompt.submit{origin has {kind=scheduled-trigger}}",
    "classic.Stop{stop_hook_active=true|false}",
-   "session.start{isInteractive=true|false}",
-   "session.start{isInteractive=true}",
-   "ui.render{component=AboveProm… [+288 chars]"
+   "session.append{door=prompt}",
+   "turn.st… [+716 chars]"
   ],
   "calls": [
-   "$.agent.list (via refresh)",
-   "$.clock.after",
+   "$.agent.list",
+   "$.clock.after (via feed",
+   "refocus)",
    "$.clock.every",
    "$.clock.now",
-   "$.clock.sleep (via confirmed",
-   "look)",
+   "$.clock.sleep",
    "$.command.register",
    "$.command.run (via stop)",
-   "$.env.get (via beforeBash",
-   "homes",
-   "prices",
-   "readSession)",
-   "$.fs.list (via findRollout",
+   "$.env.get",
+   "$.fs.list (via execFiles",
+   "findRollout",
    "isMissing",
-   "poll)",
+   "pollCodex)",
    "$.fs.read (via cancel",
-   "follow",
-   "launched",
-   "poll",
    "prices",
+   "readFile",
+   "readJson",
    "readMeta",
+   "readScript",
    "readSession",
-   "readWhole",
-   "refresh)",
+   "report)",
    "$.fs.stat (via cancel",
-   "follow",
+   "checkedOutput",
    "look",
-   "poll",
+   "pollCodex",
+   "pollShells",
+   "readFile",
+   "readJson",
+   "readMeta",
+   "readScript",
    "readSession",
-   "readWhole",
    "statOnce)",
    "$.process.run (via cancel",
-   "poll",
-   "readSession",
-   "readWhole)",
+   "execFiles",
+   "pollWorktrees",
+   "portCommand",
+   "readFile",
+   "readFires",
+   "readSession)",
    "$.session.cwd (via beforeBash",
    "look",
    "previous",
    "remember)",
-   "$.session.id (via look",
-   "poll)",
+   "$.session.id (via checkedOutput",
+   "look",
+   "pollCodex",
+   "readFile",
+   "readScript)",
+   "$.session.root (via checkedOutput",
+   "readFile",
+   "readScript)",
    "$.session.send (via act)",
+   "$.session.surfaces",
    "$.session.usage",
+   "$.session.version (via report)",
    "$.state.get",
    "$.state.set",
    "$.store.get (via previous)",
-   "$.store.set (via remember)",
+   "$.store.set (via previous",
+   "remember)",
    "$.tool.call (via act",
    "list",
    "stop)",
-   "$.ui.copy (via act)",
-   "$.ui.focus (via focusOn",
-   "regain)",
-   "$.ui.invalidate (via feed",
-   "tick)",
-   "$.ui.open",
-   "$.ui.panes (via refocus)",
-   "$.ui.resolve",
-   "$.ui.toast (via act",
-   "remove",
-   "stop)"
+   "$.ui.close",
+   "$.ui.copy (via … [+135 chars]"
   ],
   "stateReads": [
+   "rabe.actions",
+   "rabe.agentFiles",
+   "rabe.codexFiles",
+   "rabe.cronTranscript",
+   "rabe.cronTurn",
+   "rabe.diag",
+   "rabe.diffs",
    "rabe.edits",
    "rabe.folded",
+   "rabe.grouping",
    "rabe.items",
    "rabe.lines",
+   "rabe.mainUsage",
    "rabe.open",
+   "rabe.openFrom",
    "rabe.order",
+   "rabe.picked",
    "rabe.query",
    "rabe.removed",
+   "rabe.rollouts",
    "rabe.selected",
    "rabe.tab",
    "rabe.turns",
@@ -1102,14 +1564,26 @@
    "rabe.worktrees"
   ],
   "stateWrites": [
+   "rabe.actions",
+   "rabe.agentFiles",
+   "rabe.codexFiles",
+   "rabe.cronTranscript",
+   "rabe.cronTurn",
+   "rabe.diag",
+   "rabe.diffs",
    "rabe.edits",
    "rabe.folded",
+   "rabe.grouping",
    "rabe.items",
    "rabe.lines",
+   "rabe.mainUsage",
    "rabe.open",
+   "rabe.openFrom",
    "rabe.order",
+   "rabe.picked",
    "rabe.query",
    "rabe.removed",
+   "rabe.rollouts",
    "rabe.selected",
    "rabe.tab",
    "rabe.turns",
@@ -1132,7 +1606,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: rabe.items, rabe.tab, rabe.turns, rabe.lines, rabe.query, rabe.folded, rabe.selected, rabe.open, rabe.order, rabe.edits, rabe.removed, rabe.worktrees, rabe.window"
+     "types ./types/index.d.ts declares state: rabe.items, rabe.cronTranscript, rabe.cronTurn, rabe.agentFiles, rabe.codexFiles, rabe.rollouts, rabe.tab, rabe.turns, rabe.lines, rabe.query, rabe.folded, rabe.selected, rabe.picked, rabe.open, rabe.openFrom, rabe.order, rabe.edits, rabe.diffs, rabe.removed, rabe.worktrees, rabe.window, rabe.grouping, rabe.mainUsage, rabe.diag, rabe.actions"
     ],
     "gatingHooks": []
    },
@@ -1143,9 +1617,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start{cwd=/\"^\"/}, agent.spawn{subagentType=/\"^\"/}, classic.SubagentStart{agent_id=/\"^\"/}, turn.step{agentId=/\"^\"/}, tool.call{tool=Edit|Write}, tool.call{tool=Bash}, turn.complete{agentId=/\"^\"/}, tool.call{tool=Workflow}, prompt.submit{origin has {kind=task-notification}}, session.start{isInteractive=true}, command.run{command=rabe-stop, args=/\"^\\\\s*codex:\"/}, tool.call{tool=Bash}, prompt.submit{origin has {kind=task-notification}}, classic.Stop{stop_hook_active=true|false}, session.start{isInteractive=true|false}, tool.call{tool=Monitor}, prompt.submit{origin has {kind=task-notification}}, classic.Stop{stop_hook_active=true|false}, session.start{isInteractive=true|false}, tool.call{tool=CronCreate}, tool.call{tool=CronDelete}, tool.call{tool=ScheduleWakeup}, prompt.submit{origin has {kind=scheduled-trigger}}, classic.Stop{stop_hook_active=true|false}, session.start{isInteractive=true|false}, session.start{isInteractive=true}, ui.render{component=AboveProm… [+288 chars]",
-      "./register.tsx answers its own command: command.run{command=rabe-stop, args=/\"^\\\\s*codex:\"/}",
+      "./register.tsx hooks: session.start{cwd=/\"^\"/}, session.start{cwd=/\"^\"/}, agent.spawn{subagentType=/\"^\"/}, classic.SubagentStart{agent_id=/\"^\"/}, turn.step{agentId=/\"^\"/}, turn.step{model=/\"^\"/}, tool.call{tool=Edit|Write}, tool.call{tool=Bash}, turn.complete{agentId=/\"^\"/}, tool.call{tool=Workflow}, prompt.submit{origin has {kind=task-notification}}, session.start{isInteractive=true|false}, command.run{command=rabe-stop}, session.start{isInteractive=true|false}, tool.call{tool=Bash}, prompt.submit{origin has {kind=task-notification}}, classic.Stop{stop_hook_active=true|false}, session.start{isInteractive=true|false}, tool.call{tool=Monitor}, prompt.submit{origin has {kind=task-notification}}, classic.Stop{stop_hook_active=true|false}, session.start{isInteractive=true}, tool.call{tool=CronCreate}, tool.call{tool=CronDelete}, tool.call{tool=ScheduleWakeup}, prompt.submit{origin has {kind=scheduled-trigger}}, classic.Stop{stop_hook_active=true|false}, session.append{door=prompt}, turn.st… [+716 chars]",
+      "./register.tsx hooks on classic.SubagentStart, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=rabe-stop}",
       "./register.tsx answers its own command: command.run{command=rabe}",
+      "./register.tsx answers its own command: command.run{command=rabe-diag}",
       "./register.tsx gating hook with .catch: agent.spawn{subagentType=/\"^\"/}",
       "./register.tsx gating hook with .catch: classic.SubagentStart{agent_id=/\"^\"/}",
       "./register.tsx gating hook without .catch: tool.call{tool=Edit|Write}",
@@ -1163,13 +1639,19 @@
       "./register.tsx gating hook without .catch: tool.call{tool=ScheduleWakeup}",
       "./register.tsx gating hook without .catch: prompt.submit{origin has {kind=scheduled-trigger}}",
       "./register.tsx gating hook without .catch: classic.Stop{stop_hook_active=true|false}",
-      "./register.tsx gating hook with .catch: ui.focus{requestId=rabe}",
+      "./register.tsx gating hook without .catch: session.append{door=prompt}",
+      "./register.tsx gating hook with .catch: ui.close{id=rabe, origin has {kind=person}}",
+      "./register.tsx gating hook with .catch: ui.close{id=rabe}",
+      "./register.tsx gating hook with .catch: prompt.submit{origin has {kind=/\"^\"/}}",
+      "./register.tsx gating hook with .catch: ui.focus{requestId=rabe, origin has {kind=plugin}}",
+      "./register.tsx gating hook with .catch: ui.focus{requestId=rabe, origin has {kind=person}}",
       "./register.tsx gating hook without .catch: ui.scroll{requestId=rabe}",
-      "./register.tsx calls: $.agent.list (via refresh), $.clock.after, $.clock.every, $.clock.now, $.clock.sleep (via confirmed, look), $.command.register, $.command.run (via stop), $.env.get (via beforeBash, homes, prices, readSession), $.fs.list (via findRollout, isMissing, poll), $.fs.read (via cancel, follow, launched, poll, prices, readMeta, readSession, readWhole, refresh), $.fs.stat (via cancel, follow, look, poll, readSession, readWhole, statOnce), $.process.run (via cancel, poll, readSession, readWhole), $.session.cwd (via beforeBash, look, previous, remember), $.session.id (via look, poll), $.session.send (via act), $.session.usage, $.state.get, $.state.set, $.store.get (via previous), $.store.set (via remember), $.tool.call (via act, list, stop), $.ui.copy (via act), $.ui.focus (via focusOn, regain), $.ui.invalidate (via feed, tick), $.ui.open, $.ui.panes (via refocus), $.ui.resolve, $.ui.toast (via act, remove, stop)",
+      "./register.tsx gating hook without .catch: command.run{command=rabe:report-bug}",
+      "./register.tsx calls: $.agent.list, $.clock.after (via feed, refocus), $.clock.every, $.clock.now, $.clock.sleep, $.command.register, $.command.run (via stop), $.env.get, $.fs.list (via execFiles, findRollout, isMissing, pollCodex), $.fs.read (via cancel, prices, readFile, readJson, readMeta, readScript, readSession, report), $.fs.stat (via cancel, checkedOutput, look, pollCodex, pollShells, readFile, readJson, readMeta, readScript, readSession, statOnce), $.process.run (via cancel, execFiles, pollWorktrees, portCommand, readFile, readFires, readSession), $.session.cwd (via beforeBash, look, previous, remember), $.session.id (via checkedOutput, look, pollCodex, readFile, readScript), $.session.root (via checkedOutput, readFile, readScript), $.session.send (via act), $.session.surfaces, $.session.usage, $.session.version (via report), $.state.get, $.state.set, $.store.get (via previous), $.store.set (via previous, remember), $.tool.call (via act, list, stop), $.ui.close, $.ui.copy (via … [+135 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, CODEX_HOME, HOME",
-      "./register.tsx state writes: rabe.edits, rabe.folded, rabe.items, rabe.lines, rabe.open, rabe.order, rabe.query, rabe.removed, rabe.selected, rabe.tab, rabe.turns, rabe.window, rabe.worktrees",
-      "./register.tsx state reads: rabe.edits, rabe.folded, rabe.items, rabe.lines, rabe.open, rabe.order, rabe.query, rabe.removed, rabe.selected, rabe.tab, rabe.turns, rabe.window, rabe.worktrees"
+      "./register.tsx state writes: rabe.actions, rabe.agentFiles, rabe.codexFiles, rabe.cronTranscript, rabe.cronTurn, rabe.diag, rabe.diffs, rabe.edits, rabe.folded, rabe.grouping, rabe.items, rabe.lines, rabe.mainUsage, rabe.open, rabe.openFrom, rabe.order, rabe.picked, rabe.query, rabe.removed, rabe.rollouts, rabe.selected, rabe.tab, rabe.turns, rabe.window, rabe.worktrees",
+      "./register.tsx state reads: rabe.actions, rabe.agentFiles, rabe.codexFiles, rabe.cronTranscript, rabe.cronTurn, rabe.diag, rabe.diffs, rabe.edits, rabe.folded, rabe.grouping, rabe.items, rabe.lines, rabe.mainUsage, rabe.open, rabe.openFrom, rabe.order, rabe.picked, rabe.query, rabe.removed, rabe.rollouts, rabe.selected, rabe.tab, rabe.turns, rabe.window, rabe.worktrees"
      ],
      "gatingHooks": [
       {
@@ -1276,14 +1758,50 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=prompt}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=rabe, origin has {kind=person}}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=rabe}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=/\"^\"/}}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "ui.focus",
-       "hook": "ui.focus{requestId=rabe}",
+       "hook": "ui.focus{requestId=rabe, origin has {kind=plugin}}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=rabe, origin has {kind=person}}",
        "hasCatch": true
       },
       {
        "module": "./register.tsx",
        "pattern": "ui.scroll",
        "hook": "ui.scroll{requestId=rabe}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=rabe:report-bug}",
        "hasCatch": false
       }
      ]
@@ -1292,5 +1810,5 @@
    "advice": []
   }
  },
- "sourceHash": "1d4ab8e68660ac00"
+ "sourceHash": "97bf80edf05beb5"
 }

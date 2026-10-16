@@ -1,0 +1,9 @@
+{
+ "slug": "remvisual-claude-handoff-compact-handoff-answer",
+ "files": {
+  "hooks/register.ts": "// compact-handoff-answer: answers the compactions compact-handoff starts. The engine skips a\n// plugin's own hooks on an event that plugin raised, so the answer has to come from a second plugin.\nimport type { Register } from 'claude-code'\n\nimport { answerFor } from './answer'\n\nexport const register: Register = on => {\n  on('session.compact', async ($, e, next) => {\n    const text = answerFor(e)\n    if (text === null) return next(e)\n    return { messages: [{ role: 'user', text, toolUses: [] }] }\n  }).catch(($, e, next) => next(e))\n}\n",
+  "hooks/answer.ts": "// The whole protocol with compact-handoff: instructions = MARKER line + the message to install.\nexport const MARKER = 'compact-handoff:v1'\n\n/** The message to install for this compaction, or null to leave it to the engine. */\nexport function answerFor(e: { agentId?: string; instructions?: string }): string | null {\n  if (e.agentId || !e.instructions) return null\n  const [first = '', ...rest] =e.instructions.split('\\n')\n  if (first.trim() !== MARKER) return null\n  const body = rest.join('\\n').trim()\n  return body || null\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"compact-handoff-answer\",\n  \"version\": \"0.1.0\",\n  \"description\": \"EXPERIMENTAL companion of compact-handoff: supplies the replacement message for the compactions compact-handoff starts (a plugin cannot answer its own). Does nothing on any other compaction.\",\n  \"author\": {\n    \"name\": \"REMvisual\"\n  }\n}"
+ }
+}

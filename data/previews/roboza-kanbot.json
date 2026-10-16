@@ -1,0 +1,458 @@
+{
+ "slug": "roboza-kanbot",
+ "generatedAt": "2026-10-16T14:21:30.615Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "kanbot"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__kanbot__queue_cards"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.message",
+    "matcher": {
+     "component": "Pane",
+     "element": "board"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "kanbot"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "kanbot",
+    "description": "Kanbot board: add, work, pause, resume, stop, projects, help",
+    "argumentHint": "[add <title> | queue [project] | work | pause | resume | stop | projects | help]",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "queue_cards",
+    "description": "Adds cards to the Kanbot board's Backlog, in order, for the person to review and then queue. Each card is later run by a background Claude agent that cannot see this conversation, so each brief must stand alone. Use it when the person asks to put a plan or tasks on Kanbot (for example after /kanbot queue)."
+   }
+  ],
+  "panes": [
+   {
+    "id": "kanbot",
+    "title": "Kanbot"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.id": 1,
+   "$.store.get": 4,
+   "$.store.set": 1,
+   "$.clock.every": 1,
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2,
+   "$.state.get": 2,
+   "$.store.keys": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 3000
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "kanbot": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "alignItems": "center",
+         "flexWrap": "wrap",
+         "columnGap": 2
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "alignItems": "center",
+           "columnGap": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "size": "title",
+             "weight": "bold",
+             "color": "claude"
+            },
+            "children": [
+             "◆ Kanbot"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "columnGap": 2,
+             "borderStyle": "round",
+             "borderColor": "subtle",
+             "borderDimColor": true,
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab-board",
+               "hotkey": "b",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true,
+                 "color": "claude",
+                 "underline": true
+                },
+                "children": [
+                 "Board"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab-card",
+               "hotkey": "c",
+               "plain": true,
+               "dimColor": true,
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "underline": false
+                },
+                "children": [
+                 "Card"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab-projects",
+               "hotkey": "p",
+               "plain": true,
+               "dimColor": true,
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "underline": false
+                },
+                "children": [
+                 "Projects"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab-activity",
+               "hotkey": "a",
+               "plain": true,
+               "dimColor": true,
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": false,
+                 "underline": false
+                },
+                "children": [
+                 "Activity"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "alignItems": "center",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "size": "footnote",
+             "dimColor": true,
+             "tabular": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "0 running · 0 queued · 0 review"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "chip-dispatcher",
+             "color": "inverseText",
+             "backgroundColor": "error",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             " ○ no dispatcher "
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "welcome",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "claude",
+         "borderDimColor": false,
+         "paddingX": 1,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "size": "footnote",
+           "weight": "semibold",
+           "color": "claude"
+          },
+          "children": [
+           "GET STARTED"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "rowGap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap"
+            },
+            "children": [
+             "No projects yet. A project points Kanbot at a repo, a workspace of repos, or a plain working folder."
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "go-projects",
+               "label": "Set up a project",
+               "variant": "primary",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Kanbot"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(kanbot)",
+   "/kanbot → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=kanbot}",
+   "tool.call{tool=mcp__kanbot__queue_cards}",
+   "tool.call",
+   "turn.complete",
+   "ui.message{component=Pane, element=board}",
+   "ui.render{component=Pane, requestId=kanbot}"
+  ],
+  "calls": [
+   "$.agent.list (via dispatch",
+   "spawnAgent)",
+   "$.agent.spawn (via spawnAgent)",
+   "$.clock.after",
+   "$.clock.every",
+   "$.command.register",
+   "$.fs.exists (via ensureWorkspace",
+   "ensureWorktree)",
+   "$.fs.list (via discoverRepos)",
+   "$.fs.stat (via checkProject)",
+   "$.process.run (via git)",
+   "$.prompt.submit",
+   "$.session.cwd (via defaultProject)",
+   "$.session.id",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.keys (via loadBoard)",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.log",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.status (via tick)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "kanbot.draft",
+   "kanbot.editing",
+   "kanbot.filter",
+   "kanbot.rev",
+   "kanbot.selected",
+   "kanbot.tab"
+  ],
+  "stateWrites": [
+   "kanbot.draft",
+   "kanbot.editing",
+   "kanbot.filter",
+   "kanbot.rev",
+   "kanbot.selected",
+   "kanbot.tab"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/roboza-kanbot/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/roboza-kanbot/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: kanbot.tab, kanbot.selected, kanbot.filter, kanbot.rev, kanbot.draft, kanbot.editing"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/roboza-kanbot/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=kanbot}, tool.call{tool=mcp__kanbot__queue_cards}, tool.call, turn.complete, ui.message{component=Pane, element=board}, ui.render{component=Pane, requestId=kanbot}",
+      "./register.tsx answers its own command: command.run{command=kanbot}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__kanbot__queue_cards}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.agent.list (via dispatch, spawnAgent), $.agent.spawn (via spawnAgent), $.clock.after, $.clock.every, $.command.register, $.fs.exists (via ensureWorkspace, ensureWorktree), $.fs.list (via discoverRepos), $.fs.stat (via checkProject), $.process.run (via git), $.prompt.submit, $.session.cwd (via defaultProject), $.session.id, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys (via loadBoard), $.store.set, $.tool.register, $.ui.log, $.ui.open (via openPane), $.ui.resolve, $.ui.status (via tick), $.ui.toast",
+      "./register.tsx state writes: kanbot.draft, kanbot.editing, kanbot.filter, kanbot.rev, kanbot.selected, kanbot.tab",
+      "./register.tsx state reads: kanbot.draft, kanbot.editing, kanbot.filter, kanbot.rev, kanbot.selected, kanbot.tab",
+      "./register.tsx surface modules: hooks/board-client.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__kanbot__queue_cards}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "3f90cb389a54e14"
+}

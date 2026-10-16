@@ -1,0 +1,8 @@
+{
+ "slug": "cch-agent-claude-mods-grill-choices",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\nconst isGrillWithDocs = (skill: string) => skill === 'grill-with-docs' || skill.endsWith(':grill-with-docs')\nconst isGrilling = (skill: string) => skill === 'grilling' || skill.endsWith(':grilling')\n\nconst OVERRIDE = `\n\n## 提問格式覆寫（grill-choices mod，優先於 grilling 的文字格式）\n\n提問時**不要**用純文字的 ❓/➡️ 格式，改用 \\`AskUserQuestion\\` 工具，讓使用者以選擇題作答：\n- 每一輪 frontier 的問題，一次呼叫 \\`AskUserQuestion\\` 送出（一次最多 4 題；超過就分批連續呼叫，同一輪內不要等使用者做決策以外的事）。\n- 每題 2–4 個選項，互斥且具體；把你**建議的答案放第一個**，label 結尾加「(Recommended)」，description 說明理由與取捨。\n- 不要自己加「其他」選項：工具會自動提供讓使用者自行輸入的 Other。\n- \\`header\\` 用短標籤（≤12 字）；問題本身若無法歸納成選項（純開放式），仍用 AskUserQuestion，給 2 個你最有把握的選項即可。\n- 該由你查證的事實仍然自己查，不要拿來問使用者。\n- 使用者回答後照原本的 design tree 流程重算 frontier、進入下一輪。`\n\nexport const register: Register = on => {\n  let pending = false\n\n  on('skill.prompt', ($, e, next) => {\n    if (isGrillWithDocs(e.skill)) {\n      pending = true\n      return next({ ...e, text: e.text + OVERRIDE })\n    }\n    if (pending && isGrilling(e.skill)) {\n      pending = false\n      return next({ ...e, text: e.text + OVERRIDE })\n    }\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"grill-choices\",\n  \"version\": \"0.1.0\",\n  \"description\": \"grill-with-docs 的提問改用 AskUserQuestion：選擇題，可選建議答案或自行輸入\",\n  \"author\": {\n    \"name\": \"ChengHung\"\n  }\n}"
+ }
+}

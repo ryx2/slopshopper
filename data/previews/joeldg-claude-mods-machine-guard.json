@@ -1,6 +1,6 @@
 {
  "slug": "joeldg-claude-mods-machine-guard",
- "generatedAt": "2026-10-08T15:54:10.725Z",
+ "generatedAt": "2026-10-16T14:17:35.805Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,18 @@
     "event": "tool.call",
     "matcher": {
      "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__machine-guard__machine_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__machine-guard__machine_status"
     }
    },
    {
@@ -39,10 +51,15 @@
     "description": "Show memory, swap, GPU and the guard; pause or resume it",
     "argumentHint": "[pause 15m | on]",
     "immediate": true,
-    "output": "Memory pressure: normal\nSwap: 0 of 0 GB\nGPU: unknown\nBiggest: \nNot reserved (/busy [2h] [reason] reserves it)\nGuard on (/guard pause 15m pauses it)"
+    "output": "Memory pressure: normal\nSwap: 0 of 0 GB\nGPU: unknown\nCPU cores: unknown.\nBiggest: no process table — ps did not answer within 10 s (tried just now; the Mac is that loaded). machine_status and /guard try again at most once a minute, or run `ps -axo rss=,comm= | sort -rn | head -5` yourself.\nNot reserved (/busy [2h] [reason] reserves it)\nGuard on (/guard pause 15m pauses it)"
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "machine_status",
+    "description": "Memory, swap, GPU and the guard's verdict for this Mac from the sample all Claude sessions share, plus the apps holding the most memory: whether heavy local work (training, inference, rendering, Docker, ffmpeg) may start now. Use this instead of running ps, top, vm_stat, memory_pressure or project scripts to check the load before launching heavy work: those take 10–40 s when the Mac is swapping and add to the load, while this reads the shared sample (and takes a process table at most once a minute)."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
@@ -50,27 +67,26 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 2,
-   "$.clock.every": 1,
-   "$.clock.now": 6,
-   "$.env.get": 6,
-   "$.fs.read": 5,
+   "$.tool.register": 1,
+   "$.clock.now": 9,
+   "$.env.get": 11,
+   "$.fs.read": 8,
+   "$.clock.after": 1,
    "$.state.get": 7,
-   "$.process.run": 8,
+   "$.session.id": 1,
+   "$.fs.write": 2,
+   "$.process.run": 5,
    "$.state.set": 2,
    "$.ui.status": 2
   },
   "timers": [
    {
-    "kind": "every",
-    "ms": 15000
+    "kind": "after",
+    "ms": 0
    }
   ],
   "sites": {},
   "script": [
-   "$.process.run(sysctl -n kern.memorystatus_vm_pressure_level vm.swapusage) → exit 0",
-   "$.process.run(memory_pressure -Q) → exit 0",
-   "$.process.run(ps -axo rss=,comm=) → exit 0",
-   "$.process.run(ioreg -r -d 1 -w 0 -c IOAccelerator) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -83,11 +99,14 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/busy → Not reserved. /busy [2h] [reason] reserves this Mac.",
-   "$.process.run(sysctl -n kern.memorystatus_vm_pressure_level vm.swapusage) → exit 0",
-   "$.process.run(memory_pressure -Q) → exit 0",
-   "$.process.run(ps -axo rss=,comm=) → exit 0",
+   "$.fs.write(/Users/dev/.claude/machine-guard/lock.json)",
+   "$.process.run(sysctl -n hw.memsize vm.swapusage kern.memorystatus_vm_pressure_level) → exit 0",
+   "$.process.run(sysctl -n hw.ncpu kern.sched_recommended_cores) → exit 0",
+   "$.process.run(vm_stat) → exit 0",
    "$.process.run(ioreg -r -d 1 -w 0 -c IOAccelerator) → exit 0",
-   "/guard → Memory pressure: normal\nSwap: 0 of 0 GB\nGPU: unknown\nBiggest: \nNot reserved (/bu…"
+   "$.fs.write(/Users/dev/.claude/machine-guard/sample.json)",
+   "$.process.run(ps -axo rss=,comm=) → exit 0",
+   "/guard → Memory pressure: normal\nSwap: 0 of 0 GB\nGPU: unknown\nCPU cores: unknown.\nBiggest…"
   ],
   "console": [],
   "status": "RAM",
@@ -100,27 +119,34 @@
   "hooks": [
    "session.start",
    "tool.call{tool=Bash}",
+   "tool.check{tool=mcp__machine-guard__machine_status}",
+   "tool.call{tool=mcp__machine-guard__machine_status}",
    "command.run{command=busy}",
    "command.run{command=guard}"
   ],
   "calls": [
-   "$.clock.every (via ensureTimer)",
+   "$.clock.after (via schedule)",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via reservationPath)",
-   "$.fs.read (via readReservation)",
+   "$.env.get (via homePath)",
+   "$.fs.read (via readText)",
    "$.fs.write",
    "$.process.run (via run)",
+   "$.session.id (via sessionId)",
    "$.state.get",
    "$.state.set",
+   "$.tool.register",
+   "$.ui.log",
    "$.ui.status (via showStatus)",
    "$.ui.toast"
   ],
   "stateReads": [
+   "machine-guard.coresAnnounced",
    "machine-guard.pausedUntil",
    "machine-guard.snapshot"
   ],
   "stateWrites": [
+   "machine-guard.coresAnnounced",
    "machine-guard.pausedUntil",
    "machine-guard.snapshot"
   ],
@@ -138,7 +164,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: machine-guard.snapshot, machine-guard.pausedUntil"
+     "types ./types/index.d.ts declares state: machine-guard.snapshot, machine-guard.pausedUntil, machine-guard.coresAnnounced"
     ],
     "gatingHooks": []
    },
@@ -149,15 +175,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, tool.call{tool=Bash}, command.run{command=busy}, command.run{command=guard}",
+      "./register.ts hooks: session.start, tool.call{tool=Bash}, tool.check{tool=mcp__machine-guard__machine_status}, tool.call{tool=mcp__machine-guard__machine_status}, command.run{command=busy}, command.run{command=guard}",
       "./register.ts answers its own command: command.run{command=busy}",
       "./register.ts answers its own command: command.run{command=guard}",
       "./register.ts gating hook without .catch: tool.call{tool=Bash}",
-      "./register.ts calls: $.clock.every (via ensureTimer), $.clock.now, $.command.register, $.env.get (via reservationPath), $.fs.read (via readReservation), $.fs.write, $.process.run (via run), $.state.get, $.state.set, $.ui.status (via showStatus), $.ui.toast",
+      "./register.ts gating hook without .catch: tool.check{tool=mcp__machine-guard__machine_status}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__machine-guard__machine_status}",
+      "./register.ts calls: $.clock.after (via schedule), $.clock.now, $.command.register, $.env.get (via homePath), $.fs.read (via readText), $.fs.write, $.process.run (via run), $.session.id (via sessionId), $.state.get, $.state.set, $.tool.register, $.ui.log, $.ui.status (via showStatus), $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: HOME",
-      "./register.ts state writes: machine-guard.pausedUntil, machine-guard.snapshot",
-      "./register.ts state reads: machine-guard.pausedUntil, machine-guard.snapshot"
+      "./register.ts state writes: machine-guard.coresAnnounced, machine-guard.pausedUntil, machine-guard.snapshot",
+      "./register.ts state reads: machine-guard.coresAnnounced, machine-guard.pausedUntil, machine-guard.snapshot"
      ],
      "gatingHooks": [
       {
@@ -165,11 +193,24 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__machine-guard__machine_status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__machine-guard__machine_status}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "9f1acaad7626f4b2"
+ "sourceHash": "98b233d5dc837623"
 }

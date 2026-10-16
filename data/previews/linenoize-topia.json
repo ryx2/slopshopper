@@ -1,6 +1,6 @@
 {
  "slug": "linenoize-topia",
- "generatedAt": "2026-10-06T14:51:10.276Z",
+ "generatedAt": "2026-10-16T14:17:39.443Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -15,6 +15,46 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "mods"
+    }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "topia-mods"
+    }
+   },
+   {
+    "event": "prompt.edit"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "skill.prompt"
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "routing"
+    }
    },
    {
     "event": "prompt.compose"
@@ -82,10 +122,28 @@
   ],
   "commands": [
    {
+    "name": "mods",
+    "description": "Turn Topia mods on or off, for you or for this project",
+    "argumentHint": "[mod] [on|off|reset] [--project|--user]",
+    "output": "Topia mods: git · orders · quiet · model · routing on, hosts off. The pane is open."
+   },
+   {
+    "name": "routing",
+    "description": "Turn the Topia prompt-routing band and highlights on or off",
+    "argumentHint": "[on|off]",
+    "output": "Prompt routing is off: no band, no highlights, nothing added for the model. /routing on brings it back."
+   },
+   {
     "name": "orders",
     "description": "Show or toggle your standing orders for this project",
     "argumentHint": "[fanout|ledger|scripts|commit] [on|off]",
     "output": "Standing orders pane opened."
+   },
+   {
+    "name": "hosts",
+    "description": "Show the SSH hosts the model knows about; forget one",
+    "argumentHint": "[forget <user@host>]",
+    "output": "Remote hosts is off. /mods hosts on turns it on (for you; add --project for this project only)."
    },
    {
     "name": "topia-activity",
@@ -102,6 +160,10 @@
   "tools": [],
   "panes": [
    {
+    "id": "topia-mods",
+    "title": "Topia mods"
+   },
+   {
     "id": "topia-standing-orders",
     "title": "Standing orders"
    },
@@ -113,21 +175,28 @@
   "toasts": [],
   "logs": [],
   "denies": [],
-  "rewrites": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"[topia prompt-routing] The wording of this prompt points at topia:build (\\\"fix\\\", \\\"add\\\"), topia:audit (\\\"audit\\\"), topia:debug (\\\"fail\\\"…"
+   }
+  ],
   "apiCalls": {
+   "$.state.get": 78,
+   "$.state.set": 25,
+   "$.command.register": 6,
+   "$.store.get": 11,
+   "$.session.root": 9,
+   "$.config.list": 1,
    "$.session.cwd": 9,
-   "$.command.register": 3,
    "$.process.run": 9,
-   "$.session.root": 4,
-   "$.state.get": 25,
-   "$.store.get": 4,
-   "$.state.set": 13,
-   "$.ui.status": 3,
+   "$.ui.status": 4,
    "$.session.usage": 2,
+   "$.clock.now": 1,
+   "$.store.set": 4,
    "$.session.model": 2,
-   "$.store.set": 1,
-   "$.ui.open": 2,
-   "$.ui.resolve": 4
+   "$.ui.open": 3,
+   "$.ui.resolve": 5
   },
   "timers": [],
   "sites": {
@@ -136,57 +205,1485 @@
     "tree": {
      "type": "Box",
      "props": {
-      "flexDirection": "row",
-      "gap": 1
+      "flexDirection": "column"
      },
      "children": [
       {
-       "type": "Text",
+       "type": "Box",
        "props": {
-        "color": "yellow"
+        "key": "git",
+        "flexDirection": "row",
+        "gap": 1
        },
        "children": [
-        "⎇ ",
-        "",
-        " · ",
-        "2 changed · no upstream"
+        {
+         "type": "Button",
+         "props": {
+          "key": "git-branch",
+          "hover": {
+           "scope": "topia-about-git-branch",
+           "underline": true
+          },
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "yellow",
+            "dimColor": false
+           },
+           "children": [
+            "⎇ "
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "git-changed",
+          "hover": {
+           "scope": "topia-about-git-changed",
+           "underline": true
+          },
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "yellow",
+            "dimColor": false
+           },
+           "children": [
+            "2 changed"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "git-upstream",
+          "hover": {
+           "scope": "topia-about-git-upstream",
+           "underline": true
+          },
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "yellow",
+            "dimColor": false
+           },
+           "children": [
+            "no upstream"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "commit",
+          "hover": {
+           "scope": "topia-about-commit",
+           "underline": true
+          },
+          "label": "Commit",
+          "hotkey": "c",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "commit-push",
+          "hover": {
+           "scope": "topia-about-commit-push",
+           "underline": true
+          },
+          "label": "Commit & push",
+          "hotkey": "p",
+          "variant": "primary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "hide",
+          "hover": {
+           "scope": "topia-about-hide",
+           "underline": true
+          },
+          "label": "Hide",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
        ]
       },
       {
-       "type": "Button",
+       "type": "Box",
        "props": {
-        "key": "commit",
-        "label": "Commit",
-        "hotkey": "c",
-        "onPress": "[fn]"
+        "key": "about",
+        "flexDirection": "column",
+        "height": 2,
+        "overflow": "hidden"
        },
-       "children": []
-      },
-      {
-       "type": "Button",
-       "props": {
-        "key": "commit-push",
-        "label": "Commit & push",
-        "hotkey": "p",
-        "variant": "primary",
-        "onPress": "[fn]"
-       },
-       "children": []
-      },
-      {
-       "type": "Button",
-       "props": {
-        "key": "hide",
-        "label": "Hide",
-        "plain": true,
-        "onPress": "[fn]"
-       },
-       "children": []
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "key": "about-git-branch",
+          "display": "none",
+          "height": 2,
+          "flexShrink": 0,
+          "hover": {
+           "scope": "topia-about-git-branch",
+           "display": "flex"
+          }
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "wrap"
+           },
+           "children": [
+            "ⓘ ",
+            "The branch checked out in this folder."
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "about-git-changed",
+          "display": "none",
+          "height": 2,
+          "flexShrink": 0,
+          "hover": {
+           "scope": "topia-about-git-changed",
+           "display": "flex"
+          }
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "wrap"
+           },
+           "children": [
+            "ⓘ ",
+            "Files with changes not yet committed, new untracked files included."
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "about-git-upstream",
+          "display": "none",
+          "height": 2,
+          "flexShrink": 0,
+          "hover": {
+           "scope": "topia-about-git-upstream",
+           "display": "flex"
+          }
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "wrap"
+           },
+           "children": [
+            "ⓘ ",
+            "This branch tracks no remote branch, so nothing counts as unpushed; git push -u sets one."
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "about-commit",
+          "display": "none",
+          "height": 2,
+          "flexShrink": 0,
+          "hover": {
+           "scope": "topia-about-commit",
+           "display": "flex"
+          }
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "wrap"
+           },
+           "children": [
+            "ⓘ ",
+            "Asks Claude to commit the current changes with a descriptive message."
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "about-commit-push",
+          "display": "none",
+          "height": 2,
+          "flexShrink": 0,
+          "hover": {
+           "scope": "topia-about-commit-push",
+           "display": "flex"
+          }
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "wrap"
+           },
+           "children": [
+            "ⓘ ",
+            "Asks Claude to commit the current changes, then push them."
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "about-hide",
+          "display": "none",
+          "height": 2,
+          "flexShrink": 0,
+          "hover": {
+           "scope": "topia-about-hide",
+           "display": "flex"
+          }
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "wrap"
+           },
+           "children": [
+            "ⓘ ",
+            "Hides this row until the session ends; /mods git off turns it off for good."
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "about-rest",
+          "height": 2,
+          "flexShrink": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "wrap"
+           },
+           "children": [
+            "ⓘ ",
+            "Hover or Tab to a value to see what it means."
+           ]
+          }
+         ]
+        }
+       ]
       }
      ]
     }
    },
    "Pane": {
+    "topia-mods": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "scope",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Save for"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "scope-project",
+           "hover": {
+            "scope": "topia-about-scope-project",
+            "underline": true
+           },
+           "label": "this project (app)",
+           "hotkey": "p",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "scope-user",
+           "hover": {
+            "scope": "topia-about-scope-user",
+            "underline": true
+           },
+           "label": "all my projects",
+           "hotkey": "u",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row-gitBand",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "mod-gitBand",
+           "hover": {
+            "scope": "topia-about-mod-gitBand",
+            "underline": true
+           },
+           "hotkey": "1",
+           "label": "on ",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": false
+          },
+          "children": [
+           "Git band"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "source-gitBand",
+           "hover": {
+            "scope": "topia-about-source-gitBand",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "default",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row-standingOrders",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "mod-standingOrders",
+           "hover": {
+            "scope": "topia-about-mod-standingOrders",
+            "underline": true
+           },
+           "hotkey": "2",
+           "label": "on ",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": false
+          },
+          "children": [
+           "Standing orders"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "source-standingOrders",
+           "hover": {
+            "scope": "topia-about-source-standingOrders",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "default",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row-remoteHosts",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "mod-remoteHosts",
+           "hover": {
+            "scope": "topia-about-mod-remoteHosts",
+            "underline": true
+           },
+           "hotkey": "3",
+           "label": "off",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Remote hosts"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "source-remoteHosts",
+           "hover": {
+            "scope": "topia-about-source-remoteHosts",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "default",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row-quietReports",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "mod-quietReports",
+           "hover": {
+            "scope": "topia-about-mod-quietReports",
+            "underline": true
+           },
+           "hotkey": "4",
+           "label": "on ",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": false
+          },
+          "children": [
+           "Quiet reports"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "source-quietReports",
+           "hover": {
+            "scope": "topia-about-source-quietReports",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "default",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row-modelPreset",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "mod-modelPreset",
+           "hover": {
+            "scope": "topia-about-mod-modelPreset",
+            "underline": true
+           },
+           "hotkey": "5",
+           "label": "on ",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": false
+          },
+          "children": [
+           "Model preset"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "source-modelPreset",
+           "hover": {
+            "scope": "topia-about-source-modelPreset",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "default",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row-promptRouting",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "mod-promptRouting",
+           "hover": {
+            "scope": "topia-about-mod-promptRouting",
+            "underline": true
+           },
+           "hotkey": "6",
+           "label": "off",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Prompt routing"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "source-promptRouting",
+           "hover": {
+            "scope": "topia-about-source-promptRouting",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "you",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "status",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Status line:"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "usage-ctx",
+           "hover": {
+            "scope": "topia-about-usage-ctx",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "ctx 49%"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "usage-cache",
+           "hover": {
+            "scope": "topia-about-usage-cache",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "cache 93%"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "usage-usd",
+           "hover": {
+            "scope": "topia-about-usage-usd",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "$0.42"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "usage-5h",
+           "hover": {
+            "scope": "topia-about-usage-5h",
+            "underline": true
+           },
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "5h 31%"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "actions",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "clear-project",
+           "hover": {
+            "scope": "topia-about-clear-project",
+            "underline": true
+           },
+           "label": "Clear this project's choices",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "ask-new",
+           "hover": {
+            "scope": "topia-about-ask-new",
+            "underline": true
+           },
+           "label": "Stop asking in new projects",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "recap",
+           "hover": {
+            "scope": "topia-about-recap",
+            "underline": true
+           },
+           "label": "No more reminders",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "about",
+         "flexDirection": "column",
+         "height": 2,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-scope-project",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-scope-project",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Choices apply in app only and beat your all-projects choices."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-scope-user",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-scope-user",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Choices apply in every project that has no choice of its own."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-mod-gitBand",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-mod-gitBand",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "A row above the prompt with uncommitted and unpushed counts and Commit / Push buttons; hidden when the tree is clean."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-source-gitBand",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-source-gitBand",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Nobody has chosen; this is the plugin's default."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-mod-standingOrders",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-mod-standingOrders",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Rules you turn on per project (/orders) added to the system prompt. Flipping it mid-session changes that prompt."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-source-standingOrders",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-source-standingOrders",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Nobody has chosen; this is the plugin's default."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-mod-remoteHosts",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-mod-remoteHosts",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Remembers SSH hosts from ssh commands that worked in this project and lists them to the model (/hosts)."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-source-remoteHosts",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-source-remoteHosts",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Nobody has chosen; this is the plugin's default."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-mod-quietReports",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-mod-quietReports",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Keeps Topia's session reports and banners out of the model's context (/topia-activity); usage in the status line."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-source-quietReports",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-source-quietReports",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Nobody has chosen; this is the plugin's default."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-mod-modelPreset",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-mod-modelPreset",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Remembers the model you last used in this project and starts the next session on it (/model-preset)."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-source-modelPreset",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-source-modelPreset",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Nobody has chosen; this is the plugin's default."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-mod-promptRouting",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-mod-promptRouting",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "As you type, names the Topia skills your wording points at and underlines the words; predicted vs ran after."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-source-promptRouting",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-source-promptRouting",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Your choice for every project, saved with /mods."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-usage-ctx",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-usage-ctx",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "How full the model's context window is."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-usage-cache",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-usage-cache",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "The share of the last turn's input read from the prompt cache: cheaper and faster."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-usage-usd",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-usage-usd",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "The estimated cost of this session so far."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-usage-5h",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-usage-5h",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "How much of your five-hour usage limit is used."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-clear-project",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-clear-project",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Drops app's own choices, so your all-projects choices apply here."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-ask-new",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-ask-new",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Whether a new project asks which mods to keep the first time you open it."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-recap",
+           "display": "none",
+           "height": 2,
+           "flexShrink": 0,
+           "hover": {
+            "scope": "topia-about-recap",
+            "display": "flex"
+           }
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Whether a reminder of these settings shows every 10 sessions and 14 days."
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "about-rest",
+           "height": 2,
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "ⓘ ",
+             "Hover or Tab to a value to see what it means."
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "/mods [git|orders|hosts|quiet|model|routing|all] [on|off|reset] [--project|--user] · /mods forget-project"
+        ]
+       }
+      ]
+     },
+     "title": "Topia mods"
+    },
     "topia-standing-orders": {
      "ok": true,
      "tree": {
@@ -365,6 +1862,54 @@
        {
         "type": "Text",
         "props": {
+         "key": "means-usage-ctx",
+         "dimColor": true
+        },
+        "children": [
+         "ctx 49%",
+         ": ",
+         "How full the model's context window is."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "means-usage-cache",
+         "dimColor": true
+        },
+        "children": [
+         "cache 93%",
+         ": ",
+         "The share of the last turn's input read from the prompt cache: cheaper and faster."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "means-usage-usd",
+         "dimColor": true
+        },
+        "children": [
+         "$0.42",
+         ": ",
+         "The estimated cost of this session so far."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "means-usage-5h",
+         "dimColor": true
+        },
+        "children": [
+         "5h 31%",
+         ": ",
+         "How much of your five-hour usage limit is used."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
          "dimColor": true
         },
         "children": [
@@ -419,8 +1964,12 @@
    "tool.call Bash cat .env",
    "$.process.run(git status --porcelain=v1 --branch) → exit 0",
    "turn.complete",
+   "$.ui.open(topia-mods)",
+   "/mods → Topia mods: git · orders · quiet · model · routing on, hosts off. The pane is op…",
+   "/routing → Prompt routing is off: no band, no highlights, nothing added for the model. /rou…",
    "$.ui.open(topia-standing-orders)",
    "/orders → Standing orders pane opened.",
+   "/hosts → Remote hosts is off. /mods hosts on turns it on (for you; add --project for this…",
    "$.ui.open(topia-activity)",
    "/topia-activity → Topia activity pane opened.",
    "/model-preset → app starts on claude-opus-5-5. /model to change it; /model-preset forget to stop…"
@@ -438,6 +1987,14 @@
    "session.end",
    "tool.call",
    "turn.complete",
+   "command.run{command=mods}",
+   "ui.focus{component=Pane}",
+   "ui.render{component=Pane, requestId=topia-mods}",
+   "prompt.edit",
+   "prompt.submit",
+   "skill.prompt",
+   "ui.focus{component=AbovePrompt}",
+   "command.run{command=routing}",
    "prompt.compose",
    "prompt.attachment",
    "ui.render{component=AbovePrompt}",
@@ -454,6 +2011,7 @@
    "$.clock.now",
    "$.command.register",
    "$.command.run (via applyModel)",
+   "$.config.list (via lockedMods)",
    "$.process.run (via refreshGit)",
    "$.prompt.submit",
    "$.session.cwd (via refreshGit)",
@@ -467,31 +2025,52 @@
    "$.store.get",
    "$.store.set (via forgetHost",
    "learnFrom",
+   "loadModSettings",
    "rememberModel",
-   "saveOrders)",
+   "saveOrders",
+   "savePrefs",
+   "saveProject",
+   "setMods)",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.status (via setStatus)",
-   "$.ui.toast (via applyModel",
-   "learnFrom)"
+   "$.ui.status",
+   "$.ui.toast"
   ],
   "stateReads": [
+   "topia.bandFocus",
    "topia.gitBandHidden",
    "topia.gitInfo",
+   "topia.modSettings",
    "topia.modelPresetApplied",
+   "topia.modsFocus",
+   "topia.modsPrefs",
+   "topia.modsPrompt",
+   "topia.modsScope",
    "topia.quietHidden",
    "topia.quietSavedChars",
    "topia.quietUsage",
+   "topia.routingHidden",
+   "topia.routingLive",
+   "topia.routingTurn",
    "topia.sshHosts",
    "topia.standingOrders"
   ],
   "stateWrites": [
+   "topia.bandFocus",
    "topia.gitBandHidden",
    "topia.gitInfo",
+   "topia.modSettings",
    "topia.modelPresetApplied",
+   "topia.modsFocus",
+   "topia.modsPrefs",
+   "topia.modsPrompt",
+   "topia.modsScope",
    "topia.quietHidden",
    "topia.quietSavedChars",
    "topia.quietUsage",
+   "topia.routingHidden",
+   "topia.routingLive",
+   "topia.routingTurn",
    "topia.sshHosts",
    "topia.standingOrders"
   ],
@@ -507,7 +2086,7 @@
     "warnings": [],
     "notes": [
      "types ./mods/types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./mods/types/index.d.ts declares state: topia.gitInfo, topia.gitBandHidden, topia.standingOrders, topia.sshHosts, topia.quietHidden, topia.quietSavedChars, topia.quietUsage, topia.modelPresetApplied"
+     "types ./mods/types/index.d.ts declares state: topia.gitInfo, topia.gitBandHidden, topia.standingOrders, topia.sshHosts, topia.quietHidden, topia.quietSavedChars, topia.quietUsage, topia.modelPresetApplied, topia.routingLive, topia.routingTurn, topia.routingHidden, topia.bandFocus, topia.modSettings, topia.modsPrompt, topia.modsScope, topia.modsFocus, topia.modsPrefs"
     ],
     "gatingHooks": []
    },
@@ -518,11 +2097,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "../mods/index.tsx hooks: session.start, session.end, tool.call, turn.complete, prompt.compose, prompt.attachment, ui.render{component=AbovePrompt}, command.run{command=orders}, ui.render{component=Pane, requestId=topia-standing-orders}, command.run{command=hosts}, ui.render{component=Pane, requestId=topia-remote-hosts}, command.run{command=topia-activity}, ui.render{component=Pane, requestId=topia-activity}, command.run{command=model}, command.run{command=model-preset}",
+      "../mods/index.tsx hooks: session.start, session.end, tool.call, turn.complete, command.run{command=mods}, ui.focus{component=Pane}, ui.render{component=Pane, requestId=topia-mods}, prompt.edit, prompt.submit, skill.prompt, ui.focus{component=AbovePrompt}, command.run{command=routing}, prompt.compose, prompt.attachment, ui.render{component=AbovePrompt}, command.run{command=orders}, ui.render{component=Pane, requestId=topia-standing-orders}, command.run{command=hosts}, ui.render{component=Pane, requestId=topia-remote-hosts}, command.run{command=topia-activity}, ui.render{component=Pane, requestId=topia-activity}, command.run{command=model}, command.run{command=model-preset}",
+      "../mods/index.tsx hooks on skill.prompt, prompt.compose, prompt.attachment do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "../mods/index.tsx gating hook without .catch: tool.call",
-      "../mods/index.tsx calls: $.clock.now, $.command.register, $.command.run (via applyModel), $.process.run (via refreshGit), $.prompt.submit, $.session.cwd (via refreshGit), $.session.model (via applyModel, rememberModel), $.session.root, $.session.usage (via refreshUsage), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set (via forgetHost, learnFrom, rememberModel, saveOrders), $.ui.open, $.ui.resolve, $.ui.status (via setStatus), $.ui.toast (via applyModel, learnFrom)",
-      "../mods/index.tsx state writes: topia.gitBandHidden, topia.gitInfo, topia.modelPresetApplied, topia.quietHidden, topia.quietSavedChars, topia.quietUsage, topia.sshHosts, topia.standingOrders",
-      "../mods/index.tsx state reads: topia.gitBandHidden, topia.gitInfo, topia.modelPresetApplied, topia.quietHidden, topia.quietSavedChars, topia.quietUsage, topia.sshHosts, topia.standingOrders"
+      "../mods/index.tsx gating hook without .catch: command.run{command=mods}",
+      "../mods/index.tsx gating hook without .catch: ui.focus{component=Pane}",
+      "../mods/index.tsx gating hook without .catch: prompt.submit",
+      "../mods/index.tsx gating hook without .catch: ui.focus{component=AbovePrompt}",
+      "../mods/index.tsx gating hook without .catch: command.run{command=routing}",
+      "../mods/index.tsx gating hook without .catch: command.run{command=orders}",
+      "../mods/index.tsx gating hook without .catch: command.run{command=hosts}",
+      "../mods/index.tsx gating hook without .catch: command.run{command=topia-activity}",
+      "../mods/index.tsx gating hook without .catch: command.run{command=model}",
+      "../mods/index.tsx gating hook without .catch: command.run{command=model-preset}",
+      "../mods/index.tsx calls: $.clock.now, $.command.register, $.command.run (via applyModel), $.config.list (via lockedMods), $.process.run (via refreshGit), $.prompt.submit, $.session.cwd (via refreshGit), $.session.model (via applyModel, rememberModel), $.session.root, $.session.usage (via refreshUsage), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set (via forgetHost, learnFrom, loadModSettings, rememberModel, saveOrders, savePrefs, saveProject, setMods), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "../mods/index.tsx state writes: topia.bandFocus, topia.gitBandHidden, topia.gitInfo, topia.modSettings, topia.modelPresetApplied, topia.modsFocus, topia.modsPrefs, topia.modsPrompt, topia.modsScope, topia.quietHidden, topia.quietSavedChars, topia.quietUsage, topia.routingHidden, topia.routingLive, topia.routingTurn, topia.sshHosts, topia.standingOrders",
+      "../mods/index.tsx state reads: topia.bandFocus, topia.gitBandHidden, topia.gitInfo, topia.modSettings, topia.modelPresetApplied, topia.modsFocus, topia.modsPrefs, topia.modsPrompt, topia.modsScope, topia.quietHidden, topia.quietSavedChars, topia.quietUsage, topia.routingHidden, topia.routingLive, topia.routingTurn, topia.sshHosts, topia.standingOrders"
      ],
      "gatingHooks": [
       {
@@ -530,11 +2120,72 @@
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=mods}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=Pane}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=AbovePrompt}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=routing}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=orders}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=hosts}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=topia-activity}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=model}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=model-preset}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "92a493f11b877b3f"
+ "sourceHash": "5c12a8024919b5a4"
 }

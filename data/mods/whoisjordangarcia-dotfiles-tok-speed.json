@@ -1,0 +1,8 @@
+{
+ "slug": "whoisjordangarcia-dotfiles-tok-speed",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Rate is measured first chunk → last chunk, so time-to-first-token (queueing,\n// prompt processing) doesn't drag it down. Subagent steps are left out.\nexport const register: Register = on => {\n  let tokens = 0\n  let ms = 0 // ponytail: session totals live in module vars, reset on hot reload; move to $.state if that matters\n\n  on('turn.step', async function* ($, e, next) {\n    if (e.agentId) return yield* next(e)\n\n    let first: number | undefined\n    const stream = next(e)\n    let step = await stream.next()\n    while (!step.done) {\n      first ??= await $.clock.now()\n      yield step.value\n      step = await stream.next()\n    }\n    const result = step.value\n    const out = result.usage?.output_tokens ?? 0\n    const elapsed = first === undefined ? 0 : (await $.clock.now()) - first\n\n    if (out > 0 && elapsed > 0) {\n      tokens += out\n      ms += elapsed\n      const rate = (n: number, t: number) => Math.round((n * 1000) / t)\n      $.ui.status(`⚡ ${rate(out, elapsed)} tok/s · avg ${rate(tokens, ms)}`)\n    }\n    return result\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"tok-speed\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Shows Claude's output tokens per second in the status line\"\n}"
+ }
+}

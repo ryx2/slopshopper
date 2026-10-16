@@ -1,0 +1,9 @@
+{
+ "slug": "ezekohon-context-meter",
+ "files": {
+  "hooks/register.tsx": "import { atom, read, update } from 'claude-code'\nimport type { Register, SessionContextUsage, SessionCost, SessionRateLimit } from 'claude-code'\n\nconst line = atom({ plugin: 'context-meter', key: 'line' } as const, null)\n\nconst k = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`)\n\nexport const format = (u: { context: SessionContextUsage; cost?: SessionCost; rateLimits: SessionRateLimit[] }) => {\n  const { tokens, window, percent } = u.context\n  const parts = [`ctx ${k(tokens ?? 0)}/${k(window)}${percent === undefined ? '' : ` (${Math.round(percent)}%)`}`]\n  if (u.cost) parts.push(`$${u.cost.usd.toFixed(2)}`)\n  for (const r of u.rateLimits) parts.push(`${r.kind} ${Math.round(r.percentUsed)}%`)\n  return parts.join(' · ')\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const r = await next(e)\n    const text = format(await $.session.usage())\n    await update($, line, () => text)\n    return r\n  })\n\n  on('session.measure', async ($, e, next) => {\n    const text = format(e)\n    await update($, line, () => text)\n    return next(e)\n  })\n\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {\n    const text = await read($, line)\n    if (e.props.hasSurvey || text === null) return next(e)\n\n    const { Text } = $.ui.resolve(e)\n    return <Text dimColor>{text}</Text>\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"context-meter\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Pins context window fill, tokens, cost and rate limits above the prompt\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "export type Line = string | null\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'context-meter': { line: Line }\n  }\n}\n"
+ }
+}

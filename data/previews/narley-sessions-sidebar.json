@@ -1,6 +1,6 @@
 {
  "slug": "narley-sessions-sidebar",
- "generatedAt": "2026-10-09T15:34:01.886Z",
+ "generatedAt": "2026-10-16T14:21:00.164Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -21,6 +21,15 @@
     "matcher": {
      "command": "statusline-toggle"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "go"
+    }
+   },
+   {
+    "event": "prompt.autocomplete"
    },
    {
     "event": "command.run",
@@ -53,6 +62,12 @@
     "name": "statusline-toggle",
     "description": "Hide or show the status line in every session of this profile",
     "output": "Status line hidden in every session."
+   },
+   {
+    "name": "go",
+    "description": "Switch to another session's tab; alone, to the next one",
+    "argumentHint": "[session]",
+    "immediate": true
    }
   ],
   "tools": [],
@@ -67,7 +82,7 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
+   "$.command.register": 3,
    "$.env.get": 9,
    "$.session.id": 1,
    "$.clock.every": 2,
@@ -76,7 +91,7 @@
    "$.session.usage": 1,
    "$.clock.now": 5,
    "$.fs.list": 1,
-   "$.state.get": 28,
+   "$.state.get": 30,
    "$.state.set": 1,
    "$.ui.panes": 1,
    "$.ui.close": 1,
@@ -236,7 +251,7 @@
                  {
                   "type": "Text",
                   "props": {
-                   "bold": true
+                   "weight": "bold"
                   },
                   "children": [
                    "Live"
@@ -342,7 +357,7 @@
                {
                 "type": "Text",
                 "props": {
-                 "bold": true,
+                 "weight": "bold",
                  "color": "cyan"
                 },
                 "children": [
@@ -505,7 +520,7 @@
                  {
                   "type": "Text",
                   "props": {
-                   "bold": true
+                   "weight": "bold"
                   },
                   "children": [
                    "Closed"
@@ -586,7 +601,7 @@
                {
                 "type": "Text",
                 "props": {
-                 "bold": true,
+                 "weight": "bold",
                  "color": "cyan"
                 },
                 "children": [
@@ -749,7 +764,7 @@
                  {
                   "type": "Text",
                   "props": {
-                   "bold": true
+                   "weight": "bold"
                   },
                   "children": [
                    "Done"
@@ -865,7 +880,7 @@
             "type": "Text",
             "props": {
              "color": "green",
-             "bold": true
+             "weight": "bold"
             },
             "children": [
              "  31%"
@@ -905,7 +920,8 @@
    "turn.complete",
    "/sessions-sidebar → Sessions sidebar closed.",
    "$.fs.write(/Users/dev/.claude/statusline.hidden)",
-   "/statusline-toggle → Status line hidden in every session."
+   "/statusline-toggle → Status line hidden in every session.",
+   "/go → "
   ],
   "console": [],
   "warnings": []
@@ -921,6 +937,8 @@
    "tool.call{tool=Bash}",
    "session.end",
    "command.run{command=statusline-toggle}",
+   "command.run{command=go}",
+   "prompt.autocomplete",
    "command.run{command=sessions-sidebar}",
    "ui.scroll{component=Pane, requestId=sessions-sidebar}",
    "ui.render{component=Pane, requestId=sessions-sidebar}"
@@ -958,19 +976,25 @@
    "$.state.get",
    "$.state.set",
    "$.ui.close",
+   "$.ui.notify (via alertChanges)",
    "$.ui.open",
    "$.ui.panes",
    "$.ui.resolve",
-   "$.ui.toast (via attachInWarpTab",
+   "$.ui.toast (via alertChanges",
+   "attachInWarpTab",
    "endSession",
    "finishSession",
    "focusWarpTab",
    "openWarpTabRunning",
+   "removeDormantWorktree",
    "removeWorktreeAndEnd",
    "resumeInWarpTab",
-   "stopBackground)"
+   "showAgent",
+   "stopBackground)",
+   "$.ui.view (via showAgent)"
   ],
   "stateReads": [
+   "sessions-sidebar.agents",
    "sessions-sidebar.archived",
    "sessions-sidebar.checkout",
    "sessions-sidebar.closed",
@@ -990,6 +1014,7 @@
    "sessions-sidebar.usage"
   ],
   "stateWrites": [
+   "sessions-sidebar.agents",
    "sessions-sidebar.archived",
    "sessions-sidebar.checkout",
    "sessions-sidebar.closed",
@@ -1032,7 +1057,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: sessions-sidebar.rows, sessions-sidebar.dormant, sessions-sidebar.closed, sessions-sidebar.checkout, sessions-sidebar.collapsed, sessions-sidebar.archived, sessions-sidebar.offset, sessions-sidebar.pulse, sessions-sidebar.usage, sessions-sidebar.question, sessions-sidebar.olderSearch, sessions-sidebar.searches, sessions-sidebar.detail, sessions-sidebar.filters, sessions-sidebar.newSession, sessions-sidebar.repos, sessions-sidebar.repoSearch"
+     "types ./types/index.d.ts declares state: sessions-sidebar.rows, sessions-sidebar.dormant, sessions-sidebar.closed, sessions-sidebar.checkout, sessions-sidebar.collapsed, sessions-sidebar.archived, sessions-sidebar.offset, sessions-sidebar.pulse, sessions-sidebar.usage, sessions-sidebar.question, sessions-sidebar.olderSearch, sessions-sidebar.searches, sessions-sidebar.detail, sessions-sidebar.filters, sessions-sidebar.newSession, sessions-sidebar.repos, sessions-sidebar.repoSearch, sessions-sidebar.agents"
     ],
     "gatingHooks": []
    },
@@ -1043,16 +1068,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=Bash}, session.end, command.run{command=statusline-toggle}, command.run{command=sessions-sidebar}, ui.scroll{component=Pane, requestId=sessions-sidebar}, ui.render{component=Pane, requestId=sessions-sidebar}",
+      "./register.tsx hooks: session.start, tool.call{tool=Bash}, session.end, command.run{command=statusline-toggle}, command.run{command=go}, prompt.autocomplete, command.run{command=sessions-sidebar}, ui.scroll{component=Pane, requestId=sessions-sidebar}, ui.render{component=Pane, requestId=sessions-sidebar}",
       "./register.tsx answers its own command: command.run{command=statusline-toggle}",
+      "./register.tsx answers its own command: command.run{command=go}",
       "./register.tsx answers its own command: command.run{command=sessions-sidebar}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=sessions-sidebar}",
-      "./register.tsx calls: $.agent.list (via publishOwnState), $.clock.after (via reopenAll), $.clock.every, $.clock.now, $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.list (via findSessionOf, loadClosedSessions, loadSessions, projectFoldersOf, recordLaunches, runningWorkflowAgents), $.fs.read (via hasStaleClaudeLock, loadClosedSessions, loadSessions, readState, recordLaunches, refresh, startingEffortOf, toggleNewSessionMenu), $.fs.write, $.process.run, $.session.id, $.session.model (via publishOwnState), $.session.root (via startNewSession), $.session.usage (via publishOwnState, refresh), $.state.get, $.state.set, $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via attachInWarpTab, endSession, finishSession, focusWarpTab, openWarpTabRunning, removeWorktreeAndEnd, resumeInWarpTab, stopBackground)",
+      "./register.tsx calls: $.agent.list (via publishOwnState), $.clock.after (via reopenAll), $.clock.every, $.clock.now, $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.list (via findSessionOf, loadClosedSessions, loadSessions, projectFoldersOf, recordLaunches, runningWorkflowAgents), $.fs.read (via hasStaleClaudeLock, loadClosedSessions, loadSessions, readState, recordLaunches, refresh, startingEffortOf, toggleNewSessionMenu), $.fs.write, $.process.run, $.session.id, $.session.model (via publishOwnState), $.session.root (via startNewSession), $.session.usage (via publishOwnState, refresh), $.state.get, $.state.set, $.ui.close, $.ui.notify (via alertChanges), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via alertChanges, attachInWarpTab, endSession, finishSession, focusWarpTab, openWarpTabRunning, removeDormantWorktree, removeWorktreeAndEnd, resumeInWarpTab, showAgent, stopBackground), $.ui.view (via showAgent)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_EFFORT_LEVEL, CLAUDE_CONFIG_DIR, HOME, SESSIONS_SIDEBAR_COLOR, WARP_FOCUS_URL",
-      "./register.tsx state writes: sessions-sidebar.archived, sessions-sidebar.checkout, sessions-sidebar.closed, sessions-sidebar.collapsed, sessions-sidebar.detail, sessions-sidebar.dormant, sessions-sidebar.filters, sessions-sidebar.newSession, sessions-sidebar.offset, sessions-sidebar.olderSearch, sessions-sidebar.pulse, sessions-sidebar.question, sessions-sidebar.repoSearch, sessions-sidebar.repos, sessions-sidebar.rows, sessions-sidebar.searches, sessions-sidebar.usage",
-      "./register.tsx state reads: sessions-sidebar.archived, sessions-sidebar.checkout, sessions-sidebar.closed, sessions-sidebar.collapsed, sessions-sidebar.detail, sessions-sidebar.dormant, sessions-sidebar.filters, sessions-sidebar.newSession, sessions-sidebar.offset, sessions-sidebar.olderSearch, sessions-sidebar.pulse, sessions-sidebar.question, sessions-sidebar.repoSearch, sessions-sidebar.repos, sessions-sidebar.rows, sessions-sidebar.searches, sessions-sidebar.usage"
+      "./register.tsx state writes: sessions-sidebar.agents, sessions-sidebar.archived, sessions-sidebar.checkout, sessions-sidebar.closed, sessions-sidebar.collapsed, sessions-sidebar.detail, sessions-sidebar.dormant, sessions-sidebar.filters, sessions-sidebar.newSession, sessions-sidebar.offset, sessions-sidebar.olderSearch, sessions-sidebar.pulse, sessions-sidebar.question, sessions-sidebar.repoSearch, sessions-sidebar.repos, sessions-sidebar.rows, sessions-sidebar.searches, sessions-sidebar.usage",
+      "./register.tsx state reads: sessions-sidebar.agents, sessions-sidebar.archived, sessions-sidebar.checkout, sessions-sidebar.closed, sessions-sidebar.collapsed, sessions-sidebar.detail, sessions-sidebar.dormant, sessions-sidebar.filters, sessions-sidebar.newSession, sessions-sidebar.offset, sessions-sidebar.olderSearch, sessions-sidebar.pulse, sessions-sidebar.question, sessions-sidebar.repoSearch, sessions-sidebar.repos, sessions-sidebar.rows, sessions-sidebar.searches, sessions-sidebar.usage"
      ],
      "gatingHooks": [
       {
@@ -1073,5 +1099,5 @@
    "advice": []
   }
  },
- "sourceHash": "4e328d6ee06c3a47"
+ "sourceHash": "d4937a1f64289876"
 }

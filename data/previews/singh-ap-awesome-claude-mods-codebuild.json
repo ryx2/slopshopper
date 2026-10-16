@@ -1,0 +1,347 @@
+{
+ "slug": "singh-ap-awesome-claude-mods-codebuild",
+ "generatedAt": "2026-10-16T14:16:37.375Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "codebuild"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__codebuild__build"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "codebuild"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "codebuild",
+    "description": "Build this repo on AWS CodeBuild: /codebuild [setup|login|profile <name>|fix|stop|status|logs|buildspec [save]|teardown [all]|<path>]",
+    "argumentHint": "[setup | login | profile <name> | fix | stop | status | logs | buildspec | teardown | <path>]",
+    "output": "Ready with profile default (account undefined · us-east-1 · undefined).\nRun /codebuild again to set up and build, or switch with /codebuild profile <name>."
+   }
+  ],
+  "tools": [
+   {
+    "name": "build",
+    "description": "Build and test a repository on AWS CodeBuild (a clean Linux machine) and return the outcome and the relevant log lines. Uploads the working tree, uncommitted changes included. Use when the user asks to build or test on CodeBuild, in CI, or in the cloud, or to verify a fix there. The user confirms before it runs. After a failure, fix the cause and call it again."
+   }
+  ],
+  "panes": [
+   {
+    "id": "codebuild",
+    "title": "CodeBuild setup"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.store.get": 3,
+   "$.state.get": 9,
+   "$.session.root": 1,
+   "$.process.run": 3,
+   "$.env.get": 3,
+   "$.fs.list": 1,
+   "$.fs.read": 1,
+   "$.state.set": 3,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "codebuild": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "☁️ Build on AWS CodeBuild"
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "profile-name",
+         "label": "AWS profile",
+         "value": "default",
+         "placeholder": "default",
+         "submitLabel": "Check",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "green",
+         "wrap": "wrap"
+        },
+        "children": [
+         "  ✓ account undefined · us-east-1 · undefined"
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "repo",
+         "label": "Repo",
+         "value": "/work/app",
+         "submitLabel": "Use",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "  node (npm) · buildspec generated for you"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "  First run creates: a private S3 bucket (sources expire in 7 days), one least-privilege IAM role, one CodeBuild project."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "  ~$0.005/min · small Linux machine"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "go",
+           "variant": "primary",
+           "hotkey": "b",
+           "label": "Set up & build",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "spec-toggle",
+           "hotkey": "s",
+           "label": "Show buildspec",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "cancel",
+           "hotkey": "x",
+           "label": "Close",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "  or just run /codebuild again · Esc returns to the prompt"
+        ]
+       }
+      ]
+     },
+     "title": "CodeBuild setup"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(aws configure list-profiles) → exit 0",
+   "$.ui.open(codebuild)",
+   "$.process.run(aws sts get-caller-identity --output json --no-cli-pager --profile default) → exit 0",
+   "$.process.run(aws configure get region --output json --no-cli-pager --profile default) → exit 0",
+   "/codebuild → Ready with profile default (account undefined · us-east-1 · undefined).\nRun /cod…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=codebuild}",
+   "turn.complete",
+   "tool.call{tool=mcp__codebuild__build}",
+   "ui.render{component=Pane, requestId=codebuild}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every (via followBuild)",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via absoluteRepo",
+   "openWizard",
+   "packageSource",
+   "resolveTarget)",
+   "$.fs.list (via inspectRepo)",
+   "$.fs.read (via inspectRepo)",
+   "$.fs.stat (via packageSource",
+   "pickRepo)",
+   "$.fs.write (via saveBuildspec)",
+   "$.process.run (via awsCli",
+   "buildForClaude",
+   "ensureSetup",
+   "launch",
+   "listProfiles",
+   "packageSource",
+   "settleLogs",
+   "signIn)",
+   "$.prompt.submit (via askClaudeToFix",
+   "signIn)",
+   "$.session.root (via absoluteRepo)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via finishBuild",
+   "teardown)",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.ask (via buildForClaude",
+   "teardown)",
+   "$.ui.close",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast (via finishBuild",
+   "recheckProfiles)"
+  ],
+  "stateReads": [
+   "codebuild.build",
+   "codebuild.log",
+   "codebuild.mode",
+   "codebuild.wizard"
+  ],
+  "stateWrites": [
+   "codebuild.build",
+   "codebuild.log",
+   "codebuild.mode",
+   "codebuild.wizard"
+  ],
+  "envReads": [
+   "AWS_DEFAULT_REGION",
+   "AWS_PROFILE",
+   "AWS_REGION",
+   "HOME",
+   "TMPDIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/singh-ap-awesome-claude-mods-codebuild/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/singh-ap-awesome-claude-mods-codebuild/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: codebuild.wizard, codebuild.build, codebuild.log, codebuild.mode"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/singh-ap-awesome-claude-mods-codebuild/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=codebuild}, turn.complete, tool.call{tool=mcp__codebuild__build}, ui.render{component=Pane, requestId=codebuild}",
+      "./register.tsx answers its own command: command.run{command=codebuild}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__codebuild__build}",
+      "./register.tsx calls: $.clock.after, $.clock.every (via followBuild), $.clock.now, $.command.register, $.env.get (via absoluteRepo, openWizard, packageSource, resolveTarget), $.fs.list (via inspectRepo), $.fs.read (via inspectRepo), $.fs.stat (via packageSource, pickRepo), $.fs.write (via saveBuildspec), $.process.run (via awsCli, buildForClaude, ensureSetup, launch, listProfiles, packageSource, settleLogs, signIn), $.prompt.submit (via askClaudeToFix, signIn), $.session.root (via absoluteRepo), $.state.get, $.state.set, $.store.delete (via finishBuild, teardown), $.store.get, $.store.set, $.tool.register, $.ui.ask (via buildForClaude, teardown), $.ui.close, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via finishBuild, recheckProfiles)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: AWS_DEFAULT_REGION, AWS_PROFILE, AWS_REGION, HOME, TMPDIR",
+      "./register.tsx state writes: codebuild.build, codebuild.log, codebuild.mode, codebuild.wizard",
+      "./register.tsx state reads: codebuild.build, codebuild.log, codebuild.mode, codebuild.wizard"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__codebuild__build}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "11f2b5b401e110ec"
+}

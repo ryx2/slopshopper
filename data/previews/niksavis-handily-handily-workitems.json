@@ -1,6 +1,6 @@
 {
  "slug": "niksavis-handily-handily-workitems",
- "generatedAt": "2026-10-10T14:45:35.552Z",
+ "generatedAt": "2026-10-16T14:21:04.089Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,10 +11,22 @@
     "event": "session.start"
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "workitems"
+    }
+   },
+   {
     "event": "classic.CwdChanged"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "workitems",
+    "description": "handily · Pause or resume every tracker read of workitems",
+    "argumentHint": "pause|resume"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -22,6 +34,8 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.command.register": 1,
+   "$.state.get": 1,
    "$.clock.every": 1
   },
   "timers": [
@@ -43,7 +57,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "command.run: hook threw workitems: the engine created no provider",
+   "/workitems → "
   ],
   "console": [],
   "warnings": []
@@ -55,19 +71,23 @@
   "hooks": [
    "engine.create",
    "session.start",
+   "command.run{command=workitems}",
    "classic.CwdChanged"
   ],
   "calls": [
-   "$.clock.every",
+   "$.clock.every (via startPoll)",
    "$.clock.now",
+   "$.command.register",
    "$.env.get",
    "$.fs.exists",
    "$.fs.list",
    "$.fs.read",
    "$.fs.stat",
    "$.process.run",
+   "$.process.spawn",
    "$.session.root",
    "$.session.surfaces",
+   "$.state.get",
    "$.state.set",
    "$.store.get",
    "$.store.set",
@@ -76,9 +96,10 @@
    "$.workitems.refresh"
   ],
   "stateReads": [
-   "nothing"
+   "handily-workitems.snapshot"
   ],
   "stateWrites": [
+   "handily-workitems.checked",
    "handily-workitems.ready",
    "handily-workitems.snapshot"
   ],
@@ -86,6 +107,7 @@
    "HOME",
    "PATH",
    "PATHEXT",
+   "SystemRoot",
    "USERPROFILE"
   ],
   "raw": {
@@ -99,7 +121,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: $.workitems",
-     "types ./types/index.d.ts declares state: handily-workitems.snapshot, handily-workitems.ready"
+     "types ./types/index.d.ts declares state: handily-workitems.snapshot, handily-workitems.checked, handily-workitems.ready"
     ],
     "gatingHooks": []
    },
@@ -110,15 +132,23 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: engine.create, session.start, classic.CwdChanged",
+      "./register.tsx hooks: engine.create, session.start, command.run{command=workitems}, classic.CwdChanged",
+      "./register.tsx hooks on classic.CwdChanged do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook without .catch: command.run{command=workitems}",
       "./register.tsx gating hook with .catch: classic.CwdChanged",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.fs.stat, $.process.run, $.session.root, $.session.surfaces, $.state.set, $.store.get, $.store.set, $.ui.ask, $.ui.log, $.workitems.refresh",
+      "./register.tsx calls: $.clock.every (via startPoll), $.clock.now, $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.fs.stat, $.process.run, $.process.spawn, $.session.root, $.session.surfaces, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.ask, $.ui.log, $.workitems.refresh",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME, PATH, PATHEXT, USERPROFILE",
-      "./register.tsx state writes: handily-workitems.ready, handily-workitems.snapshot",
-      "./register.tsx state reads: nothing"
+      "./register.tsx env reads: HOME, PATH, PATHEXT, SystemRoot, USERPROFILE",
+      "./register.tsx state writes: handily-workitems.checked, handily-workitems.ready, handily-workitems.snapshot",
+      "./register.tsx state reads: handily-workitems.snapshot"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=workitems}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "classic.CwdChanged",
@@ -131,5 +161,5 @@
    "advice": []
   }
  },
- "sourceHash": "461f9305510b0b95"
+ "sourceHash": "5d7b073a01936be0"
 }

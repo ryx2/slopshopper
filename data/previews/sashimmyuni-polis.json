@@ -1,6 +1,6 @@
 {
  "slug": "sashimmyuni-polis",
- "generatedAt": "2026-10-10T14:45:47.041Z",
+ "generatedAt": "2026-10-16T14:21:34.288Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,9 @@
    },
    {
     "event": "prompt.compose"
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "tool.check",
@@ -77,6 +80,21 @@
     "event": "session.measure"
    },
    {
+    "event": "classic.PermissionRequest"
+   },
+   {
+    "event": "classic.PermissionDenied"
+   },
+   {
+    "event": "classic.PostToolUse"
+   },
+   {
+    "event": "classic.PostToolUseFailure"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
     "event": "classic.Stop"
    },
    {
@@ -96,8 +114,8 @@
   "commands": [
    {
     "name": "city",
-    "description": "Open the Polis project dashboard and city map",
-    "argumentHint": "[overview|city|tasks|agents|resources|skills]",
+    "description": "Open the Polis project dashboard and city map, or answer with a session report or the whole project as text",
+    "argumentHint": "[overview|city|tasks|agents|resources|skills|report [save]|project|page]",
     "output": "Polis opened."
    },
    {
@@ -119,7 +137,9 @@
     "title": "Polis"
    }
   ],
-  "toasts": [],
+  "toasts": [
+   "Check failed: tests"
+  ],
   "logs": [
    "polis: turn.start: TypeError: undefined is not an object (evaluating 'text.trim')"
   ],
@@ -129,19 +149,23 @@
    "$.command.register": 2,
    "$.tool.register": 1,
    "$.agent.register": 2,
-   "$.clock.now": 9,
+   "$.clock.now": 39,
    "$.session.repo": 1,
    "$.session.id": 1,
-   "$.state.get": 61,
-   "$.store.get": 3,
-   "$.state.set": 29,
-   "$.store.set": 1,
+   "$.state.get": 161,
+   "$.store.get": 11,
+   "$.state.set": 42,
+   "$.store.set": 5,
    "$.command.list": 1,
    "$.session.usage": 1,
-   "$.ui.panes": 1,
-   "$.clock.every": 1,
+   "$.process.run": 4,
+   "$.ui.status": 4,
+   "$.ui.panes": 2,
+   "$.clock.every": 2,
+   "$.fs.exists": 1,
+   "$.fs.write": 3,
    "$.ui.log": 1,
-   "$.ui.status": 1,
+   "$.ui.toast": 1,
    "$.agent.list": 1,
    "$.session.surfaces": 1,
    "$.ui.open": 1,
@@ -151,6 +175,10 @@
    {
     "kind": "every",
     "ms": 5000
+   },
+   {
+    "kind": "every",
+    "ms": 2000
    }
   ],
   "sites": {
@@ -160,30 +188,18 @@
      "type": "Box",
      "props": {
       "flexDirection": "row",
-      "gap": 1,
-      "flexWrap": "wrap"
+      "gap": 1
      },
      "children": [
       {
        "type": "Text",
        "props": {
-        "color": "#8ea6e0",
-        "bold": true
+        "color": "#7b8496",
+        "bold": false,
+        "wrap": "truncate-end"
        },
        "children": [
-        "◆ ",
-        "app"
-       ]
-      },
-      {
-       "type": "Text",
-       "props": {
-        "color": "#7b8496"
-       },
-       "children": [
-        "ctx ",
-        "49",
-        "%"
+        "ctx 97k"
        ]
       },
       {
@@ -279,9 +295,20 @@
          {
           "type": "Button",
           "props": {
+           "key": "view-project",
+           "label": "Project",
+           "hotkey": "2",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
            "key": "view-city",
            "label": "City",
-           "hotkey": "2",
+           "hotkey": "3",
            "variant": "primary",
            "onPress": "[fn]"
           },
@@ -292,7 +319,7 @@
           "props": {
            "key": "view-tasks",
            "label": "Tasks",
-           "hotkey": "3",
+           "hotkey": "4",
            "variant": "secondary",
            "onPress": "[fn]"
           },
@@ -303,7 +330,7 @@
           "props": {
            "key": "view-agents",
            "label": "Agents",
-           "hotkey": "4",
+           "hotkey": "5",
            "variant": "secondary",
            "onPress": "[fn]"
           },
@@ -314,7 +341,7 @@
           "props": {
            "key": "view-resources",
            "label": "Resources",
-           "hotkey": "5",
+           "hotkey": "6",
            "variant": "secondary",
            "onPress": "[fn]"
           },
@@ -325,13 +352,45 @@
           "props": {
            "key": "view-skills",
            "label": "Skills",
-           "hotkey": "6",
+           "hotkey": "7",
            "variant": "secondary",
            "onPress": "[fn]"
           },
           "children": []
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "strip",
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "#7b8496",
+           "bold": false,
+           "wrap": "wrap"
+          },
+          "children": [
+           "ctx 97k"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "city-view",
+         "label": "Full city",
+         "hotkey": "f",
+         "onPress": "[fn]"
+        },
+        "children": []
        },
        {
         "type": "Box",
@@ -375,7 +434,7 @@
            "color": "#7b8496"
           },
           "children": [
-           "idle"
+           "your turn"
           ]
          }
         ]
@@ -467,6 +526,27 @@
           ]
          }
         ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#d98c9a",
+         "wrap": "wrap"
+        },
+        "children": [
+         "▣ checks: tests ✘"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "#7b8496",
+         "bold": false,
+         "wrap": "wrap"
+        },
+        "children": [
+         "◇ your turn"
+        ]
        }
       ]
      },
@@ -475,6 +555,11 @@
    }
   },
   "script": [
+   "$.process.run(git status --porcelain=v2 --branch) → exit 0",
+   "$.process.run(git diff --shortstat HEAD) → exit 0",
+   "$.fs.write(/work/app/.polis/.gitignore)",
+   "$.fs.write(/work/app/.polis/city.html)",
+   "$.fs.write(/work/app/.polis/city-full.html)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -485,12 +570,15 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(git status --porcelain=v2 --branch) → exit 0",
+   "$.process.run(git diff --shortstat HEAD) → exit 0",
    "turn.complete",
    "$.ui.open(polis)",
    "/city → Polis opened.",
    "/orchestrate → Usage: /orchestrate <goal>"
   ],
   "console": [],
+  "status": "ctx 97k",
   "warnings": []
  },
  "validate": {
@@ -501,6 +589,7 @@
    "session.start",
    "session.end",
    "prompt.compose",
+   "prompt.submit",
    "tool.check{tool=mcp__polis__project}",
    "tool.call{tool=mcp__polis__project}",
    "command.run{command=city}",
@@ -515,6 +604,11 @@
    "tool.call{tool=TaskUpdate}",
    "skill.prompt",
    "session.measure",
+   "classic.PermissionRequest",
+   "classic.PermissionDenied",
+   "classic.PostToolUse",
+   "classic.PostToolUseFailure",
+   "classic.SubagentStop",
    "classic.Stop",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=polis}"
@@ -527,7 +621,10 @@
    "$.clock.now",
    "$.command.list",
    "$.command.register",
+   "$.fs.exists (via writePage)",
+   "$.fs.write",
    "$.model.classify",
+   "$.process.run (via readGit)",
    "$.prompt.fill (via actionsOf)",
    "$.prompt.submit",
    "$.session.cwd",
@@ -551,8 +648,13 @@
   "stateReads": [
    "polis.activity",
    "polis.agents",
+   "polis.archive",
+   "polis.checks",
    "polis.files",
+   "polis.git",
    "polis.history",
+   "polis.limits",
+   "polis.log",
    "polis.procs",
    "polis.project",
    "polis.skills",
@@ -560,13 +662,19 @@
    "polis.tick",
    "polis.turn",
    "polis.ui",
-   "polis.usage"
+   "polis.usage",
+   "polis.waits"
   ],
   "stateWrites": [
    "polis.activity",
    "polis.agents",
+   "polis.archive",
+   "polis.checks",
    "polis.files",
+   "polis.git",
    "polis.history",
+   "polis.limits",
+   "polis.log",
    "polis.procs",
    "polis.project",
    "polis.skills",
@@ -574,7 +682,8 @@
    "polis.tick",
    "polis.turn",
    "polis.ui",
-   "polis.usage"
+   "polis.usage",
+   "polis.waits"
   ],
   "envReads": [],
   "raw": {
@@ -588,7 +697,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: polis.tasks, polis.agents, polis.procs, polis.turn, polis.usage, polis.history, polis.project, polis.skills, polis.ui, polis.activity, polis.files, polis.tick"
+     "types ./types/index.d.ts declares state: polis.tasks, polis.agents, polis.procs, polis.turn, polis.usage, polis.history, polis.project, polis.skills, polis.ui, polis.activity, polis.files, polis.waits, polis.limits, polis.checks, polis.git, polis.log, polis.archive, polis.tick"
     ],
     "gatingHooks": []
    },
@@ -599,9 +708,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, prompt.compose, tool.check{tool=mcp__polis__project}, tool.call{tool=mcp__polis__project}, command.run{command=city}, command.run{command=orchestrate}, turn.start, turn.step, turn.complete, agent.spawn, tool.call, tool.call{tool=TodoWrite}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, skill.prompt, session.measure, classic.Stop, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=polis}",
+      "./register.tsx hooks: session.start, session.end, prompt.compose, prompt.submit, tool.check{tool=mcp__polis__project}, tool.call{tool=mcp__polis__project}, command.run{command=city}, command.run{command=orchestrate}, turn.start, turn.step, turn.complete, agent.spawn, tool.call, tool.call{tool=TodoWrite}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, skill.prompt, session.measure, classic.PermissionRequest, classic.PermissionDenied, classic.PostToolUse, classic.PostToolUseFailure, classic.SubagentStop, classic.Stop, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=polis}",
+      "./register.tsx hooks on prompt.compose, skill.prompt, classic.PermissionRequest, classic.PermissionDenied, classic.PostToolUse, classic.PostToolUseFailure, classic.SubagentStop, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=city}",
       "./register.tsx answers its own command: command.run{command=orchestrate}",
+      "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.check{tool=mcp__polis__project}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__polis__project}",
       "./register.tsx gating hook without .catch: agent.spawn",
@@ -609,12 +720,23 @@
       "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskCreate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskUpdate}",
+      "./register.tsx gating hook without .catch: classic.PermissionRequest",
+      "./register.tsx gating hook without .catch: classic.PermissionDenied",
+      "./register.tsx gating hook without .catch: classic.PostToolUse",
+      "./register.tsx gating hook without .catch: classic.PostToolUseFailure",
+      "./register.tsx gating hook without .catch: classic.SubagentStop",
       "./register.tsx gating hook without .catch: classic.Stop",
-      "./register.tsx calls: $.agent.list, $.agent.register, $.clock.after, $.clock.every, $.clock.now, $.command.list, $.command.register, $.model.classify, $.prompt.fill (via actionsOf), $.prompt.submit, $.session.cwd, $.session.id, $.session.repo, $.session.surfaces, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.turn.abort (via stopTurn), $.ui.log (via say), $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.status (via refresh), $.ui.toast",
-      "./register.tsx state writes: polis.activity, polis.agents, polis.files, polis.history, polis.procs, polis.project, polis.skills, polis.tasks, polis.tick, polis.turn, polis.ui, polis.usage",
-      "./register.tsx state reads: polis.activity, polis.agents, polis.files, polis.history, polis.procs, polis.project, polis.skills, polis.tasks, polis.tick, polis.turn, polis.ui, polis.usage"
+      "./register.tsx calls: $.agent.list, $.agent.register, $.clock.after, $.clock.every, $.clock.now, $.command.list, $.command.register, $.fs.exists (via writePage), $.fs.write, $.model.classify, $.process.run (via readGit), $.prompt.fill (via actionsOf), $.prompt.submit, $.session.cwd, $.session.id, $.session.repo, $.session.surfaces, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.turn.abort (via stopTurn), $.ui.log (via say), $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.status (via refresh), $.ui.toast",
+      "./register.tsx state writes: polis.activity, polis.agents, polis.archive, polis.checks, polis.files, polis.git, polis.history, polis.limits, polis.log, polis.procs, polis.project, polis.skills, polis.tasks, polis.tick, polis.turn, polis.ui, polis.usage, polis.waits",
+      "./register.tsx state reads: polis.activity, polis.agents, polis.archive, polis.checks, polis.files, polis.git, polis.history, polis.limits, polis.log, polis.procs, polis.project, polis.skills, polis.tasks, polis.tick, polis.turn, polis.ui, polis.usage, polis.waits"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.check",
@@ -659,6 +781,36 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "classic.PermissionRequest",
+       "hook": "classic.PermissionRequest",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PermissionDenied",
+       "hook": "classic.PermissionDenied",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolUseFailure",
+       "hook": "classic.PostToolUseFailure",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "classic.Stop",
        "hook": "classic.Stop",
        "hasCatch": false
@@ -669,5 +821,5 @@
    "advice": []
   }
  },
- "sourceHash": "e7a86a0beb5f1c3e"
+ "sourceHash": "af5902c1dc418d29"
 }

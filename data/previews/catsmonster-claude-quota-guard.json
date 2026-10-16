@@ -1,6 +1,6 @@
 {
  "slug": "catsmonster-claude-quota-guard",
- "generatedAt": "2026-10-08T15:53:51.259Z",
+ "generatedAt": "2026-10-16T14:18:58.495Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -61,16 +61,16 @@
    {
     "name": "quota",
     "description": "Quota guard: status, on/off, threshold, pause, cancel, resume, test",
-    "argumentHint": "[status|on|off|threshold N|weekly N|ctxmin N|ctx [close]|pause [min]|cancel|resume|test on|off|sim ...]",
+    "argumentHint": "[status|on|off|threshold N|weekly N|ctxmin N|idle [on|off|any|waiting|min N|ttl M]|ctx [close]|pause [min]|cancel|resume|test on|off|sim ...]",
     "immediate": true,
-    "output": "Auto quota management: ON\nThresholds: 5-hour 94%, weekly 97% (pause), compact only if context > 30%, abort turn at 98%, burn-rate ceiling 99%\n5-hour usage: 31%, resets in NaNm\nContext window: 49% (handled by normal compaction, never a quota pause)\nRecent largest jump: 0.0 pts\nState: IDLE\nTask on record: fix the failing auth test and add an audit log call"
+    "output": "Auto quota management: ON\nThresholds: 5-hour 94%, weekly 97% (pause), compact only if context > 30%, abort turn at 98%, burn-rate ceiling 99%\n5-hour usage: 31%, resets in NaNm\nContext window: 49% (handled by normal compaction, never a quota pause)\nRecent largest jump: 0.0 pts\nState: IDLE\nIdle compaction: ON (any idle session, above 200k tokens, cache 60m, 180s early); not waiting on anything; not firing: context below the minimum\nTask on record: fix the failing auth test and add an audit log call"
    },
    {
     "name": "quota-guard",
     "description": "Quota guard: status, on/off, threshold, pause, cancel, resume, test",
-    "argumentHint": "[status|on|off|threshold N|weekly N|ctxmin N|ctx [close]|pause [min]|cancel|resume|test on|off|sim ...]",
+    "argumentHint": "[status|on|off|threshold N|weekly N|ctxmin N|idle [on|off|any|waiting|min N|ttl M]|ctx [close]|pause [min]|cancel|resume|test on|off|sim ...]",
     "immediate": true,
-    "output": "Auto quota management: ON\nThresholds: 5-hour 94%, weekly 97% (pause), compact only if context > 30%, abort turn at 98%, burn-rate ceiling 99%\n5-hour usage: 31%, resets in NaNm\nContext window: 49% (handled by normal compaction, never a quota pause)\nRecent largest jump: 0.0 pts\nState: IDLE\nTask on record: fix the failing auth test and add an audit log call"
+    "output": "Auto quota management: ON\nThresholds: 5-hour 94%, weekly 97% (pause), compact only if context > 30%, abort turn at 98%, burn-rate ceiling 99%\n5-hour usage: 31%, resets in NaNm\nContext window: 49% (handled by normal compaction, never a quota pause)\nRecent largest jump: 0.0 pts\nState: IDLE\nIdle compaction: ON (any idle session, above 200k tokens, cache 60m, 180s early); not waiting on anything; not firing: context below the minimum\nTask on record: fix the failing auth test and add an audit log call"
    }
   ],
   "tools": [],
@@ -87,11 +87,12 @@
   "apiCalls": {
    "$.command.register": 2,
    "$.session.id": 1,
-   "$.store.get": 3,
+   "$.store.get": 6,
+   "$.clock.now": 25,
+   "$.store.keys": 1,
+   "$.store.set": 7,
    "$.session.surfaces": 2,
-   "$.clock.now": 8,
-   "$.session.usage": 5,
-   "$.store.set": 5,
+   "$.session.usage": 9,
    "$.ui.status": 2,
    "$.state.get": 5,
    "$.state.set": 2,
@@ -274,7 +275,8 @@
    "command.run{command=quota-guard}"
   ],
   "calls": [
-   "$.clock.after (via doSubmit)",
+   "$.clock.after (via doSubmit",
+   "scheduleIdle)",
    "$.clock.every (via sync)",
    "$.clock.now",
    "$.clock.sleep (via claimSlot",
@@ -283,19 +285,23 @@
    "$.command.register (via registerCommand)",
    "$.prompt.fill (via runEffects)",
    "$.prompt.submit (via doSubmit)",
-   "$.session.compact (via doCompact)",
+   "$.session.compact (via doCompact",
+   "runIdle)",
    "$.session.id (via load)",
    "$.session.surfaces (via watched)",
-   "$.session.usage (via publish",
+   "$.session.usage (via contextTokens",
+   "publish",
    "readUsage)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via claimSlot",
-   "load)",
-   "$.store.set (via claimSlot",
-   "persist",
-   "saveCfg",
-   "saveSim)",
+   "$.store.delete (via touchIndex)",
+   "$.store.get (via boot",
+   "claimSlot",
+   "load",
+   "recordUnresolved",
+   "touchIndex)",
+   "$.store.keys (via touchIndex)",
+   "$.store.set",
    "$.turn.abort (via runEffects)",
    "$.ui.close (via command)",
    "$.ui.log (via doCompact",
@@ -341,12 +347,13 @@
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, session.attach, session.measure, turn.start, turn.complete, prompt.submit, session.compact, tool.call, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=quota-ctx}, session.end, command.run{command=quota}, command.run{command=quota-guard}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: session.compact",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: command.run{command=quota}",
       "./register.tsx gating hook with .catch: command.run{command=quota-guard}",
-      "./register.tsx calls: $.clock.after (via doSubmit), $.clock.every (via sync), $.clock.now, $.clock.sleep (via claimSlot, doCompact, doSubmit), $.command.register (via registerCommand), $.prompt.fill (via runEffects), $.prompt.submit (via doSubmit), $.session.compact (via doCompact), $.session.id (via load), $.session.surfaces (via watched), $.session.usage (via publish, readUsage), $.state.get, $.state.set, $.store.get (via claimSlot, load), $.store.set (via claimSlot, persist, saveCfg, saveSim), $.turn.abort (via runEffects), $.ui.close (via command), $.ui.log (via doCompact, doSubmit, logOnce, registerCommand, runEffects, say), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via say)",
+      "./register.tsx calls: $.clock.after (via doSubmit, scheduleIdle), $.clock.every (via sync), $.clock.now, $.clock.sleep (via claimSlot, doCompact, doSubmit), $.command.register (via registerCommand), $.prompt.fill (via runEffects), $.prompt.submit (via doSubmit), $.session.compact (via doCompact, runIdle), $.session.id (via load), $.session.surfaces (via watched), $.session.usage (via contextTokens, publish, readUsage), $.state.get, $.state.set, $.store.delete (via touchIndex), $.store.get (via boot, claimSlot, load, recordUnresolved, touchIndex), $.store.keys (via touchIndex), $.store.set, $.turn.abort (via runEffects), $.ui.close (via command), $.ui.log (via doCompact, doSubmit, logOnce, registerCommand, runEffects, say), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via say)",
       "./register.tsx state writes: quota-guard.bar, quota-guard.detail",
       "./register.tsx state reads: quota-guard.bar, quota-guard.detail"
      ],
@@ -383,8 +390,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "c42264cedebf1dc8"
+ "sourceHash": "14ca029632e21825"
 }

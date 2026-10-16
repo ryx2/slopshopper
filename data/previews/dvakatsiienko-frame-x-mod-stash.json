@@ -1,11 +1,17 @@
 {
  "slug": "dvakatsiienko-frame-x-mod-stash",
- "generatedAt": "2026-10-10T14:45:11.848Z",
+ "generatedAt": "2026-10-16T14:19:29.511Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "skill.prompt"
+   },
+   {
+    "event": "ui.press"
    },
    {
     "event": "prompt.submit"
@@ -29,10 +35,28 @@
     "event": "turn.complete"
    },
    {
+    "event": "session.compact"
+   },
+   {
     "event": "session.measure"
    },
    {
     "event": "turn.step"
+   },
+   {
+    "event": "session.receive"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "quiet-canary"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "quiet"
+    }
    },
    {
     "event": "command.run",
@@ -42,6 +66,13 @@
    },
    {
     "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "stash-settings"
+    }
    },
    {
     "event": "ui.render",
@@ -71,13 +102,23 @@
     "name": "board",
     "description": "open the fleet board: every live session, busy or idle, its last message; `/board colour` flips its colour",
     "output": "fleet board opened"
+   },
+   {
+    "name": "quiet-canary",
+    "description": "quiet comms canary: send cclio a test [progress] ping, no model; `pnpm mods:quiet-canary` reads held → delivered",
+    "output": "quiet canary cmgj6k3ng: sent"
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "orbit",
+    "description": "orbit: your asks to dima on the fleet board; an ask goes here, never into a reply. 🛎️ tick = pick good to go, 🔁 replay = another round, plus his steer; marked asks reach you model-only. a --bg session has no board: its asks go to its coordinator.\nop add, asks [{ text, pick, hiddenNote, link }]: text one line ≤90 chars, subject first, readable alone (no «above», «this»); pick: your recommendation; hiddenNote: yours alone, its source and what a tick means; link: one https url or file path he opens in a click; dies: \"halt\" or N of dima's prompts unpicked, your own turns never count. irreversible (trash, push, close, merge) → lead with ⚠️, name the exact target.\nop resolve, ids, words { id: closing word }: the asks answered this turn; they leave when it ends, a worded one shown dim a turn more.\nop follow, id, text, pick: another round on an answered ask, same id and place, text ≤90 chars, marked 🆕.\nop assume, texts: ≤3 a turn, ≤90 chars: unasked choices a wrong guess would cost a redo on, never routine; 🛎️ clears, ↩️ sends back with his steer.\nop catch, pieces [{ kind, text, hiddenNote }], clear [ids]: cclio only, her rules come from catch.md.\nop plan, lines: your next 7 moves (now, next, then), each ≤90 chars and readable alone; set at each turn end; untouched 3 turns reads stale. step: your lane step.\nop glide — 🦉 cclio only, every board draws it: act create, title, items [{ text, ticket, done }]: a lane's whole scope as 1–7 steps dima reads at a glance — plain words, ≤60 chars, no paths, op names or pr numbers; ticket is an optional id; the result names the lane id. act link, id, session, role (coder or verifier): a member's session id; a re-link of a role replaces the old one. act edit, id, title?, items?: the card refreshed in place, a step whose text stays keeps its done flag. act step, id, current: the step we are on, every step before it done; current = the step count marks the lane finished. act end, id: at the siesta or the halt after it finished. nothing moved for 8 of your turns reads stale."
+   }
+  ],
   "panes": [
    {
     "id": "fleet-board",
-    "title": "fleet board"
+    "title": "🚦 board"
    }
   ],
   "toasts": [],
@@ -86,29 +127,33 @@
   "rewrites": [
    {
     "event": "prompt.submit",
-    "summary": "context added: [\"now 08:53\"]"
+    "summary": "context added: [\"now 08:53 UTC+0\",\"phases are your live plan: set them with mcp__x-mod-stash__orbit's plan op and keep them current as the work moves.\"]"
    }
   ],
   "apiCalls": {
    "$.session.id": 6,
+   "$.session.root": 1,
    "$.session.repo": 1,
-   "$.process.run": 1,
-   "$.state.get": 11,
-   "$.clock.now": 11,
-   "$.store.keys": 5,
-   "$.store.get": 12,
+   "$.process.run": 26,
+   "$.state.get": 60,
+   "$.store.get": 66,
+   "$.env.get": 5,
+   "$.fs.read": 2,
+   "$.store.keys": 14,
+   "$.state.set": 14,
+   "$.tool.register": 1,
+   "$.clock.now": 21,
    "$.ui.panes": 5,
-   "$.state.set": 9,
-   "$.command.register": 1,
+   "$.command.register": 2,
    "$.clock.after": 1,
-   "$.store.set": 2,
+   "$.store.set": 3,
+   "$.store.delete": 4,
    "$.settings.read": 1,
-   "$.env.get": 3,
    "$.session.usage": 1,
-   "$.store.delete": 1,
    "$.ui.open": 1,
    "$.fs.list": 1,
-   "$.ui.resolve": 2
+   "$.session.send": 1,
+   "$.ui.resolve": 3
   },
   "timers": [
    {
@@ -128,72 +173,228 @@
       {
        "type": "Box",
        "props": {
+        "alignItems": "center",
         "flexDirection": "row",
+        "gap": 1,
         "justifyContent": "space-between",
-        "marginBottom": 0
+        "key": "row"
        },
        "children": [
         {
-         "type": "Text",
-         "props": {
-          "dimColor": true
-         },
-         "children": [
-          "no open asks"
-         ]
-        },
-        {
          "type": "Box",
          "props": {
+          "alignItems": "center",
           "flexDirection": "row",
+          "flexGrow": 1,
           "flexShrink": 1,
           "gap": 1,
-          "key": "meter:info",
-          "minWidth": 0,
-          "overflow": "hidden"
+          "key": "row:readings",
+          "minWidth": 0
          },
          "children": [
           {
-           "type": "Text",
+           "type": "Box",
            "props": {
-            "color": "#e5484d"
+            "flexDirection": "row",
+            "flexShrink": 0,
+            "gap": 1,
+            "key": "chips"
            },
            "children": [
-            "+NaN% pace"
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            "🌔 ",
-            "NaNh NaNm"
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            "📦"
+            {
+             "type": "Box",
+             "props": {
+              "key": "tip:chip:asks"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": false,
+                "dimColor": true
+               },
+               "children": [
+                "🪐 0"
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "display": "none",
+                "hover": {
+                 "display": "flex"
+                },
+                "position": "absolute",
+                "top": 0,
+                "left": 4
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "dimColor": true
+                 },
+                 "children": [
+                  "0 open asks for you"
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "key": "tip:chip:plan"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                "🌔 0"
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "display": "none",
+                "hover": {
+                 "display": "flex"
+                },
+                "position": "absolute",
+                "top": 0,
+                "left": 4
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "dimColor": true
+                 },
+                 "children": [
+                  "0 phases"
+                 ]
+                }
+               ]
+              }
+             ]
+            }
            ]
           },
           {
            "type": "Box",
            "props": {
-            "flexShrink": 0,
-            "width": 8
+            "flexDirection": "row",
+            "flexShrink": 1,
+            "gap": 1,
+            "key": "meter:info",
+            "minWidth": 0
            },
            "children": [
             {
-             "type": "Input",
+             "type": "Box",
              "props": {
-              "key": "compact-at",
-              "onSubmit": "[fn]",
-              "placeholder": "70",
-              "submitLabel": "✓",
-              "value": ""
+              "key": "tip:pace"
              },
-             "children": []
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": true,
+                "color": "#47915a"
+               },
+               "children": [
+                "🔋 +NaN%"
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "display": "none",
+                "hover": {
+                 "display": "flex"
+                },
+                "position": "absolute",
+                "top": 0,
+                "left": 10
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "dimColor": true
+                 },
+                 "children": [
+                  "ahead of the 5h pace"
+                 ]
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "key": "tip:reset"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {},
+               "children": [
+                "⏳",
+                " ",
+                "NaNh NaNm"
+               ]
+              },
+              {
+               "type": "Box",
+               "props": {
+                "display": "none",
+                "hover": {
+                 "display": "flex"
+                },
+                "position": "absolute",
+                "top": 0,
+                "left": 9
+               },
+               "children": [
+                {
+                 "type": "Text",
+                 "props": {
+                  "dimColor": true
+                 },
+                 "children": [
+                  "until the 5h window resets"
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexShrink": 1,
+            "key": "wait",
+            "minWidth": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "inactive",
+              "wrap": "truncate-end"
+             },
+             "children": [
+              "🔭 ",
+              "not waiting"
+             ]
             }
            ]
           }
@@ -203,9 +404,107 @@
          "type": "Box",
          "props": {
           "flexDirection": "row",
-          "gap": 1
+          "flexShrink": 0,
+          "gap": 1,
+          "key": "enhancer"
          },
          "children": [
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip:enh:enhance"
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "dimColor": false,
+              "key": "enh:enhance",
+              "onPress": "[fn]",
+              "plain": true
+             },
+             "children": [
+              "🪄"
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "display": "none",
+              "hover": {
+               "display": "flex"
+              },
+              "position": "absolute",
+              "top": 0,
+              "right": 3
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                "enhance prompt"
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "flexShrink": 0,
+          "gap": 1,
+          "key": "switches"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "key": "tip:wind"
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "wind",
+              "onPress": "[fn]",
+              "plain": true
+             },
+             "children": [
+              "🐦‍🔥"
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "display": "none",
+              "hover": {
+               "display": "flex"
+              },
+              "position": "absolute",
+              "top": 0,
+              "right": 4
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                "second wind: refresh this session at a good stop"
+               ]
+              }
+             ]
+            }
+           ]
+          },
           {
            "type": "Box",
            "props": {
@@ -335,6 +634,48 @@
           {
            "type": "Box",
            "props": {
+            "key": "tip:settings"
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "settings",
+              "onPress": "[fn]",
+              "plain": true
+             },
+             "children": [
+              "🎛️"
+             ]
+            },
+            {
+             "type": "Box",
+             "props": {
+              "display": "none",
+              "hover": {
+               "display": "flex"
+              },
+              "position": "absolute",
+              "top": 0,
+              "right": 3
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "dimColor": true
+               },
+               "children": [
+                "settings: show or hide each part"
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
             "key": "tip:board"
            },
            "children": [
@@ -383,293 +724,6 @@
        ]
       },
       {
-       "type": "Box",
-       "props": {
-        "flexDirection": "column",
-        "flexShrink": 0,
-        "key": "meters",
-        "marginBottom": 0,
-        "marginTop": 0,
-        "paddingRight": 0
-       },
-       "children": [
-        {
-         "type": "Box",
-         "props": {
-          "alignItems": "center",
-          "flexDirection": "row",
-          "gap": 1,
-          "key": "meter:5h",
-          "marginTop": 0
-         },
-         "children": [
-          {
-           "type": "Box",
-           "props": {
-            "flexShrink": 0,
-            "width": 6
-           },
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "wrap": "truncate-end"
-             },
-             "children": [
-              "🔥 5h"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Box",
-           "props": {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "flexGrow": 1,
-            "gap": 1,
-            "justifyContent": "space-between"
-           },
-           "children": [
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "flexShrink": 0
-             },
-             "children": [
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#a9b665",
-                "dimColor": false,
-                "key": "meter:5h:0"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#b5ba61",
-                "dimColor": false,
-                "key": "meter:5h:1"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#c1b25d",
-                "dimColor": false,
-                "key": "meter:5h:2"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#cdac5a",
-                "dimColor": false,
-                "key": "meter:5h:3"
-               },
-               "children": [
-                "▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "dimColor": true,
-                "key": "meter:5h:4"
-               },
-               "children": [
-                "▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯"
-               ]
-              }
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexShrink": 0,
-              "justifyContent": "flex-end",
-              "width": 4
-             },
-             "children": [
-              {
-               "type": "Text",
-               "props": {
-                "bold": true,
-                "color": "#e5484d"
-               },
-               "children": [
-                "31",
-                "%"
-               ]
-              }
-             ]
-            }
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Box",
-         "props": {
-          "alignItems": "center",
-          "flexDirection": "row",
-          "gap": 1,
-          "key": "meter:ctx",
-          "marginTop": 0
-         },
-         "children": [
-          {
-           "type": "Box",
-           "props": {
-            "flexShrink": 0,
-            "width": 6
-           },
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "wrap": "truncate-end"
-             },
-             "children": [
-              "🧠 ctx"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Box",
-           "props": {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "flexGrow": 1,
-            "gap": 1,
-            "justifyContent": "space-between"
-           },
-           "children": [
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "flexShrink": 0
-             },
-             "children": [
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#a9b665",
-                "dimColor": false,
-                "key": "meter:ctx:0"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#b5ba61",
-                "dimColor": false,
-                "key": "meter:ctx:1"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#c1b25d",
-                "dimColor": false,
-                "key": "meter:ctx:2"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#cdac5a",
-                "dimColor": false,
-                "key": "meter:ctx:3"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "color": "#d8a657",
-                "dimColor": false,
-                "key": "meter:ctx:4"
-               },
-               "children": [
-                "▮▮▮▮▮▮▮▮"
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "bold": false,
-                "dimColor": true,
-                "key": "meter:ctx:5"
-               },
-               "children": [
-                "▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯"
-               ]
-              }
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexShrink": 0,
-              "justifyContent": "flex-end",
-              "width": 4
-             },
-             "children": [
-              {
-               "type": "Text",
-               "props": {
-                "bold": true,
-                "color": "#4f83e0"
-               },
-               "children": [
-                "49",
-                "%"
-               ]
-              }
-             ]
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      },
-      {
        "type": "engine",
        "ref": 1,
        "props": {
@@ -694,33 +748,1322 @@
     "fleet-board": {
      "ok": true,
      "tree": {
-      "type": "Text",
+      "type": "Box",
       "props": {
-       "dimColor": true
+       "flexDirection": "column",
+       "minHeight": 30
       },
       "children": [
-       "no live sessions"
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "no live sessions"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "orbit",
+         "borderColor": "subtle",
+         "borderStyle": "round",
+         "flexDirection": "column",
+         "paddingX": 1,
+         "paddingY": 0.5,
+         "marginTop": 1,
+         "rowGap": 0.5
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "🪐 orbit"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "alignItems": "center",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "fold:orbit",
+               "onPress": "[fn]",
+               "plain": true
+              },
+              "children": [
+               "📂"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexGrow": 1,
+         "key": "phases:gap"
+        },
+        "children": []
+       }
       ]
      },
-     "title": "fleet board"
+     "title": "🚦 board"
+    },
+    "stash-settings": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1,
+       "key": "settings:view",
+       "minHeight": 30
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "key": "settings:columns"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "gap": 1,
+           "width": 0
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "borderColor": "subtle",
+             "borderStyle": "round",
+             "flexDirection": "column",
+             "key": "settings:stash · band",
+             "paddingX": 1,
+             "paddingY": 0,
+             "rowGap": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "stash · band"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "rowGap": 0
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.chips"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.chips",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🪐 🌔 asks and phases chips"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.pace"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.pace",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🔋 🪫 pace gap"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.reset"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.reset",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "⏳ time to the 5h reset"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.wait"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.wait",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🔭 wait line"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.enhancer"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.enhancer",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🪄 ⏪ ⏩ enhancer"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.hot"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.hot",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🔥 keep-hot"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.waker"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.waker",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "⏰ waker"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.afk"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.afk",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "💨 afk"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.board"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.board",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🚦 board button"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.5h"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.5h",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🔥 5h bar (desktop)"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.ctx"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.ctx",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🧠 ctx bar (desktop)"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.digest"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.digest",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "while you were away"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "borderColor": "subtle",
+             "borderStyle": "round",
+             "flexDirection": "column",
+             "key": "settings:stash · board",
+             "paddingX": 1,
+             "paddingY": 0,
+             "rowGap": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "stash · board"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "rowGap": 0
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.orbit"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.orbit",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🪐 orbit asks"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.assumed"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.assumed",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "assumed section"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.catch"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.catch",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🐠 catch"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.phases"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.phases",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🌔 phases"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.glide"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.glide",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🛼 glide"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.speak"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.speak",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🔊 ⏯️ ⏹️ speak buttons"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.rowmeta"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.rowmeta",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "session rows: model, effort and wait"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.second-wind"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.second-wind",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "🐦‍🔥 second wind"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "borderColor": "subtle",
+             "borderStyle": "round",
+             "flexDirection": "column",
+             "key": "settings:stash · replies",
+             "paddingX": 1,
+             "paddingY": 0,
+             "rowGap": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "stash · replies"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column",
+               "rowGap": 0
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.bullets"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.bullets",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "·-lists drawn as bullets"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.boldwords"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.boldwords",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "fleet words bold with their badge"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.circled"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.circled",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "①②③ drawn as numbered lines"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.tickets"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.tickets",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "bare ticket ids drawn as links"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.waitaside"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.waitaside",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "a 🔭 line's (aside) dropped"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "settings:row:stash.cost"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "part:stash.cost",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "💵 cost questions read model-cards.md"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "gap": 1,
+           "width": 0
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "borderColor": "subtle",
+             "borderStyle": "round",
+             "flexDirection": "column",
+             "key": "settings:knobs",
+             "paddingX": 1,
+             "paddingY": 0,
+             "rowGap": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "stash · knobs"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "knob:board-colour"
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "knob:board-colour",
+                 "onPress": "[fn]",
+                 "dimColor": true
+                },
+                "children": [
+                 "🎨 board colour"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "alignItems": "center",
+               "flexDirection": "row",
+               "gap": 1,
+               "key": "knob:ctx-shape"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "🧠 sessions: ctx meter type"
+                ]
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "knob:ctx-ring",
+                 "onPress": "[fn]",
+                 "variant": "primary"
+                },
+                "children": [
+                 "◯ ring"
+                ]
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "knob:ctx-bar",
+                 "onPress": "[fn]",
+                 "dimColor": true
+                },
+                "children": [
+                 "▬ bar"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "alignItems": "center",
+               "flexDirection": "row",
+               "gap": 1,
+               "key": "knob:phase-lines"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "🌔 phase lines"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexShrink": 0,
+                 "width": 8
+                },
+                "children": [
+                 {
+                  "type": "Input",
+                  "props": {
+                   "key": "knob:phase-lines",
+                   "onInput": "[fn]",
+                   "onSubmit": "[fn]",
+                   "value": "7"
+                  },
+                  "children": []
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "lines (5–7)"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "alignItems": "center",
+               "flexDirection": "row",
+               "gap": 1,
+               "key": "knob:undo-row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "key": "knob:undo-window"
+                },
+                "children": [
+                 {
+                  "type": "Button",
+                  "props": {
+                   "key": "knob:undo-window",
+                   "onPress": "[fn]",
+                   "variant": "primary"
+                  },
+                  "children": [
+                   "📨 undo tick"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "alignItems": "center",
+                 "flexDirection": "row",
+                 "gap": 1,
+                 "key": "knob:undo-delay"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexShrink": 0,
+                   "width": 8
+                  },
+                  "children": [
+                   {
+                    "type": "Input",
+                    "props": {
+                     "key": "knob:undo-delay",
+                     "onInput": "[fn]",
+                     "onSubmit": "[fn]",
+                     "value": "5"
+                    },
+                    "children": []
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "s (1–30)"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "knob:speak-assumed"
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "knob:speak-assumed",
+                 "onPress": "[fn]",
+                 "variant": "primary"
+                },
+                "children": [
+                 "🔊 read-aloud on assumptions"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "key": "knob:guard-silent"
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "knob:guard-silent",
+                 "onPress": "[fn]",
+                 "variant": "primary"
+                },
+                "children": [
+                 "🛡️ guard notes to the model"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexGrow": 1,
+         "key": "settings:gap"
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "key": "settings:bottom"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "borderColor": "subtle",
+           "borderStyle": "round",
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "key": "settings:bars",
+           "paddingX": 1,
+           "paddingY": 0,
+           "rowGap": 0,
+           "width": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "🔥 bars"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "key": "knob:breathe"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "knob:breathe",
+               "onPress": "[fn]",
+               "variant": "primary"
+              },
+              "children": [
+               "🔥 bars breathe while a turn runs"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "key": "knob:breath-preview"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "knob:breath-preview",
+               "onPress": "[fn]",
+               "dimColor": true
+              },
+              "children": [
+               "🔥 bars breathe all the time"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "alignItems": "center",
+             "flexDirection": "row",
+             "gap": 1,
+             "key": "knob:breath-speed"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {},
+              "children": [
+               "🔥 breath speed"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0,
+               "width": 8
+              },
+              "children": [
+               {
+                "type": "Input",
+                "props": {
+                 "key": "knob:breath-speed",
+                 "onInput": "[fn]",
+                 "onSubmit": "[fn]",
+                 "value": "0.5"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "× (0.1–5)"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "borderColor": "subtle",
+           "borderStyle": "round",
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "key": "settings:quiet",
+           "paddingX": 1,
+           "paddingY": 0,
+           "rowGap": 0,
+           "width": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "🤫 quiet comms"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "key": "knob:quiet-comms"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "knob:quiet-comms",
+               "onPress": "[fn]",
+               "variant": "primary"
+              },
+              "children": [
+               "🤫 hold members' [progress] pings"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "alignItems": "center",
+             "flexDirection": "row",
+             "gap": 1,
+             "key": "knob:quiet-wait"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {},
+              "children": [
+               "🤫 held pings wait"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0,
+               "width": 8
+              },
+              "children": [
+               {
+                "type": "Input",
+                "props": {
+                 "key": "knob:quiet-wait",
+                 "onInput": "[fn]",
+                 "onSubmit": "[fn]",
+                 "value": "10"
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "min (1–60)"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "borderColor": "subtle",
+           "borderStyle": "round",
+           "flexDirection": "column",
+           "flexGrow": 1,
+           "key": "settings:compact",
+           "paddingX": 1,
+           "paddingY": 0,
+           "width": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "context"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "alignItems": "center",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {},
+              "children": [
+               "📦 auto-compact at"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0,
+               "width": 8
+              },
+              "children": [
+               {
+                "type": "Input",
+                "props": {
+                 "key": "compact-at",
+                 "onInput": "[fn]",
+                 "onSubmit": "[fn]",
+                 "placeholder": "70",
+                 "value": ""
+                },
+                "children": []
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "% of the context window"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "stash-settings"
     }
    }
   },
   "script": [
    "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "session.start",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Read",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Grep",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Edit",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Write",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Write",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Bash bun test",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Bash git status --porcelain",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Bash rm -rf build && git push --force origin main",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "tool.call Bash cat .env",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
    "turn.complete",
    "$.ui.open(fleet-board)",
-   "/board → fleet board opened"
+   "$.process.run(sh -c echo $PPID; ps -o lstart= -p $PPID) → exit 0",
+   "/board → fleet board opened",
+   "/quiet-canary → quiet canary cmgj6k3ng: sent"
   ],
   "console": [],
   "warnings": []
@@ -733,15 +2076,22 @@
   ],
   "hooks": [
    "session.start",
+   "skill.prompt",
+   "ui.press",
    "prompt.submit",
    "session.append{door=response}",
    "ui.render{component=AssistantMessage}",
    "classic.Stop",
    "turn.complete",
+   "session.compact",
    "session.measure",
    "turn.step",
+   "session.receive",
+   "command.run{command=quiet-canary}",
+   "command.run{command=quiet}",
    "command.run{command=board}",
    "ui.close",
+   "ui.render{component=Pane, requestId=stash-settings}",
    "ui.render{component=Pane, requestId=fleet-board}",
    "session.end",
    "command.run",
@@ -751,57 +2101,74 @@
   "calls": [
    "$.clock.after",
    "$.clock.now",
+   "$.command.list (via enhancerSystem)",
    "$.command.register",
+   "$.command.run (via runWind)",
    "$.env.get (via compactAtOf",
+   "enhancerSystem",
    "freshMeter",
    "members",
-   "queueAfter",
+   "openPath",
+   "quietLedger",
+   "readLanes",
    "registry",
+   "relayCcrowWake",
    "saveUsage",
    "sessionName",
-   "setCompactAt)",
+   "setCompactAt",
+   "speak",
+   "staleProbes",
+   "ticketNote",
+   "windReady",
+   "writeLanes)",
    "$.fs.exists (via isUnstarted",
    "setCompactAt)",
-   "$.fs.list (via registry)",
-   "$.fs.read (via freshMeter",
-   "queueAfter",
-   "registry",
-   "sessionName",
-   "setCompactAt)",
-   "$.fs.write (via queueAfter",
+   "$.fs.list (via registry",
+   "staleProbes)",
+   "$.fs.read",
+   "$.fs.write (via relayCcrowWake",
    "saveUsage",
-   "setCompactAt)",
-   "$.process.run (via pressDoor",
+   "setCompactAt",
+   "writeLanes)",
+   "$.model.complete (via enhanceOnce)",
+   "$.process.run (via enhancerSystem",
+   "isResumed",
+   "openPath",
    "procOf",
-   "registry)",
-   "$.prompt.submit (via armHot",
-   "armWake)",
+   "quietAlarm",
+   "quietLedger",
+   "registry",
+   "speak",
+   "ticketNote",
+   "windReady)",
+   "$.prompt.fill (via enhanceNew",
+   "enhanceOnce",
+   "enhancePrev)",
+   "$.prompt.read (via enhanceOnce",
+   "enhancePrev)",
+   "$.prompt.submit (via selfSubmit)",
+   "$.session.append (via quietIdle)",
    "$.session.id",
    "$.session.repo",
+   "$.session.root",
+   "$.session.send",
    "$.session.usage (via compactAtOf)",
    "$.settings.read (via compactAtOf)",
-   "$.state.get",
-   "$.state.set",
-   "$.store.delete",
-   "$.store.get",
-   "$.store.keys (via awayDigest",
-   "countWords",
-   "load",
-   "pruneEnded)",
-   "$.store.set",
-   "$.ui.close",
-   "$.ui.copy",
-   "$.ui.log",
-   "$.ui.open (via openBoard)",
-   "$.ui.panes (via isOpen)",
-   "$.ui.resolve"
+   "$.state.ge… [+342 chars]"
   ],
   "stateReads": [
    "x-mod-stash.board",
    "x-mod-stash.cap",
    "x-mod-stash.ended",
+   "x-mod-stash.enhancer",
+   "x-mod-stash.folds",
+   "x-mod-stash.laneAsks",
+   "x-mod-stash.lanes",
    "x-mod-stash.meter",
-   "x-mod-stash.open",
+   "x-mod-stash.mobile",
+   "x-mod-stash.orbit",
+   "x-mod-stash.quiet",
+   "x-mod-stash.speaking",
    "x-mod-stash.turn",
    "x-mod-stash.view"
   ],
@@ -809,8 +2176,15 @@
    "x-mod-stash.board",
    "x-mod-stash.cap",
    "x-mod-stash.ended",
+   "x-mod-stash.enhancer",
+   "x-mod-stash.folds",
+   "x-mod-stash.laneAsks",
+   "x-mod-stash.lanes",
    "x-mod-stash.meter",
-   "x-mod-stash.open",
+   "x-mod-stash.mobile",
+   "x-mod-stash.orbit",
+   "x-mod-stash.quiet",
+   "x-mod-stash.speaking",
    "x-mod-stash.turn",
    "x-mod-stash.view"
   ],
@@ -835,7 +2209,7 @@
     ],
     "notes": [
      "types ./types/stash.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/stash.d.ts declares state: x-mod-stash.open, x-mod-stash.view, x-mod-stash.board, x-mod-stash.turn, x-mod-stash.meter, x-mod-stash.cap, x-mod-stash.ended"
+     "types ./types/stash.d.ts declares state: x-mod-stash.speaking, x-mod-stash.quiet, x-mod-stash.view, x-mod-stash.board, x-mod-stash.turn, x-mod-stash.meter, x-mod-stash.cap, x-mod-stash.ended, x-mod-stash.orbit, x-mod-stash.mobile, x-mod-stash.enhancer, x-mod-stash.lanes, x-mod-stash.laneAsks, x-mod-stash.folds"
     ],
     "gatingHooks": []
    },
@@ -846,19 +2220,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, session.append{door=response}, ui.render{component=AssistantMessage}, classic.Stop, turn.complete, session.measure, turn.step, command.run{command=board}, ui.close, ui.render{component=Pane, requestId=fleet-board}, session.end, command.run, tool.call, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, skill.prompt, ui.press, prompt.submit, session.append{door=response}, ui.render{component=AssistantMessage}, classic.Stop, turn.complete, session.compact, session.measure, turn.step, session.receive, command.run{command=quiet-canary}, command.run{command=quiet}, command.run{command=board}, ui.close, ui.render{component=Pane, requestId=stash-settings}, ui.render{component=Pane, requestId=fleet-board}, session.end, command.run, tool.call, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on skill.prompt, classic.Stop, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=quiet-canary}",
+      "./register.tsx answers its own command: command.run{command=quiet}",
       "./register.tsx answers its own command: command.run{command=board}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.append{door=response}",
       "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: session.receive",
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: command.run",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.env.get (via compactAtOf, freshMeter, members, queueAfter, registry, saveUsage, sessionName, setCompactAt), $.fs.exists (via isUnstarted, setCompactAt), $.fs.list (via registry), $.fs.read (via freshMeter, queueAfter, registry, sessionName, setCompactAt), $.fs.write (via queueAfter, saveUsage, setCompactAt), $.process.run (via pressDoor, procOf, registry), $.prompt.submit (via armHot, armWake), $.session.id, $.session.repo, $.session.usage (via compactAtOf), $.settings.read (via compactAtOf), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys (via awayDigest, countWords, load, pruneEnded), $.store.set, $.ui.close, $.ui.copy, $.ui.log, $.ui.open (via openBoard), $.ui.panes (via isOpen), $.ui.resolve",
+      "./register.tsx calls: $.clock.after, $.clock.now, $.command.list (via enhancerSystem), $.command.register, $.command.run (via runWind), $.env.get (via compactAtOf, enhancerSystem, freshMeter, members, openPath, quietLedger, readLanes, registry, relayCcrowWake, saveUsage, sessionName, setCompactAt, speak, staleProbes, ticketNote, windReady, writeLanes), $.fs.exists (via isUnstarted, setCompactAt), $.fs.list (via registry, staleProbes), $.fs.read, $.fs.write (via relayCcrowWake, saveUsage, setCompactAt, writeLanes), $.model.complete (via enhanceOnce), $.process.run (via enhancerSystem, isResumed, openPath, procOf, quietAlarm, quietLedger, registry, speak, ticketNote, windReady), $.prompt.fill (via enhanceNew, enhanceOnce, enhancePrev), $.prompt.read (via enhanceOnce, enhancePrev), $.prompt.submit (via selfSubmit), $.session.append (via quietIdle), $.session.id, $.session.repo, $.session.root, $.session.send, $.session.usage (via compactAtOf), $.settings.read (via compactAtOf), $.state.ge… [+342 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_AUTOCOMPACT_PCT_OVERRIDE, HOME",
-      "./register.tsx state writes: x-mod-stash.board, x-mod-stash.cap, x-mod-stash.ended, x-mod-stash.meter, x-mod-stash.open, x-mod-stash.turn, x-mod-stash.view",
-      "./register.tsx state reads: x-mod-stash.board, x-mod-stash.cap, x-mod-stash.ended, x-mod-stash.meter, x-mod-stash.open, x-mod-stash.turn, x-mod-stash.view"
+      "./register.tsx state writes: x-mod-stash.board, x-mod-stash.cap, x-mod-stash.ended, x-mod-stash.enhancer, x-mod-stash.folds, x-mod-stash.laneAsks, x-mod-stash.lanes, x-mod-stash.meter, x-mod-stash.mobile, x-mod-stash.orbit, x-mod-stash.quiet, x-mod-stash.speaking, x-mod-stash.turn, x-mod-stash.view",
+      "./register.tsx state reads: x-mod-stash.board, x-mod-stash.cap, x-mod-stash.ended, x-mod-stash.enhancer, x-mod-stash.folds, x-mod-stash.laneAsks, x-mod-stash.lanes, x-mod-stash.meter, x-mod-stash.mobile, x-mod-stash.orbit, x-mod-stash.quiet, x-mod-stash.speaking, x-mod-stash.turn, x-mod-stash.view"
      ],
      "gatingHooks": [
       {
@@ -877,6 +2256,18 @@
        "module": "./register.tsx",
        "pattern": "classic.Stop",
        "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.receive",
+       "hook": "session.receive",
        "hasCatch": false
       },
       {
@@ -903,5 +2294,5 @@
    "advice": []
   }
  },
- "sourceHash": "ee97184a6e847d6b"
+ "sourceHash": "4d7060e1489cf70e"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "tellang-triflux-triflux-mods",
- "generatedAt": "2026-10-10T14:44:23.157Z",
+ "generatedAt": "2026-10-16T14:16:04.600Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -30,9 +30,56 @@
    },
    {
     "event": "turn.step"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "SendMessage"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ListAgents"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": true
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": false
+    }
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": [
+      "prompt_input_exit",
+      "resume",
+      "logout",
+      "other"
+     ]
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tfx-lead"
+    }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "tfx-lead",
+    "description": "메모리 압박 알림 리드 등록: on|off|status",
+    "output": "사용법: /tfx-lead on|off|status"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -41,14 +88,16 @@
   "rewrites": [],
   "apiCalls": {
    "$.env.get": 4,
-   "$.session.id": 2,
+   "$.session.id": 4,
    "$.session.usage": 2,
    "$.clock.now": 2,
    "$.process.run": 2,
    "$.state.get": 3,
    "$.state.set": 2,
    "$.fs.write": 2,
-   "$.clock.every": 1
+   "$.clock.every": 1,
+   "$.command.register": 1,
+   "$.store.get": 1
   },
   "timers": [
    {
@@ -76,7 +125,8 @@
    "tool.call Bash cat .env",
    "$.process.run(node /Users/dev/.claude/hud/hud-qos-status.mjs --band) → exit 0",
    "$.fs.write(/Users/dev/.claude/cache/triflux/claude-band/preview-session)",
-   "turn.complete"
+   "turn.complete",
+   "/tfx-lead → 사용법: /tfx-lead on|off|status"
   ],
   "console": [],
   "warnings": []
@@ -92,20 +142,29 @@
    "tool.call{tool=Agent}",
    "agent.spawn",
    "session.end",
-   "turn.step"
+   "turn.step",
+   "tool.call{tool=SendMessage}",
+   "tool.call{tool=ListAgents}",
+   "session.start{isInteractive=true|false}",
+   "session.end{reason=prompt_input_exit|resume|logout|other}",
+   "command.run{command=tfx-lead}"
   ],
   "calls": [
    "$.clock.every",
-   "$.clock.now (via refreshRows",
-   "runHud)",
+   "$.clock.now",
+   "$.command.register",
    "$.env.get (via homeDir",
    "refreshRows)",
    "$.fs.write (via writeMarker)",
-   "$.process.run (via runHud)",
-   "$.session.id (via refreshRows)",
+   "$.process.run",
+   "$.prompt.submit (via startMemoryPressure)",
+   "$.session.id",
    "$.session.usage (via refreshRows)",
    "$.state.get",
    "$.state.set",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.set",
    "$.ui.resolve"
   ],
   "stateReads": [
@@ -141,10 +200,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.measure, ui.render{component=AbovePrompt}, tool.call{tool=Agent}, agent.spawn, session.end, turn.step",
+      "./register.ts hooks: session.start, session.measure, ui.render{component=AbovePrompt}, tool.call{tool=Agent}, agent.spawn, session.end, turn.step, tool.call{tool=SendMessage}, tool.call{tool=ListAgents}, session.start{isInteractive=true|false}, session.end{reason=prompt_input_exit|resume|logout|other}, command.run{command=tfx-lead}",
+      "./register.ts answers its own command: command.run{command=tfx-lead}",
       "./register.ts gating hook without .catch: tool.call{tool=Agent}",
       "./register.ts gating hook without .catch: agent.spawn",
-      "./register.ts calls: $.clock.every, $.clock.now (via refreshRows, runHud), $.env.get (via homeDir, refreshRows), $.fs.write (via writeMarker), $.process.run (via runHud), $.session.id (via refreshRows), $.session.usage (via refreshRows), $.state.get, $.state.set, $.ui.resolve",
+      "./register.ts gating hook without .catch: tool.call{tool=SendMessage}",
+      "./register.ts gating hook without .catch: tool.call{tool=ListAgents}",
+      "./register.ts calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via homeDir, refreshRows), $.fs.write (via writeMarker), $.process.run, $.prompt.submit (via startMemoryPressure), $.session.id, $.session.usage (via refreshRows), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.ui.resolve",
       "./register.ts env writes: nothing",
       "./register.ts env reads: HOME, TFX_HUD_PATH, USERPROFILE",
       "./register.ts state writes: triflux-mods.rows",
@@ -162,6 +224,18 @@
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=SendMessage}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=ListAgents}",
+       "hasCatch": false
       }
      ]
     }
@@ -169,5 +243,5 @@
    "advice": []
   }
  },
- "sourceHash": "5c6a590555211165"
+ "sourceHash": "5a9050016ff83ece"
 }

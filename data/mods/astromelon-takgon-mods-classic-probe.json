@@ -1,0 +1,8 @@
+{
+ "slug": "astromelon-takgon-mods-classic-probe",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n/**\n * 엔진 제약 1번 감시용: user 범위 플러그인의 classic.* 훅이 내장 보안 플러그인(cc-plugin-sec-default)에 의해 건너뛰어지는지.\n * classic.SessionStart 훅이 실제로 실행되면 debug 로그에 CLASSIC-PROBE 줄을 남긴다. /probe-classic은 로드 확인용이다.\n */\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'probe-classic', description: 'classic probe' })\n    return next(e)\n  })\n\n  on('classic.SessionStart', async ($, e, next) => {\n    $.ui.log(`CLASSIC-PROBE SessionStart ran source=${String(e.source)}`)\n    return next(e)\n  }).catch(($, e, next) => next(e))\n\n  on('command.run', { command: 'probe-classic' }, async () => ({ text: 'PROBE-CLASSIC OK' }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"classic-probe\",\n  \"version\": \"0.0.1\",\n  \"description\": \"엔진 제약 1번(user 플러그인의 classic.* 훅 bypass) 감시용\",\n  \"author\": {\n    \"name\": \"tglee\"\n  }\n}"
+ }
+}

@@ -1,6 +1,6 @@
 {
  "slug": "ninthspace-claude-code-marketplace-cpm-next-progress",
- "generatedAt": "2026-10-08T15:54:32.242Z",
+ "generatedAt": "2026-10-16T14:21:04.259Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,10 +17,23 @@
     }
    },
    {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "progress-overview"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "Artifact"
     }
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "tool.call"
@@ -29,11 +42,20 @@
   "commands": [
    {
     "name": "progress-tracker",
-    "description": "Check the cpm-next progress trackers against the epic docs, or name a spec (\"01\") to prepare its tracker",
-    "output": "No docs/specifications folder in this directory or above it."
+    "description": "Check the cpm-next progress trackers against the epic docs, name a spec (\"01\") to prepare its tracker, \"times\" for how long stories take, \"all\" for every project's progress in a pane, or \"all publish\" for it as a claude.ai page",
+    "output": "No docs/specifications or docs/cpm/specifications folder in this directory or above it."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "publish_tracker",
+    "description": "Prepares the cpm-next progress tracker for a spec: the claude.ai page that shows the build order and status of its epics and stories. Call this when asked to make, publish or share a progress tracker or progress page for planned work, and never write such a page by hand. It writes the page from the plugin's template and answers with how to publish it; the rows are then kept in step with the epic docs."
+   },
+   {
+    "name": "story_times",
+    "description": "How long this project's cpm-next stories have taken, measured from the epic docs, and how long each story in progress has run, with the time left where the timings are steady enough to predict it. Call this when asked how long a story, an epic or the remaining work will take or has taken, and answer from it rather than estimating from the steps left."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
@@ -41,11 +63,41 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.session.cwd": 8,
-   "$.fs.exists": 16
+   "$.tool.register": 2,
+   "$.env.get": 10,
+   "$.session.cwd": 11,
+   "$.fs.exists": 60,
+   "$.store.get": 1,
+   "$.ui.resolve": 1,
+   "$.store.keys": 1,
+   "$.clock.now": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "Pane": {
+    "progress-overview": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No trackers indexed yet. Run /progress-tracker in a project to add its trackers."
+        ]
+       }
+      ]
+     },
+     "title": "progress-overview"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -58,7 +110,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/progress-tracker → No docs/specifications folder in this directory or above it."
+   "/progress-tracker → No docs/specifications or docs/cpm/specifications folder in this directory or ab…"
   ],
   "console": [],
   "warnings": []
@@ -71,38 +123,73 @@
    "session.start",
    "prompt.submit",
    "command.run{command=progress-tracker}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.close",
    "tool.call{tool=Artifact}",
+   "turn.complete",
    "tool.call"
   ],
   "calls": [
-   "$.clock.now (via checkOne)",
+   "$.clock.after",
+   "$.clock.every (via openOverview)",
+   "$.clock.now",
    "$.command.register (via start)",
-   "$.fs.exists (via findRoot",
+   "$.env.get (via findRoot)",
+   "$.fs.exists (via checkOne",
+   "findRoot",
    "ignoreWorkDir",
    "listDocs",
+   "openOverview",
    "orderFileFor",
+   "overviewDrift",
    "savePublished)",
    "$.fs.list (via listDocs)",
    "$.fs.read (via checkOne",
    "ignoreWorkDir",
    "orderFileFor",
    "prepare",
+   "prepareOverview",
    "readEpics",
-   "savePublished)",
+   "savePublished",
+   "specless)",
    "$.fs.write (via checkOne",
    "ignoreWorkDir",
    "orderFileFor",
+   "overviewDrift",
    "prepare",
+   "prepareOverview",
    "savePublished)",
-   "$.session.cwd (via findRoot)",
-   "$.store.get (via checkAll)",
-   "$.store.set (via checkAll)",
+   "$.prompt.submit",
+   "$.session.cwd (via checkAll",
+   "findRoot",
+   "prepareOverview)",
+   "$.store.delete (via checkOne",
+   "openOverview",
+   "overviewDrift",
+   "saveOverview)",
+   "$.store.get",
+   "$.store.keys (via indexEntries",
+   "openOverview)",
+   "$.store.set (via checkAll",
+   "checkOne",
+   "isGone",
+   "overviewDrift",
+   "saveIndex",
+   "saveOverview",
+   "saveTimes)",
    "$.tool.call (via readLive)",
+   "$.tool.register (via start)",
+   "$.ui.invalidate (via openOverview",
+   "saveIndex)",
+   "$.ui.open (via openOverview)",
+   "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [],
   "stateWrites": [],
-  "envReads": [],
+  "envReads": [
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -122,12 +209,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.submit, command.run{command=progress-tracker}, tool.call{tool=Artifact}, tool.call",
+      "./register.ts hooks: session.start, prompt.submit, command.run{command=progress-tracker}, ui.render{component=Pane, requestId=?}, ui.close, tool.call{tool=Artifact}, turn.complete, tool.call",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: command.run{command=progress-tracker}",
+      "./register.ts gating hook without .catch: ui.close",
       "./register.ts gating hook without .catch: tool.call{tool=Artifact}",
       "./register.ts gating hook without .catch: tool.call",
-      "./register.ts calls: $.clock.now (via checkOne), $.command.register (via start), $.fs.exists (via findRoot, ignoreWorkDir, listDocs, orderFileFor, savePublished), $.fs.list (via listDocs), $.fs.read (via checkOne, ignoreWorkDir, orderFileFor, prepare, readEpics, savePublished), $.fs.write (via checkOne, ignoreWorkDir, orderFileFor, prepare, savePublished), $.session.cwd (via findRoot), $.store.get (via checkAll), $.store.set (via checkAll), $.tool.call (via readLive), $.ui.toast"
+      "./register.ts calls: $.clock.after, $.clock.every (via openOverview), $.clock.now, $.command.register (via start), $.env.get (via findRoot), $.fs.exists (via checkOne, findRoot, ignoreWorkDir, listDocs, openOverview, orderFileFor, overviewDrift, savePublished), $.fs.list (via listDocs), $.fs.read (via checkOne, ignoreWorkDir, orderFileFor, prepare, prepareOverview, readEpics, savePublished, specless), $.fs.write (via checkOne, ignoreWorkDir, orderFileFor, overviewDrift, prepare, prepareOverview, savePublished), $.prompt.submit, $.session.cwd (via checkAll, findRoot, prepareOverview), $.store.delete (via checkOne, openOverview, overviewDrift, saveOverview), $.store.get, $.store.keys (via indexEntries, openOverview), $.store.set (via checkAll, checkOne, isGone, overviewDrift, saveIndex, saveOverview, saveTimes), $.tool.call (via readLive), $.tool.register (via start), $.ui.invalidate (via openOverview, saveIndex), $.ui.open (via openOverview), $.ui.resolve, $.ui.toast",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: HOME"
      ],
      "gatingHooks": [
       {
@@ -144,6 +234,12 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=Artifact}",
        "hasCatch": false
@@ -156,8 +252,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "14c596c945483829"
+ "sourceHash": "c138cd5e3109b7d7"
 }

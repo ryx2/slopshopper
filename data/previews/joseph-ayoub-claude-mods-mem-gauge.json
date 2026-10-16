@@ -1,0 +1,1470 @@
+{
+ "slug": "joseph-ayoub-claude-mods-mem-gauge",
+ "generatedAt": "2026-10-16T14:20:07.233Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "mem"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "disk"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "mem-gauge"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "mem-gauge-disk"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "mem",
+    "description": "Show what is using this Mac's memory across Claude sessions, agents and apps",
+    "immediate": true,
+    "output": "Memory pane opened."
+   },
+   {
+    "name": "disk",
+    "description": "Show this Mac's disk: the volume's use, every mounted volume, the usual big folders",
+    "immediate": true,
+    "output": "Disk pane opened."
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "mem-gauge",
+    "title": "Memory"
+   },
+   {
+    "id": "mem-gauge-disk",
+    "title": "Disk"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.clock.every": 1,
+   "$.state.get": 27,
+   "$.state.set": 6,
+   "$.clock.after": 2,
+   "$.clock.now": 7,
+   "$.session.id": 1,
+   "$.session.cwd": 2,
+   "$.env.get": 1,
+   "$.fs.read": 2,
+   "$.process.run": 12,
+   "$.fs.write": 2,
+   "$.session.usage": 1,
+   "$.session.model": 1,
+   "$.agent.list": 1,
+   "$.fs.list": 2,
+   "$.session.surfaces": 2,
+   "$.ui.open": 2,
+   "$.ui.resolve": 3
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   }
+  ],
+  "sites": {
+   "PromptHint": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "isDraft": false,
+        "isWorking": false,
+        "hint": "? for shortcuts"
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "marginLeft": 2,
+        "flexDirection": "row",
+        "gap": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "color": "red",
+          "bold": true
+         },
+         "children": [
+          "?"
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "mem-gauge",
+          "plain": true,
+          "dimColor": true,
+          "label": "Memory -- · Pressure ? · 1 session · Disk ? free",
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "SessionMode": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "mem-gauge": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "gauge",
+         "flexDirection": "row",
+         "gap": 2,
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ --"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Memory ",
+             "--",
+             " used · pressure ",
+             "unknown"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "This session ",
+             "unknown",
+             " · ",
+             "1",
+             " live session",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "total:Used",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 12
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Used"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate"
+              },
+              "children": [
+               "? of ?"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "total:Free",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 12
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Free"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate"
+              },
+              "children": [
+               "?"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "total:Compressed",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 12
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Compressed"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate"
+              },
+              "children": [
+               "?"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "total:Swap",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 12
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Swap"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate"
+              },
+              "children": [
+               "? of ?"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "total:Load",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 12
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Load"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate"
+              },
+              "children": [
+               "? on ? cores"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "sessions",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Sessions",
+           ""
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "head",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 34,
+             "flexGrow": 1,
+             "justifyContent": "flex-start"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true,
+               "bold": false
+              },
+              "children": [
+               "Session"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 9,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true,
+               "bold": false
+              },
+              "children": [
+               "RSS"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 6,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true,
+               "bold": false
+              },
+              "children": [
+               "Ctx"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 7,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true,
+               "bold": false
+              },
+              "children": [
+               "Agents"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "s:preview-session",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 34,
+             "flexGrow": 1,
+             "justifyContent": "flex-start"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": false,
+               "bold": true
+              },
+              "children": [
+               "app"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 9,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": false,
+               "bold": true
+              },
+              "children": [
+               "?"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 6,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": false,
+               "bold": true
+              },
+              "children": [
+               "49%"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 7,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": false,
+               "bold": true
+              },
+              "children": [
+               "0"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "optimize",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Optimize"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Nothing to do right now."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "RSS is approximate (it undercounts compressed memory). A session without mem-gauge is listed from the engine's own record: name, memory and idle time only (model, context and agents read --)."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 2,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "Refresh",
+           "hotkey": "r",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "disk",
+           "label": "Disk",
+           "hotkey": "d",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "Close",
+           "hotkey": "c",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Memory"
+    },
+    "mem-gauge-disk": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "gauge",
+         "flexDirection": "row",
+         "gap": 2,
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ --"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Disk ",
+             "--",
+             " used"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "used ",
+             "?",
+             " of ",
+             "?",
+             " · free ",
+             "?"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "volumes",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Volumes"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "head",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 36,
+             "flexGrow": 1,
+             "justifyContent": "flex-start"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true,
+               "bold": false
+              },
+              "children": [
+               "Volume"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true,
+               "bold": false
+              },
+              "children": [
+               "Free"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "flexGrow": 0,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true,
+               "bold": false
+              },
+              "children": [
+               "Used %"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "df listed no volume."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "folders",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Big folders"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "f:/Users/dev/.claude/projects",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 46,
+             "flexGrow": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true
+              },
+              "children": [
+               "Claude transcripts (~/.claude/projects)"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "--"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "f:/Users/dev/.claude/file-history",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 46,
+             "flexGrow": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true
+              },
+              "children": [
+               "Claude file history"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "--"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "f:/Users/dev/Library/Developer/Xcode/DerivedData",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 46,
+             "flexGrow": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true
+              },
+              "children": [
+               "Xcode DerivedData"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "--"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "f:/Users/dev/Library/Developer/CoreSimulator/Devices",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 46,
+             "flexGrow": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true
+              },
+              "children": [
+               "iOS simulator devices"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "--"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "f:/Users/dev/Library/Caches",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 46,
+             "flexGrow": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true
+              },
+              "children": [
+               "Library caches"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "--"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "f:/Users/dev/.Trash",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "width": 46,
+             "flexGrow": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate",
+               "dimColor": true
+              },
+              "children": [
+               "Trash"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "width": 10,
+             "justifyContent": "flex-end"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "--"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "free",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Free up safely"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Nothing worth freeing right now."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "Sizes come from df (5 s) and du (10 s each, on open and Refresh); a folder that is missing or takes longer shows --."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 2,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "disk-refresh",
+           "label": "Refresh",
+           "hotkey": "r",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "disk-close",
+           "label": "Close",
+           "hotkey": "c",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Disk"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(sysctl hw.memsize hw.ncpu kern.memorystatus_level vm.swapusage vm.loadavg) → exit 0",
+   "$.process.run(vm_stat) → exit 0",
+   "$.process.run(df -k /) → exit 0",
+   "$.process.run(ps -axo pid=,ppid=,rss=,comm=) → exit 0",
+   "$.process.run(sh -c echo $PPID) → exit 0",
+   "$.fs.write(/Users/dev/.claude/mem-gauge/machine.json)",
+   "$.fs.write(/Users/dev/.claude/mem-gauge/sessions/preview-session.json)",
+   "$.ui.open(mem-gauge)",
+   "/mem → Memory pane opened.",
+   "$.ui.open(mem-gauge-disk)",
+   "$.process.run(df -kP) → exit 0",
+   "$.process.run(du -sk /Users/dev/.claude/projects) → exit 0",
+   "$.process.run(du -sk /Users/dev/.claude/file-history) → exit 0",
+   "$.process.run(du -sk /Users/dev/Library/Developer/Xcode/DerivedData) → exit 0",
+   "$.process.run(du -sk /Users/dev/Library/Developer/CoreSimulator/Devices) → exit 0",
+   "$.process.run(du -sk /Users/dev/Library/Caches) → exit 0",
+   "$.process.run(du -sk /Users/dev/.Trash) → exit 0",
+   "/disk → Disk pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.start",
+   "turn.complete",
+   "session.measure",
+   "session.end",
+   "command.run{command=mem}",
+   "command.run{command=disk}",
+   "ui.render{component=PromptHint}",
+   "ui.render{component=SessionMode}",
+   "ui.render{component=Pane, requestId=mem-gauge}",
+   "ui.render{component=Pane, requestId=mem-gauge-disk}"
+  ],
+  "calls": [
+   "$.agent.list (via ownEntry)",
+   "$.clock.after",
+   "$.clock.every (via arm)",
+   "$.clock.now",
+   "$.command.register",
+   "$.command.run (via applyMemory",
+   "runHandoff)",
+   "$.env.get (via dataDir)",
+   "$.fs.list (via collectRequests",
+   "readRegistry)",
+   "$.fs.read (via readText)",
+   "$.fs.write (via writeText)",
+   "$.process.run (via applyDisk",
+   "applyMemory",
+   "enginePid",
+   "removeFile",
+   "runText)",
+   "$.session.cwd (via diskReading",
+   "refreshLabel",
+   "tick)",
+   "$.session.id (via askToWrap",
+   "tick)",
+   "$.session.model (via ownEntry)",
+   "$.session.root (via refreshLabel)",
+   "$.session.surfaces",
+   "$.session.usage (via ownEntry)",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.ask (via applyDisk",
+   "applyMemory",
+   "askToWrap)",
+   "$.ui.close",
+   "$.ui.log",
+   "$.ui.open (via openDiskPane",
+   "openPane)",
+   "$.ui.resolve",
+   "$.ui.status (via publishStatus)",
+   "$.ui.toast (via applyDisk",
+   "applyMemory",
+   "askToWrap",
+   "runHandoff",
+   "runTick)"
+  ],
+  "stateReads": [
+   "mem-gauge.applying",
+   "mem-gauge.asked",
+   "mem-gauge.disk",
+   "mem-gauge.enginePid",
+   "mem-gauge.figures",
+   "mem-gauge.label",
+   "mem-gauge.lastActivityAt",
+   "mem-gauge.pidChecked",
+   "mem-gauge.showAllSessions",
+   "mem-gauge.snapshot",
+   "mem-gauge.wrapRequest"
+  ],
+  "stateWrites": [
+   "mem-gauge.applying",
+   "mem-gauge.asked",
+   "mem-gauge.disk",
+   "mem-gauge.enginePid",
+   "mem-gauge.figures",
+   "mem-gauge.label",
+   "mem-gauge.lastActivityAt",
+   "mem-gauge.pidChecked",
+   "mem-gauge.showAllSessions",
+   "mem-gauge.snapshot",
+   "mem-gauge.wrapRequest"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/joseph-ayoub-claude-mods-mem-gauge/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/joseph-ayoub-claude-mods-mem-gauge/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: mem-gauge.snapshot, mem-gauge.enginePid, mem-gauge.pidChecked, mem-gauge.lastActivityAt, mem-gauge.asked, mem-gauge.label, mem-gauge.figures, mem-gauge.wrapRequest, mem-gauge.showAllSessions, mem-gauge.disk, mem-gauge.applying"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/joseph-ayoub-claude-mods-mem-gauge/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, turn.start, turn.complete, session.measure, session.end, command.run{command=mem}, command.run{command=disk}, ui.render{component=PromptHint}, ui.render{component=SessionMode}, ui.render{component=Pane, requestId=mem-gauge}, ui.render{component=Pane, requestId=mem-gauge-disk}",
+      "./register.tsx answers its own command: command.run{command=mem}",
+      "./register.tsx answers its own command: command.run{command=disk}",
+      "./register.tsx calls: $.agent.list (via ownEntry), $.clock.after, $.clock.every (via arm), $.clock.now, $.command.register, $.command.run (via applyMemory, runHandoff), $.env.get (via dataDir), $.fs.list (via collectRequests, readRegistry), $.fs.read (via readText), $.fs.write (via writeText), $.process.run (via applyDisk, applyMemory, enginePid, removeFile, runText), $.session.cwd (via diskReading, refreshLabel, tick), $.session.id (via askToWrap, tick), $.session.model (via ownEntry), $.session.root (via refreshLabel), $.session.surfaces, $.session.usage (via ownEntry), $.state.get, $.state.set, $.ui.ask (via applyDisk, applyMemory, askToWrap), $.ui.close, $.ui.log, $.ui.open (via openDiskPane, openPane), $.ui.resolve, $.ui.status (via publishStatus), $.ui.toast (via applyDisk, applyMemory, askToWrap, runHandoff, runTick)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: mem-gauge.applying, mem-gauge.asked, mem-gauge.disk, mem-gauge.enginePid, mem-gauge.figures, mem-gauge.label, mem-gauge.lastActivityAt, mem-gauge.pidChecked, mem-gauge.showAllSessions, mem-gauge.snapshot, mem-gauge.wrapRequest",
+      "./register.tsx state reads: mem-gauge.applying, mem-gauge.asked, mem-gauge.disk, mem-gauge.enginePid, mem-gauge.figures, mem-gauge.label, mem-gauge.lastActivityAt, mem-gauge.pidChecked, mem-gauge.showAllSessions, mem-gauge.snapshot, mem-gauge.wrapRequest"
+     ],
+     "gatingHooks": []
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "e03829aff4926b90"
+}

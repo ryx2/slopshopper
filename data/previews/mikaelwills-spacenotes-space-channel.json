@@ -1,11 +1,14 @@
 {
  "slug": "mikaelwills-spacenotes-space-channel",
- "generatedAt": "2026-10-08T15:53:01.353Z",
+ "generatedAt": "2026-10-16T14:16:03.740Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "prompt.submit"
@@ -17,10 +20,7 @@
     "event": "turn.complete"
    },
    {
-    "event": "session.append",
-    "matcher": {
-     "door": "response"
-    }
+    "event": "turn.step"
    },
    {
     "event": "tool.call"
@@ -37,7 +37,7 @@
   "panes": [],
   "toasts": [],
   "logs": [
-   "bridge not connected:",
+   "SPACE_CHANNEL_AGENT is not set; the space-channel bridge is not started",
    "push_message failed: push_message timed out after 3000ms",
    "push_status failed: push_status timed out after 3000ms",
    "push_status failed: push_status timed out after 3000ms",
@@ -71,9 +71,14 @@
    "push_context_usage failed: push_context_usage timed out after 3000ms"
   ],
   "denies": [],
-  "rewrites": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"Your user talks to you from the SpaceNotes app as well as this terminal; everything you write reaches both, so answer in plain text — ther…"
+   }
+  ],
   "apiCalls": {
-   "$.mcp.connect": 1,
+   "$.env.get": 1,
    "$.ui.log": 32,
    "$.clock.after": 1
   },
@@ -137,24 +142,31 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.compact",
    "prompt.submit",
    "turn.start",
    "turn.complete",
-   "session.append{door=response}",
+   "turn.step",
    "tool.call",
    "tool.check",
    "session.measure"
   ],
   "calls": [
    "$.clock.after",
-   "$.clock.sleep (via inboundLoop",
+   "$.clock.sleep (via runBridge",
    "runSlashCommand)",
    "$.command.run (via runSlashCommand)",
+   "$.config.list (via modelChoices",
+   "switchModel)",
+   "$.config.set (via switchModel)",
    "$.env.get",
-   "$.mcp.call (via bridge)",
-   "$.mcp.connect",
+   "$.http.fetch (via bridge)",
    "$.process.run (via backgroundTool)",
+   "$.process.spawn (via runBridge)",
    "$.prompt.submit (via deliver)",
+   "$.session.model (via modelChoices",
+   "switchModel)",
+   "$.tool.register",
    "$.turn.abort (via stopTurn)",
    "$.ui.log"
   ],
@@ -162,7 +174,8 @@
   "stateWrites": [],
   "envReads": [
    "HERDR_PANE_ID",
-   "HOME"
+   "HOME",
+   "SPACE_CHANNEL_AGENT"
   ],
   "raw": {
    "success": true,
@@ -183,26 +196,27 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.submit, turn.start, turn.complete, session.append{door=response}, tool.call, tool.check, session.measure",
+      "./register.ts hooks: session.start, session.compact, prompt.submit, turn.start, turn.complete, turn.step, tool.call, tool.check, session.measure",
+      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook without .catch: session.compact",
       "./register.ts gating hook without .catch: prompt.submit",
-      "./register.ts gating hook without .catch: session.append{door=response}",
       "./register.ts gating hook without .catch: tool.call",
       "./register.ts gating hook without .catch: tool.check",
-      "./register.ts calls: $.clock.after, $.clock.sleep (via inboundLoop, runSlashCommand), $.command.run (via runSlashCommand), $.env.get, $.mcp.call (via bridge), $.mcp.connect, $.process.run (via backgroundTool), $.prompt.submit (via deliver), $.turn.abort (via stopTurn), $.ui.log",
+      "./register.ts calls: $.clock.after, $.clock.sleep (via runBridge, runSlashCommand), $.command.run (via runSlashCommand), $.config.list (via modelChoices, switchModel), $.config.set (via switchModel), $.env.get, $.http.fetch (via bridge), $.process.run (via backgroundTool), $.process.spawn (via runBridge), $.prompt.submit (via deliver), $.session.model (via modelChoices, switchModel), $.tool.register, $.turn.abort (via stopTurn), $.ui.log",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HERDR_PANE_ID, HOME"
+      "./register.ts env reads: HERDR_PANE_ID, HOME, SPACE_CHANNEL_AGENT"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
-       "pattern": "prompt.submit",
-       "hook": "prompt.submit",
+       "pattern": "session.compact",
+       "hook": "session.compact",
        "hasCatch": false
       },
       {
        "module": "./register.ts",
-       "pattern": "session.append",
-       "hook": "session.append{door=response}",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
        "hasCatch": false
       },
       {
@@ -219,8 +233,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "6b7df21c94da338e"
+ "sourceHash": "b9c8191bd539a7b3"
 }

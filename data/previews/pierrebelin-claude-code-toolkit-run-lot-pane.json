@@ -1,9 +1,18 @@
 {
  "slug": "pierrebelin-claude-code-toolkit-run-lot-pane",
- "generatedAt": "2026-10-10T14:44:24.162Z",
+ "generatedAt": "2026-10-16T14:16:04.680Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
    {
     "event": "session.start"
    },
@@ -36,8 +45,8 @@
   "commands": [
    {
     "name": "run-lot-pane",
-    "description": "Open the Workflow progress pane (clear forgets the finished run, demo loads a sample run, demo end a finished one)",
-    "output": "Workflow pane 0.7.0 opened."
+    "description": "Open the Workflow progress pane (clear forgets the finished run, demo loads a sample run, demo end a finished one, demo plan and demo plan end a run-plan run)",
+    "output": "Workflow pane opened."
    }
   ],
   "tools": [],
@@ -52,11 +61,13 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.ui.panes": 1,
+   "$.state.get": 12,
+   "$.state.set": 2,
    "$.command.register": 1,
    "$.clock.every": 1,
-   "$.state.get": 6,
    "$.ui.open": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -65,6 +76,9 @@
    }
   ],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "Pane": {
     "run-lot-pane": {
      "ok": true,
@@ -160,7 +174,7 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(run-lot-pane)",
-   "/run-lot-pane → Workflow pane 0.7.0 opened."
+   "/run-lot-pane → Workflow pane opened."
   ],
   "console": [],
   "warnings": []
@@ -170,6 +184,8 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "ui.render{component=AbovePrompt}",
+   "ui.close",
    "session.start",
    "command.run{command=run-lot-pane}",
    "tool.call",
@@ -184,25 +200,36 @@
    "$.command.register",
    "$.fs.list (via listDirectory)",
    "$.fs.read (via readText)",
-   "$.fs.stat (via poll",
-   "refreshSheet)",
-   "$.session.usage",
+   "$.fs.stat (via changedText",
+   "poll",
+   "refreshFeed",
+   "refreshSheet",
+   "withCycleProgress)",
+   "$.fs.write (via writePane)",
+   "$.session.usage (via refreshUsage)",
    "$.state.get",
    "$.state.set",
-   "$.ui.close",
+   "$.store.get (via pastFiguresOf)",
+   "$.store.set (via keepFigures)",
+   "$.ui.close (via closePane)",
    "$.ui.open (via openPane)",
+   "$.ui.panes",
    "$.ui.resolve",
    "$.ui.toast (via announce)"
   ],
   "stateReads": [
+   "run-lot-pane.feed",
    "run-lot-pane.history",
+   "run-lot-pane.isShown",
    "run-lot-pane.nav",
    "run-lot-pane.now",
    "run-lot-pane.runs",
    "run-lot-pane.usage"
   ],
   "stateWrites": [
+   "run-lot-pane.feed",
    "run-lot-pane.history",
+   "run-lot-pane.isShown",
    "run-lot-pane.nav",
    "run-lot-pane.now",
    "run-lot-pane.runs",
@@ -220,7 +247,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: run-lot-pane.runs, run-lot-pane.now, run-lot-pane.usage, run-lot-pane.nav, run-lot-pane.history"
+     "types ./types/index.d.ts declares state: run-lot-pane.runs, run-lot-pane.now, run-lot-pane.usage, run-lot-pane.nav, run-lot-pane.history, run-lot-pane.isShown, run-lot-pane.feed"
     ],
     "gatingHooks": []
    },
@@ -231,15 +258,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=run-lot-pane}, tool.call, turn.step, agent.spawn, turn.complete, ui.render{component=Pane, requestId=run-lot-pane}",
+      "./register.tsx hooks: ui.render{component=AbovePrompt}, ui.close, session.start, command.run{command=run-lot-pane}, tool.call, turn.step, agent.spawn, turn.complete, ui.render{component=Pane, requestId=run-lot-pane}",
       "./register.tsx answers its own command: command.run{command=run-lot-pane}",
+      "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: agent.spawn",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.list (via listDirectory), $.fs.read (via readText), $.fs.stat (via poll, refreshSheet), $.session.usage, $.state.get, $.state.set, $.ui.close, $.ui.open (via openPane), $.ui.resolve, $.ui.toast (via announce)",
-      "./register.tsx state writes: run-lot-pane.history, run-lot-pane.nav, run-lot-pane.now, run-lot-pane.runs, run-lot-pane.usage",
-      "./register.tsx state reads: run-lot-pane.history, run-lot-pane.nav, run-lot-pane.now, run-lot-pane.runs, run-lot-pane.usage"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.list (via listDirectory), $.fs.read (via readText), $.fs.stat (via changedText, poll, refreshFeed, refreshSheet, withCycleProgress), $.fs.write (via writePane), $.session.usage (via refreshUsage), $.state.get, $.state.set, $.store.get (via pastFiguresOf), $.store.set (via keepFigures), $.ui.close (via closePane), $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.toast (via announce)",
+      "./register.tsx state writes: run-lot-pane.feed, run-lot-pane.history, run-lot-pane.isShown, run-lot-pane.nav, run-lot-pane.now, run-lot-pane.runs, run-lot-pane.usage",
+      "./register.tsx state reads: run-lot-pane.feed, run-lot-pane.history, run-lot-pane.isShown, run-lot-pane.nav, run-lot-pane.now, run-lot-pane.runs, run-lot-pane.usage"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -258,5 +292,5 @@
    "advice": []
   }
  },
- "sourceHash": "3fbba726a5bc168b"
+ "sourceHash": "eb7ace40b0e2e551"
 }

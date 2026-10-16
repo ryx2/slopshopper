@@ -1,0 +1,232 @@
+{
+ "slug": "kochetkov-ma-claude-brewcode-brewmod-placeholders",
+ "generatedAt": "2026-10-16T14:15:42.718Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "prompt.edit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "prompt.autocomplete",
+    "matcher": {
+     "token": "/^[^\\w\\s]{2}/"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "placeholders"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__brewmod-placeholders__/"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "placeholders",
+    "description": "Show, list or explain your placeholders; or say in any words what to add, change or remove",
+    "argumentHint": "[show ++<names> | list | help | any words]",
+    "output": "plugin files removed (updated?) · run /reload-plugins"
+   }
+  ],
+  "tools": [
+   {
+    "name": "list_placeholders",
+    "description": "List every placeholder, one entry per name: token, layer (plugin | global | project | global-legacy | project-legacy), files (the user files per layer; both layers when it is in both), when, plan (add | replace | only | none), description, its text and its plan-mode text. Call it first before creating, changing, removing or showing one. To show placeholders, print the requested ones verbatim; /placeholders show ++<name> also prints them instantly."
+   },
+   {
+    "name": "save_placeholder",
+    "description": "Never call this tool before the user answered your one AskUserQuestion about this exact save in this turn, even when the request is explicit. Create or change a placeholder file; never use Write. Call list_placeholders first. name: lowercase letters, digits, underscore, no prefix. text: the user's words verbatim when given, else your draft; a change starts from its text in list_placeholders. planText: a plan-mode part, added to the text only in Plan mode (file <name>.plan.md); draft one only when the user mentions plan mode (plan, plan mode, planning, план, планир, режим плана) or the name already has one. A change picks the part by words: plan part, plan mode, план, в режиме плана -> planText only; normal, обычн, основн -> text only; both, оба -> both; else text. An omitted part stays as it is. scope (required): a first word global or project wins; else infer it only from the words outside the placeholder's own text (global: global, everywhere, all projects, глобально, везде, во всех проектах; project: project, this project, here, this repo, в проекте, здесь, локально); a change keeps its layer from list_placeholders (global-legacy = global, project-legacy = project). That one AskUserQuestion call holds these questions in this order: 1. header \"Placeholder\", question exactly \"Save ++<name> as drafted?\" (never a layer in it) with the text, options \"Save as drafted (Recommended)\" / \"Change it\" (Other = a different name or text; apply it and save without asking again). 2. Only with a plan-mode part: header \"Plan mode\", question \"Add this plan-mode part to ++<name>?\", the draft as the first option's preview, options \"Add it (Recommended)\" / \"No plan part\". 3. Only when the scope is unclear (no word, or a new override of a plugin default): header \"Where\", question \"Where to save ++<name>?\", options \"Global (Recommended)\" (all your projects) then \"Project\" (only this project; wins over global). Only with no AskUserQuestion tool at all: save as drafted, scope global unless a word outside the text says project. Then say where it was saved."
+   },
+   {
+    "name": "remove_placeholder",
+    "description": "Never call this tool before the user answered your one AskUserQuestion about this exact removal in this turn, even when the request is explicit; only a name with files: none in list_placeholders skips the question (a plugin default or legacy brewtools file: nothing is removed; relay the result). Remove a placeholder file from the global or project layer; never use Bash rm. The wording is free (remove, delete, drop, удали, убери, сотри). Call list_placeholders first. part: all (default; <name>.md and <name>.plan.md), plan (the plan-mode part only: plan part, plan mode, план, в режиме плана), normal (the normal text only). scope: a first word global or project wins; else omit it and the tool takes the one layer holding the file. Question 1, header \"Remove\": \"Remove ++<name> (<layer>)?\", options \"Remove it (Recommended)\" / \"Keep it\"; when it has a plan-mode part and no part was named: \"Remove ++<name> (<layer>)? It has a plan-mode part.\", options \"Both parts (Recommended)\" / \"Only the plan-mode part\" / \"Keep it\"; when the plan part was named: \"Remove the plan-mode part of ++<name> (<layer>)?\", options \"Remove it (Recommended)\" / \"Keep it\". When list_placeholders shows files in both layers and no scope was given, add question 2 in the same call: header \"Where\", \"Remove ++<name> from where?\", options \"Global\" / \"Project\". Then say what is served afterwards (the result says it)."
+   },
+   {
+    "name": "placeholders_help",
+    "description": "How the user's ++ placeholders work: syntax, full text (/placeholders show ++name; the caret on a token shows up to 15 rows in the band), sending a message as typed (++/), global vs project, file format, /placeholders commands and doc links. Call it before answering any question about placeholders or the ++ prefix."
+   }
+  ],
+  "panes": [],
+  "toasts": [
+   "plugin files removed (updated?) · run /reload-plugins"
+  ],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 4,
+   "$.ui.invalidate": 2,
+   "$.prompt.read": 2,
+   "$.session.root": 2,
+   "$.state.get": 5,
+   "$.env.get": 4,
+   "$.fs.exists": 2,
+   "$.ui.toast": 1,
+   "$.session.id": 2,
+   "$.fs.read": 2,
+   "$.state.set": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine"
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/placeholders → plugin files removed (updated?) · run /reload-plugins"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.complete",
+   "prompt.edit",
+   "ui.render{component=PromptHint}",
+   "prompt.autocomplete{token=/\"^[^\\\\w\\\\s]{2}\"/}",
+   "prompt.submit",
+   "ui.render{component=AbovePrompt}",
+   "command.run{command=placeholders}",
+   "tool.call{tool=/\"^mcp__brewmod-placeholders__\"/}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.exists",
+   "$.fs.list",
+   "$.fs.read",
+   "$.fs.stat",
+   "$.fs.write",
+   "$.process.run",
+   "$.prompt.fill",
+   "$.prompt.read",
+   "$.prompt.submit",
+   "$.session.id",
+   "$.session.root",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.invalidate",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "brewmod-placeholders.focus",
+   "brewmod-placeholders.view"
+  ],
+  "stateWrites": [
+   "brewmod-placeholders.focus",
+   "brewmod-placeholders.view"
+  ],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/kochetkov-ma-claude-brewcode-brewmod-placeholders/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kochetkov-ma-claude-brewcode-brewmod-placeholders/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: brewmod-placeholders.view, brewmod-placeholders.focus"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kochetkov-ma-claude-brewcode-brewmod-placeholders/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, turn.complete, prompt.edit, ui.render{component=PromptHint}, prompt.autocomplete{token=/\"^[^\\\\w\\\\s]{2}\"/}, prompt.submit, ui.render{component=AbovePrompt}, command.run{command=placeholders}, tool.call{tool=/\"^mcp__brewmod-placeholders__\"/}",
+      "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook with .catch: command.run{command=placeholders}",
+      "./register.ts gating hook with .catch: tool.call{tool=/\"^mcp__brewmod-placeholders__\"/}",
+      "./register.ts calls: $.clock.after, $.clock.now, $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.fs.stat, $.fs.write, $.process.run, $.prompt.fill, $.prompt.read, $.prompt.submit, $.session.id, $.session.root, $.state.get, $.state.set, $.tool.register, $.ui.invalidate, $.ui.resolve, $.ui.toast",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
+      "./register.ts state writes: brewmod-placeholders.focus, brewmod-placeholders.view",
+      "./register.ts state reads: brewmod-placeholders.focus, brewmod-placeholders.view"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=placeholders}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__brewmod-placeholders__\"/}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "beea3787174135ab"
+}

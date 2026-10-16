@@ -1,0 +1,8 @@
+{
+ "slug": "alexei-led-claude-router-spawn-probe",
+ "files": {
+  "hooks/probe.mjs": "// Records each agent.spawn input and result, and the first turn.step model of each agent loop, to $OUT.\nconst rows = [];\nconst seen = new Set();\nasync function flush($) {\n  const out = await $.env.get('SPAWN_PROBE_OUT');\n  if (out) await $.fs.write(out, JSON.stringify(rows, null, 2));\n}\nexport function register(on) {\n  on('agent.spawn', async ($, e, next) => {\n    const started = Date.now();\n    const m = /OVR:(\\S+)/.exec(e.description) ?? /OVR:(\\S+)/.exec(e.prompt);\n    const input = { ...e, prompt: e.prompt.slice(0, 120) };\n    const sent = m ? { ...e, model: m[1] } : e;\n    const result = await next(sent);\n    rows.push({ event: 'agent.spawn', input, override: m?.[1] ?? null, result, nextMs: Date.now() - started, budget: next.budget?.ms });\n    await flush($);\n    return result;\n  });\n  on('turn.step', async function* ($, e, next) {\n    if (e.agentId && !seen.has(e.agentId)) {\n      seen.add(e.agentId);\n      rows.push({ event: 'turn.step', agentId: e.agentId, model: e.model, effort: e.effort ?? null });\n      await flush($);\n    }\n    return yield* next(e);\n  });\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./probe.mjs\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"spawn-probe\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Records agent.spawn inputs and results\"\n}"
+ }
+}

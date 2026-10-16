@@ -1,0 +1,297 @@
+{
+ "slug": "daviddecorso-claude-mods-handoff",
+ "generatedAt": "2026-10-16T14:19:14.121Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ReportFindings"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__handoff__jules_delegate"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handoff"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "handoff"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "jules"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "handoff",
+    "description": "Hand the plan to agy or Jules: no args writes it with /handoff:plan-handoff; <slug>, review, fix, stop, jules, jules-status",
+    "argumentHint": "[<plan slug> | review | fix | stop | jules | jules-status]",
+    "output": "Writing the plan with /handoff:plan-handoff; pick how to hand it off when it lands."
+   }
+  ],
+  "tools": [
+   {
+    "name": "jules_delegate",
+    "description": "Hands a self-contained coding task to Jules, Google's async cloud agent, which works from a pushed GitHub branch and opens a PR against it. Returns the session URL; the user sees progress in the /handoff jules-status pane. Use only for jules-shaped work: self-contained, verifiable by tests/CI or a diff small enough to read in one pass, no local-only state (simulators, local DB, secrets, dev server), no design or product judgment. Good fits: test backfill, dependency bumps, isolated bugs, lint/type cleanups, docs, mechanical migrations. Never for work that depends on uncommitted changes or on context from this conversation that the prompt does not spell out. Write the prompt self-contained: name the files, the expected behaviour and how to verify it. Jules sees only the pushed branch and the prompt."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.state.get": 9,
+   "$.prompt.submit": 1,
+   "$.ui.resolve": 3,
+   "$.clock.now": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "handoff": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "Nothing handed off yet."
+      ]
+     },
+     "title": "handoff"
+    },
+    "jules": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No Jules jobs tracked. /handoff jules sends the current plan."
+      ]
+     },
+     "title": "jules"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/handoff → Writing the plan with /handoff:plan-handoff; pick how to hand it off when it lan…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=Write}",
+   "tool.call{tool=Edit}",
+   "tool.check{tool=Write|Edit}",
+   "tool.call{tool=ReportFindings}",
+   "tool.call{tool=mcp__handoff__jules_delegate}",
+   "command.run{command=handoff}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=handoff}",
+   "ui.render{component=Pane, requestId=jules}"
+  ],
+  "calls": [
+   "$.clock.after (via endAgent",
+   "killGroup)",
+   "$.clock.every (via ensureJulesPoll",
+   "handOffInteractive",
+   "runHeadless)",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via apiKey",
+   "logEvent)",
+   "$.fs.list (via findPlan)",
+   "$.fs.read (via capturePlan",
+   "sendPlanToJules)",
+   "$.fs.write (via sendFixes)",
+   "$.http.fetch (via julesFetch)",
+   "$.process.run (via apiKey",
+   "git",
+   "isAlive",
+   "killGroup",
+   "logEvent",
+   "repoRoot",
+   "sendFixes)",
+   "$.process.spawn (via runHeadless)",
+   "$.prompt.submit",
+   "$.session.cwd (via delegate",
+   "findPlan",
+   "isPlanFile)",
+   "$.session.id (via logEvent)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.copy (via handOffInteractive)",
+   "$.ui.invalidate (via watchAgent)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via countChanged",
+   "review)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "handoff.isBandHidden",
+   "handoff.julesJobs",
+   "handoff.plan",
+   "handoff.review",
+   "handoff.run"
+  ],
+  "stateWrites": [
+   "handoff.isBandHidden",
+   "handoff.julesJobs",
+   "handoff.plan",
+   "handoff.review",
+   "handoff.run"
+  ],
+  "envReads": [
+   "HOME",
+   "JULES_API_KEY"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/daviddecorso-claude-mods-handoff/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/daviddecorso-claude-mods-handoff/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: handoff.plan, handoff.run, handoff.review, handoff.isBandHidden, handoff.julesJobs"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/daviddecorso-claude-mods-handoff/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=Write}, tool.call{tool=Edit}, tool.check{tool=Write|Edit}, tool.call{tool=ReportFindings}, tool.call{tool=mcp__handoff__jules_delegate}, command.run{command=handoff}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=handoff}, ui.render{component=Pane, requestId=jules}",
+      "./register.tsx answers its own command: command.run{command=handoff}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Write}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Edit}",
+      "./register.tsx gating hook with .catch: tool.check{tool=Write|Edit}",
+      "./register.tsx gating hook with .catch: tool.call{tool=ReportFindings}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__handoff__jules_delegate}",
+      "./register.tsx calls: $.clock.after (via endAgent, killGroup), $.clock.every (via ensureJulesPoll, handOffInteractive, runHeadless), $.clock.now, $.command.register, $.env.get (via apiKey, logEvent), $.fs.list (via findPlan), $.fs.read (via capturePlan, sendPlanToJules), $.fs.write (via sendFixes), $.http.fetch (via julesFetch), $.process.run (via apiKey, git, isAlive, killGroup, logEvent, repoRoot, sendFixes), $.process.spawn (via runHeadless), $.prompt.submit, $.session.cwd (via delegate, findPlan, isPlanFile), $.session.id (via logEvent), $.state.get, $.state.set, $.tool.register, $.ui.copy (via handOffInteractive), $.ui.invalidate (via watchAgent), $.ui.open, $.ui.resolve, $.ui.status (via countChanged, review), $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, JULES_API_KEY",
+      "./register.tsx state writes: handoff.isBandHidden, handoff.julesJobs, handoff.plan, handoff.review, handoff.run",
+      "./register.tsx state reads: handoff.isBandHidden, handoff.julesJobs, handoff.plan, handoff.review, handoff.run"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Write|Edit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=ReportFindings}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__handoff__jules_delegate}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "84f49cadd2f7164b"
+}

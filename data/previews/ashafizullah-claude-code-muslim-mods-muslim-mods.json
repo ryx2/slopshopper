@@ -1,6 +1,6 @@
 {
  "slug": "ashafizullah-claude-code-muslim-mods-muslim-mods",
- "generatedAt": "2026-10-08T15:53:01.017Z",
+ "generatedAt": "2026-10-16T14:15:51.296Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -133,6 +133,21 @@
     }
    },
    {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "salah"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": true
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "PromptHint"
@@ -156,7 +171,7 @@
    {
     "name": "muslim",
     "description": "The Muslim mods dashboard: switch each one on or off. /muslim on|off <feature>",
-    "output": "Muslim mods opened. Keys 1–8 switch each one on or off; x closes."
+    "output": "Muslim mods opened. Keys 1–9 switch each one on or off; s and l shorten or lengthen the salah break, h sets whether it holds prompts; x closes."
    },
    {
     "name": "prayer-times",
@@ -197,6 +212,11 @@
     "name": "tasbih",
     "description": "Count SubhanAllah, Alhamdulillah, Allahu akbar: /tasbih [close|demo]",
     "output": "Tasbih opened. Keys: c count, r restart, x close."
+   },
+   {
+    "name": "salah",
+    "description": "A break from work at each prayer's time; /salah now, /salah later, /salah done",
+    "output": "No salah break right now. One begins at each prayer's time and lasts 15 minutes. Your prompts wait until it ends. /salah now starts one; /muslim changes the length."
    }
   ],
   "tools": [],
@@ -219,15 +239,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 9,
+   "$.command.register": 10,
    "$.ui.status": 2,
-   "$.clock.now": 21,
+   "$.clock.now": 25,
    "$.clock.sleep": 1,
-   "$.store.get": 6,
+   "$.store.get": 7,
    "$.http.fetch": 2,
-   "$.state.get": 68,
+   "$.state.get": 76,
    "$.state.set": 8,
-   "$.clock.every": 7,
+   "$.clock.every": 8,
    "$.ui.open": 3,
    "$.ui.resolve": 4
   },
@@ -259,6 +279,10 @@
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 1000
    }
   ],
   "sites": {
@@ -762,6 +786,107 @@
        {
         "type": "Box",
         "props": {
+         "key": "row-salahBreak",
+         "flexDirection": "row",
+         "gap": 2
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "toggle-salahBreak",
+           "hotkey": "9",
+           "variant": "primary",
+           "label": "● On ",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "dimColor": false
+            },
+            "children": [
+             "9",
+             " ",
+             "Salah break"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "A break from work at each prayer's time; /salah"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "salah-settings",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "Salah break: ",
+           "15",
+           " min"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "break-less",
+           "hotkey": "s",
+           "label": "− Shorter",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "break-more",
+           "hotkey": "l",
+           "label": "+ Longer",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "break-hold",
+           "hotkey": "h",
+           "variant": "primary",
+           "label": "● Hold prompts",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
          "flexDirection": "row",
          "gap": 2
         },
@@ -1009,7 +1134,7 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(muslim)",
-   "/muslim → Muslim mods opened. Keys 1–8 switch each one on or off; x closes.",
+   "/muslim → Muslim mods opened. Keys 1–9 switch each one on or off; s and l shorten or lengt…",
    "/prayer-times → Location unknown. Set it with /prayer-times <your city>, or \"lat, lng\".",
    "/hijri → 17 Rabi' al-Akhir 1447 AH (Umm al-Qura)\n  Thu 9 Oct 2025\n\nComing up (each begins…",
    "$.ui.open(adhkar)",
@@ -1019,7 +1144,8 @@
    "/jumuah → The next Jumu'ah is Fri 10 Oct, in 1 day; it begins at Thursday's Maghrib.",
    "/ayah → وَمَا خَلَقْتُ ٱلْجِنَّ وَٱلْإِنسَ إِلَّا لِيَعْبُدُونِ\n\n\"And I did not create t…",
    "$.ui.open(tasbih)",
-   "/tasbih → Tasbih opened. Keys: c count, r restart, x close."
+   "/tasbih → Tasbih opened. Keys: c count, r restart, x close.",
+   "/salah → No salah break right now. One begins at each prayer's time and lasts 15 minutes.…"
   ],
   "console": [],
   "warnings": []
@@ -1051,6 +1177,9 @@
    "command.run{command=tasbih}",
    "ui.render{component=Pane, requestId=tasbih}",
    "session.start{isInteractive=true}",
+   "prompt.submit",
+   "command.run{command=salah}",
+   "session.start{isInteractive=true}",
    "ui.render{component=PromptHint}",
    "command.run{command=muslim}",
    "ui.render{component=Pane, requestId=muslim}"
@@ -1062,6 +1191,7 @@
    "$.command.register",
    "$.config.set",
    "$.http.fetch (via fetchJson)",
+   "$.prompt.suggest (via offer)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
@@ -1072,6 +1202,7 @@
    "$.ui.status",
    "$.ui.toast (via finish",
    "invite",
+   "setBreakFromPane",
    "tick",
    "toggleFromPane)"
   ],
@@ -1093,6 +1224,9 @@
    "muslim-mods.prayerLine",
    "muslim-mods.prayerToday",
    "muslim-mods.ramadanLine",
+   "muslim-mods.salahBreak",
+   "muslim-mods.salahHeld",
+   "muslim-mods.salahLine",
    "muslim-mods.tasbihCounts",
    "muslim-mods.tasbihDemo",
    "muslim-mods.tasbihIndex",
@@ -1117,6 +1251,9 @@
    "muslim-mods.prayerLine",
    "muslim-mods.prayerToday",
    "muslim-mods.ramadanLine",
+   "muslim-mods.salahBreak",
+   "muslim-mods.salahHeld",
+   "muslim-mods.salahLine",
    "muslim-mods.tasbihCounts",
    "muslim-mods.tasbihDemo",
    "muslim-mods.tasbihIndex",
@@ -1135,7 +1272,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: muslim-mods.prayerToday, muslim-mods.prayerLine, muslim-mods.hijriToday, muslim-mods.hijriAhead, muslim-mods.hijriLine, muslim-mods.adhkarDate, muslim-mods.adhkarMode, muslim-mods.adhkarIndex, muslim-mods.adhkarCounts, muslim-mods.adhkarDone, muslim-mods.adhkarLine, muslim-mods.ayahSeed, muslim-mods.ayahSkip, muslim-mods.ayahHidden, muslim-mods.fastingLine, muslim-mods.ramadanLine, muslim-mods.jumuahLine, muslim-mods.tasbihReached, muslim-mods.tasbihIndex, muslim-mods.tasbihCounts, muslim-mods.tasbihLine, muslim-mods.tasbihDemo"
+     "types ./types/index.d.ts declares state: muslim-mods.prayerToday, muslim-mods.prayerLine, muslim-mods.hijriToday, muslim-mods.hijriAhead, muslim-mods.hijriLine, muslim-mods.adhkarDate, muslim-mods.adhkarMode, muslim-mods.adhkarIndex, muslim-mods.adhkarCounts, muslim-mods.adhkarDone, muslim-mods.adhkarLine, muslim-mods.ayahSeed, muslim-mods.ayahSkip, muslim-mods.ayahHidden, muslim-mods.fastingLine, muslim-mods.ramadanLine, muslim-mods.jumuahLine, muslim-mods.tasbihReached, muslim-mods.tasbihIndex, muslim-mods.tasbihCounts, muslim-mods.tasbihLine, muslim-mods.tasbihDemo, muslim-mods.salahBreak, muslim-mods.salahHeld, muslim-mods.salahLine"
     ],
     "gatingHooks": []
    },
@@ -1146,7 +1283,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=prayer-times}, session.start{isInteractive=true}, command.run{command=hijri}, session.start{isInteractive=true}, command.run{command=adhkar}, ui.render{component=Pane, requestId=adhkar}, session.start{isInteractive=true}, command.run{command=fasting}, session.start{isInteractive=true}, command.run{command=ramadan}, session.start{isInteractive=true}, command.run{command=jumuah}, session.start{isInteractive=true}, command.run{command=ayah}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, session.end{reason=clear}, session.measure, command.run{command=tasbih}, ui.render{component=Pane, requestId=tasbih}, session.start{isInteractive=true}, ui.render{component=PromptHint}, command.run{command=muslim}, ui.render{component=Pane, requestId=muslim}",
+      "./register.tsx hooks: session.start, command.run{command=prayer-times}, session.start{isInteractive=true}, command.run{command=hijri}, session.start{isInteractive=true}, command.run{command=adhkar}, ui.render{component=Pane, requestId=adhkar}, session.start{isInteractive=true}, command.run{command=fasting}, session.start{isInteractive=true}, command.run{command=ramadan}, session.start{isInteractive=true}, command.run{command=jumuah}, session.start{isInteractive=true}, command.run{command=ayah}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, session.end{reason=clear}, session.measure, command.run{command=tasbih}, ui.render{component=Pane, requestId=tasbih}, session.start{isInteractive=true}, prompt.submit, command.run{command=salah}, session.start{isInteractive=true}, ui.render{component=PromptHint}, command.run{command=muslim}, ui.render{component=Pane, requestId=muslim}",
       "./register.tsx answers its own command: command.run{command=prayer-times}",
       "./register.tsx answers its own command: command.run{command=hijri}",
       "./register.tsx answers its own command: command.run{command=adhkar}",
@@ -1155,15 +1292,25 @@
       "./register.tsx answers its own command: command.run{command=jumuah}",
       "./register.tsx answers its own command: command.run{command=ayah}",
       "./register.tsx answers its own command: command.run{command=tasbih}",
+      "./register.tsx answers its own command: command.run{command=salah}",
       "./register.tsx answers its own command: command.run{command=muslim}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.clock.sleep, $.command.register, $.config.set, $.http.fetch (via fetchJson), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via finish, invite, tick, toggleFromPane)",
-      "./register.tsx state writes: muslim-mods.adhkarCounts, muslim-mods.adhkarDate, muslim-mods.adhkarDone, muslim-mods.adhkarIndex, muslim-mods.adhkarLine, muslim-mods.adhkarMode, muslim-mods.ayahHidden, muslim-mods.ayahSeed, muslim-mods.ayahSkip, muslim-mods.fastingLine, muslim-mods.hijriAhead, muslim-mods.hijriLine, muslim-mods.hijriToday, muslim-mods.jumuahLine, muslim-mods.prayerLine, muslim-mods.prayerToday, muslim-mods.ramadanLine, muslim-mods.tasbihCounts, muslim-mods.tasbihDemo, muslim-mods.tasbihIndex, muslim-mods.tasbihLine, muslim-mods.tasbihReached",
-      "./register.tsx state reads: muslim-mods.adhkarCounts, muslim-mods.adhkarDate, muslim-mods.adhkarDone, muslim-mods.adhkarIndex, muslim-mods.adhkarLine, muslim-mods.adhkarMode, muslim-mods.ayahHidden, muslim-mods.ayahSeed, muslim-mods.ayahSkip, muslim-mods.fastingLine, muslim-mods.hijriAhead, muslim-mods.hijriLine, muslim-mods.hijriToday, muslim-mods.jumuahLine, muslim-mods.prayerLine, muslim-mods.prayerToday, muslim-mods.ramadanLine, muslim-mods.tasbihCounts, muslim-mods.tasbihDemo, muslim-mods.tasbihIndex, muslim-mods.tasbihLine, muslim-mods.tasbihReached"
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.clock.sleep, $.command.register, $.config.set, $.http.fetch (via fetchJson), $.prompt.suggest (via offer), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via finish, invite, setBreakFromPane, tick, toggleFromPane)",
+      "./register.tsx state writes: muslim-mods.adhkarCounts, muslim-mods.adhkarDate, muslim-mods.adhkarDone, muslim-mods.adhkarIndex, muslim-mods.adhkarLine, muslim-mods.adhkarMode, muslim-mods.ayahHidden, muslim-mods.ayahSeed, muslim-mods.ayahSkip, muslim-mods.fastingLine, muslim-mods.hijriAhead, muslim-mods.hijriLine, muslim-mods.hijriToday, muslim-mods.jumuahLine, muslim-mods.prayerLine, muslim-mods.prayerToday, muslim-mods.ramadanLine, muslim-mods.salahBreak, muslim-mods.salahHeld, muslim-mods.salahLine, muslim-mods.tasbihCounts, muslim-mods.tasbihDemo, muslim-mods.tasbihIndex, muslim-mods.tasbihLine, muslim-mods.tasbihReached",
+      "./register.tsx state reads: muslim-mods.adhkarCounts, muslim-mods.adhkarDate, muslim-mods.adhkarDone, muslim-mods.adhkarIndex, muslim-mods.adhkarLine, muslim-mods.adhkarMode, muslim-mods.ayahHidden, muslim-mods.ayahSeed, muslim-mods.ayahSkip, muslim-mods.fastingLine, muslim-mods.hijriAhead, muslim-mods.hijriLine, muslim-mods.hijriToday, muslim-mods.jumuahLine, muslim-mods.prayerLine, muslim-mods.prayerToday, muslim-mods.ramadanLine, muslim-mods.salahBreak, muslim-mods.salahHeld, muslim-mods.salahLine, muslim-mods.tasbihCounts, muslim-mods.tasbihDemo, muslim-mods.tasbihIndex, muslim-mods.tasbihLine, muslim-mods.tasbihReached"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      }
+     ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "486072a96d8676b2"
+ "sourceHash": "37bc9031b6077d88"
 }

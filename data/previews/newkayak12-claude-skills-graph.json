@@ -1,6 +1,6 @@
 {
  "slug": "newkayak12-claude-skills-graph",
- "generatedAt": "2026-10-08T15:53:12.447Z",
+ "generatedAt": "2026-10-16T14:16:23.302Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -10,28 +10,28 @@
    {
     "event": "command.run",
     "matcher": {
-     "command": "graph-live"
+     "command": "graph-status"
     }
    },
    {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
-     "requestId": "graph-live"
+     "requestId": "graph-status"
     }
    }
   ],
   "commands": [
    {
-    "name": "graph-live",
-    "description": "Open the graph live pane",
+    "name": "graph-status",
+    "description": "Open or close the graph status pane",
     "output": "pane opened"
    }
   ],
   "tools": [],
   "panes": [
    {
-    "id": "graph-live",
+    "id": "graph-status",
     "title": "Graph"
    }
   ],
@@ -41,13 +41,14 @@
   "rewrites": [],
   "apiCalls": {
    "$.session.surfaces": 1,
+   "$.clock.now": 2,
    "$.settings.read": 1,
    "$.state.get": 7,
    "$.state.set": 1,
    "$.command.register": 1,
-   "$.clock.now": 1,
    "$.fs.list": 1,
    "$.clock.every": 1,
+   "$.ui.panes": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -59,7 +60,7 @@
   ],
   "sites": {
    "Pane": {
-    "graph-live": {
+    "graph-status": {
      "ok": true,
      "tree": {
       "type": "Box",
@@ -73,6 +74,17 @@
         "children": [
          "No graph run in this folder."
         ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "close",
+         "role": "dismiss",
+         "label": "close [q]",
+         "hotkey": "q",
+         "onPress": "[fn]"
+        },
+        "children": []
        }
       ]
      },
@@ -92,8 +104,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.ui.open(graph-live)",
-   "/graph-live → pane opened"
+   "$.ui.open(graph-status)",
+   "/graph-status → pane opened"
   ],
   "console": [],
   "warnings": []
@@ -102,12 +114,13 @@
   "ok": true,
   "errors": [],
   "warnings": [
-   "Field 'category' belongs in the marketplace entry (marketplace.json), not plugin.json. It's harmless here but unused — Claude Code ignores it at load time."
+   "Field 'category' belongs in the marketplace entry (marketplace.json), not plugin.json. It's harmless here but unused — Claude Code ignores it at load time.",
+   "Shell command uses ${CLAUDE_PLUGIN_ROOT} without quotes: node ${CLAUDE_PLUGIN_ROOT}/hooks/node-gate.mjs. If the expanded path contains a space the command can split into several words and fail. Wrap the placeholder in double quotes, or use exec form: {\"command\": \"<executable>\", \"args\": [\"${CLAUDE_PLUGIN_ROOT}/...\"]}."
   ],
   "hooks": [
    "session.start",
-   "command.run{command=graph-live}",
-   "ui.render{component=Pane, requestId=graph-live}"
+   "command.run{command=graph-status}",
+   "ui.render{component=Pane, requestId=graph-status}"
   ],
   "calls": [
    "$.clock.every",
@@ -119,8 +132,12 @@
    "$.settings.read",
    "$.state.get",
    "$.state.set",
+   "$.tool.call",
+   "$.ui.close",
    "$.ui.open",
-   "$.ui.resolve"
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
    "graph.lang",
@@ -129,6 +146,7 @@
   ],
   "stateWrites": [
    "graph.lang",
+   "graph.outcome",
    "graph.snap",
    "graph.view"
   ],
@@ -150,7 +168,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: graph.snap, graph.view, graph.lang"
+     "types ./types/index.d.ts declares state: graph.snap, graph.view, graph.lang, graph.outcome"
     ],
     "gatingHooks": []
    },
@@ -159,18 +177,25 @@
      "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/newkayak12-claude-skills-graph/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      {
+       "path": "hooks.PreToolUse",
+       "message": "Shell command uses ${CLAUDE_PLUGIN_ROOT} without quotes: node ${CLAUDE_PLUGIN_ROOT}/hooks/node-gate.mjs. If the expanded path contains a space the command can split into several words and fail. Wrap the placeholder in double quotes, or use exec form: {\"command\": \"<executable>\", \"args\": [\"${CLAUDE_PLUGIN_ROOT}/...\"]}.",
+       "code": null
+      }
+     ],
      "notes": [
-      "./mod.tsx hooks: session.start, command.run{command=graph-live}, ui.render{component=Pane, requestId=graph-live}",
-      "./mod.tsx answers its own command: command.run{command=graph-live}",
-      "./mod.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.list, $.fs.read, $.session.surfaces, $.settings.read, $.state.get, $.state.set, $.ui.open, $.ui.resolve",
-      "./mod.tsx state writes: graph.lang, graph.snap, graph.view",
+      "./mod.tsx hooks: session.start, command.run{command=graph-status}, ui.render{component=Pane, requestId=graph-status}",
+      "./mod.tsx answers its own command: command.run{command=graph-status}",
+      "./mod.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.list, $.fs.read, $.session.surfaces, $.settings.read, $.state.get, $.state.set, $.tool.call, $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
+      "./mod.tsx state writes: graph.lang, graph.outcome, graph.snap, graph.view",
       "./mod.tsx state reads: graph.lang, graph.snap, graph.view"
      ],
      "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "e82753d591c671a0"
+ "sourceHash": "ff396b06e03d9afe"
 }

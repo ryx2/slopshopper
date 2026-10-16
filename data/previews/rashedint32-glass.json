@@ -1,6 +1,6 @@
 {
  "slug": "rashedint32-glass",
- "generatedAt": "2026-10-09T15:31:51.346Z",
+ "generatedAt": "2026-10-16T14:15:51.980Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,6 +8,18 @@
     "event": "config.set",
     "matcher": {
      "key": "glass.palette"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "glass-theme"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "glass.notify"
     }
    },
    {
@@ -130,11 +142,18 @@
     "name": "collapse",
     "description": "glass: fold the runs of reads and searches again",
     "output": "Runs of reads and searches fold again."
+   },
+   {
+    "name": "glass-theme",
+    "description": "glass: write a theme for the current palette to ~/.claude/themes and select it",
+    "output": "theme glass-tidepool on (~/.claude/themes/glass-tidepool.json)"
    }
   ],
   "tools": [],
   "panes": [],
-  "toasts": [],
+  "toasts": [
+   "1 call failed · Bash"
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
@@ -142,13 +161,18 @@
    "$.ui.status": 1,
    "$.session.cwd": 1,
    "$.command.list": 1,
-   "$.command.register": 4,
+   "$.command.register": 5,
    "$.clock.now": 30,
-   "$.state.get": 26,
-   "$.state.set": 22,
+   "$.state.get": 29,
+   "$.state.set": 24,
    "$.session.usage": 2,
    "$.clock.every": 1,
+   "$.ui.toast": 1,
    "$.ui.invalidate": 4,
+   "$.env.get": 1,
+   "$.fs.list": 1,
+   "$.fs.write": 1,
+   "$.config.set": 1,
    "$.ui.resolve": 4
   },
   "timers": [
@@ -402,7 +426,9 @@
    "/fold → Folded 1 turn. /unfold opens them again.",
    "/unfold → Every turn is open.",
    "/expand → Every folded run is open. /collapse folds them again.",
-   "/collapse → Runs of reads and searches fold again."
+   "/collapse → Runs of reads and searches fold again.",
+   "$.fs.write(/Users/dev/.claude/themes/glass-tidepool.json)",
+   "/glass-theme → theme glass-tidepool on (~/.claude/themes/glass-tidepool.json)"
   ],
   "console": [],
   "warnings": []
@@ -413,6 +439,8 @@
   "warnings": [],
   "hooks": [
    "config.set{key=\"glass.palette\"}",
+   "command.run{command=glass-theme}",
+   "config.set{key=\"glass.notify\"}",
    "session.start",
    "command.run{command=expand}",
    "command.run{command=collapse}",
@@ -439,19 +467,29 @@
    "$.clock.now",
    "$.command.list",
    "$.command.register",
+   "$.config.list",
+   "$.config.set (via installTheme)",
+   "$.env.get (via installTheme)",
+   "$.fs.list (via installTheme)",
+   "$.fs.write (via installTheme)",
    "$.session.cwd",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
    "$.ui.blit (via tick)",
+   "$.ui.copy",
    "$.ui.invalidate",
+   "$.ui.notify (via notifyPerson)",
    "$.ui.resolve",
-   "$.ui.status"
+   "$.ui.status",
+   "$.ui.toast",
+   "$.ui.view (via showView)"
   ],
   "stateReads": [
    "glass.agents",
    "glass.band",
    "glass.calls",
+   "glass.liveTurn",
    "glass.prompts",
    "glass.turns"
   ],
@@ -459,10 +497,13 @@
    "glass.agents",
    "glass.band",
    "glass.calls",
+   "glass.liveTurn",
    "glass.prompts",
    "glass.turns"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -474,7 +515,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: glass.turns, glass.prompts, glass.calls, glass.agents, glass.band"
+     "types ./types/index.d.ts declares state: glass.turns, glass.prompts, glass.calls, glass.agents, glass.band, glass.liveTurn"
     ],
     "gatingHooks": []
    },
@@ -485,24 +526,34 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: config.set{key=\"glass.palette\"}, session.start, command.run{command=expand}, command.run{command=collapse}, command.run{command=fold}, command.run{command=unfold}, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}, ui.render{component=ToolUse}, ui.render{component=ToolGroup}, ui.render{component=ToolResult}, prompt.submit, turn.start, tool.call, turn.step, agent.spawn, turn.complete, ui.render{component=TurnDuration}, ui.render{component=PromptHint}, ui.render{component=Spinner}, ui.render{component=AbovePrompt}",
+      "./register.ts hooks: config.set{key=\"glass.palette\"}, command.run{command=glass-theme}, config.set{key=\"glass.notify\"}, session.start, command.run{command=expand}, command.run{command=collapse}, command.run{command=fold}, command.run{command=unfold}, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}, ui.render{component=ToolUse}, ui.render{component=ToolGroup}, ui.render{component=ToolResult}, prompt.submit, turn.start, tool.call, turn.step, agent.spawn, turn.complete, ui.render{component=TurnDuration}, ui.render{component=PromptHint}, ui.render{component=Spinner}, ui.render{component=AbovePrompt}",
+      "./register.ts answers its own command: command.run{command=glass-theme}",
       "./register.ts answers its own command: command.run{command=expand}",
       "./register.ts answers its own command: command.run{command=collapse}",
       "./register.ts answers its own command: command.run{command=fold}",
       "./register.ts answers its own command: command.run{command=unfold}",
       "./register.ts gating hook without .catch: config.set{key=\"glass.palette\"}",
+      "./register.ts gating hook without .catch: config.set{key=\"glass.notify\"}",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: tool.call",
       "./register.ts gating hook without .catch: agent.spawn",
-      "./register.ts calls: $.clock.every, $.clock.now, $.command.list, $.command.register, $.session.cwd, $.session.usage, $.state.get, $.state.set, $.ui.blit (via tick), $.ui.invalidate, $.ui.resolve, $.ui.status",
-      "./register.ts state writes: glass.agents, glass.band, glass.calls, glass.prompts, glass.turns",
-      "./register.ts state reads: glass.agents, glass.band, glass.calls, glass.prompts, glass.turns"
+      "./register.ts calls: $.clock.every, $.clock.now, $.command.list, $.command.register, $.config.list, $.config.set (via installTheme), $.env.get (via installTheme), $.fs.list (via installTheme), $.fs.write (via installTheme), $.session.cwd, $.session.usage, $.state.get, $.state.set, $.ui.blit (via tick), $.ui.copy, $.ui.invalidate, $.ui.notify (via notifyPerson), $.ui.resolve, $.ui.status, $.ui.toast, $.ui.view (via showView)",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: HOME",
+      "./register.ts state writes: glass.agents, glass.band, glass.calls, glass.liveTurn, glass.prompts, glass.turns",
+      "./register.ts state reads: glass.agents, glass.band, glass.calls, glass.liveTurn, glass.prompts, glass.turns"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "config.set",
        "hook": "config.set{key=\"glass.palette\"}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "config.set",
+       "hook": "config.set{key=\"glass.notify\"}",
        "hasCatch": false
       },
       {
@@ -529,5 +580,5 @@
    "advice": []
   }
  },
- "sourceHash": "425dd6453e0da1d5"
+ "sourceHash": "659e5f61f5a13c2c"
 }

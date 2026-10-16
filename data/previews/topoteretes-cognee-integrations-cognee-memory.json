@@ -1,0 +1,532 @@
+{
+ "slug": "topoteretes-cognee-integrations-cognee-memory",
+ "generatedAt": "2026-10-16T14:15:36.469Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cognee-tour"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cognee-dataset"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__cognee-memory__search"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__cognee-memory__remember"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "cognee-fix"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "cognee-fix"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AssistantMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Spinner"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "cognee-dataset",
+    "description": "Switch this session to another Cognee dataset; without a name, list them.",
+    "argumentHint": "[name]",
+    "output": "Cognee: no datasets listed (is memory connected?)."
+   },
+   {
+    "name": "cognee-tour",
+    "description": "Replay the short tour of the Cognee status row.",
+    "output": "Cognee: the tour is on the status row above the prompt."
+   }
+  ],
+  "tools": [
+   {
+    "name": "search",
+    "description": "Search Cognee memory: the permanent knowledge graph of this session's dataset (scope \"graph\", the default), or the indexed repository's code graph (scope \"code\"). Memory is already recalled automatically on every prompt; call this for a deeper or differently worded search, for more results, or to read another dataset by its id. Returns the matching memories as text; an empty result from a reachable server is authoritative."
+   },
+   {
+    "name": "remember",
+    "description": "Store what the person asked to remember in Cognee memory (the active dataset's knowledge graph): a preference, a correction, a fact about them, a decision, a note. Use it when they say \"remember this\", \"save this to memory\" or \"store this file\", not on your own initiative: the session is captured automatically, routine tool calls included, so do not store those or your working notes. Category \"user\" for their preferences and facts about them; \"project\" for facts about the codebase, docs and decisions; \"agent\" only when they ask you to keep a finding of yours. Pass \"file\" instead of \"content\" to store a file they named (code then rides the code path). Each call runs a cognify on their key: a session allows 5 calls and 64000 bytes in all; past that the cognee-remember skill is the way."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 2,
+   "$.config.list": 1,
+   "$.fs.read": 3,
+   "$.session.id": 2,
+   "$.clock.now": 15,
+   "$.fs.write": 1,
+   "$.process.run": 4,
+   "$.command.register": 2,
+   "$.tool.register": 2,
+   "$.clock.every": 3,
+   "$.ui.invalidate": 7,
+   "$.ui.resolve": 5,
+   "$.store.get": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1000
+   },
+   {
+    "kind": "every",
+    "ms": 120
+   },
+   {
+    "kind": "every",
+    "ms": 120
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "width": 100
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "color": "yellow"
+         },
+         "children": [
+          "⠋ "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "bold": true,
+          "color": "#bc9bff"
+         },
+         "children": [
+          "cognee "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          "memory"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          " · "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "bold": true,
+          "color": "#bc9bff"
+         },
+         "children": [
+          "…"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "yellow"
+         },
+         "children": [
+          " · saving…"
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "width": 100
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "The dataset name is a picker ↑: pick another dataset, or \"+ new dataset…\" to create one  "
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "tourNext",
+          "label": "next",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          " "
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "tourSkip",
+          "label": "skip",
+          "plain": true,
+          "dimColor": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
+   },
+   "Spinner": {
+    "ok": "engine",
+    "props": {
+     "word": "Thinking",
+     "message": null,
+     "suffix": " · saving…",
+     "mode": "thinking"
+    },
+    "transient": true
+   },
+   "AssistantMessage": {
+    "ok": "engine"
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "cognee-fix": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "red"
+        },
+        "children": [
+         "✕ Memory reported a problem"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "reason: unknown"
+        ]
+       },
+       {
+        "type": "Markdown",
+        "props": {
+         "text": "The row shows a reason the plugin recorded; the doctor report below has the details.\n\n1. **Run doctor** below.\n2. A new session re-checks everything."
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         ""
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "doctor",
+           "label": "run doctor",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "   "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "closeFix",
+           "label": "close",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "cognee-fix"
+    }
+   }
+  },
+  "script": [
+   "$.fs.write(/Users/dev/.cognee-plugin/claude-code/band/preview-session.json)",
+   "$.process.run(python3 /plugins/cognee-memory/scripts/cognee_statusline_render.py --json) → exit 0",
+   "session.start",
+   "$.process.run(python3 /plugins/cognee-memory/scripts/switch-dataset.py --list --json --session…) → exit 0",
+   "$.process.run(python3 /plugins/cognee-memory/scripts/cognee_statusline_render.py --json) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(python3 /plugins/cognee-memory/scripts/switch-dataset.py --list --json --session…) → exit 0",
+   "/cognee-dataset → Cognee: no datasets listed (is memory connected?).",
+   "/cognee-tour → Cognee: the tour is on the status row above the prompt."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=cognee-tour}",
+   "command.run{command=cognee-dataset}",
+   "tool.call{tool=mcp__cognee-memory__search}",
+   "tool.call{tool=mcp__cognee-memory__remember}",
+   "prompt.submit",
+   "tool.call",
+   "session.compact",
+   "session.end",
+   "turn.complete",
+   "ui.close{id=cognee-fix}",
+   "ui.render{component=Pane, requestId=cognee-fix}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=AssistantMessage}",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=Spinner}"
+  ],
+  "calls": [
+   "$.clock.every (via setActive",
+   "startPoll)",
+   "$.clock.now",
+   "$.command.register",
+   "$.config.list (via lightTheme)",
+   "$.env.get (via lightTheme",
+   "stateDir)",
+   "$.fs.read",
+   "$.fs.stat",
+   "$.fs.write (via markBand)",
+   "$.process.run (via runPython",
+   "runWrapper)",
+   "$.session.id",
+   "$.store.get (via startTourIfFirstRun)",
+   "$.store.set (via endTour)",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.invalidate (via redraw",
+   "setActive)",
+   "$.ui.open (via openFix)",
+   "$.ui.resolve",
+   "$.ui.toast (via endTour",
+   "openFix",
+   "switchDataset)"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "COGNEE_STATUSLINE_THEME",
+   "HOME",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/topoteretes-cognee-integrations-cognee-memory/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/topoteretes-cognee-integrations-cognee-memory/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/topoteretes-cognee-integrations-cognee-memory/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, command.run{command=cognee-tour}, command.run{command=cognee-dataset}, tool.call{tool=mcp__cognee-memory__search}, tool.call{tool=mcp__cognee-memory__remember}, prompt.submit, tool.call, session.compact, session.end, turn.complete, ui.close{id=cognee-fix}, ui.render{component=Pane, requestId=cognee-fix}, ui.render{component=AbovePrompt}, ui.render{component=AssistantMessage}, ui.render{component=ToolUse}, ui.render{component=Spinner}",
+      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts answers its own command: command.run{command=cognee-tour}",
+      "./register.ts answers its own command: command.run{command=cognee-dataset}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__cognee-memory__search}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__cognee-memory__remember}",
+      "./register.ts gating hook with .catch: prompt.submit",
+      "./register.ts gating hook with .catch: tool.call",
+      "./register.ts gating hook with .catch: session.compact",
+      "./register.ts gating hook with .catch: ui.close{id=cognee-fix}",
+      "./register.ts calls: $.clock.every (via setActive, startPoll), $.clock.now, $.command.register, $.config.list (via lightTheme), $.env.get (via lightTheme, stateDir), $.fs.read, $.fs.stat, $.fs.write (via markBand), $.process.run (via runPython, runWrapper), $.session.id, $.store.get (via startTourIfFirstRun), $.store.set (via endTour), $.tool.register, $.ui.close, $.ui.invalidate (via redraw, setActive), $.ui.open (via openFix), $.ui.resolve, $.ui.toast (via endTour, openFix, switchDataset)",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: COGNEE_STATUSLINE_THEME, HOME, USERPROFILE"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__cognee-memory__search}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__cognee-memory__remember}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=cognee-fix}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "d18b6b2488739bf8"
+}

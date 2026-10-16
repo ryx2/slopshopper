@@ -1,0 +1,1053 @@
+{
+ "slug": "rsmdt-cc-enforcer",
+ "generatedAt": "2026-10-16T14:21:31.850Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolGroup"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "cc-enforcer-audit"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.SubagentStop"
+   }
+  ],
+  "commands": [
+   {
+    "name": "cc-enforcer-rules",
+    "description": "List cc-enforcer rules with their source, state and hits. If rules stop applying, Claude Code may have switched mods off for this session. Look for its notice in the transcript and for the `mods active` line in /plugin, then run /reload-plugins to restore enforcement.",
+    "output": "No rules are active. Place rule files named hookify.<name>.local.md in the project folder /work/app/.claude or the personal folder /Users/dev/.claude.\n\nIf rules stop applying, Claude Code may have switched mods off for this session. Look for its notice in the transcript and for the `mods active` line in /plugin, then run /reload-plugins to restore enforcement."
+   },
+   {
+    "name": "cc-enforcer-toggle",
+    "description": "Switch a cc-enforcer rule on or off",
+    "argumentHint": "<name> on|off [project|personal]",
+    "output": "Usage: /cc-enforcer-toggle <name> on|off [project|personal]"
+   },
+   {
+    "name": "cc-enforcer-audit",
+    "description": "Open or close the cc-enforcer audit pane",
+    "output": "Audit pane opened"
+   },
+   {
+    "name": "cc-enforcer-cleanup",
+    "description": "Delete cc-enforcer session logs older than a period (default 180 days)",
+    "argumentHint": "[period, e.g. last week, 30 days]",
+    "output": "No session logs are older than 180 days."
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "cc-enforcer-audit",
+    "title": "cc-enforcer audit"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.cwd": 23,
+   "$.env.get": 24,
+   "$.process.run": 2,
+   "$.fs.list": 46,
+   "$.command.register": 4,
+   "$.session.id": 1,
+   "$.fs.read": 1,
+   "$.ui.invalidate": 20,
+   "$.ui.status": 20,
+   "$.settings.read": 1,
+   "$.fs.write": 20,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "cc-enforcer-audit": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "heading",
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "CC Enforcer"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "flexWrap": "wrap",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "card:checked",
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "╭─ # ─╮"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "│  0  │"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "╰─────╯"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "card:approved",
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "success"
+              },
+              "children": [
+               "╭─ ✓ ─╮"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "success"
+              },
+              "children": [
+               "│  0  │"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "success"
+              },
+              "children": [
+               "╰─────╯"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "card:rejected",
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "error"
+              },
+              "children": [
+               "╭─ ✗ ─╮"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "error"
+              },
+              "children": [
+               "│  0  │"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "error"
+              },
+              "children": [
+               "╰─────╯"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "card:cautioned",
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "warning"
+              },
+              "children": [
+               "╭─ ! ─╮"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "warning"
+              },
+              "children": [
+               "│  0  │"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "warning"
+              },
+              "children": [
+               "╰─────╯"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "card:pending",
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "suggestion"
+              },
+              "children": [
+               "╭─ … ─╮"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "suggestion"
+              },
+              "children": [
+               "│  0  │"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "suggestion"
+              },
+              "children": [
+               "╰─────╯"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "card:ignored",
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "╭─ · ─╮"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "│  9  │"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "╰─────╯"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Log · 9 events"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:0",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Read /work/app/src/auth.ts"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:1",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Grep /work/app/src"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:2",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Edit /work/app/src/auth.ts"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:3",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Write /work/app/src/audit.ts"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:4",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Write /work/app/src/cache.ts"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:5",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Bash bun test"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:6",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Bash git status --porcelain"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:7",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Bash rm -rf build && git push --force origin main"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "row:8",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "14:21:31"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "·"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Bash cat .env"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "cc-enforcer audit"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git rev-parse --show-cdup) → exit 0",
+   "session.start",
+   "$.process.run(sh -c umask 077 && mkdir -p \"$1\" && chmod 700 \"$2\" \"$3\" \"$1\" && : >> \"$4\" && chm…) → exit 0",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Read",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Grep",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Edit",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Write",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Write",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Bash bun test",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Bash git status --porcelain",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "tool.call Bash cat .env",
+   "$.fs.write(/Users/dev/.cc-enforcer/projects/-work-app/preview-session.jsonl)",
+   "turn.complete",
+   "/cc-enforcer-rules → No rules are active. Place rule files named hookify.<name>.local.md in the proje…",
+   "/cc-enforcer-toggle → Usage: /cc-enforcer-toggle <name> on|off [project|personal]",
+   "$.ui.open(cc-enforcer-audit)",
+   "/cc-enforcer-audit → Audit pane opened",
+   "/cc-enforcer-cleanup → No session logs are older than 180 days."
+  ],
+  "console": [],
+  "status": "#0 ✓0 ✗0 !0 …0 ·9",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run",
+   "tool.call",
+   "prompt.submit",
+   "turn.complete",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=ToolGroup}",
+   "ui.render{component=Pane}",
+   "ui.scroll{requestId=?}",
+   "ui.render{component=AbovePrompt}",
+   "classic.Stop",
+   "classic.SubagentStop"
+  ],
+  "calls": [
+   "$.agent.list (via callerLabel",
+   "recordBlock)",
+   "$.clock.sleep (via evaluatorIo)",
+   "$.command.register",
+   "$.env.get (via homeFolder)",
+   "$.fs.exists (via sourceIo)",
+   "$.fs.list (via cleanup",
+   "sourceIo)",
+   "$.fs.read (via guardStop",
+   "recorderIo",
+   "sourceIo)",
+   "$.fs.stat (via cleanup",
+   "guardStop",
+   "sourceIo)",
+   "$.fs.write (via recorderIo",
+   "sourceIo)",
+   "$.model.classify (via evaluatorIo)",
+   "$.model.complete (via reviewIo)",
+   "$.process.run (via cleanup",
+   "recorderIo",
+   "sourceIo)",
+   "$.prompt.fill (via sendFindings)",
+   "$.prompt.read (via sendFindings)",
+   "$.session.cwd (via recorderIo",
+   "sourceIo)",
+   "$.session.id (via recorderIo)",
+   "$.session.surfaces (via reviewTurn)",
+   "$.settings.read",
+   "$.ui.ask",
+   "$.ui.close (via toggleAuditPane)",
+   "$.ui.invalidate",
+   "$.ui.log (via recorderIo)",
+   "$.ui.open (via toggleAuditPane)",
+   "$.ui.panes (via toggleAuditPane)",
+   "$.ui.resolve",
+   "$.ui.status (via redraw)"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/rsmdt-cc-enforcer/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/rsmdt-cc-enforcer/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/rsmdt-cc-enforcer/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "../src/mod.ts hooks: session.start, command.run, tool.call, prompt.submit, turn.complete, ui.render{component=ToolUse}, ui.render{component=ToolGroup}, ui.render{component=Pane}, ui.scroll{requestId=?}, ui.render{component=AbovePrompt}, classic.Stop, classic.SubagentStop",
+      "../src/mod.ts hooks on classic.Stop, classic.SubagentStop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "../src/mod.ts gating hook with .catch: command.run",
+      "../src/mod.ts gating hook with .catch: tool.call",
+      "../src/mod.ts gating hook with .catch: prompt.submit",
+      "../src/mod.ts gating hook without .catch: ui.scroll{requestId=?}",
+      "../src/mod.ts gating hook with .catch: classic.Stop",
+      "../src/mod.ts gating hook with .catch: classic.SubagentStop",
+      "../src/mod.ts calls: $.agent.list (via callerLabel, recordBlock), $.clock.sleep (via evaluatorIo), $.command.register, $.env.get (via homeFolder), $.fs.exists (via sourceIo), $.fs.list (via cleanup, sourceIo), $.fs.read (via guardStop, recorderIo, sourceIo), $.fs.stat (via cleanup, guardStop, sourceIo), $.fs.write (via recorderIo, sourceIo), $.model.classify (via evaluatorIo), $.model.complete (via reviewIo), $.process.run (via cleanup, recorderIo, sourceIo), $.prompt.fill (via sendFindings), $.prompt.read (via sendFindings), $.session.cwd (via recorderIo, sourceIo), $.session.id (via recorderIo), $.session.surfaces (via reviewTurn), $.settings.read, $.ui.ask, $.ui.close (via toggleAuditPane), $.ui.invalidate, $.ui.log (via recorderIo), $.ui.open (via toggleAuditPane), $.ui.panes (via toggleAuditPane), $.ui.resolve, $.ui.status (via redraw)",
+      "../src/mod.ts env writes: nothing",
+      "../src/mod.ts env reads: HOME"
+     ],
+     "gatingHooks": [
+      {
+       "module": "../src/mod.ts",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": true
+      },
+      {
+       "module": "../src/mod.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "../src/mod.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "../src/mod.ts",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{requestId=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "../src/mod.ts",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "../src/mod.ts",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "ff5da0d69dc7efb3"
+}

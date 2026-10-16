@@ -1,6 +1,6 @@
 {
  "slug": "orcait-co-ywr-harness-ywr-harness",
- "generatedAt": "2026-10-10T14:45:38.712Z",
+ "generatedAt": "2026-10-16T14:21:09.686Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,13 +14,19 @@
     "event": "turn.complete"
    },
    {
-    "event": "session.measure"
+    "event": "session.start"
    },
    {
-    "event": "tool.call"
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    },
    {
-    "event": "session.end"
+    "event": "command.run",
+    "matcher": {
+     "command": "ywr-harness:setup"
+    }
    }
   ],
   "commands": [],
@@ -31,14 +37,23 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.root": 9,
-   "$.fs.exists": 2,
+   "$.env.get": 1,
+   "$.process.run": 3,
    "$.session.id": 1,
-   "$.clock.now": 1
+   "$.clock.now": 1,
+   "$.session.root": 1,
+   "$.fs.exists": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   }
+  },
   "script": [
+   "$.process.run(node --version) → exit 0",
+   "$.process.run(pwsh --version) → exit 0",
+   "$.process.run(python --version) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -62,28 +77,35 @@
    "agent.spawn",
    "turn.step",
    "turn.complete",
-   "session.measure",
-   "tool.call",
-   "session.end"
+   "session.start",
+   "ui.render{component=AbovePrompt}",
+   "command.run{command=ywr-harness:setup}"
   ],
   "calls": [
    "$.clock.now",
-   "$.fs.exists (via adoptedRoot",
-   "flush",
+   "$.env.get (via isWindows",
+   "probeOne)",
+   "$.fs.exists (via flush",
    "target)",
    "$.fs.list (via flush)",
    "$.fs.read (via flush)",
    "$.fs.stat (via statOf)",
    "$.fs.write (via flush)",
+   "$.process.run (via runVerdict)",
+   "$.process.spawn (via runSetup)",
+   "$.session.append",
    "$.session.id",
-   "$.session.root (via adoptedRoot",
-   "target)",
-   "$.ui.status (via away",
-   "show)"
+   "$.session.root (via target)",
+   "$.ui.invalidate",
+   "$.ui.resolve",
+   "$.ui.status (via runSetup)"
   ],
   "stateReads": [],
   "stateWrites": [],
-  "envReads": [],
+  "envReads": [
+   "LOCALAPPDATA",
+   "OS"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -103,10 +125,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mods.mjs hooks: agent.spawn, turn.step, turn.complete, session.measure, tool.call, session.end",
+      "./mods.mjs hooks: agent.spawn, turn.step, turn.complete, session.start, ui.render{component=AbovePrompt}, command.run{command=ywr-harness:setup}",
       "./mods.mjs gating hook without .catch: agent.spawn",
-      "./mods.mjs gating hook without .catch: tool.call",
-      "./mods.mjs calls: $.clock.now, $.fs.exists (via adoptedRoot, flush, target), $.fs.list (via flush), $.fs.read (via flush), $.fs.stat (via statOf), $.fs.write (via flush), $.session.id, $.session.root (via adoptedRoot, target), $.ui.status (via away, show)"
+      "./mods.mjs gating hook without .catch: command.run{command=ywr-harness:setup}",
+      "./mods.mjs calls: $.clock.now, $.env.get (via isWindows, probeOne), $.fs.exists (via flush, target), $.fs.list (via flush), $.fs.read (via flush), $.fs.stat (via statOf), $.fs.write (via flush), $.process.run (via runVerdict), $.process.spawn (via runSetup), $.session.append, $.session.id, $.session.root (via target), $.ui.invalidate, $.ui.resolve, $.ui.status (via runSetup)",
+      "./mods.mjs env writes: nothing",
+      "./mods.mjs env reads: LOCALAPPDATA, OS"
      ],
      "gatingHooks": [
       {
@@ -117,8 +141,8 @@
       },
       {
        "module": "./mods.mjs",
-       "pattern": "tool.call",
-       "hook": "tool.call",
+       "pattern": "command.run",
+       "hook": "command.run{command=ywr-harness:setup}",
        "hasCatch": false
       }
      ]
@@ -127,5 +151,5 @@
    "advice": []
   }
  },
- "sourceHash": "91b0b8d49eb8cc10"
+ "sourceHash": "af03efc8c7172c04"
 }

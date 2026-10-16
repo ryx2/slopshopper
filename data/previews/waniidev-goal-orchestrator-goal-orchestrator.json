@@ -1,6 +1,6 @@
 {
  "slug": "waniidev-goal-orchestrator-goal-orchestrator",
- "generatedAt": "2026-10-09T15:34:40.625Z",
+ "generatedAt": "2026-10-16T14:22:04.753Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,26 +8,45 @@
     "event": "session.start"
    },
    {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "mcp__goal-orchestrator__start_goal"
-    }
-   },
-   {
     "event": "command.run",
     "matcher": {
-     "command": "goal"
+     "command": "orchestrator-stop"
     }
    },
    {
-    "event": "prompt.compose"
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__goal-orchestrator__run_start"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__goal-orchestrator__run_finish"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.complete"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "orchestrator-stop",
+    "description": "End the running goal-orchestrator run as BLOCKED and clear /goal",
+    "output": "No goal-orchestrator run is active; cleared /goal."
+   }
+  ],
   "tools": [
    {
-    "name": "start_goal",
-    "description": "Turns on Claude Code goal mode for a goal-orchestrator run: queues `/goal <condition>` exactly as if the person typed it. Call it once, at the end of the run skill's intake, with the finish line the person chose. The goal starts when this turn ends: after calling it, say in one line that goal mode is armed and end your turn. Write the condition so an evaluator that reads only the conversation can judge it: name each artefact and how it shows (PR merged into main, CI green, tracker issues Done, final report posted), and when to stop as impossible."
+    "name": "run_start",
+    "description": "Start the goal-orchestrator watchdog for this run (call once after intake, and again on resume). It ends the run as BLOCKED instead of looping when there is no progress, the same command keeps failing, or the time budget is spent."
+   },
+   {
+    "name": "run_finish",
+    "description": "End the goal-orchestrator run in exactly one terminal state. Call it last, after pushing the branch, saving state and removing lane worktrees. DONE: everything shipped and verified. PARTIAL: some issues shipped, the rest listed. BLOCKED: only the user can unblock it (auth, secret, permission, approval) or the run cannot make progress."
    }
   ],
   "panes": [],
@@ -36,9 +55,17 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 1
+   "$.state.get": 1,
+   "$.tool.register": 2,
+   "$.command.register": 1,
+   "$.clock.after": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   }
+  ],
   "sites": {},
   "script": [
    "session.start",
@@ -51,7 +78,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/orchestrator-stop → No goal-orchestrator run is active; cleared /goal."
   ],
   "console": [],
   "warnings": []
@@ -62,25 +90,32 @@
   "warnings": [],
   "hooks": [
    "session.start",
-   "tool.call{tool=mcp__goal-orchestrator__start_goal}",
-   "command.run{command=goal}",
-   "prompt.compose"
+   "command.run{command=orchestrator-stop}",
+   "tool.call{tool=mcp__goal-orchestrator__run_start}",
+   "tool.call{tool=mcp__goal-orchestrator__run_finish}",
+   "tool.call",
+   "turn.complete"
   ],
   "calls": [
-   "$.clock.after",
+   "$.clock.after (via clearGoal)",
+   "$.clock.every (via startTicker)",
    "$.clock.now",
-   "$.command.run",
+   "$.command.register",
+   "$.command.run (via clearGoal)",
+   "$.process.run (via headOf)",
+   "$.prompt.submit (via tick)",
    "$.state.get",
-   "$.state.set",
+   "$.state.set (via save)",
    "$.tool.register",
-   "$.ui.status",
-   "$.ui.toast"
+   "$.ui.log (via clearGoal)",
+   "$.ui.notify (via end)",
+   "$.ui.status (via status)"
   ],
   "stateReads": [
-   "goal-orchestrator.goal"
+   "goal-orchestrator.run"
   ],
   "stateWrites": [
-   "goal-orchestrator.goal"
+   "goal-orchestrator.run"
   ],
   "envReads": [],
   "raw": {
@@ -94,7 +129,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: goal-orchestrator.goal"
+     "types ./types/index.d.ts declares state: goal-orchestrator.run"
     ],
     "gatingHooks": []
    },
@@ -105,24 +140,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, tool.call{tool=mcp__goal-orchestrator__start_goal}, command.run{command=goal}, prompt.compose",
-      "./register.ts gating hook with .catch: tool.call{tool=mcp__goal-orchestrator__start_goal}",
-      "./register.ts gating hook with .catch: command.run{command=goal}",
-      "./register.ts calls: $.clock.after, $.clock.now, $.command.run, $.state.get, $.state.set, $.tool.register, $.ui.status, $.ui.toast",
-      "./register.ts state writes: goal-orchestrator.goal",
-      "./register.ts state reads: goal-orchestrator.goal"
+      "./register.ts hooks: session.start, command.run{command=orchestrator-stop}, tool.call{tool=mcp__goal-orchestrator__run_start}, tool.call{tool=mcp__goal-orchestrator__run_finish}, tool.call, turn.complete",
+      "./register.ts answers its own command: command.run{command=orchestrator-stop}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__goal-orchestrator__run_start}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__goal-orchestrator__run_finish}",
+      "./register.ts gating hook with .catch: tool.call",
+      "./register.ts calls: $.clock.after (via clearGoal), $.clock.every (via startTicker), $.clock.now, $.command.register, $.command.run (via clearGoal), $.process.run (via headOf), $.prompt.submit (via tick), $.state.get, $.state.set (via save), $.tool.register, $.ui.log (via clearGoal), $.ui.notify (via end), $.ui.status (via status)",
+      "./register.ts state writes: goal-orchestrator.run",
+      "./register.ts state reads: goal-orchestrator.run"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__goal-orchestrator__start_goal}",
+       "hook": "tool.call{tool=mcp__goal-orchestrator__run_start}",
        "hasCatch": true
       },
       {
        "module": "./register.ts",
-       "pattern": "command.run",
-       "hook": "command.run{command=goal}",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__goal-orchestrator__run_finish}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
        "hasCatch": true
       }
      ]
@@ -131,5 +174,5 @@
    "advice": []
   }
  },
- "sourceHash": "f1ad759526566a84"
+ "sourceHash": "67511f8772677a03"
 }

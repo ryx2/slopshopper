@@ -1,6 +1,6 @@
 {
  "slug": "abrose-claude-plugins-team",
- "generatedAt": "2026-10-09T15:32:55.539Z",
+ "generatedAt": "2026-10-16T14:18:27.437Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -19,6 +19,18 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "mcp__team__reset_self"
+    }
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.receive"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__team__ask"
     }
    },
@@ -27,6 +39,12 @@
     "matcher": {
      "tool": "mcp__team__queue"
     }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "tool.call",
@@ -41,9 +59,18 @@
     }
    },
    {
+    "event": "classic.PermissionDenied"
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "team-overview"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "team-envoy"
     }
    },
    {
@@ -78,6 +105,11 @@
     "name": "team-overview",
     "description": "Show or hide the Team and Questions tabs",
     "output": "No team run in this session."
+   },
+   {
+    "name": "team-envoy",
+    "description": "Make this session the envoy of the live team run; starts a new orchestrator if its session is gone",
+    "output": "No team run in this repo: start one with /team:init <ticket>."
    }
   ],
   "tools": [
@@ -86,8 +118,12 @@
     "description": "Send a composed brief to a team agent by its session id. Run `team-brief compose` first. Returns \"<name>: <state>\"; an error names the reason."
    },
    {
+    "name": "reset_self",
+    "description": "Ask the team mod to compact your context at the next idle moment. Call it only at a safe point, after you wrote scratchpad/current/orch-handover.md. It refuses when that file is missing or stale."
+   },
+   {
     "name": "ask",
-    "description": "File an open question for the human as a card. State door and rework; park (parked: true) only a two-way question with about an hour of rework or less, and continue on your recommendation. Returns the card id, Q-<n>; name it in your REPORT line."
+    "description": "File an open question for the human as a card. State door and rework; park (parked: true) only a two-way question with about an hour of rework or less, and continue on your recommendation. Returns the card id, Q-<n>; name it in your REPORT line. Write the card so it stands on its own. A reader who saw nothing else in the conversation must be able to decide."
    },
    {
     "name": "queue",
@@ -110,13 +146,17 @@
   "apiCalls": {
    "$.session.id": 1,
    "$.env.set": 1,
-   "$.command.register": 1,
-   "$.tool.register": 5,
+   "$.fs.read": 5,
+   "$.state.get": 11,
+   "$.state.set": 1,
+   "$.command.register": 2,
+   "$.tool.register": 6,
    "$.clock.every": 1,
-   "$.env.get": 1,
-   "$.fs.read": 1,
-   "$.ui.resolve": 2,
-   "$.state.get": 8
+   "$.clock.now": 1,
+   "$.env.get": 4,
+   "$.session.root": 4,
+   "$.process.run": 2,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -213,8 +253,7 @@
          "dimColor": true
         },
         "children": [
-         "tick ",
-         "-"
+         "tick -"
         ]
        }
       ]
@@ -235,7 +274,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/team-overview → No team run in this session."
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "/team-overview → No team run in this session.",
+   "/team-envoy → No team run in this repo: start one with /team:init <ticket>."
   ],
   "console": [],
   "warnings": []
@@ -248,11 +290,18 @@
    "session.start",
    "session.end",
    "tool.call{tool=?}",
+   "tool.call{tool=?}",
+   "session.compact",
+   "session.receive",
    "tool.call{tool=mcp__team__ask}",
    "tool.call{tool=mcp__team__queue}",
+   "turn.start",
+   "turn.complete",
    "tool.call{tool=mcp__team__decide}",
    "tool.call{tool=mcp__team__relay}",
+   "classic.PermissionDenied",
    "command.run{command=team-overview}",
+   "command.run{command=team-envoy}",
    "ui.close{id=?}",
    "ui.close{id=?}",
    "ui.render{component=Pane, requestId=?}",
@@ -260,9 +309,7 @@
   ],
   "calls": [
    "$.clock.every",
-   "$.clock.now (via makeIo",
-   "orchestratorHalf",
-   "tick)",
+   "$.clock.now",
    "$.clock.sleep (via makeIo)",
    "$.command.register",
    "$.env.get (via makeIo)",
@@ -271,10 +318,16 @@
    "$.fs.read (via makeIo)",
    "$.fs.stat (via makeIo)",
    "$.fs.write (via makeIo)",
-   "$.process.run (via makeIo)",
-   "$.prompt.submit (via orchestratorHalf)",
+   "$.process.run (via makeIo",
+   "projectRoot)",
+   "$.prompt.read (via makeIo)",
+   "$.prompt.submit (via makeIo",
+   "sendLines)",
+   "$.session.compact (via resetPort)",
    "$.session.id",
+   "$.session.root (via projectRoot)",
    "$.session.send (via makeIo)",
+   "$.session.usage (via resetPort)",
    "$.state.get",
    "$.state.set",
    "$.store.get (via showPanes)",
@@ -292,22 +345,26 @@
    "team.agents",
    "team.cards",
    "team.error",
+   "team.expandedCards",
    "team.idleTabs",
    "team.plan",
    "team.planPath",
    "team.tickAt",
-   "team.urgent"
+   "team.urgent",
+   "team.version"
   ],
   "stateWrites": [
    "team.active",
    "team.agents",
    "team.cards",
    "team.error",
+   "team.expandedCards",
    "team.idleTabs",
    "team.plan",
    "team.planPath",
    "team.tickAt",
-   "team.urgent"
+   "team.urgent",
+   "team.version"
   ],
   "envReads": [
    "HERDR_BIN_PATH",
@@ -324,7 +381,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: team.active, team.agents, team.idleTabs, team.plan, team.cards, team.urgent, team.planPath, team.tickAt, team.error"
+     "types ./types/index.d.ts declares state: team.active, team.agents, team.idleTabs, team.plan, team.cards, team.expandedCards, team.urgent, team.planPath, team.tickAt, team.version, team.error"
     ],
     "gatingHooks": []
    },
@@ -335,26 +392,50 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mod/team.tsx hooks: session.start, session.end, tool.call{tool=?}, tool.call{tool=mcp__team__ask}, tool.call{tool=mcp__team__queue}, tool.call{tool=mcp__team__decide}, tool.call{tool=mcp__team__relay}, command.run{command=team-overview}, ui.close{id=?}, ui.close{id=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}",
+      "./mod/team.tsx hooks: session.start, session.end, tool.call{tool=?}, tool.call{tool=?}, session.compact, session.receive, tool.call{tool=mcp__team__ask}, tool.call{tool=mcp__team__queue}, turn.start, turn.complete, tool.call{tool=mcp__team__decide}, tool.call{tool=mcp__team__relay}, classic.PermissionDenied, command.run{command=team-overview}, command.run{command=team-envoy}, ui.close{id=?}, ui.close{id=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}",
+      "./mod/team.tsx hooks on session.compact, classic.PermissionDenied do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./mod/team.tsx answers its own command: command.run{command=team-overview}",
+      "./mod/team.tsx answers its own command: command.run{command=team-envoy}",
       "./mod/team.tsx gating hook without .catch: tool.call{tool=?}",
+      "./mod/team.tsx gating hook without .catch: tool.call{tool=?}",
+      "./mod/team.tsx gating hook without .catch: session.compact",
+      "./mod/team.tsx gating hook without .catch: session.receive",
       "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__ask}",
       "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__queue}",
       "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__decide}",
       "./mod/team.tsx gating hook without .catch: tool.call{tool=mcp__team__relay}",
+      "./mod/team.tsx gating hook without .catch: classic.PermissionDenied",
       "./mod/team.tsx gating hook without .catch: ui.close{id=?}",
       "./mod/team.tsx gating hook without .catch: ui.close{id=?}",
-      "./mod/team.tsx calls: $.clock.every, $.clock.now (via makeIo, orchestratorHalf, tick), $.clock.sleep (via makeIo), $.command.register, $.env.get (via makeIo), $.env.set, $.fs.list (via makeIo), $.fs.read (via makeIo), $.fs.stat (via makeIo), $.fs.write (via makeIo), $.process.run (via makeIo), $.prompt.submit (via orchestratorHalf), $.session.id, $.session.send (via makeIo), $.state.get, $.state.set, $.store.get (via showPanes), $.store.set, $.tool.register, $.ui.close, $.ui.open (via openPanes), $.ui.panes, $.ui.resolve, $.ui.status (via setStatus), $.ui.toast (via urgentBadge)",
+      "./mod/team.tsx calls: $.clock.every, $.clock.now, $.clock.sleep (via makeIo), $.command.register, $.env.get (via makeIo), $.env.set, $.fs.list (via makeIo), $.fs.read (via makeIo), $.fs.stat (via makeIo), $.fs.write (via makeIo), $.process.run (via makeIo, projectRoot), $.prompt.read (via makeIo), $.prompt.submit (via makeIo, sendLines), $.session.compact (via resetPort), $.session.id, $.session.root (via projectRoot), $.session.send (via makeIo), $.session.usage (via resetPort), $.state.get, $.state.set, $.store.get (via showPanes), $.store.set, $.tool.register, $.ui.close, $.ui.open (via openPanes), $.ui.panes, $.ui.resolve, $.ui.status (via setStatus), $.ui.toast (via urgentBadge)",
       "./mod/team.tsx env writes: TEAM_SESSION_ID",
       "./mod/team.tsx env reads: HERDR_BIN_PATH, TEAM_SCRATCH",
-      "./mod/team.tsx state writes: team.active, team.agents, team.cards, team.error, team.idleTabs, team.plan, team.planPath, team.tickAt, team.urgent",
-      "./mod/team.tsx state reads: team.active, team.agents, team.cards, team.error, team.idleTabs, team.plan, team.planPath, team.tickAt, team.urgent"
+      "./mod/team.tsx state writes: team.active, team.agents, team.cards, team.error, team.expandedCards, team.idleTabs, team.plan, team.planPath, team.tickAt, team.urgent, team.version",
+      "./mod/team.tsx state reads: team.active, team.agents, team.cards, team.error, team.expandedCards, team.idleTabs, team.plan, team.planPath, team.tickAt, team.urgent, team.version"
      ],
      "gatingHooks": [
       {
        "module": "./mod/team.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
+       "pattern": "session.receive",
+       "hook": "session.receive",
        "hasCatch": false
       },
       {
@@ -383,6 +464,12 @@
       },
       {
        "module": "./mod/team.tsx",
+       "pattern": "classic.PermissionDenied",
+       "hook": "classic.PermissionDenied",
+       "hasCatch": false
+      },
+      {
+       "module": "./mod/team.tsx",
        "pattern": "ui.close",
        "hook": "ui.close{id=?}",
        "hasCatch": false
@@ -399,5 +486,5 @@
    "advice": []
   }
  },
- "sourceHash": "50c50ffb8c6a5214"
+ "sourceHash": "8011f7f61de8cb2a"
 }

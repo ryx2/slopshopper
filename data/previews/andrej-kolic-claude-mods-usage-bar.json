@@ -1,6 +1,6 @@
 {
  "slug": "andrej-kolic-claude-mods-usage-bar",
- "generatedAt": "2026-10-10T14:44:56.815Z",
+ "generatedAt": "2026-10-16T14:18:39.824Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,21 @@
    },
    {
     "event": "session.measure"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "ui.render",
@@ -26,16 +41,24 @@
   "rewrites": [],
   "apiCalls": {
    "$.clock.every": 1,
-   "$.state.get": 3,
-   "$.state.set": 1,
+   "$.state.get": 12,
+   "$.state.set": 4,
+   "$.clock.after": 1,
    "$.store.get": 1,
    "$.ui.resolve": 1,
-   "$.clock.now": 1
+   "$.clock.now": 2,
+   "$.settings.read": 1,
+   "$.env.get": 9,
+   "$.session.model": 1
   },
   "timers": [
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "after",
+    "ms": 1000
    }
   ],
   "sites": {
@@ -44,23 +67,23 @@
     "tree": {
      "type": "Box",
      "props": {
-      "flexDirection": "row",
-      "justifyContent": "space-between",
-      "columnGap": 2,
-      "width": "100%"
+      "flexDirection": "column"
      },
      "children": [
       {
        "type": "Box",
        "props": {
+        "key": "line",
         "flexDirection": "row",
-        "columnGap": 1
+        "justifyContent": "flex-end",
+        "columnGap": 1,
+        "width": "100%"
        },
        "children": [
         {
          "type": "Box",
          "props": {
-          "key": "conversation:0",
+          "key": "item:0",
           "flexDirection": "row"
          },
          "children": [
@@ -89,7 +112,7 @@
         {
          "type": "Box",
          "props": {
-          "key": "conversation:1",
+          "key": "item:1",
           "flexDirection": "row"
          },
          "children": [
@@ -104,20 +127,21 @@
            ]
           }
          ]
-        }
-       ]
-      },
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row",
-        "columnGap": 1
-       },
-       "children": [
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true,
+          "wrap": "truncate-end"
+         },
+         "children": [
+          "·"
+         ]
+        },
         {
          "type": "Box",
          "props": {
-          "key": "limits:0",
+          "key": "item:2",
           "flexDirection": "row"
          },
          "children": [
@@ -154,6 +178,21 @@
          ]
         }
        ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
       }
      ]
     }
@@ -182,11 +221,22 @@
   "hooks": [
    "session.start",
    "session.measure",
+   "classic.SessionStart",
+   "session.compact",
+   "turn.start",
+   "turn.complete",
+   "turn.step",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.clock.after",
    "$.clock.every",
    "$.clock.now",
+   "$.env.get (via cacheInputs)",
+   "$.process.run (via readWritten)",
+   "$.session.model (via cacheInputs)",
+   "$.session.usage (via engineReading)",
+   "$.settings.read (via cacheInputs)",
    "$.state.get",
    "$.state.set",
    "$.store.get (via freshRecord)",
@@ -195,14 +245,36 @@
    "$.ui.toast"
   ],
   "stateReads": [
+   "usage-bar.cacheSeen",
+   "usage-bar.lastRequest",
    "usage-bar.minute",
-   "usage-bar.reading"
+   "usage-bar.reading",
+   "usage-bar.resumed",
+   "usage-bar.transcript",
+   "usage-bar.working",
+   "usage-bar.written"
   ],
   "stateWrites": [
+   "usage-bar.cacheSeen",
+   "usage-bar.lastRequest",
    "usage-bar.minute",
-   "usage-bar.reading"
+   "usage-bar.reading",
+   "usage-bar.resumed",
+   "usage-bar.transcript",
+   "usage-bar.working",
+   "usage-bar.written"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
+   "DISABLE_PROMPT_CACHING",
+   "DISABLE_PROMPT_CACHING_FABLE",
+   "DISABLE_PROMPT_CACHING_HAIKU",
+   "DISABLE_PROMPT_CACHING_MYTHOS",
+   "DISABLE_PROMPT_CACHING_OPUS",
+   "DISABLE_PROMPT_CACHING_SONNET",
+   "ENABLE_PROMPT_CACHING_1H",
+   "FORCE_PROMPT_CACHING_5M"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -214,7 +286,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: usage-bar.reading, usage-bar.minute"
+     "types ./types/index.d.ts declares state: usage-bar.reading, usage-bar.minute, usage-bar.lastRequest, usage-bar.cacheSeen, usage-bar.working, usage-bar.resumed, usage-bar.transcript, usage-bar.written"
     ],
     "gatingHooks": []
    },
@@ -225,16 +297,34 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.state.get, $.state.set, $.store.get (via freshRecord), $.store.set, $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: usage-bar.minute, usage-bar.reading",
-      "./register.tsx state reads: usage-bar.minute, usage-bar.reading"
+      "./register.tsx hooks: session.start, session.measure, classic.SessionStart, session.compact, turn.start, turn.complete, turn.step, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on classic.SessionStart, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.env.get (via cacheInputs), $.process.run (via readWritten), $.session.model (via cacheInputs), $.session.usage (via engineReading), $.settings.read (via cacheInputs), $.state.get, $.state.set, $.store.get (via freshRecord), $.store.set, $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, DISABLE_PROMPT_CACHING, DISABLE_PROMPT_CACHING_FABLE, DISABLE_PROMPT_CACHING_HAIKU, DISABLE_PROMPT_CACHING_MYTHOS, DISABLE_PROMPT_CACHING_OPUS, DISABLE_PROMPT_CACHING_SONNET, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M",
+      "./register.tsx state writes: usage-bar.cacheSeen, usage-bar.lastRequest, usage-bar.minute, usage-bar.reading, usage-bar.resumed, usage-bar.transcript, usage-bar.working, usage-bar.written",
+      "./register.tsx state reads: usage-bar.cacheSeen, usage-bar.lastRequest, usage-bar.minute, usage-bar.reading, usage-bar.resumed, usage-bar.transcript, usage-bar.working, usage-bar.written"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "664ad843b61c0a"
+ "sourceHash": "ee36deba538570b3"
 }

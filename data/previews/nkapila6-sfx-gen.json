@@ -1,6 +1,6 @@
 {
  "slug": "nkapila6-sfx-gen",
- "generatedAt": "2026-10-10T14:44:48.143Z",
+ "generatedAt": "2026-10-16T14:17:00.185Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -16,6 +16,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "sfx-notify"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "sfx-pane"
     }
    },
@@ -24,6 +30,18 @@
     "matcher": {
      "tool": "mcp__sfx-gen__sfx"
     }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.check"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "ui.render",
@@ -44,18 +62,25 @@
     "name": "sfx",
     "description": "Generate a sound effect from a text prompt with a local Stable Audio model",
     "argumentHint": "[description] [--duration N] [--seed N]",
-    "output": "Usage: /sfx <description> [--duration N] [--seed N]"
+    "output": "usage  /sfx <description> [--duration N] [--seed N]"
    },
    {
     "name": "sfx-pane",
     "description": "Show generated sound effects in a pane",
+    "argumentHint": "[history]",
     "output": "Sound effects pane opened."
+   },
+   {
+    "name": "sfx-notify",
+    "description": "Play custom sounds on errors, permission prompts and finished replies",
+    "argumentHint": "[event] [description | test | off] or on | off",
+    "output": "\n╭──────────────────────────────────────────────╮\n│ ❯ sfx-notify  on                             │\n│ error      ·  a tool call or test run fails  │\n│ permission ·  Claude is waiting on you       │\n│ done       ·  a reply finished               │\n│ abort      ·  you interrupted a reply        │\n│ compact    ·  the conversation was compacted │\n│                                              │\n│ set   /sfx-notify <event> <description>      │\n│ test  /sfx-notify <event> test               │\n│ clear /sfx-notify <event> off                │\n│ mute  /sfx-notify off | on                   │\n╰──────────────────────────────────────────────╯"
    }
   ],
   "tools": [
    {
     "name": "sfx",
-    "description": "Generate a sound effect from a text prompt using a local Stable Audio model (sa3.cpp). No API key, no Python. Returns the path to a WAV file. Use for foley and SFX: \"metal impact with a deep sub boom\", \"whoosh across the screen\", \"footsteps on gravel\". Keep prompts to one sound each and layer clips for complex scenes."
+    "description": "Generate a sound effect from a text prompt using a local Stable Audio model (sa3.cpp). No API key, no Python. Returns the path to a WAV file. Use for foley and SFX: \"metal impact with a deep sub boom\", \"whoosh across the screen\", \"footsteps on gravel\". Keep prompts to one sound each and layer clips for complex scenes. Set notify_on to make the clip the sound played when that event happens (error: a tool call or test run failed, permission: waiting on the user, done: reply finished, abort: user interrupted, compact: context compacted); notify clips default to 2s."
    }
   ],
   "panes": [
@@ -69,10 +94,10 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 6,
-   "$.store.get": 1,
-   "$.state.set": 1,
-   "$.command.register": 2,
+   "$.state.get": 9,
+   "$.store.get": 2,
+   "$.state.set": 2,
+   "$.command.register": 3,
    "$.tool.register": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 2
@@ -88,16 +113,66 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "column"
+       "flexDirection": "column",
+       "borderStyle": "round",
+       "borderColor": "green",
+       "paddingX": 1
       },
       "children": [
+       {
+        "type": "Box",
+        "props": {
+         "justifyContent": "space-between"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "green",
+           "bold": true
+          },
+          "children": [
+           "~/sfx"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {},
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "0",
+             " ",
+             "clips",
+             " · ",
+             "small-sfx",
+             ""
+            ]
+           }
+          ]
+         }
+        ]
+       },
        {
         "type": "Text",
         "props": {
          "dimColor": true
         },
         "children": [
-         "No clips yet. Try /sfx a whoosh across the screen"
+         {
+          "type": "Text",
+          "props": {
+           "color": "green"
+          },
+          "children": [
+           "$ "
+          ]
+         },
+         "/sfx a whoosh across the screen"
         ]
        }
       ]
@@ -118,9 +193,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/sfx → Usage: /sfx <description> [--duration N] [--seed N]",
+   "/sfx → usage  /sfx <description> [--duration N] [--seed N]",
    "$.ui.open(sfx)",
-   "/sfx-pane → Sound effects pane opened."
+   "/sfx-pane → Sound effects pane opened.",
+   "/sfx-notify → \n╭──────────────────────────────────────────────╮\n│ ❯ sfx-notify  on            …"
   ],
   "console": [],
   "warnings": []
@@ -132,51 +208,74 @@
   "hooks": [
    "session.start",
    "command.run{command=sfx}",
+   "command.run{command=sfx-notify}",
    "command.run{command=sfx-pane}",
    "tool.call{tool=mcp__sfx-gen__sfx}",
+   "tool.call",
+   "tool.check",
+   "turn.complete",
+   "session.compact",
    "ui.render{component=Pane, requestId=sfx}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.audio.play (via announce",
-   "playClip)",
+   "playClip",
+   "ring",
+   "runNotify)",
    "$.command.register",
-   "$.env.get (via generate",
-   "shareClip)",
-   "$.fs.exists (via firstExisting",
+   "$.env.get (via detectOS",
    "generate",
+   "homeDir)",
+   "$.fs.exists (via detectOS",
+   "firstExisting",
+   "generate",
+   "notifyDir",
    "shareClip)",
    "$.fs.read (via generate",
-   "playClip)",
-   "$.process.run (via generate",
+   "playClip",
+   "ring)",
+   "$.process.run (via copyFileRef",
+   "findTool",
+   "generate",
+   "notifyDir",
    "shareClip)",
    "$.session.cwd (via generate)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
-   "$.store.set (via saveClips)",
+   "$.store.set (via saveClips",
+   "saveNotify)",
    "$.tool.register",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.status (via generate)",
    "$.ui.toast (via announce",
    "playClip",
+   "ring",
    "saveClips",
+   "saveNotify",
    "shareClip)"
   ],
   "stateReads": [
    "sfx-gen.clips",
    "sfx-gen.dismissed",
-   "sfx-gen.pending"
+   "sfx-gen.pending",
+   "sfx-gen.showHistory",
+   "sfx-gen.since"
   ],
   "stateWrites": [
    "sfx-gen.clips",
    "sfx-gen.dismissed",
-   "sfx-gen.pending"
+   "sfx-gen.pending",
+   "sfx-gen.showHistory",
+   "sfx-gen.since"
   ],
   "envReads": [
    "HOME",
-   "SA3_CPP_DIR"
+   "OS",
+   "SA3_CPP_DIR",
+   "USERPROFILE"
   ],
   "raw": {
    "success": true,
@@ -189,7 +288,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: sfx-gen.clips, sfx-gen.pending, sfx-gen.dismissed"
+     "types ./types/index.d.ts declares state: sfx-gen.clips, sfx-gen.pending, sfx-gen.dismissed, sfx-gen.showHistory, sfx-gen.since"
     ],
     "gatingHooks": []
    },
@@ -200,21 +299,44 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=sfx}, command.run{command=sfx-pane}, tool.call{tool=mcp__sfx-gen__sfx}, ui.render{component=Pane, requestId=sfx}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=sfx}, command.run{command=sfx-notify}, command.run{command=sfx-pane}, tool.call{tool=mcp__sfx-gen__sfx}, tool.call, tool.check, turn.complete, session.compact, ui.render{component=Pane, requestId=sfx}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=sfx}",
+      "./register.tsx answers its own command: command.run{command=sfx-notify}",
       "./register.tsx answers its own command: command.run{command=sfx-pane}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__sfx-gen__sfx}",
-      "./register.tsx calls: $.audio.play (via announce, playClip), $.command.register, $.env.get (via generate, shareClip), $.fs.exists (via firstExisting, generate, shareClip), $.fs.read (via generate, playClip), $.process.run (via generate, shareClip), $.session.cwd (via generate), $.state.get, $.state.set, $.store.get, $.store.set (via saveClips), $.tool.register, $.ui.open, $.ui.resolve, $.ui.status (via generate), $.ui.toast (via announce, playClip, saveClips, shareClip)",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.check",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx calls: $.audio.play (via announce, playClip, ring, runNotify), $.command.register, $.env.get (via detectOS, generate, homeDir), $.fs.exists (via detectOS, firstExisting, generate, notifyDir, shareClip), $.fs.read (via generate, playClip, ring), $.process.run (via copyFileRef, findTool, generate, notifyDir, shareClip), $.session.cwd (via generate), $.state.get, $.state.set, $.store.get, $.store.set (via saveClips, saveNotify), $.tool.register, $.ui.open, $.ui.resolve, $.ui.status (via generate), $.ui.toast (via announce, playClip, ring, saveClips, saveNotify, shareClip)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME, SA3_CPP_DIR",
-      "./register.tsx state writes: sfx-gen.clips, sfx-gen.dismissed, sfx-gen.pending",
-      "./register.tsx state reads: sfx-gen.clips, sfx-gen.dismissed, sfx-gen.pending"
+      "./register.tsx env reads: HOME, OS, SA3_CPP_DIR, USERPROFILE",
+      "./register.tsx state writes: sfx-gen.clips, sfx-gen.dismissed, sfx-gen.pending, sfx-gen.showHistory, sfx-gen.since",
+      "./register.tsx state reads: sfx-gen.clips, sfx-gen.dismissed, sfx-gen.pending, sfx-gen.showHistory, sfx-gen.since"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__sfx-gen__sfx}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
        "hasCatch": false
       }
      ]
@@ -223,5 +345,5 @@
    "advice": []
   }
  },
- "sourceHash": "e4615fe2a6116a0"
+ "sourceHash": "42eb97ba56376508"
 }

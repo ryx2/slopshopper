@@ -1,0 +1,8 @@
+{
+ "slug": "robgruhl-claude-mod-learnings-e3-moves",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// One move per command, chosen by the command text, so one hook shows all five.\nexport const register: Register = on => {\n  let seen = 0\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    seen += 1\n    if (e.command.startsWith('observe')) return next(e)\n    if (e.command.startsWith('rewrite')) return next({ ...e, command: 'echo rewritten' })\n    if (e.command.startsWith('answer')) return { result: { stdout: `answered by the mod (seen ${seen})`, stderr: '', interrupted: false } } as never\n    if (e.command.startsWith('post')) {\n      const r = (await next(e)) as { result?: { stdout?: string } }\n      return { ...r, result: { ...r.result, stdout: `${r.result?.stdout ?? ''} [annotated]` } } as never\n    }\n    if (e.command.startsWith('retry')) {\n      const first = (await next(e)) as { result?: { stdout?: string } }\n      if (first.result?.stdout?.includes('flaky')) return next(e)\n      return first as never\n    }\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"e3-moves\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Observe, rewrite, answer, post-process and retry on tool.call\",\n  \"author\": {\n    \"name\": \"Rob Gruhl\"\n  }\n}"
+ }
+}

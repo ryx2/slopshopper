@@ -1,0 +1,399 @@
+{
+ "slug": "michalstrnadel-claude-docket",
+ "generatedAt": "2026-10-16T14:17:49.188Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "docket"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "dk"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__docket__docket"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TodoWrite"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "docket"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "docket",
+    "description": "Open the task board",
+    "output": "board opened · esc closes"
+   },
+   {
+    "name": "dk",
+    "description": "Fold or unfold the task list above the prompt",
+    "output": "task list folded"
+   }
+  ],
+  "tools": [
+   {
+    "name": "docket",
+    "description": "The project's task board (docket), shown to the user live above the prompt and in a board pane, stored in .claude/docket.json so it survives crashes and new sessions.\nUse it for any work of more than two steps: plan it on the board first, set an item to \"doing\" when you start it and \"done\" when it is verified, and keep at most one or two items \"doing\". The user reads this board instead of your messages to know where things stand, so keep it true.\nActions:\n- view: returns the board as text with item ids (#n).\n- plan: {title, lists:[{name, items:[title | {title, status}]}]} builds a whole board. Refused when the board has open items unless replace:true — prefer add/update to extend an existing plan.\n- add: {list, title, status?} adds an item (the list is created if missing).\n- update: {id, status?, title?, note?, list?} changes an item; note is a one-line status note (\"waiting on CI\"), empty string clears it.\n- remove: {id}. clear_done: drops done items and empty lists.\nStatuses: todo, doing, done, blocked."
+   }
+  ],
+  "panes": [
+   {
+    "id": "docket",
+    "title": "Docket"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.tool.register": 1,
+   "$.fs.stat": 1,
+   "$.state.get": 11,
+   "$.state.set": 4,
+   "$.clock.every": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1500
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "docket": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "paddingX": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "claude"
+          },
+          "children": [
+           "◆"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Docket"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "success"
+          },
+          "children": [
+           "────────────────"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "tabular": true
+          },
+          "children": [
+           "0",
+           "/",
+           "0"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 2,
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "warning"
+            },
+            "children": [
+             "◐ ",
+             "0"
+            ]
+           },
+           " doing · ",
+           {
+            "type": "Text",
+            "props": {
+             "color": "error"
+            },
+            "children": [
+             "⊘ ",
+             "0"
+            ]
+           },
+           " blocked · ○ ",
+           "0",
+           " todo · ",
+           {
+            "type": "Text",
+            "props": {
+             "color": "success"
+            },
+            "children": [
+             "● ",
+             "0"
+            ]
+           },
+           " done"
+          ]
+         },
+         {
+          "type": "Select",
+          "props": {
+           "key": "filter",
+           "value": "all",
+           "options": [
+            {
+             "value": "all",
+             "label": "all"
+            },
+            {
+             "value": "open",
+             "label": "open"
+            }
+           ],
+           "onSelect": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No tasks yet. Ask Claude to plan the work, or add one below."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Input",
+          "props": {
+           "key": "add",
+           "placeholder": "add a task…",
+           "submitLabel": "add",
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "enter cycles ○ → ◐ → ● · esc closes · ",
+         ".claude/docket.json"
+        ]
+       }
+      ]
+     },
+     "title": "Docket"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(docket)",
+   "/docket → board opened · esc closes",
+   "/dk → task list folded"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=docket}",
+   "ui.close",
+   "command.run{command=dk}",
+   "tool.call{tool=mcp__docket__docket}",
+   "tool.call{tool=TodoWrite}",
+   "prompt.compose",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=docket}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.command.register",
+   "$.fs.read (via load)",
+   "$.fs.stat (via load",
+   "save)",
+   "$.fs.write (via save)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve"
+  ],
+  "stateReads": [
+   "docket.addTo",
+   "docket.board",
+   "docket.compact",
+   "docket.error",
+   "docket.filter",
+   "docket.paneOpen"
+  ],
+  "stateWrites": [
+   "docket.addTo",
+   "docket.board",
+   "docket.compact",
+   "docket.error",
+   "docket.filter",
+   "docket.paneOpen"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/michalstrnadel-claude-docket/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/michalstrnadel-claude-docket/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: docket.board, docket.error, docket.filter, docket.addTo, docket.compact, docket.paneOpen"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/michalstrnadel-claude-docket/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=docket}, ui.close, command.run{command=dk}, tool.call{tool=mcp__docket__docket}, tool.call{tool=TodoWrite}, prompt.compose, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=docket}",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=docket}",
+      "./register.tsx answers its own command: command.run{command=dk}",
+      "./register.tsx gating hook with .catch: ui.close",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__docket__docket}",
+      "./register.tsx gating hook with .catch: tool.call{tool=TodoWrite}",
+      "./register.tsx calls: $.clock.every, $.command.register, $.fs.read (via load), $.fs.stat (via load, save), $.fs.write (via save), $.state.get, $.state.set, $.tool.register, $.ui.open (via openPane), $.ui.resolve",
+      "./register.tsx state writes: docket.addTo, docket.board, docket.compact, docket.error, docket.filter, docket.paneOpen",
+      "./register.tsx state reads: docket.addTo, docket.board, docket.compact, docket.error, docket.filter, docket.paneOpen"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__docket__docket}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TodoWrite}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "a82f3cb865e29810"
+}

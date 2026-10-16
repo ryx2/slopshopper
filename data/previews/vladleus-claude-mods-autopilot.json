@@ -1,6 +1,6 @@
 {
  "slug": "vladleus-claude-mods-autopilot",
- "generatedAt": "2026-10-10T14:44:36.155Z",
+ "generatedAt": "2026-10-16T14:17:09.475Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,24 @@
     "event": "command.run",
     "matcher": {
      "command": "autopilot"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "away"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "back"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ask-user"
     }
    },
    {
@@ -26,12 +44,21 @@
     }
    },
    {
+    "event": "prompt.submit"
+   },
+   {
     "event": "turn.start"
    },
    {
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__autopilot__wait_for"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__autopilot__queue_question"
     }
    },
    {
@@ -50,9 +77,30 @@
   "commands": [
    {
     "name": "autopilot",
-    "description": "Run this session on autopilot with a fixed role; no args shows status, \"0 0 stop\" hands back",
-    "argumentHint": "<time> <threshold%> [max restarts] \"<role>\" [--goal \"…\"] [--5h 95] [--week 80] [--ask-user] | 0 0 stop",
-    "output": "Autopilot is off."
+    "description": "Run this session on autopilot with a fixed role; no args shows status, \"extend|shorten [<time>] [--restarts N]\" and \"until 18:30|6:30pm\" change the end, \"0 0 stop\" hands back",
+    "argumentHint": "<time | until 18:30|6:30pm> <threshold%> [max restarts] \"<role>\" [--goal \"…\"] [--5h 95] [--week 80] [--ask-user] | extend|shorten [<time>] [--restarts N] | until 18:30|6:30pm | 0 0 stop",
+    "output": "Autopilot is off.\nAway: not set\nAsks the person: off (not set)"
+   },
+   {
+    "name": "away",
+    "description": "Autopilot: you are away; critical questions are queued instead of asked, then asked one by one when you are back",
+    "argumentHint": "for <90m|2h|1h30m> | until <15:00|6pm> [--global]",
+    "immediate": true,
+    "output": "Usage: /away for <duration> [--global] (90m, 2h, 1h30m)  ·  /away until <clock> [--global] (15:00, 6pm, local time)"
+   },
+   {
+    "name": "back",
+    "description": "Autopilot: you are back; the queued questions are asked one by one",
+    "argumentHint": "[--global]",
+    "immediate": true,
+    "output": "Back (this session).\nAway: no, back (session, set 0s ago)\nAsks the person: off (not set)"
+   },
+   {
+    "name": "ask-user",
+    "description": "Autopilot: turn asking you critical questions on or off (off queues them until you turn it on)",
+    "argumentHint": "on|off [--global]",
+    "immediate": true,
+    "output": "Usage: /ask-user on|off [--global]"
    }
   ],
   "tools": [
@@ -63,23 +111,37 @@
    {
     "name": "wait_for",
     "description": "Autopilot only: declares that this session is waiting for something (another session, a subagent, a workflow, a background task, the person), so autopilot stops nudging it. End your turn right after calling it; any new message wakes the session."
+   },
+   {
+    "name": "queue_question",
+    "description": "Autopilot only: while the person is away or has asking turned off, parks a critical question (one you would otherwise stop for with wait_for user-answer) for them to answer later, one by one. Keep working on what is not blocked by it. Refused when the person can be asked directly."
    }
   ],
   "panes": [],
-  "toasts": [],
+  "toasts": [
+   "Autopilot: Usage: /away for <duration> [--global] (90m, 2h, 1h30m)  ·  /away until <clock> [--global] (15:00, 6pm, local time)",
+   "Autopilot: Usage: /ask-user on|off [--global]"
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.env.get": 1,
-   "$.process.run": 2,
-   "$.session.id": 4,
-   "$.store.get": 1,
+   "$.process.run": 4,
+   "$.session.id": 8,
+   "$.store.get": 7,
+   "$.clock.now": 12,
+   "$.fs.stat": 4,
    "$.session.usage": 1,
-   "$.command.register": 1,
-   "$.tool.register": 2,
+   "$.command.register": 4,
+   "$.store.keys": 1,
+   "$.fs.list": 1,
+   "$.tool.register": 3,
    "$.clock.every": 1,
-   "$.clock.now": 1
+   "$.ui.toast": 2,
+   "$.store.set": 1,
+   "$.fs.read": 1,
+   "$.fs.write": 1
   },
   "timers": [
    {
@@ -89,8 +151,8 @@
   ],
   "sites": {},
   "script": [
-   "$.process.run(/bin/mkdir -p /Users/dev/.claude/autopilot) → exit 0",
-   "$.process.run(/bin/chmod 700 /Users/dev/.claude/autopilot) → exit 0",
+   "$.process.run(/bin/mkdir -p /Users/dev/.claude/autopilot /Users/dev/.claude/autopilot/status) → exit 0",
+   "$.process.run(/bin/chmod 700 /Users/dev/.claude/autopilot /Users/dev/.claude/autopilot/status) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -102,7 +164,13 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/autopilot → Autopilot is off."
+   "$.process.run(/bin/date +%z) → exit 0",
+   "/autopilot → Autopilot is off.\nAway: not set\nAsks the person: off (not set)",
+   "/away → Usage: /away for <duration> [--global] (90m, 2h, 1h30m)  ·  /away until <clock> …",
+   "$.process.run(/bin/date +%z) → exit 0",
+   "$.fs.write(/Users/dev/.claude/autopilot/preview-session.log)",
+   "/back → Back (this session).\nAway: no, back (session, set 0s ago)\nAsks the person: off (…",
+   "/ask-user → Usage: /ask-user on|off [--global]"
   ],
   "console": [],
   "warnings": []
@@ -116,10 +184,15 @@
   "hooks": [
    "session.start",
    "command.run{command=autopilot}",
+   "command.run{command=away}",
+   "command.run{command=back}",
+   "command.run{command=ask-user}",
    "prompt.compose",
    "classic.Stop",
    "session.compact{trigger=auto}",
+   "prompt.submit",
    "turn.start",
+   "tool.call{tool=?}",
    "tool.call{tool=?}",
    "tool.call{tool=mcp__autopilot__restart_session}",
    "tool.call",
@@ -134,19 +207,29 @@
    "$.command.run",
    "$.env.get",
    "$.fs.exists",
-   "$.fs.read (via log)",
-   "$.fs.write (via log",
-   "save)",
+   "$.fs.list (via readBadges",
+   "sweepFinished)",
+   "$.fs.read (via log",
+   "readBadges",
+   "readGlobalAvail",
+   "readLockOwner)",
+   "$.fs.stat",
+   "$.fs.write (via claimLock",
+   "combinedTick",
+   "log",
+   "markDelivered",
+   "save",
+   "writeGlobalAvail)",
    "$.process.run",
    "$.process.spawn (via grepTranscript)",
    "$.prompt.submit",
    "$.session.id",
    "$.session.root",
    "$.session.usage",
-   "$.store.delete (via save",
-   "syncId)",
+   "$.store.delete",
    "$.store.get",
-   "$.store.set (via save)",
+   "$.store.keys (via sweepFinished)",
+   "$.store.set",
    "$.tool.register",
    "$.ui.status",
    "$.ui.toast"
@@ -183,14 +266,20 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=autopilot}, prompt.compose, classic.Stop, session.compact{trigger=auto}, turn.start, tool.call{tool=?}, tool.call{tool=mcp__autopilot__restart_session}, tool.call, turn.complete",
+      "./register.tsx hooks: session.start, command.run{command=autopilot}, command.run{command=away}, command.run{command=back}, command.run{command=ask-user}, prompt.compose, classic.Stop, session.compact{trigger=auto}, prompt.submit, turn.start, tool.call{tool=?}, tool.call{tool=?}, tool.call{tool=mcp__autopilot__restart_session}, tool.call, turn.complete",
+      "./register.tsx hooks on prompt.compose, classic.Stop, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=away}",
+      "./register.tsx answers its own command: command.run{command=back}",
+      "./register.tsx answers its own command: command.run{command=ask-user}",
       "./register.tsx gating hook with .catch: command.run{command=autopilot}",
       "./register.tsx gating hook with .catch: classic.Stop",
       "./register.tsx gating hook with .catch: session.compact{trigger=auto}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: tool.call{tool=?}",
       "./register.tsx gating hook with .catch: tool.call{tool=?}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__autopilot__restart_session}",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.list, $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.read (via log), $.fs.write (via log, save), $.process.run, $.process.spawn (via grepTranscript), $.prompt.submit, $.session.id, $.session.root, $.session.usage, $.store.delete (via save, syncId), $.store.get, $.store.set (via save), $.tool.register, $.ui.status, $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.list, $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.list (via readBadges, sweepFinished), $.fs.read (via log, readBadges, readGlobalAvail, readLockOwner), $.fs.stat, $.fs.write (via claimLock, combinedTick, log, markDelivered, save, writeGlobalAvail), $.process.run, $.process.spawn (via grepTranscript), $.prompt.submit, $.session.id, $.session.root, $.session.usage, $.store.delete, $.store.get, $.store.keys (via sweepFinished), $.store.set, $.tool.register, $.ui.status, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME"
      ],
@@ -211,6 +300,18 @@
        "module": "./register.tsx",
        "pattern": "session.compact",
        "hook": "session.compact{trigger=auto}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
        "hasCatch": true
       },
       {
@@ -237,5 +338,5 @@
    "advice": []
   }
  },
- "sourceHash": "a54c2b351f81a56c"
+ "sourceHash": "983f582813b24821"
 }

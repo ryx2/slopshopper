@@ -1,11 +1,17 @@
 {
  "slug": "niksavis-handily-handily-item-toasts",
- "generatedAt": "2026-10-10T14:45:34.510Z",
+ "generatedAt": "2026-10-16T14:21:03.587Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "item-toasts"
+    }
    },
    {
     "event": "session.end"
@@ -32,7 +38,14 @@
     "event": "classic.Stop"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "item-toasts",
+    "description": "handily · Set or toggle the toasts for work item changes for this session",
+    "argumentHint": "[on|off]",
+    "output": "item-toasts off for this session. No work item change draws a toast until /item-toasts on."
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -48,9 +61,10 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.command.register": 1,
+   "$.state.get": 8,
+   "$.state.set": 3,
    "$.clock.every": 1,
-   "$.state.get": 5,
-   "$.state.set": 1,
    "$.ui.log": 7
   },
   "timers": [
@@ -71,7 +85,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/item-toasts → item-toasts off for this session. No work item change draws a toast until /item-…"
   ],
   "console": [],
   "warnings": []
@@ -82,6 +97,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=item-toasts}",
    "session.end",
    "tool.call{tool=Bash}",
    "tool.call{tool=Write|Edit}",
@@ -92,6 +108,7 @@
    "$.clock.after (via keepBackgroundOpen)",
    "$.clock.every (via startToasts)",
    "$.clock.now (via hostOf)",
+   "$.command.register",
    "$.state.get",
    "$.state.set",
    "$.ui.log",
@@ -104,11 +121,13 @@
   "stateReads": [
    "handily-item-toasts.announced",
    "handily-item-toasts.lastToastAt",
+   "handily-item-toasts.mode",
    "handily-workitems.snapshot"
   ],
   "stateWrites": [
    "handily-item-toasts.announced",
    "handily-item-toasts.lastToastAt",
+   "handily-item-toasts.mode",
    "handily-item-toasts.ready"
   ],
   "envReads": [],
@@ -123,7 +142,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: handily-item-toasts.announced, handily-item-toasts.lastToastAt, handily-item-toasts.ready"
+     "types ./types/index.d.ts declares state: handily-item-toasts.mode, handily-item-toasts.announced, handily-item-toasts.lastToastAt, handily-item-toasts.ready"
     ],
     "gatingHooks": []
    },
@@ -134,17 +153,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, tool.call{tool=Bash}, tool.call{tool=Write|Edit}, prompt.submit, classic.Stop",
+      "./register.tsx hooks: session.start, command.run{command=item-toasts}, session.end, tool.call{tool=Bash}, tool.call{tool=Write|Edit}, prompt.submit, classic.Stop",
+      "./register.tsx hooks on classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook without .catch: command.run{command=item-toasts}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook without .catch: tool.call{tool=Write|Edit}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: classic.Stop",
-      "./register.tsx calls: $.clock.after (via keepBackgroundOpen), $.clock.every (via startToasts), $.clock.now (via hostOf), $.state.get, $.state.set, $.ui.log, $.ui.toast (via hostOf), $.workitems.classify (via rulesOf), $.workitems.lines (via hostOf), $.workitems.refresh (via hostOf), $.workitems.trackerFile (via rulesOf)",
-      "./register.tsx state writes: handily-item-toasts.announced, handily-item-toasts.lastToastAt, handily-item-toasts.ready",
-      "./register.tsx state reads: handily-item-toasts.announced, handily-item-toasts.lastToastAt, handily-workitems.snapshot",
+      "./register.tsx calls: $.clock.after (via keepBackgroundOpen), $.clock.every (via startToasts), $.clock.now (via hostOf), $.command.register, $.state.get, $.state.set, $.ui.log, $.ui.toast (via hostOf), $.workitems.classify (via rulesOf), $.workitems.lines (via hostOf), $.workitems.refresh (via hostOf), $.workitems.trackerFile (via rulesOf)",
+      "./register.tsx state writes: handily-item-toasts.announced, handily-item-toasts.lastToastAt, handily-item-toasts.mode, handily-item-toasts.ready",
+      "./register.tsx state reads: handily-item-toasts.announced, handily-item-toasts.lastToastAt, handily-item-toasts.mode, handily-workitems.snapshot",
       "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): handily-workitems.snapshot"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=item-toasts}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -175,5 +202,5 @@
    "advice": []
   }
  },
- "sourceHash": "94533fc3a705bc94"
+ "sourceHash": "d3021edbf379126f"
 }

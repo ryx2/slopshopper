@@ -1,0 +1,8 @@
+{
+ "slug": "midudev-better-claude-think-hard",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst MARK = '+'\n\n// Set by the prompt that starts the turn, cleared when the turn ends.\nlet hardTurn = false\n\nexport const register: Register = on => {\n  on('prompt.submit', ($, e, next) => {\n    hardTurn = e.text.startsWith(MARK)\n    return next(hardTurn ? { ...e, text: e.text.slice(MARK.length).trimStart() } : e)\n  })\n\n  on('turn.complete', ($, e, next) => {\n    hardTurn = false\n    return next(e)\n  })\n\n  // Every model request of a marked turn asks for max effort, when the model takes an effort at all.\n  on('turn.step', async function* ($, e, next) {\n    return yield* next(hardTurn && e.effort !== undefined ? { ...e, effort: 'max' } : e)\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"think-hard\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Start a prompt with + and that turn thinks at max effort. Other prompts keep the session's effort.\",\n  \"author\": {\n    \"name\": \"Miguel Ángel Durán (midudev)\",\n    \"url\": \"https://github.com/midudev\"\n  },\n  \"homepage\": \"https://github.com/midudev/better-claude\",\n  \"repository\": \"https://github.com/midudev/better-claude\",\n  \"license\": \"MIT\",\n  \"keywords\": [\n    \"effort\",\n    \"thinking\",\n    \"prompt\",\n    \"mod\"\n  ]\n}"
+ }
+}

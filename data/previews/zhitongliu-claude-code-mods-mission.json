@@ -1,6 +1,6 @@
 {
  "slug": "zhitongliu-claude-code-mods-mission",
- "generatedAt": "2026-10-10T14:46:00.529Z",
+ "generatedAt": "2026-10-16T14:22:18.692Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -35,9 +35,9 @@
   "commands": [
    {
     "name": "mission",
-    "description": "Open the live web page of agents, tool calls and the code map; /mission off stops it",
-    "argumentHint": "[who|code|off]",
-    "output": "Mission Control: 0 agents · 9 tool calls · 3 files. Opened file:///tmp/mission-control/ig75vgic/index.html#who"
+    "description": "Open the live web page of agents, tool calls and the code map; give a base, PR link or #123 to put what changed on the map first; off stops it",
+    "argumentHint": "[base | PR link | #123 | off]",
+    "output": "Mission Control: 0 agents · 9 tool calls · 3 files. Opened file:///tmp/mission-control/kxrw7zh5/index.html"
    }
   ],
   "tools": [],
@@ -47,15 +47,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 45,
-   "$.state.set": 28,
+   "$.state.get": 52,
+   "$.state.set": 32,
    "$.command.register": 1,
    "$.clock.every": 1,
    "$.fs.read": 7,
    "$.clock.after": 7,
+   "$.process.run": 9,
    "$.env.get": 3,
-   "$.fs.write": 2,
-   "$.process.run": 1,
+   "$.fs.write": 4,
    "$.model.complete": 1
   },
   "timers": [
@@ -102,17 +102,27 @@
    "turn.start: hook threw undefined is not an object (evaluating 'text.replace')",
    "tool.call Read",
    "tool.call Grep",
+   "$.process.run(git -C /work/app/src diff HEAD --no-color -U3 -- /work/app/src/auth.ts) → exit 0",
+   "$.process.run(git -C /work/app/src ls-files --error-unmatch -- /work/app/src/auth.ts) → exit 0",
    "tool.call Edit",
+   "$.process.run(git -C /work/app/src diff HEAD --no-color -U3 -- /work/app/src/audit.ts) → exit 0",
+   "$.process.run(git -C /work/app/src ls-files --error-unmatch -- /work/app/src/audit.ts) → exit 0",
    "tool.call Write",
+   "$.process.run(git -C /work/app/src diff HEAD --no-color -U3 -- /work/app/src/cache.ts) → exit 0",
+   "$.process.run(git -C /work/app/src ls-files --error-unmatch -- /work/app/src/cache.ts) → exit 0",
    "tool.call Write",
    "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.fs.write(/tmp/mission-control/ig75vgic/index.html)",
-   "$.fs.write(/tmp/mission-control/ig75vgic/data.js)",
-   "$.process.run(open file:///tmp/mission-control/ig75vgic/index.html#who) → exit 0",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(gh pr view --json number,url) → exit 0",
+   "$.fs.write(/tmp/mission-control/kxrw7zh5/index.html)",
+   "$.fs.write(/tmp/mission-control/kxrw7zh5/hljs.js)",
+   "$.fs.write(/tmp/mission-control/kxrw7zh5/diffs.js)",
+   "$.fs.write(/tmp/mission-control/kxrw7zh5/data.js)",
+   "$.process.run(open file:///tmp/mission-control/kxrw7zh5/index.html) → exit 0",
    "/mission → Mission Control: 0 agents · 9 tool calls · 3 files. Opened file:///tmp/mission-c…"
   ],
   "console": [],
@@ -138,25 +148,35 @@
    "$.command.register",
    "$.env.get (via openPage",
    "pageDir)",
-   "$.fs.read (via touch)",
+   "$.fs.read (via review",
+   "touch)",
    "$.fs.write (via writePage)",
    "$.model.complete (via explainPending)",
-   "$.process.run (via openPage)",
+   "$.process.run (via focusedWorkspace",
+   "liveDiff",
+   "liveWhere",
+   "openPage",
+   "review",
+   "reviewRemote)",
    "$.state.get",
    "$.state.set",
    "$.ui.resolve"
   ],
   "stateReads": [
+   "mission.diffs",
    "mission.files",
    "mission.nodes",
    "mission.sid",
-   "mission.turn"
+   "mission.turn",
+   "mission.where"
   ],
   "stateWrites": [
+   "mission.diffs",
    "mission.files",
    "mission.nodes",
    "mission.sid",
-   "mission.turn"
+   "mission.turn",
+   "mission.where"
   ],
   "envReads": [
    "CMUX_WORKSPACE_ID",
@@ -173,7 +193,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: mission.nodes, mission.files, mission.turn, mission.sid"
+     "types ./types/index.d.ts declares state: mission.nodes, mission.files, mission.turn, mission.sid, mission.diffs, mission.where"
     ],
     "gatingHooks": []
    },
@@ -188,11 +208,11 @@
       "./register.tsx answers its own command: command.run{command=mission}",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.after (via publish, touch), $.clock.every, $.command.register, $.env.get (via openPage, pageDir), $.fs.read (via touch), $.fs.write (via writePage), $.model.complete (via explainPending), $.process.run (via openPage), $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx calls: $.clock.after (via publish, touch), $.clock.every, $.command.register, $.env.get (via openPage, pageDir), $.fs.read (via review, touch), $.fs.write (via writePage), $.model.complete (via explainPending), $.process.run (via focusedWorkspace, liveDiff, liveWhere, openPage, review, reviewRemote), $.state.get, $.state.set, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CMUX_WORKSPACE_ID, TMPDIR",
-      "./register.tsx state writes: mission.files, mission.nodes, mission.sid, mission.turn",
-      "./register.tsx state reads: mission.files, mission.nodes, mission.sid, mission.turn"
+      "./register.tsx state writes: mission.diffs, mission.files, mission.nodes, mission.sid, mission.turn, mission.where",
+      "./register.tsx state reads: mission.diffs, mission.files, mission.nodes, mission.sid, mission.turn, mission.where"
      ],
      "gatingHooks": [
       {
@@ -213,5 +233,5 @@
    "advice": []
   }
  },
- "sourceHash": "b6a568bcff40bf1c"
+ "sourceHash": "fac52bbda40a2ee4"
 }

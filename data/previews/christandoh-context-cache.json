@@ -1,6 +1,6 @@
 {
  "slug": "christandoh-context-cache",
- "generatedAt": "2026-10-10T14:44:39.699Z",
+ "generatedAt": "2026-10-16T14:16:44.378Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -21,6 +21,9 @@
    },
    {
     "event": "classic.Stop"
+   },
+   {
+    "event": "classic.PreModelSwitch"
    },
    {
     "event": "classic.PostModelSwitch"
@@ -50,6 +53,18 @@
     "event": "command.run",
     "matcher": {
      "command": "cache-scale"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cache-mini"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cache-autowarm"
     }
    },
    {
@@ -89,8 +104,13 @@
    },
    {
     "name": "cache-status",
-    "description": "Context & cache panel: where each figure comes from (surfaces, draws, the account usage request, Fable)",
-    "output": "Surfaces attached now: terminal\nClients that attached since load: none seen\nDraw requests received: nothing yet\nPanel hidden: yes; px per cell: 8 (/cache scale <px> changes it)\nContext: 97400 / 200000\nLimits: session 31% (source: response)\nAccount usage request: auth undefined, HTTP —; keys: —; windows: none; Fable matched: none\nCache: last write 2025-10-09T08:53:20.080Z, TTL 60m (default)\nWarming: off\nFull report: /work/app/context-cache-status.json"
+    "description": "Context & cache panel: where each figure comes from (surfaces, draws, the account usage request, Fable) and what was saved today",
+    "output": "Surfaces attached now: terminal\nClients that attached since load: none seen\nDraw requests received: nothing yet\nPanel hidden: yes; px per cell: 8 (/cache scale <px> changes it)\nContext: 97400 / 200000\nLimits: session 31% (source: response)\nAccount usage request: auth undefined, HTTP —; keys: —; windows: none; Fable matched: none\nCache: last write 2025-10-09T08:53:20.080Z, TTL 60m (default)\nPrices: claude-opus-5-5 at $4 input, $0.2 cache read per million tokens\nSaved today by Clear and Compact: nothing yet\nSaved today by Warm: no pings yet\nSaved in the last 7 days: nothing yet\nWarming: off\nAuto-warm: off (/cache-autowarm sets it)\nFull report: /work/app/context-cache-status.json"
+   },
+   {
+    "name": "cache-mini",
+    "description": "Context & cache panel: one line (context %, cache, the next message's price) or the whole card",
+    "output": "Context & cache panel: one line (context, cache, next message). /cache-mini again for the whole card."
    },
    {
     "name": "cache-pane",
@@ -107,6 +127,12 @@
     "description": "Context & cache panel: px per cell the desktop draws at (default 8); a number sets it, none steps it",
     "argumentHint": "[px]",
     "output": "Desktop now draws at 8.5 px per cell (was 8). Run it again to step up; /cache-scale <px> sets it outright."
+   },
+   {
+    "name": "cache-autowarm",
+    "description": "Context & cache panel: switch Warm on by itself when you go quiet with a context over this many thousand tokens; 0 is off, none steps off/200/300/500",
+    "argumentHint": "[k tokens]",
+    "output": "Auto-warm: Warm switches itself on when the context is over 200k and you have been quiet 55 minutes (was off). Each ping reads the cache; /cache-autowarm 0 turns it off."
    }
   ],
   "tools": [],
@@ -121,21 +147,22 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 5,
-   "$.store.get": 2,
-   "$.state.get": 33,
-   "$.clock.now": 7,
-   "$.state.set": 11,
+   "$.command.register": 7,
+   "$.store.get": 12,
+   "$.state.get": 35,
+   "$.clock.now": 8,
+   "$.state.set": 12,
    "$.session.surfaces": 2,
    "$.clock.every": 3,
    "$.session.usage": 3,
    "$.session.messages": 2,
-   "$.session.authorize": 3,
+   "$.store.set": 4,
+   "$.session.authorize": 1,
    "$.fs.stat": 1,
+   "$.session.model": 3,
    "$.ui.close": 1,
    "$.fs.write": 1,
    "$.ui.open": 1,
-   "$.store.set": 1,
    "$.ui.resolve": 2
   },
   "timers": [
@@ -158,436 +185,32 @@
     "tree": {
      "type": "Box",
      "props": {
-      "key": "context-cache",
-      "flexDirection": "column",
-      "borderStyle": "round",
-      "borderColor": "#34322e",
+      "key": "context-cache-mini",
       "paddingX": 1
      },
      "children": [
       {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row"
-       },
-       "children": [
-        {
-         "type": "Text",
-         "props": {
-          "bold": true,
-          "color": "#ece9e2"
-         },
-         "children": [
-          "Context "
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "color": "#8a867d"
-         },
-         "children": [
-          "97k / 200k (49%)",
-          " "
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "wrap": "truncate"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "#2f2d2a"
-           },
-           "children": [
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "color": "#7d7970"
-         },
-         "children": [
-          " ",
-          "49%"
-         ]
-        }
-       ]
-      },
-      {
        "type": "Text",
        "props": {
-        "wrap": "wrap"
-       },
-       "children": [
-        {
-         "type": "Text",
-         "props": {},
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "#6f6b64"
-           },
-           "children": [
-            "● "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#b9b5ab"
-           },
-           "children": [
-            "System 0  "
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {},
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "#7050b8"
-           },
-           "children": [
-            "● "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#b9b5ab"
-           },
-           "children": [
-            "Tools 0  "
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {},
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "#2f6bd6"
-           },
-           "children": [
-            "● "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#b9b5ab"
-           },
-           "children": [
-            "Files 0  "
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {},
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "#c2562f"
-           },
-           "children": [
-            "● "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#b9b5ab"
-           },
-           "children": [
-            "Messages 0  "
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "color": "#7d7970"
-         },
-         "children": [
-          "Free 103k"
-         ]
-        }
-       ]
-      },
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row",
-        "justifyContent": "space-between"
-       },
-       "children": [
-        {
-         "type": "Box",
-         "props": {
-          "key": "limit-session",
-          "flexDirection": "column"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "color": "#4fae6a"
-             },
-             "children": [
-              "◷",
-              " "
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "bold": true,
-              "color": "#ece9e2"
-             },
-             "children": [
-              "31%"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#8a867d"
-           },
-           "children": [
-            "Time 80%"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Box",
-         "props": {
-          "key": "limit-weekly",
-          "flexDirection": "column"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "color": "#3b7be0"
-             },
-             "children": [
-              "▦",
-              " "
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "bold": true,
-              "color": "#7d7970"
-             },
-             "children": [
-              "—"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#8a867d"
-           },
-           "children": [
-            " "
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Box",
-         "props": {
-          "key": "limit-fable",
-          "flexDirection": "column"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "color": "#8a6fc0"
-             },
-             "children": [
-              "✦",
-              " "
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "bold": true,
-              "color": "#7d7970"
-             },
-             "children": [
-              "—"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#8a867d"
-           },
-           "children": [
-            " "
-           ]
-          }
-         ]
-        },
-        {
-         "type": "Box",
-         "props": {
-          "key": "cache",
-          "flexDirection": "column"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "color": "#e8833a"
-             },
-             "children": [
-              "♨",
-              " "
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "bold": true,
-              "color": "#ece9e2"
-             },
-             "children": [
-              "Warm"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#8a867d"
-           },
-           "children": [
-            "100% warm"
-           ]
-          }
-         ]
-        }
-       ]
-      },
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "column"
+        "wrap": "truncate"
        },
        "children": [
         {
          "type": "Text",
          "props": {
-          "wrap": "wrap"
+          "color": "#e8833a"
          },
          "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "#e8833a"
-           },
-           "children": [
-            "● "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "#b9b5ab"
-           },
-           "children": [
-            "Cache warm: reuses 97k."
-           ]
-          }
+          "● "
          ]
         },
         {
-         "type": "Box",
+         "type": "Text",
          "props": {
-          "flexDirection": "row",
-          "columnGap": 1
+          "color": "#b9b5ab"
          },
          "children": [
-          {
-           "type": "Button",
-           "props": {
-            "key": "clear",
-            "label": "Clear",
-            "variant": "primary",
-            "hotkey": "c",
-            "onPress": "[fn]"
-           },
-           "children": []
-          },
-          {
-           "type": "Button",
-           "props": {
-            "key": "compact",
-            "label": "Compact",
-            "hotkey": "k",
-            "onPress": "[fn]"
-           },
-           "children": []
-          },
-          {
-           "type": "Button",
-           "props": {
-            "key": "warm",
-            "label": "Warm",
-            "hotkey": "w",
-            "onPress": "[fn]"
-           },
-           "children": []
-          }
+          "Context 49% · Cache warm, 60m left · Next message ≈$0.02"
          ]
         }
        ]
@@ -630,8 +253,18 @@
            "color": "#8a867d"
           },
           "children": [
-           "97k / 200k (49%)",
-           " "
+           "97k / 200k (",
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "#ffffff"
+            },
+            "children": [
+             "49%"
+            ]
+           },
+           ") "
           ]
          },
          {
@@ -664,114 +297,131 @@
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "wrap": "wrap"
+         "paddingLeft": 0
         },
         "children": [
          {
           "type": "Text",
-          "props": {},
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "#6f6b64"
-            },
-            "children": [
-             "● "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "#b9b5ab"
-            },
-            "children": [
-             "System 0  "
-            ]
-           }
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "#7050b8"
-            },
-            "children": [
-             "● "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "#b9b5ab"
-            },
-            "children": [
-             "Tools 0  "
-            ]
-           }
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "#2f6bd6"
-            },
-            "children": [
-             "● "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "#b9b5ab"
-            },
-            "children": [
-             "Files 0  "
-            ]
-           }
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "color": "#c2562f"
-            },
-            "children": [
-             "● "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "#b9b5ab"
-            },
-            "children": [
-             "Messages 0  "
-            ]
-           }
-          ]
-         },
-         {
-          "type": "Text",
           "props": {
-           "color": "#7d7970"
+           "wrap": "wrap"
           },
           "children": [
-           "Free 103k"
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "#6f6b64"
+              },
+              "children": [
+               "● "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "#b9b5ab"
+              },
+              "children": [
+               "System 0  "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "#7050b8"
+              },
+              "children": [
+               "● "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "#b9b5ab"
+              },
+              "children": [
+               "Tools 0  "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "#2f6bd6"
+              },
+              "children": [
+               "● "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "#b9b5ab"
+              },
+              "children": [
+               "Files 0  "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "#c2562f"
+              },
+              "children": [
+               "● "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "color": "#b9b5ab"
+              },
+              "children": [
+               "Messages 0  "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#7d7970"
+            },
+            "children": [
+             "Free "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#c7c1b3"
+            },
+            "children": [
+             "103k"
+            ]
+           }
           ]
          }
         ]
@@ -968,27 +618,37 @@
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "wrap": "wrap"
+           "key": "notice"
           },
           "children": [
            {
             "type": "Text",
             "props": {
-             "color": "#e8833a"
+             "wrap": "wrap"
             },
             "children": [
-             "● "
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "#b9b5ab"
-            },
-            "children": [
-             "Cache warm: reuses 97k."
+             {
+              "type": "Text",
+              "props": {
+               "key": "dot",
+               "color": "#e8833a"
+              },
+              "children": [
+               "● "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "key": "rest",
+               "color": "#ded9cd"
+              },
+              "children": [
+               "Cache warm: reuses 97k (≈$0.02)."
+              ]
+             }
             ]
            }
           ]
@@ -997,39 +657,48 @@
           "type": "Box",
           "props": {
            "flexDirection": "row",
-           "columnGap": 1
+           "justifyContent": "flex-end"
           },
           "children": [
            {
-            "type": "Button",
+            "type": "Box",
             "props": {
-             "key": "clear",
-             "label": "Clear",
-             "variant": "primary",
-             "hotkey": "c",
-             "onPress": "[fn]"
+             "flexDirection": "row",
+             "columnGap": 1
             },
-            "children": []
-           },
-           {
-            "type": "Button",
-            "props": {
-             "key": "compact",
-             "label": "Compact",
-             "hotkey": "k",
-             "onPress": "[fn]"
-            },
-            "children": []
-           },
-           {
-            "type": "Button",
-            "props": {
-             "key": "warm",
-             "label": "Warm",
-             "hotkey": "w",
-             "onPress": "[fn]"
-            },
-            "children": []
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "clear",
+               "label": "Clear",
+               "variant": "primary",
+               "hotkey": "c",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "compact",
+               "label": "Compact",
+               "hotkey": "k",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "warm",
+               "label": "Warm",
+               "hotkey": "w",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
            }
           ]
          }
@@ -1056,10 +725,12 @@
    "/cache → Context & cache panel hidden. /cache shows it again.",
    "$.fs.write(context-cache-status.json)",
    "/cache-status → Surfaces attached now: terminal\nClients that attached since load: none seen\nDraw…",
+   "/cache-mini → Context & cache panel: one line (context, cache, next message). /cache-mini agai…",
    "$.ui.open(context-cache)",
    "/cache-pane → Context & cache panel opened.",
    "/cache-refresh → Context & cache panel refreshed.",
-   "/cache-scale → Desktop now draws at 8.5 px per cell (was 8). Run it again to step up; /cache-sc…"
+   "/cache-scale → Desktop now draws at 8.5 px per cell (was 8). Run it again to step up; /cache-sc…",
+   "/cache-autowarm → Auto-warm: Warm switches itself on when the context is over 200k and you have be…"
   ],
   "console": [],
   "warnings": []
@@ -1075,6 +746,7 @@
    "turn.complete",
    "turn.start",
    "classic.Stop",
+   "classic.PreModelSwitch",
    "classic.PostModelSwitch",
    "session.measure",
    "session.compact",
@@ -1082,6 +754,8 @@
    "command.run{command=cache-status}",
    "command.run{command=cache-refresh}",
    "command.run{command=cache-scale}",
+   "command.run{command=cache-mini}",
+   "command.run{command=cache-autowarm}",
    "command.run{command=cache-pane}",
    "command.run{command=cache}",
    "session.attach",
@@ -1100,6 +774,7 @@
    "$.model.fork (via warmTick)",
    "$.session.authorize (via fetchAccount)",
    "$.session.messages (via doRefresh)",
+   "$.session.model (via doRefresh)",
    "$.session.surfaces (via hasMobile",
    "statusReport)",
    "$.session.usage (via doRefresh)",
@@ -1108,12 +783,14 @@
    "$.store.get",
    "$.store.set",
    "$.ui.close",
+   "$.ui.notify (via coldSoon)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
    "context-cache.isHidden",
+   "context-cache.isMini",
    "context-cache.now",
    "context-cache.pxPerCell",
    "context-cache.snapshot",
@@ -1121,6 +798,7 @@
   ],
   "stateWrites": [
    "context-cache.isHidden",
+   "context-cache.isMini",
    "context-cache.now",
    "context-cache.pxPerCell",
    "context-cache.snapshot",
@@ -1138,7 +816,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: context-cache.snapshot, context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.warmUntil"
+     "types ./types/index.d.ts declares state: context-cache.snapshot, context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.warmUntil, context-cache.isMini"
     ],
     "gatingHooks": []
    },
@@ -1149,19 +827,23 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.SessionStart, turn.step, turn.complete, turn.start, classic.Stop, classic.PostModelSwitch, session.measure, session.compact, session.end, command.run{command=cache-status}, command.run{command=cache-refresh}, command.run{command=cache-scale}, command.run{command=cache-pane}, command.run{command=cache}, session.attach, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=context-cache}",
+      "./register.tsx hooks: session.start, classic.SessionStart, turn.step, turn.complete, turn.start, classic.Stop, classic.PreModelSwitch, classic.PostModelSwitch, session.measure, session.compact, session.end, command.run{command=cache-status}, command.run{command=cache-refresh}, command.run{command=cache-scale}, command.run{command=cache-mini}, command.run{command=cache-autowarm}, command.run{command=cache-pane}, command.run{command=cache}, session.attach, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=context-cache}",
+      "./register.tsx hooks on classic.SessionStart, classic.Stop, classic.PreModelSwitch, classic.PostModelSwitch, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook with .catch: classic.SessionStart",
       "./register.tsx gating hook with .catch: classic.Stop",
+      "./register.tsx gating hook with .catch: classic.PreModelSwitch",
       "./register.tsx gating hook with .catch: classic.PostModelSwitch",
       "./register.tsx gating hook with .catch: session.compact",
       "./register.tsx gating hook without .catch: command.run{command=cache-status}",
       "./register.tsx gating hook without .catch: command.run{command=cache-refresh}",
       "./register.tsx gating hook without .catch: command.run{command=cache-scale}",
+      "./register.tsx gating hook without .catch: command.run{command=cache-mini}",
+      "./register.tsx gating hook without .catch: command.run{command=cache-autowarm}",
       "./register.tsx gating hook without .catch: command.run{command=cache-pane}",
       "./register.tsx gating hook without .catch: command.run{command=cache}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via actionsFor), $.fs.read (via learnTtl), $.fs.stat (via learnTtl), $.fs.write (via statusReport), $.http.fetch (via fetchAccount), $.model.fork (via warmTick), $.session.authorize (via fetchAccount), $.session.messages (via doRefresh), $.session.surfaces (via hasMobile, statusReport), $.session.usage (via doRefresh), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.snapshot, context-cache.warmUntil",
-      "./register.tsx state reads: context-cache.isHidden, context-cache.now, context-cache.pxPerCell, context-cache.snapshot, context-cache.warmUntil"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via actionsFor), $.fs.read (via learnTtl), $.fs.stat (via learnTtl), $.fs.write (via statusReport), $.http.fetch (via fetchAccount), $.model.fork (via warmTick), $.session.authorize (via fetchAccount), $.session.messages (via doRefresh), $.session.model (via doRefresh), $.session.surfaces (via hasMobile, statusReport), $.session.usage (via doRefresh), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.notify (via coldSoon), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: context-cache.isHidden, context-cache.isMini, context-cache.now, context-cache.pxPerCell, context-cache.snapshot, context-cache.warmUntil",
+      "./register.tsx state reads: context-cache.isHidden, context-cache.isMini, context-cache.now, context-cache.pxPerCell, context-cache.snapshot, context-cache.warmUntil"
      ],
      "gatingHooks": [
       {
@@ -1174,6 +856,12 @@
        "module": "./register.tsx",
        "pattern": "classic.Stop",
        "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PreModelSwitch",
+       "hook": "classic.PreModelSwitch",
        "hasCatch": true
       },
       {
@@ -1209,6 +897,18 @@
       {
        "module": "./register.tsx",
        "pattern": "command.run",
+       "hook": "command.run{command=cache-mini}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=cache-autowarm}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
        "hook": "command.run{command=cache-pane}",
        "hasCatch": false
       },
@@ -1224,5 +924,5 @@
    "advice": []
   }
  },
- "sourceHash": "e79166dd7ed53ae0"
+ "sourceHash": "e026236563623fed"
 }

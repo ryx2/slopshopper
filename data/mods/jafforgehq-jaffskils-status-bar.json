@@ -1,0 +1,8 @@
+{
+ "slug": "jafforgehq-jaffskils-status-bar",
+ "files": {
+  "hooks/register.ts": "import type { EngineInterface, Register } from 'claude-code'\n\n// Shows \"$0.42 · main · opus · ctx 31%\" in the status line after each turn.\nasync function refresh($: EngineInterface, model: string) {\n  const { context, cost } = await $.session.usage()\n  const git = await $.process.run(['git', 'branch', '--show-current'])\n  const branch = git.exitCode === 0 ? git.stdout.trim() : ''\n  const parts = [\n    cost ? `$${cost.usd.toFixed(2)}` : '',\n    branch,\n    model,\n    context.percent === undefined ? '' : `ctx ${context.percent}%`,\n  ].filter(Boolean)\n\n  $.ui.status(parts.length > 0 ? parts.join(' · ') : undefined)\n}\n\nexport const register: Register = on => {\n  let model = ''\n\n  on('session.start', async ($, e, next) => {\n    await refresh($, model)\n\n    return next(e)\n  })\n\n  on('turn.complete', async ($, e, next) => {\n    if (e.agentId === undefined && e.usage?.model) {\n      model = e.usage.model.replace(/^claude-/, '').replace(/-\\d.*$/, '')\n    }\n    await refresh($, model)\n\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"status-bar\",\n  \"description\": \"One status line entry: session cost, git branch, model and context use\",\n  \"author\": {\n    \"name\": \"jafforgehq\"\n  }\n}"
+ }
+}

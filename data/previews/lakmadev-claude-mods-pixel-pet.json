@@ -1,6 +1,6 @@
 {
  "slug": "lakmadev-claude-mods-pixel-pet",
- "generatedAt": "2026-10-09T15:33:45.604Z",
+ "generatedAt": "2026-10-16T14:20:24.408Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -56,9 +56,9 @@
   "commands": [
    {
     "name": "pet",
-    "description": "Your pixel pet: stats, or show / hide / rename <name> / color <name>",
-    "argumentHint": "[show|hide|rename <name>|color <name>]",
-    "output": "Bit · teal\n1 turns together · petted 0 times · 0 days old\nClick it to pet it. /pet color <name> changes its colour, /pet rename <name> its name."
+    "description": "Your pixel pet: stats, or color / rename / outfit / card / calm / breaks / sound / project / hide / show",
+    "argumentHint": "[color|rename|outfit|card|calm|breaks|sound|project|hide|show]",
+    "output": "Sprout · teal\n1 turns together · petted 0 times · 0 helpers hatched · 0 green test runs · 0 days old\nClick it to pet it. /pet color, rename, outfit, card, calm, breaks, sound, project."
    }
   ],
   "tools": [],
@@ -69,26 +69,24 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.clock.now": 18,
-   "$.store.get": 1,
-   "$.store.set": 2,
-   "$.env.get": 3,
+   "$.clock.now": 20,
+   "$.process.run": 1,
+   "$.env.get": 4,
+   "$.fs.read": 3,
+   "$.store.get": 3,
+   "$.fs.write": 2,
+   "$.store.set": 6,
    "$.config.list": 1,
    "$.session.usage": 1,
-   "$.state.get": 7,
-   "$.state.set": 6,
+   "$.state.get": 8,
+   "$.state.set": 7,
    "$.clock.every": 1,
-   "$.clock.after": 1,
    "$.ui.resolve": 2
   },
   "timers": [
    {
     "kind": "every",
     "ms": 1000
-   },
-   {
-    "kind": "after",
-    "ms": 860
    }
   ],
   "sites": {
@@ -106,12 +104,17 @@
        "props": {
         "key": "pet",
         "module": "./pet-view.tsx",
-        "width": 10,
-        "height": 4,
+        "width": 14,
+        "height": 5,
         "props": {
          "mood": "happy",
          "look": 0,
-         "color": "teal"
+         "color": "teal",
+         "outfit": "none",
+         "tired": 0,
+         "calm": false,
+         "scene": "meadow",
+         "isMoving": false
         }
        },
        "children": []
@@ -129,8 +132,9 @@
           "key": "status",
           "module": "./status-view.tsx",
           "props": {
-           "name": "Bit",
-           "line": "says: ship it!"
+           "name": "Sprout",
+           "line": "high-fives the terminal!",
+           "calm": false
           }
          },
          "children": []
@@ -232,6 +236,8 @@
    }
   },
   "script": [
+   "$.process.run(date +%z) → exit 0",
+   "$.fs.write(/Users/dev/.claude/pixel-pet.json)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -242,8 +248,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.fs.write(/Users/dev/.claude/pixel-pet.json)",
    "turn.complete",
-   "/pet → Bit · teal\n1 turns together · petted 0 times · 0 days old\nClick it to pet it. /p…"
+   "/pet → Sprout · teal\n1 turns together · petted 0 times · 0 helpers hatched · 0 green te…"
   ],
   "console": [],
   "warnings": []
@@ -270,6 +277,7 @@
   ],
   "calls": [
    "$.agent.list (via tendMinis)",
+   "$.audio.play (via call)",
    "$.clock.after (via hatch",
    "say)",
    "$.clock.every",
@@ -277,13 +285,18 @@
    "$.command.register",
    "$.config.list",
    "$.env.get",
-   "$.fs.read (via definedColor)",
+   "$.fs.exists (via saveCard)",
+   "$.fs.read (via definedColor",
+   "readKept)",
+   "$.fs.write (via keep",
+   "saveCard)",
+   "$.process.run",
    "$.session.cwd (via definedColor)",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
    "$.store.get",
-   "$.store.set",
+   "$.store.set (via keep)",
    "$.ui.resolve"
   ],
   "stateReads": [
@@ -321,13 +334,14 @@
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, prompt.edit, prompt.autocomplete, ui.message, prompt.submit, turn.start, agent.spawn, session.compact, classic.Notification, turn.complete, tool.call, session.measure, command.run{command=pet}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on session.compact, classic.Notification do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=pet}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: session.compact",
       "./register.tsx gating hook without .catch: classic.Notification",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via tendMinis), $.clock.after (via hatch, say), $.clock.every, $.clock.now, $.command.register, $.config.list, $.env.get, $.fs.read (via definedColor), $.session.cwd (via definedColor), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.resolve",
+      "./register.tsx calls: $.agent.list (via tendMinis), $.audio.play (via call), $.clock.after (via hatch, say), $.clock.every, $.clock.now, $.command.register, $.config.list, $.env.get, $.fs.exists (via saveCard), $.fs.read (via definedColor, readKept), $.fs.write (via keep, saveCard), $.process.run, $.session.cwd (via definedColor), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set (via keep), $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, HOME",
       "./register.tsx state writes: pixel-pet.view",
@@ -371,5 +385,5 @@
    "advice": []
   }
  },
- "sourceHash": "8e641be66249d223"
+ "sourceHash": "650508a48d0338b5"
 }

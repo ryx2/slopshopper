@@ -1,0 +1,511 @@
+{
+ "slug": "bruw-workflow-conductor",
+ "generatedAt": "2026-10-16T14:15:56.152Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "conductor"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Workflow"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskStop"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "UserMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "conductor"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "conductor"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "text": "/^/"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "isAborted": [
+      true,
+      false
+     ]
+    }
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": [
+      "clear",
+      "resume"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__workflow-conductor__project"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Write",
+      "Edit"
+     ]
+    }
+   },
+   {
+    "event": "ui.message",
+    "matcher": {
+     "requestId": "conductor-project",
+     "element": "canvas"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "conductor-project"
+    }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "requestId": "conductor-project"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "conductor-project"
+    }
+   },
+   {
+    "event": "prompt.edit",
+    "matcher": {
+     "text": ""
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "conductor-project"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": [
+      true,
+      false
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__workflow-conductor__before_workflow"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "conductor",
+    "description": "Workflow designer and run view: no argument opens the board (a run in progress, the project last opened, or the start screen to pick one); with a description, Claude drafts a new project for it; min and max move the designer between its pane and the band above the prompt",
+    "argumentHint": "[what the workflow should do | min | max]",
+    "output": "Open a saved project in the pane, or start a new one from a template."
+   }
+  ],
+  "tools": [
+   {
+    "name": "project",
+    "description": "Reads and edits the user's Conductor workflow project: the board of blocks they see, saved at .claude/workflow-conductor/<name>.json. Use it whenever the user asks to draft, add, change, move or remove workflow blocks or steps (\"add a verify after n3\", \"this block\"); do not edit that file by hand. A project is a spec the user reviews, not a script: never run it from here.\nActions: read = the project JSON, the block selected on the board (\"this block\") and the lints. Read before you describe, review or edit a project, unless a Conductor note with the prompt has told you what changed: the user changes the board by hand between your turns, so what you read or wrote earlier may be gone (every answer names the revision it shows). apply = `ops` in order, all or nothing. write = replace the whole tree with `nodes` (drafting, large restructures). attach = a write, with `match`, of a project OF the workflow run tracked now: the run shows on it. An edit shows on the board at once and returns the lints: fix them or tell the user.\nBlock: { id, type, kind?, name, logic?, knobs?, match?, children? }. Ids (n1, n2…) are assigned for you and never change. name is a short label; logic is free text saying what the block should do. Order is execution order. Only containers hold children. Blocks directly inside a branch are its arms (one runs, picked by its `condition`), and directly inside a parallel they run side by side: to run two blocks one after the other there, put both in a pipeline. Every project starts with its start block: it is not added, moved or removed, and it alone has the knobs `goal` (the goal of the whole workflow, in a sentence: set it when drafting, keep it true) and `args` (the workflow's input, or unset for none). Update it by id; in a write, put it first, or leave it out to keep it as it is.\nTypes:\n- agent: Performs a task. Use when a step needs reading or judgment: search, review, write, decide.\n- pipeline (container): Per-item chain of steps. Use when each item takes several steps and no step needs all items at once.\n- parallel (container): Concurrent; awaits all. Use when the next step needs every result together: merge, compare, pick.\n- loop (container): Repeat until stop rule. Use when you cannot tell up front how many rounds it takes; say when it stops.\n- branch (container): If/else on a result. Use when a result decides what runs next, e.g. nothing found: skip the checks.\n- subworkflow: Run a saved workflow. Use when a saved workflow already does this part.\n- code: Plain JS, no tokens. Use when the step is exact and mechanical: never spend an agent on it.\n- start: Entry: goal and args. Use when always: every project has one, first.\nKinds: `kind` names the pattern a block is used for (each explained on `kind` in the schema); leave it out for the plain block. agent: scout, check, verify, judge, critic, merge, classify. loop: count, pass, dry, converged, target, budget. parallel: each, sweep, attempts. branch: guard, route.\nKnobs, all optional, explained on `knobs` in the schema: goal, args, prompt, output, model, effort, isolation, agentType, oncePer, stopCondition, condition."
+   },
+   {
+    "name": "before_workflow",
+    "description": "Call this before authoring or running any Workflow script (multi-agent workflow); it asks the user how they want to proceed."
+   }
+  ],
+  "panes": [
+   {
+    "id": "conductor-project",
+    "title": "Conductor project"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.state.get": 26,
+   "$.tool.register": 2,
+   "$.state.set": 3,
+   "$.session.root": 4,
+   "$.session.cwd": 3,
+   "$.fs.list": 1,
+   "$.fs.exists": 1,
+   "$.ui.open": 1,
+   "$.clock.after": 2,
+   "$.ui.resolve": 2,
+   "$.config.list": 1
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 48
+   },
+   {
+    "kind": "after",
+    "ms": 32
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "UserMessage": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "conductor-project": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "color": "inactive"
+      },
+      "children": [
+       "◆ Conductor project: no room here for the designer, it goes to the band above the prompt"
+      ]
+     },
+     "title": "Conductor project"
+    },
+    "conductor": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "color": "text"
+        },
+        "children": [
+         "◆ Conductor"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "inactive"
+        },
+        "children": [
+         "╰ no workflow running yet"
+        ]
+       }
+      ]
+     },
+     "title": "conductor"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(conductor-project)",
+   "/conductor → Open a saved project in the pane, or start a new one from a template."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=conductor}",
+   "tool.call{tool=Workflow}",
+   "agent.spawn",
+   "turn.step",
+   "turn.complete",
+   "tool.call{tool=TaskStop}",
+   "ui.render{component=UserMessage}",
+   "ui.render{component=Pane, requestId=?}",
+   "command.run{command=conductor}",
+   "session.start{cwd=/\"^\"/}",
+   "prompt.submit{text=/\"^\"/}",
+   "turn.complete{isAborted=true|false}",
+   "session.compact",
+   "session.end{reason=clear|resume}",
+   "tool.call{tool=?}",
+   "tool.call{tool=Write|Edit}",
+   "ui.message{requestId=?, element=canvas}",
+   "ui.scroll{requestId=?}",
+   "ui.focus{requestId=?}",
+   "ui.close{id=?}",
+   "prompt.edit{text=\"\"}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.render{component=AbovePrompt}",
+   "session.start{isInteractive=true|false}",
+   "tool.call{tool=?}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.config.list (via themeOf)",
+   "$.fs.exists",
+   "$.fs.list",
+   "$.fs.read",
+   "$.fs.write (via saveProject)",
+   "$.prompt.fill",
+   "$.prompt.read (via endDraft",
+   "watchBox)",
+   "$.prompt.submit",
+   "$.session.cwd",
+   "$.session.root",
+   "$.session.surfaces",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via forgetAnswers)",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.ask",
+   "$.ui.close (via minimize",
+   "request)",
+   "$.ui.focus",
+   "$.ui.invalidate",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "workflow-conductor.draftBeat",
+   "workflow-conductor.markNudge",
+   "workflow-conductor.project",
+   "workflow-conductor.projectUi",
+   "workflow-conductor.run",
+   "workflow-conductor.runClock",
+   "workflow-conductor.runProject",
+   "workflow-conductor.runScript",
+   "workflow-conductor.runTimes",
+   "workflow-conductor.runUi",
+   "workflow-conductor.shell",
+   "workflow-conductor.splashed"
+  ],
+  "stateWrites": [
+   "workflow-conductor.draftBeat",
+   "workflow-conductor.markNudge",
+   "workflow-conductor.project",
+   "workflow-conductor.projectUi",
+   "workflow-conductor.run",
+   "workflow-conductor.runClock",
+   "workflow-conductor.runProject",
+   "workflow-conductor.runScript",
+   "workflow-conductor.runTimes",
+   "workflow-conductor.runUi",
+   "workflow-conductor.shell",
+   "workflow-conductor.splashed"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/bruw-workflow-conductor/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/bruw-workflow-conductor/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: workflow-conductor.run, workflow-conductor.runUi, workflow-conductor.runClock, workflow-conductor.runProject, workflow-conductor.runScript, workflow-conductor.runTimes, workflow-conductor.project, workflow-conductor.projectUi, workflow-conductor.splashed, workflow-conductor.draftBeat, workflow-conductor.markNudge, workflow-conductor.shell"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/bruw-workflow-conductor/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=conductor}, tool.call{tool=Workflow}, agent.spawn, turn.step, turn.complete, tool.call{tool=TaskStop}, ui.render{component=UserMessage}, ui.render{component=Pane, requestId=?}, command.run{command=conductor}, session.start{cwd=/\"^\"/}, prompt.submit{text=/\"^\"/}, turn.complete{isAborted=true|false}, session.compact, session.end{reason=clear|resume}, tool.call{tool=?}, tool.call{tool=Write|Edit}, ui.message{requestId=?, element=canvas}, ui.scroll{requestId=?}, ui.focus{requestId=?}, ui.close{id=?}, prompt.edit{text=\"\"}, ui.render{component=Pane, requestId=?}, ui.render{component=AbovePrompt}, session.start{isInteractive=true|false}, tool.call{tool=?}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook without .catch: command.run{command=conductor}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Workflow}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call{tool=TaskStop}",
+      "./register.tsx gating hook without .catch: command.run{command=conductor}",
+      "./register.tsx gating hook without .catch: prompt.submit{text=/\"^\"/}",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: tool.call{tool=?}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Write|Edit}",
+      "./register.tsx gating hook without .catch: ui.scroll{requestId=?}",
+      "./register.tsx gating hook without .catch: ui.focus{requestId=?}",
+      "./register.tsx gating hook without .catch: ui.close{id=?}",
+      "./register.tsx gating hook without .catch: tool.call{tool=?}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.config.list (via themeOf), $.fs.exists, $.fs.list, $.fs.read, $.fs.write (via saveProject), $.prompt.fill, $.prompt.read (via endDraft, watchBox), $.prompt.submit, $.session.cwd, $.session.root, $.session.surfaces, $.state.get, $.state.set, $.store.delete (via forgetAnswers), $.store.get, $.store.set, $.tool.register, $.ui.ask, $.ui.close (via minimize, request), $.ui.focus, $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: workflow-conductor.draftBeat, workflow-conductor.markNudge, workflow-conductor.project, workflow-conductor.projectUi, workflow-conductor.run, workflow-conductor.runClock, workflow-conductor.runProject, workflow-conductor.runScript, workflow-conductor.runTimes, workflow-conductor.runUi, workflow-conductor.shell, workflow-conductor.splashed",
+      "./register.tsx state reads: workflow-conductor.draftBeat, workflow-conductor.markNudge, workflow-conductor.project, workflow-conductor.projectUi, workflow-conductor.run, workflow-conductor.runClock, workflow-conductor.runProject, workflow-conductor.runScript, workflow-conductor.runTimes, workflow-conductor.runUi, workflow-conductor.shell, workflow-conductor.splashed",
+      "./register.tsx surface modules: hooks/canvas.tsx, hooks/mark.tsx, hooks/splash.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=conductor}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Workflow}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskStop}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=conductor}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{text=/\"^\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write|Edit}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{requestId=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "147453981c2a899d"
+}

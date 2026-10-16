@@ -1,6 +1,6 @@
 {
  "slug": "katipally-modz-orchestrator",
- "generatedAt": "2026-10-10T14:45:22.638Z",
+ "generatedAt": "2026-10-16T14:20:15.099Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -23,6 +23,15 @@
     "event": "turn.complete"
    },
    {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "session.send"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
@@ -32,16 +41,53 @@
   "commands": [
    {
     "name": "orch",
-    "description": "Orchestrator settings: on, off, max=N, ctx=200k, models=sonnet,haiku, save, reset",
-    "argumentHint": "[on|off] [max=N] [ctx=N] [models=a,b] [save|reset]",
-    "output": "Orchestrator ON | models: sonnet, haiku | max agents: 2 | context: 200k"
+    "description": "Orchestrator settings: on, off, max=N, ctx=200k, models=sonnet,haiku, delegate=on|off, save, reset",
+    "argumentHint": "[on|off] [max=N] [ctx=N] [models=a,b] [delegate=on|off] [save|reset]",
+    "output": "Orchestrator ON | models: sonnet, haiku | max at once: 2 | context: 200k | delegate: on"
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [],
   "logs": [],
-  "denies": [],
+  "denies": [
+   {
+    "tool": "Read: /work/app/src/auth.ts",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Grep: ",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Edit: /work/app/src/auth.ts",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Write: /work/app/src/audit.ts",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Write: /work/app/src/cache.ts",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Bash: bun test",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Bash: git status --porcelain",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   },
+   {
+    "tool": "Bash: cat .env",
+    "reason": "Orchestrator mode: delegate reads, searches, edits and commands to a subagent."
+   }
+  ],
   "rewrites": [
    {
     "event": "prompt.submit",
@@ -50,7 +96,7 @@
   ],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 11,
+   "$.state.get": 20,
    "$.store.get": 1,
    "$.state.set": 2,
    "$.ui.resolve": 1
@@ -92,23 +138,46 @@
            },
            "children": [
             {
-             "type": "Box",
+             "type": "Button",
              "props": {
-              "flexDirection": "row",
-              "columnGap": 1
+              "key": "orch",
+              "plain": true,
+              "dimColor": false,
+              "onPress": "[fn]"
              },
              "children": [
               {
-               "type": "Button",
+               "type": "Text",
                "props": {
-                "key": "orch",
-                "plain": true,
-                "label": "Orchestrator on ▾",
-                "onPress": "[fn]"
+                "color": "success"
                },
-               "children": []
+               "children": [
+                "●"
+               ]
+              },
+              " Orchestrator ",
+              {
+               "type": "Text",
+               "props": {
+                "color": "success",
+                "bold": true
+               },
+               "children": [
+                "ON"
+               ]
               }
              ]
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "settings",
+              "plain": true,
+              "dimColor": true,
+              "label": "Settings ▾",
+              "onPress": "[fn]"
+             },
+             "children": []
             }
            ]
           }
@@ -137,17 +206,17 @@
   },
   "script": [
    "session.start",
-   "tool.call Read",
-   "tool.call Grep",
-   "tool.call Edit",
-   "tool.call Write",
-   "tool.call Write",
-   "tool.call Bash bun test",
-   "tool.call Bash git status --porcelain",
-   "tool.call Bash rm -rf build && git push --force origin main",
-   "tool.call Bash cat .env",
+   "tool.call Read denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Grep denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Edit denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Write denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Write denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Bash denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Bash denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Bash denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
+   "tool.call Bash denied: Orchestrator mode: delegate reads, searches, edits and commands to a subagent.",
    "turn.complete",
-   "/orch → Orchestrator ON | models: sonnet, haiku | max agents: 2 | context: 200k"
+   "/orch → Orchestrator ON | models: sonnet, haiku | max at once: 2 | context: 200k | deleg…"
   ],
   "console": [],
   "warnings": []
@@ -162,15 +231,19 @@
    "prompt.submit",
    "agent.spawn",
    "turn.complete",
+   "tool.call",
+   "turn.step",
+   "session.send",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.agent.list",
    "$.clock.every (via track)",
    "$.command.register",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
-   "$.store.set",
+   "$.store.get (via loadDefaults)",
+   "$.store.set (via saveDefaults)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
@@ -178,8 +251,9 @@
    "orchestrator.config",
    "orchestrator.editing",
    "orchestrator.isOpen",
-   "orchestrator.openMenu",
+   "orchestrator.retired",
    "orchestrator.running",
+   "orchestrator.saved",
    "orchestrator.spawned",
    "orchestrator.spin"
   ],
@@ -187,8 +261,9 @@
    "orchestrator.config",
    "orchestrator.editing",
    "orchestrator.isOpen",
-   "orchestrator.openMenu",
+   "orchestrator.retired",
    "orchestrator.running",
+   "orchestrator.saved",
    "orchestrator.spawned",
    "orchestrator.spin"
   ],
@@ -204,7 +279,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: orchestrator.config, orchestrator.spawned, orchestrator.editing, orchestrator.isOpen, orchestrator.running, orchestrator.spin, orchestrator.openMenu"
+     "types ./types/index.d.ts declares state: orchestrator.config, orchestrator.editing, orchestrator.isOpen, orchestrator.running, orchestrator.spawned, orchestrator.retired, orchestrator.saved, orchestrator.spin"
     ],
     "gatingHooks": []
    },
@@ -215,13 +290,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=orch}, prompt.submit, agent.spawn, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=orch}, prompt.submit, agent.spawn, turn.complete, tool.call, turn.step, session.send, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=orch}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: agent.spawn",
-      "./register.tsx calls: $.clock.every (via track), $.command.register, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: orchestrator.config, orchestrator.editing, orchestrator.isOpen, orchestrator.openMenu, orchestrator.running, orchestrator.spawned, orchestrator.spin",
-      "./register.tsx state reads: orchestrator.config, orchestrator.editing, orchestrator.isOpen, orchestrator.openMenu, orchestrator.running, orchestrator.spawned, orchestrator.spin"
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook with .catch: session.send",
+      "./register.tsx calls: $.agent.list, $.clock.every (via track), $.command.register, $.state.get, $.state.set, $.store.get (via loadDefaults), $.store.set (via saveDefaults), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: orchestrator.config, orchestrator.editing, orchestrator.isOpen, orchestrator.retired, orchestrator.running, orchestrator.saved, orchestrator.spawned, orchestrator.spin",
+      "./register.tsx state reads: orchestrator.config, orchestrator.editing, orchestrator.isOpen, orchestrator.retired, orchestrator.running, orchestrator.saved, orchestrator.spawned, orchestrator.spin"
      ],
      "gatingHooks": [
       {
@@ -235,6 +312,18 @@
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.send",
+       "hook": "session.send",
+       "hasCatch": true
       }
      ]
     }
@@ -242,5 +331,5 @@
    "advice": []
   }
  },
- "sourceHash": "364add8399228a76"
+ "sourceHash": "2cb1d35afd8a3e76"
 }

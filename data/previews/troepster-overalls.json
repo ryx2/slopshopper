@@ -1,11 +1,14 @@
 {
  "slug": "troepster-overalls",
- "generatedAt": "2026-10-06T05:28:17.745Z",
+ "generatedAt": "2026-10-16T14:18:17.786Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.measure"
    },
    {
     "event": "command.run",
@@ -23,6 +26,9 @@
     "event": "turn.complete"
    },
    {
+    "event": "session.end"
+   },
+   {
     "event": "session.compact"
    },
    {
@@ -37,14 +43,21 @@
      "component": "Pane",
      "requestId": "overalls"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "overalls-sessions"
+    }
    }
   ],
   "commands": [
    {
     "name": "overalls",
     "description": "Set the Overalls band",
-    "argumentHint": "weather off|minimal|normal|full · ponytail off|icon|text · caveman off|icon|text · megacave on|off · limits on|off · resets on|off · cost on|off · mcp on|off · agents on|off · turns on|off · denials on|off · runout off|warn|always · view bar|pane|both",
-    "output": "Overalls weather: full, ponytail: icon, caveman: icon, megacave: off, limits: on, resets: on, agents: on, turns: on, denials: on, runout: warn, cost: off, mcp: on, view: bar\nUsage: /overalls weather off|minimal|normal|full · ponytail off|icon|text · caveman off|icon|text · megacave on|off · limits on|off · resets on|off · cost on|off · mcp on|off · agents on|off · turns on|off · denials on|off · runout off|warn|always · view bar|pane|both"
+    "argumentHint": "weather off|minimal|normal|full · ponytail off|icon|text · caveman off|icon|text · megacave on|off · limits on|off · resets on|off · cost on|off · mcp on|off · agents on|off · turns on|off · denials on|off · runout off|warn|always · view bar|pane|both · sessions on|off",
+    "output": "Overalls weather: full, ponytail: icon, caveman: icon, megacave: off, limits: on, resets: on, agents: on, turns: on, denials: on, runout: warn, cost: off, mcp: on, view: bar, sessions: on\nUsage: /overalls weather off|minimal|normal|full · ponytail off|icon|text · caveman off|icon|text · megacave on|off · limits on|off · resets on|off · cost on|off · mcp on|off · agents on|off · turns on|off · denials on|off · runout off|warn|always · view bar|pane|both · sessions on|off"
    }
   ],
   "tools": [],
@@ -55,15 +68,23 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.store.get": 8,
+   "$.store.get": 12,
    "$.settings.read": 6,
-   "$.state.get": 24,
-   "$.state.set": 7,
+   "$.state.get": 39,
+   "$.state.set": 8,
+   "$.env.get": 12,
+   "$.session.id": 5,
+   "$.session.root": 2,
+   "$.process.run": 2,
+   "$.session.cwd": 2,
+   "$.session.model": 2,
+   "$.session.usage": 5,
+   "$.agent.list": 4,
+   "$.clock.now": 6,
+   "$.fs.write": 2,
    "$.clock.every": 1,
-   "$.session.usage": 3,
-   "$.ui.resolve": 2,
-   "$.clock.now": 2,
-   "$.agent.list": 2
+   "$.ui.resolve": 3,
+   "$.fs.list": 1
   },
   "timers": [
    {
@@ -604,10 +625,38 @@
       ]
      },
      "title": "overalls"
+    },
+    "overalls-sessions": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1,
+       "width": "100%"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "0",
+         " live session",
+         "s",
+         " running Overalls · updated every 30 s"
+        ]
+       }
+      ]
+     },
+     "title": "overalls-sessions"
     }
    }
   },
   "script": [
+   "$.process.run(grep -a -F \"type\":\"custom-title\" /Users/dev/.claude/projects/-work-app/preview-s…) → exit 0",
+   "$.fs.write(/Users/dev/.claude/overalls/sessions/preview-session.json)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -618,6 +667,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(grep -a -F \"type\":\"custom-title\" /Users/dev/.claude/projects/-work-app/preview-s…) → exit 0",
+   "$.fs.write(/Users/dev/.claude/overalls/sessions/preview-session.json)",
    "turn.complete",
    "/overalls → Overalls weather: full, ponytail: icon, caveman: icon, megacave: off, limits: on…"
   ],
@@ -630,18 +681,24 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.measure",
    "command.run{command=overalls}",
    "prompt.submit",
    "tool.call",
    "turn.complete",
+   "session.end",
    "session.compact",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=overalls}"
+   "ui.render{component=Pane, requestId=overalls}",
+   "ui.render{component=Pane, requestId=overalls-sessions}"
   ],
   "calls": [
-   "$.agent.list (via draw)",
+   "$.agent.list (via draw",
+   "heartbeat)",
    "$.clock.every",
    "$.clock.now (via draw",
+   "drawSessions",
+   "heartbeat",
    "sampleLimits)",
    "$.command.register",
    "$.command.run (via draw",
@@ -651,15 +708,26 @@
    "$.config.set (via setPref)",
    "$.env.get (via claudeDir",
    "draw",
+   "heartbeat",
    "ponytailDefault)",
+   "$.fs.list (via readBeats)",
    "$.fs.read (via checkCaveman",
-   "ponytailDefault)",
-   "$.process.run (via openConnectors)",
+   "ponytailDefault",
+   "readBeats)",
+   "$.fs.write (via heartbeat)",
+   "$.process.run (via openApp",
+   "refreshTitle)",
    "$.prompt.fill (via askToInstall",
    "draw",
    "runAsTyped)",
    "$.session.compact (via draw)",
-   "$.session.id (via checkCaveman)",
+   "$.session.cwd (via heartbeat)",
+   "$.session.id (via checkCaveman",
+   "drawSessions",
+   "heartbeat",
+   "refreshTitle)",
+   "$.session.model (via heartbeat)",
+   "$.session.root (via refreshTitle)",
    "$.session.usage",
    "$.settings.read (via isInstalled)",
    "$.state.get",
@@ -669,36 +737,37 @@
    "$.store.set (via setPref)",
    "$.ui.close (via applyView)",
    "$.ui.invalidate",
-   "$.ui.open (via applyView)",
-   "$.ui.resolve (via draw)",
+   "$.ui.open",
+   "$.ui.resolve (via draw",
+   "drawSessions)",
    "$.ui.toast (via askToInstall",
-   "draw",
-   "openConnectors",
-   "reconnectMcp",
-   "runAsTyped)"
+   "d… [+59 chars]"
   ],
   "stateReads": [
    "overalls.caveman",
    "overalls.denials",
    "overalls.history",
    "overalls.level",
-   "overalls.limitSamples",
+   "overalls.limitMeasures",
    "overalls.mcpDown",
    "overalls.panel",
-   "overalls.ponytail"
+   "overalls.ponytail",
+   "overalls.title"
   ],
   "stateWrites": [
    "overalls.caveman",
    "overalls.denials",
    "overalls.history",
    "overalls.level",
-   "overalls.limitSamples",
+   "overalls.limitMeasures",
    "overalls.mcpDown",
    "overalls.panel",
-   "overalls.ponytail"
+   "overalls.ponytail",
+   "overalls.title"
   ],
   "envReads": [
    "CLAUDE_CODE_ENTRYPOINT",
+   "CLAUDE_CODE_HOST_SESSION_ID",
    "CLAUDE_CONFIG_DIR",
    "HOME",
    "PONYTAIL_DEFAULT_MODE",
@@ -707,34 +776,61 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/troepster-overalls/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/troepster-overalls/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/troepster-overalls/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/troepster-overalls/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: overalls.history, overalls.ponytail, overalls.level, overalls.caveman, overalls.mcpDown, overalls.panel, overalls.denials, overalls.limitSamples"
-    ]
+     "types ./types/index.d.ts declares state: overalls.history, overalls.ponytail, overalls.level, overalls.caveman, overalls.mcpDown, overalls.panel, overalls.denials, overalls.limitMeasures, overalls.title"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/troepster-overalls/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/troepster-overalls/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=overalls}, prompt.submit, tool.call, turn.complete, session.compact, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=overalls}",
-      "./register.tsx calls: $.agent.list (via draw), $.clock.every, $.clock.now (via draw, sampleLimits), $.command.register, $.command.run (via draw, reconnectMcp, runAsTyped), $.config.list (via setPref), $.config.set (via setPref), $.env.get (via claudeDir, draw, ponytailDefault), $.fs.read (via checkCaveman, ponytailDefault), $.process.run (via openConnectors), $.prompt.fill (via askToInstall, draw, runAsTyped), $.session.compact (via draw), $.session.id (via checkCaveman), $.session.usage, $.settings.read (via isInstalled), $.state.get, $.state.set, $.store.get (via prefs, setPref), $.store.set (via setPref), $.ui.close (via applyView), $.ui.invalidate, $.ui.open (via applyView), $.ui.resolve (via draw), $.ui.toast (via askToInstall, draw, openConnectors, reconnectMcp, runAsTyped)",
+      "./register.tsx hooks: session.start, session.measure, command.run{command=overalls}, prompt.submit, tool.call, turn.complete, session.end, session.compact, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=overalls}, ui.render{component=Pane, requestId=overalls-sessions}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=overalls}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx calls: $.agent.list (via draw, heartbeat), $.clock.every, $.clock.now (via draw, drawSessions, heartbeat, sampleLimits), $.command.register, $.command.run (via draw, reconnectMcp, runAsTyped), $.config.list (via setPref), $.config.set (via setPref), $.env.get (via claudeDir, draw, heartbeat, ponytailDefault), $.fs.list (via readBeats), $.fs.read (via checkCaveman, ponytailDefault, readBeats), $.fs.write (via heartbeat), $.process.run (via openApp, refreshTitle), $.prompt.fill (via askToInstall, draw, runAsTyped), $.session.compact (via draw), $.session.cwd (via heartbeat), $.session.id (via checkCaveman, drawSessions, heartbeat, refreshTitle), $.session.model (via heartbeat), $.session.root (via refreshTitle), $.session.usage, $.settings.read (via isInstalled), $.state.get, $.state.set, $.store.get (via prefs, setPref), $.store.set (via setPref), $.ui.close (via applyView), $.ui.invalidate, $.ui.open, $.ui.resolve (via draw, drawSessions), $.ui.toast (via askToInstall, d… [+59 chars]",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CLAUDE_CODE_ENTRYPOINT, CLAUDE_CONFIG_DIR, HOME, PONYTAIL_DEFAULT_MODE, XDG_CONFIG_HOME",
-      "./register.tsx state writes: overalls.caveman, overalls.denials, overalls.history, overalls.level, overalls.limitSamples, overalls.mcpDown, overalls.panel, overalls.ponytail",
-      "./register.tsx state reads: overalls.caveman, overalls.denials, overalls.history, overalls.level, overalls.limitSamples, overalls.mcpDown, overalls.panel, overalls.ponytail"
+      "./register.tsx env reads: CLAUDE_CODE_ENTRYPOINT, CLAUDE_CODE_HOST_SESSION_ID, CLAUDE_CONFIG_DIR, HOME, PONYTAIL_DEFAULT_MODE, XDG_CONFIG_HOME",
+      "./register.tsx state writes: overalls.caveman, overalls.denials, overalls.history, overalls.level, overalls.limitMeasures, overalls.mcpDown, overalls.panel, overalls.ponytail, overalls.title",
+      "./register.tsx state reads: overalls.caveman, overalls.denials, overalls.history, overalls.level, overalls.limitMeasures, overalls.mcpDown, overalls.panel, overalls.ponytail, overalls.title"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "8c1d0f8657dd4a1c"
+ "sourceHash": "9238f19a4d4e59a0"
 }

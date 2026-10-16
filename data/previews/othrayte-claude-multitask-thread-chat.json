@@ -1,14 +1,58 @@
 {
  "slug": "othrayte-claude-multitask-thread-chat",
- "generatedAt": "2026-10-10T14:45:39.356Z",
+ "generatedAt": "2026-10-16T14:18:00.027Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": "/^(composer|sdk|bridge)$/"
+     }
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "element": "claude-multitask-welcome-dismiss"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt",
+     "props": {
+      "hasSurvey": false
+     }
+    }
+   },
    {
     "event": "session.start"
    },
    {
     "event": "command.run",
+    "matcher": {
+     "command": "threads"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "CommandOutput",
+     "props": {
+      "command": "threads"
+     }
+    }
+   },
+   {
+    "event": "command.describe",
     "matcher": {
      "command": "threads"
     }
@@ -52,6 +96,12 @@
     "event": "command.run",
     "matcher": {
      "command": "merge-threads"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__thread-chat__read_thread"
     }
    },
    {
@@ -106,7 +156,8 @@
   "commands": [
    {
     "name": "threads",
-    "description": "Turn conversation threads on or off in this chat",
+    "description": "Turn conversation threads on or off in this chat or by default, manage them, or set their options",
+    "argumentHint": "[on|off|toggle|status|manage|agent|filter|summaries|default [on|off]]",
     "output": "Threads are on: start or reply to one with a # name heading (or + thread in the desktop app)."
    },
    {
@@ -134,17 +185,25 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 3,
-   "$.state.get": 96,
+   "$.state.get": 133,
    "$.session.id": 4,
-   "$.store.get": 2,
+   "$.store.get": 4,
    "$.session.messages": 2,
    "$.store.keys": 1,
+   "$.env.get": 7,
+   "$.fs.read": 1,
+   "$.state.set": 17,
    "$.store.set": 2,
-   "$.state.set": 11,
+   "$.ui.invalidate": 2,
+   "$.fs.stat": 1,
+   "$.session.usage": 1,
+   "$.session.surfaces": 1,
+   "$.ui.ask": 1,
+   "$.ui.resolve": 11,
    "$.ui.open": 1,
    "$.ui.scroll": 1,
-   "$.ui.resolve": 5,
-   "$.clock.after": 1
+   "$.clock.after": 1,
+   "$.clock.now": 1
   },
   "timers": [
    {
@@ -154,69 +213,7 @@
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": true,
-    "tree": {
-     "type": "Box",
-     "props": {
-      "flexDirection": "row",
-      "alignItems": "center",
-      "columnGap": 1,
-      "flexGrow": 1,
-      "flexShrink": 1,
-      "minWidth": 0
-     },
-     "children": [
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row",
-        "alignItems": "center",
-        "flexShrink": 1,
-        "minWidth": 0
-       },
-       "children": [
-        {
-         "type": "Text",
-         "props": {
-          "dimColor": true,
-          "wrap": "truncate-end"
-         },
-         "children": [
-          "start a thread with # name"
-         ]
-        }
-       ]
-      },
-      {
-       "type": "Box",
-       "props": {
-        "flexShrink": 0
-       },
-       "children": [
-        {
-         "type": "Box",
-         "props": {
-          "flexDirection": "row",
-          "alignItems": "center",
-          "columnGap": 2
-         },
-         "children": [
-          {
-           "type": "Button",
-           "props": {
-            "key": "threads",
-            "label": "⚙ ▾",
-            "variant": "secondary",
-            "onPress": "[fn]"
-           },
-           "children": []
-          }
-         ]
-        }
-       ]
-      }
-     ]
-    }
+    "ok": "engine"
    },
    "UserMessage": {
     "ok": "engine"
@@ -225,6 +222,9 @@
     "ok": "engine"
    },
    "ToolUse": {
+    "ok": "engine"
+   },
+   "CommandOutput": {
     "ok": "engine"
    },
    "Pane": {
@@ -278,6 +278,7 @@
    }
   },
   "script": [
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -289,10 +290,14 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.ui.ask(Threads in this chat?) → \"On\"",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
    "/threads → Threads are on: start or reply to one with a # name heading (or + thread in the …",
    "$.ui.open(thread-view)",
    "/thread-view → Thread view opened.",
-   "/merge-threads → Usage: /merge-threads <thread> into <thread>"
+   "/merge-threads → Usage: /merge-threads <thread> into <thread>",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
+   "ui.render: hook threw undefined is not an object (evaluating 'args.trim')"
   ],
   "console": [],
   "warnings": []
@@ -304,8 +309,16 @@
    "No author information provided. Consider adding author details for plugin attribution"
   ],
   "hooks": [
+   "prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
+   "session.start{cwd=/\"^\"/}",
+   "ui.press{element=claude-multitask-welcome-dismiss}",
+   "ui.render{component=AbovePrompt",
+   "props has {hasSurvey=false}}",
    "session.start",
    "command.run{command=threads}",
+   "ui.render{component=CommandOutput",
+   "props has {command=threads}}",
+   "command.describe{command=threads}",
    "prompt.submit",
    "session.append",
    "turn.complete",
@@ -314,6 +327,7 @@
    "state.set{plugin=thread-chat}",
    "ui.render{component=Pane, requestId=thread-view}",
    "command.run{command=merge-threads}",
+   "tool.call{tool=mcp__thread-chat__read_thread}",
    "tool.call{tool=mcp__thread-chat__create_thread}",
    "session.compact",
    "ui.message",
@@ -326,88 +340,132 @@
   ],
   "calls": [
    "$.clock.after",
+   "$.clock.now",
    "$.command.register",
-   "$.env.get (via dataFolder)",
+   "$.env.get (via configPath",
+   "dataFolder",
+   "switchNote)",
    "$.fs.exists (via resizeElsewhere)",
-   "$.fs.read (via keptRows",
+   "$.fs.read (via isSavedOff",
+   "keptRows",
    "parentOf",
-   "pictureFile)",
-   "$.fs.stat (via readPictures)",
-   "$.fs.write (via keepViewRows",
+   "pictureFile",
+   "takeKeptCalls",
+   "takeKeptSummaries)",
+   "$.fs.stat (via isSavedOff",
+   "readPictures)",
+   "$.fs.write (via keepCalls",
+   "keepSummaries",
+   "keepViewRows",
    "resizeElsewhere)",
+   "$.model.complete (via callSummaryModel)",
    "$.process.run (via resizeElsewhere",
    "resizeOnWindows)",
    "$.session.id",
    "$.session.messages",
+   "$.session.surfaces (via sessionOf",
+   "switchNote)",
+   "$.session.usage (via noteTurnEnd)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
    "$.store.keys (via parentOf)",
-   "$.store.set (via keepViewRows",
-   "save)",
-   "$.tool.register (via offerCreateTool)",
-   "$.ui.invalidate (via drawPictures)",
+   "$.store.set",
+   "$.tool.register (via offerCreateTool",
+   "offerReadTool)",
+   "$.ui.ask (via sessionOf)",
+   "$.ui.close (via setThreads)",
+   "$.ui.invalidate (via drawPictures",
+   "redescribe)",
    "$.ui.open (via openView)",
    "$.ui.resolve",
    "$.ui.scroll (via keepViewPlace",
    "pinViewToEnd",
    "returnView",
-   "scrollToEnd)"
+   "scrollToEnd)",
+   "$.ui.toast (via switchNote)"
   ],
   "stateReads": [
+   "multitask.welcome",
    "react.isOn",
    "react.reactions",
+   "react.welcome",
+   "thread-chat.activeThread",
    "thread-chat.agentMayCreate",
    "thread-chat.aliases",
+   "thread-chat.bandNaming",
    "thread-chat.briefed",
+   "thread-chat.choice",
    "thread-chat.current",
    "thread-chat.deleted",
    "thread-chat.filtersChat",
+   "thread-chat.hasStarted",
    "thread-chat.isOn",
-   "thread-chat.menuMode",
-   "thread-chat.menuOpen",
+   "thread-chat.isOnByDefault",
+   "thread-chat.manageModes",
    "thread-chat.moved",
    "thread-chat.naming",
    "thread-chat.pickerOpen",
    "thread-chat.picking",
    "thread-chat.picturesRead",
+   "thread-chat.readToolOffered",
    "thread-chat.recent",
    "thread-chat.recentTexts",
    "thread-chat.sentTo",
    "thread-chat.snaps",
+   "thread-chat.summaries",
+   "thread-chat.summaryCalls",
+   "thread-chat.summaryLineShown",
+   "thread-chat.summaryLines",
+   "thread-chat.summaryUsage",
    "thread-chat.threads",
+   "thread-chat.tokenPos",
    "thread-chat.untold",
    "thread-chat.viewFrom",
    "thread-chat.viewRows",
-   "thread-chat.viewThreads"
+   "thread-chat.viewThreads",
+   "thread-chat.welcome"
   ],
   "stateWrites": [
+   "thread-chat.activeThread",
    "thread-chat.agentMayCreate",
    "thread-chat.aliases",
+   "thread-chat.bandNaming",
    "thread-chat.briefed",
+   "thread-chat.choice",
    "thread-chat.current",
    "thread-chat.deleted",
    "thread-chat.filtersChat",
+   "thread-chat.hasStarted",
    "thread-chat.isOn",
-   "thread-chat.menuMode",
-   "thread-chat.menuOpen",
+   "thread-chat.isOnByDefault",
+   "thread-chat.manageModes",
    "thread-chat.moved",
    "thread-chat.naming",
    "thread-chat.pickerOpen",
    "thread-chat.picking",
    "thread-chat.picturesRead",
+   "thread-chat.readToolOffered",
    "thread-chat.recent",
    "thread-chat.recentTexts",
    "thread-chat.sentTo",
    "thread-chat.snaps",
+   "thread-chat.summaries",
+   "thread-chat.summaryCalls",
+   "thread-chat.summaryLineShown",
+   "thread-chat.summaryLines",
+   "thread-chat.summaryUsage",
    "thread-chat.threads",
+   "thread-chat.tokenPos",
    "thread-chat.untold",
    "thread-chat.viewFrom",
    "thread-chat.viewRows",
-   "thread-chat.viewThreads"
+   "thread-chat.viewThreads",
+   "thread-chat.welcome"
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
+   "DISABLE_GROWTHBOOK",
    "HOME",
    "USERPROFILE"
   ],
@@ -428,7 +486,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: thread-chat.isOn, thread-chat.threads, thread-chat.aliases, thread-chat.agentMayCreate, thread-chat.filtersChat, thread-chat.snaps, thread-chat.recent, thread-chat.recentTexts, thread-chat.current, thread-chat.deleted, thread-chat.sentTo, thread-chat.moved, thread-chat.picking, thread-chat.naming, thread-chat.untold, thread-chat.briefed, thread-chat.viewRows, thread-chat.picturesRead, thread-chat.viewFrom, thread-chat.viewThreads, thread-chat.menuOpen, thread-chat.menuMode, thread-chat.pickerOpen"
+     "types ./types/index.d.ts declares state: thread-chat.isOn, thread-chat.choice, thread-chat.isOnByDefault, thread-chat.threads, thread-chat.aliases, thread-chat.agentMayCreate, thread-chat.filtersChat, thread-chat.snaps, thread-chat.recent, thread-chat.recentTexts, thread-chat.current, thread-chat.deleted, thread-chat.sentTo, thread-chat.moved, thread-chat.picking, thread-chat.naming, thread-chat.untold, thread-chat.briefed, thread-chat.viewRows, thread-chat.picturesRead, thread-chat.viewFrom, thread-chat.viewThreads, thread-chat.bandNaming, thread-chat.manageModes, thread-chat.pickerOpen, thread-chat.tokenPos, thread-chat.summaries, thread-chat.summaryLines, thread-chat.summaryUsage, thread-chat.summaryCalls, thread-chat.readToolOffered, thread-chat.hasStarted, thread-chat.summaryLineShown, thread-chat.activeThread, thread-chat.welcome"
     ],
     "gatingHooks": []
    },
@@ -439,25 +497,34 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=threads}, prompt.submit, session.append, turn.complete, command.run{command=thread-view}, ui.scroll{component=Pane, requestId=thread-view}, state.set{plugin=thread-chat}, ui.render{component=Pane, requestId=thread-view}, command.run{command=merge-threads}, tool.call{tool=mcp__thread-chat__create_thread}, session.compact, ui.message, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}, session.start{cwd=/\"^\"/}, ui.press{element=claude-multitask-welcome-dismiss}, ui.render{component=AbovePrompt, props has {hasSurvey=false}}, session.start, command.run{command=threads}, ui.render{component=CommandOutput, props has {command=threads}}, command.describe{command=threads}, prompt.submit, session.append, turn.complete, command.run{command=thread-view}, ui.scroll{component=Pane, requestId=thread-view}, state.set{plugin=thread-chat}, ui.render{component=Pane, requestId=thread-view}, command.run{command=merge-threads}, tool.call{tool=mcp__thread-chat__read_thread}, tool.call{tool=mcp__thread-chat__create_thread}, session.compact, ui.message, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=threads}",
       "./register.tsx answers its own command: command.run{command=merge-threads}",
+      "./register.tsx gating hook without .catch: prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.append",
       "./register.tsx gating hook without .catch: command.run{command=thread-view}",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=thread-view}",
       "./register.tsx gating hook without .catch: state.set{plugin=thread-chat}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__thread-chat__read_thread}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__thread-chat__create_thread}",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.clock.after, $.command.register, $.env.get (via dataFolder), $.fs.exists (via resizeElsewhere), $.fs.read (via keptRows, parentOf, pictureFile), $.fs.stat (via readPictures), $.fs.write (via keepViewRows, resizeElsewhere), $.process.run (via resizeElsewhere, resizeOnWindows), $.session.id, $.session.messages, $.state.get, $.state.set, $.store.get, $.store.keys (via parentOf), $.store.set (via keepViewRows, save), $.tool.register (via offerCreateTool), $.ui.invalidate (via drawPictures), $.ui.open (via openView), $.ui.resolve, $.ui.scroll (via keepViewPlace, pinViewToEnd, returnView, scrollToEnd)",
+      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.env.get (via configPath, dataFolder, switchNote), $.fs.exists (via resizeElsewhere), $.fs.read (via isSavedOff, keptRows, parentOf, pictureFile, takeKeptCalls, takeKeptSummaries), $.fs.stat (via isSavedOff, readPictures), $.fs.write (via keepCalls, keepSummaries, keepViewRows, resizeElsewhere), $.model.complete (via callSummaryModel), $.process.run (via resizeElsewhere, resizeOnWindows), $.session.id, $.session.messages, $.session.surfaces (via sessionOf, switchNote), $.session.usage (via noteTurnEnd), $.state.get, $.state.set, $.store.get, $.store.keys (via parentOf), $.store.set, $.tool.register (via offerCreateTool, offerReadTool), $.ui.ask (via sessionOf), $.ui.close (via setThreads), $.ui.invalidate (via drawPictures, redescribe), $.ui.open (via openView), $.ui.resolve, $.ui.scroll (via keepViewPlace, pinViewToEnd, returnView, scrollToEnd), $.ui.toast (via switchNote)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./register.tsx state writes: thread-chat.agentMayCreate, thread-chat.aliases, thread-chat.briefed, thread-chat.current, thread-chat.deleted, thread-chat.filtersChat, thread-chat.isOn, thread-chat.menuMode, thread-chat.menuOpen, thread-chat.moved, thread-chat.naming, thread-chat.pickerOpen, thread-chat.picking, thread-chat.picturesRead, thread-chat.recent, thread-chat.recentTexts, thread-chat.sentTo, thread-chat.snaps, thread-chat.threads, thread-chat.untold, thread-chat.viewFrom, thread-chat.viewRows, thread-chat.viewThreads",
-      "./register.tsx state reads: react.isOn, react.reactions, thread-chat.agentMayCreate, thread-chat.aliases, thread-chat.briefed, thread-chat.current, thread-chat.deleted, thread-chat.filtersChat, thread-chat.isOn, thread-chat.menuMode, thread-chat.menuOpen, thread-chat.moved, thread-chat.naming, thread-chat.pickerOpen, thread-chat.picking, thread-chat.picturesRead, thread-chat.recent, thread-chat.recentTexts, thread-chat.sentTo, thread-chat.snaps, thread-chat.threads, thread-chat.untold, thread-chat.viewFrom, thread-chat.viewRows, thread-chat.viewThreads",
-      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): react.isOn, react.reactions",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, DISABLE_GROWTHBOOK, HOME, USERPROFILE",
+      "./register.tsx state writes: thread-chat.activeThread, thread-chat.agentMayCreate, thread-chat.aliases, thread-chat.bandNaming, thread-chat.briefed, thread-chat.choice, thread-chat.current, thread-chat.deleted, thread-chat.filtersChat, thread-chat.hasStarted, thread-chat.isOn, thread-chat.isOnByDefault, thread-chat.manageModes, thread-chat.moved, thread-chat.naming, thread-chat.pickerOpen, thread-chat.picking, thread-chat.picturesRead, thread-chat.readToolOffered, thread-chat.recent, thread-chat.recentTexts, thread-chat.sentTo, thread-chat.snaps, thread-chat.summaries, thread-chat.summaryCalls, thread-chat.summaryLineShown, thread-chat.summaryLines, thread-chat.summaryUsage, thread-chat.threads, thread-chat.tokenPos, thread-chat.untold, thread-chat.viewFrom, thread-chat.viewRows, thread-chat.viewThreads, thread-chat.welcome",
+      "./register.tsx state reads: multitask.welcome, react.isOn, react.reactions, react.welcome, thread-chat.activeThread, thread-chat.agentMayCreate, thread-chat.aliases, thread-chat.bandNaming, thread-chat.briefed, thread-chat.choice, thread-chat.current, thread-chat.deleted, thread-chat.filtersChat, thread-chat.hasStarted, thread-chat.isOn, thread-chat.isOnByDefault, thread-chat.manageModes, thread-chat.moved, thread-chat.naming, thread-chat.pickerOpen, thread-chat.picking, thread-chat.picturesRead, thread-chat.readToolOffered, thread-chat.recent, thread-chat.recentTexts, thread-chat.sentTo, thread-chat.snaps, thread-chat.summaries, thread-chat.summaryCalls, thread-chat.summaryLineShown, thread-chat.summaryLines, thread-chat.summaryUsage, thread-chat.threads, thread-chat.tokenPos, thread-chat.untold, thread-chat.viewFrom, thread-chat.viewRows, thread-chat.viewThreads, thread-chat.welcome",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): multitask.welcome, react.isOn, react.reactions, react.welcome",
       "./register.tsx surface modules: hooks/switch.tsx"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -491,6 +558,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__thread-chat__read_thread}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__thread-chat__create_thread}",
        "hasCatch": false
       },
@@ -506,5 +579,5 @@
    "advice": []
   }
  },
- "sourceHash": "2febef0ada29f73c"
+ "sourceHash": "926cdc6497d9a382"
 }

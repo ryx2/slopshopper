@@ -1,6 +1,6 @@
 {
  "slug": "joshpocock-claude-buddy-buddy",
- "generatedAt": "2026-10-10T14:45:20.686Z",
+ "generatedAt": "2026-10-16T14:20:08.640Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -126,6 +126,30 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__buddy__codex_start"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__buddy__codex_message"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__buddy__codex_threads"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "buddy-codex"
+    }
+   },
+   {
     "event": "session.start"
    },
    {
@@ -169,12 +193,17 @@
    {
     "name": "handoff",
     "description": "Buddy writes a handoff note for continuing in a fresh chat",
-    "output": "Handoff saved to handoff-2026-10-10T14-45-19.md. Start a new chat and say: \"Read handoff-2026-10-10T14-45-19.md and continue.\""
+    "output": "Handoff saved to handoff-2026-10-16T14-20-07.md. Start a new chat and say: \"Read handoff-2026-10-16T14-20-07.md and continue.\""
    },
    {
     "name": "codex",
     "description": "Ask Codex (read-only) for a second opinion: /codex <task>",
     "output": "Usage: /codex <task>"
+   },
+   {
+    "name": "buddy-codex",
+    "description": "Buddy: start or message Codex agents (the Codex tab uses this)",
+    "output": "Turn Codex on in Buddy > Settings first."
    },
    {
     "name": "buddy-skills",
@@ -191,6 +220,18 @@
    {
     "name": "todo_for_you",
     "description": "Put a task on the user's Buddy to-do list: something only they can do (add an API key, log in, approve or pay, check something by hand, decide). The user presses Done when finished and you get a message. One task per call."
+   },
+   {
+    "name": "codex_threads",
+    "description": "List the user's recent OpenAI Codex threads (from the Codex app and CLI: id, name, folder, working or idle, last reply) and the Codex agents started from this chat."
+   },
+   {
+    "name": "codex_start",
+    "description": "Start an OpenAI Codex agent on a self-contained task (a second AI working in parallel: research, review, a separate build). Read-only unless canEdit is true, which asks the user first. Returns at once and the answer arrives later as a message from Buddy; set wait to true to wait for the answer instead."
+   },
+   {
+    "name": "codex_message",
+    "description": "Send the next message to a Codex thread or agent (a thread id from codex_threads, or an agent id from codex_start). Codex continues that conversation with its memory. Don't message a thread that is working."
    },
    {
     "name": "list_chats",
@@ -216,11 +257,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 5,
-   "$.store.get": 36,
-   "$.tool.register": 4,
+   "$.command.register": 6,
+   "$.store.get": 37,
+   "$.tool.register": 7,
    "$.env.get": 13,
-   "$.state.get": 41,
+   "$.state.get": 42,
    "$.state.set": 16,
    "$.session.usage": 3,
    "$.clock.every": 2,
@@ -404,6 +445,16 @@
            {
             "type": "Button",
             "props": {
+             "key": "tab-codex",
+             "variant": "secondary",
+             "label": "Codex",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
              "key": "tab-skills",
              "variant": "secondary",
              "label": "Skills",
@@ -507,7 +558,7 @@
             "type": "Text",
             "props": {},
             "children": [
-             "4. Before Claude sends an email or spends on a paid API, I ask you first."
+             "4. Want me to check emails and paid API calls before they go out? Switch those on in Jobs. They're off until you do."
             ]
            },
            {
@@ -602,8 +653,8 @@
               "type": "Button",
               "props": {
                "key": "cache-toggle",
-               "variant": "primary",
-               "label": "Price check ON",
+               "variant": "secondary",
+               "label": "Price check OFF",
                "onPress": "[fn]"
               },
               "children": []
@@ -817,9 +868,10 @@
    "turn.complete",
    "$.ui.open(buddy)",
    "/buddy → Buddy is back. Try /buddy pet cat, /buddy name Rex, or /buddy hatch.",
-   "$.fs.write(handoff-2026-10-10T14-45-19.md)",
-   "/handoff → Handoff saved to handoff-2026-10-10T14-45-19.md. Start a new chat and say: \"Read…",
+   "$.fs.write(handoff-2026-10-16T14-20-07.md)",
+   "/handoff → Handoff saved to handoff-2026-10-16T14-20-07.md. Start a new chat and say: \"Read…",
    "/codex → Usage: /codex <task>",
+   "/buddy-codex → Turn Codex on in Buddy > Settings first.",
    "/buddy-skills → Buddy found 0 skills.",
    "/thread → Usage: /thread <task>  ·  /thread msg <id> <text>"
   ],
@@ -854,40 +906,56 @@
    "tool.call{tool=mcp__buddy__start_chat}",
    "tool.call{tool=Skill}",
    "command.run{command=buddy-skills}",
+   "tool.call{tool=mcp__buddy__codex_start}",
+   "tool.call{tool=mcp__buddy__codex_message}",
+   "tool.call{tool=mcp__buddy__codex_threads}",
+   "command.run{command=buddy-codex}",
    "session.start",
    "command.run{command=buddy}",
    "session.end",
    "tool.call{tool=AskUserQuestion}",
    "ui.message",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=buddy}"
+   "ui.render{component=Pane",
+   "r… [+15 chars]"
   ],
   "calls": [
    "$.agent.list",
    "$.agent.spawn",
    "$.clock.every",
    "$.clock.now",
+   "$.clock.sleep (via runCodexJob",
+   "scrollConvToEnd)",
    "$.command.register",
    "$.command.run",
    "$.env.get",
    "$.fs.exists",
    "$.fs.list (via hasLink",
    "listBoard",
+   "loadCodexConversation",
    "readChats",
+   "scanCodexForPanel",
+   "scanCodexThreads",
    "scanDir",
    "scanSkillDir)",
    "$.fs.read",
-   "$.fs.stat (via hasLink)",
+   "$.fs.stat (via hasLink",
+   "loadCodexConversation)",
    "$.fs.write",
    "$.model.fork",
    "$.process.run (via copyDir",
-   "removeDir)",
+   "loadCodexConversation",
+   "removeDir",
+   "scanCodexForPanel",
+   "scanCodexThreads)",
    "$.process.spawn (via runChatThread",
-   "runCodex)",
+   "runCodex",
+   "runCodexJob)",
    "$.prompt.fill",
    "$.prompt.submit",
    "$.session.compact",
    "$.session.cwd (via runChatThread",
+   "runCodexJob",
    "runScan",
    "scanAllSkills)",
    "$.session.id",
@@ -904,6 +972,8 @@
    "$.ui.ask",
    "$.ui.open",
    "$.ui.resolve",
+   "$.ui.scroll (via runCodexJob",
+   "scrollConvToEnd)",
    "$.ui.toast"
   ],
   "stateReads": [
@@ -911,9 +981,16 @@
    "buddy.agents",
    "buddy.caught",
    "buddy.chatThreads",
+   "buddy.codexJobs",
    "buddy.codexLog",
    "buddy.codexStatus",
    "buddy.cost",
+   "buddy.cxConv",
+   "buddy.cxCounts",
+   "buddy.cxEdit",
+   "buddy.cxOpen",
+   "buddy.cxSteps",
+   "buddy.cxThreads",
    "buddy.editing",
    "buddy.forecast",
    "buddy.lastHeld",
@@ -924,6 +1001,7 @@
    "buddy.peek",
    "buddy.recOn",
    "buddy.receipt",
+   "buddy.second",
    "buddy.skillScan",
    "buddy.skillView",
    "buddy.tab",
@@ -936,9 +1014,16 @@
    "buddy.agents",
    "buddy.caught",
    "buddy.chatThreads",
+   "buddy.codexJobs",
    "buddy.codexLog",
    "buddy.codexStatus",
    "buddy.cost",
+   "buddy.cxConv",
+   "buddy.cxCounts",
+   "buddy.cxEdit",
+   "buddy.cxOpen",
+   "buddy.cxSteps",
+   "buddy.cxThreads",
    "buddy.editing",
    "buddy.forecast",
    "buddy.lastHeld",
@@ -949,6 +1034,7 @@
    "buddy.peek",
    "buddy.recOn",
    "buddy.receipt",
+   "buddy.second",
    "buddy.skillScan",
    "buddy.skillView",
    "buddy.tab",
@@ -973,7 +1059,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: buddy.mood, buddy.memory, buddy.agents, buddy.tick, buddy.lastHeld, buddy.caught, buddy.limits, buddy.cost, buddy.editing, buddy.receipt, buddy.codexLog, buddy.codexStatus, buddy.tab, buddy.skillScan, buddy.skillView, buddy.agentLive, buddy.chatThreads, buddy.threadModel, buddy.threadKind, buddy.peek, buddy.recOn, buddy.forecast, buddy.lastTurnAt"
+     "types ./types/index.d.ts declares state: buddy.mood, buddy.memory, buddy.agents, buddy.tick, buddy.lastHeld, buddy.caught, buddy.limits, buddy.cost, buddy.editing, buddy.receipt, buddy.codexLog, buddy.codexStatus, buddy.tab, buddy.codexJobs, buddy.cxCounts, buddy.cxOpen, buddy.cxThreads, buddy.cxEdit, buddy.cxConv, buddy.cxSteps, buddy.skillScan, buddy.skillView, buddy.agentLive, buddy.chatThreads, buddy.threadModel, buddy.threadKind, buddy.peek, buddy.recOn, buddy.second, buddy.forecast, buddy.lastTurnAt"
     ],
     "gatingHooks": []
    },
@@ -984,11 +1070,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.call, prompt.submit, turn.complete, agent.spawn, tool.call{tool=Edit|Write|NotebookEdit}, session.measure, prompt.context, command.run{command=handoff}, tool.call{tool=mcp__buddy__codex}, command.run{command=codex}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=CommandOutput}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__buddy__todo_for_you}, turn.step, tool.call{tool=mcp__buddy__list_chats}, tool.call{tool=mcp__buddy__message_chat}, command.run{command=thread}, tool.call{tool=mcp__buddy__start_chat}, tool.call{tool=Skill}, command.run{command=buddy-skills}, session.start, command.run{command=buddy}, session.end, tool.call{tool=AskUserQuestion}, ui.message, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=buddy}",
+      "./register.tsx hooks: tool.call, prompt.submit, turn.complete, agent.spawn, tool.call{tool=Edit|Write|NotebookEdit}, session.measure, prompt.context, command.run{command=handoff}, tool.call{tool=mcp__buddy__codex}, command.run{command=codex}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=CommandOutput}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__buddy__todo_for_you}, turn.step, tool.call{tool=mcp__buddy__list_chats}, tool.call{tool=mcp__buddy__message_chat}, command.run{command=thread}, tool.call{tool=mcp__buddy__start_chat}, tool.call{tool=Skill}, command.run{command=buddy-skills}, tool.call{tool=mcp__buddy__codex_start}, tool.call{tool=mcp__buddy__codex_message}, tool.call{tool=mcp__buddy__codex_threads}, command.run{command=buddy-codex}, session.start, command.run{command=buddy}, session.end, tool.call{tool=AskUserQuestion}, ui.message, ui.render{component=AbovePrompt}, ui.render{component=Pane, r… [+15 chars]",
+      "./register.tsx hooks on prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=handoff}",
       "./register.tsx answers its own command: command.run{command=codex}",
       "./register.tsx answers its own command: command.run{command=thread}",
       "./register.tsx answers its own command: command.run{command=buddy-skills}",
+      "./register.tsx answers its own command: command.run{command=buddy-codex}",
       "./register.tsx answers its own command: command.run{command=buddy}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook without .catch: prompt.submit",
@@ -1000,12 +1088,15 @@
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__message_chat}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__start_chat}",
       "./register.tsx gating hook without .catch: tool.call{tool=Skill}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__codex_start}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__codex_message}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__buddy__codex_threads}",
       "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
-      "./register.tsx calls: $.agent.list, $.agent.spawn, $.clock.every, $.clock.now, $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.list (via hasLink, listBoard, readChats, scanDir, scanSkillDir), $.fs.read, $.fs.stat (via hasLink), $.fs.write, $.model.fork, $.process.run (via copyDir, removeDir), $.process.spawn (via runChatThread, runCodex), $.prompt.fill, $.prompt.submit, $.session.compact, $.session.cwd (via runChatThread, runScan, scanAllSkills), $.session.id, $.session.messages, $.session.model, $.session.send, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.call, $.tool.register, $.ui.ask, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.agent.list, $.agent.spawn, $.clock.every, $.clock.now, $.clock.sleep (via runCodexJob, scrollConvToEnd), $.command.register, $.command.run, $.env.get, $.fs.exists, $.fs.list (via hasLink, listBoard, loadCodexConversation, readChats, scanCodexForPanel, scanCodexThreads, scanDir, scanSkillDir), $.fs.read, $.fs.stat (via hasLink, loadCodexConversation), $.fs.write, $.model.fork, $.process.run (via copyDir, loadCodexConversation, removeDir, scanCodexForPanel, scanCodexThreads), $.process.spawn (via runChatThread, runCodex, runCodexJob), $.prompt.fill, $.prompt.submit, $.session.compact, $.session.cwd (via runChatThread, runCodexJob, runScan, scanAllSkills), $.session.id, $.session.messages, $.session.model, $.session.send, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.call, $.tool.register, $.ui.ask, $.ui.open, $.ui.resolve, $.ui.scroll (via runCodexJob, scrollConvToEnd), $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: BUDDY_CHILD, HOME, OS, USERPROFILE",
-      "./register.tsx state writes: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.editing, buddy.forecast, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.skillScan, buddy.skillView, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
-      "./register.tsx state reads: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.editing, buddy.forecast, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.skillScan, buddy.skillView, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
+      "./register.tsx state writes: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexJobs, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.cxConv, buddy.cxCounts, buddy.cxEdit, buddy.cxOpen, buddy.cxSteps, buddy.cxThreads, buddy.editing, buddy.forecast, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.second, buddy.skillScan, buddy.skillView, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
+      "./register.tsx state reads: buddy.agentLive, buddy.agents, buddy.caught, buddy.chatThreads, buddy.codexJobs, buddy.codexLog, buddy.codexStatus, buddy.cost, buddy.cxConv, buddy.cxCounts, buddy.cxEdit, buddy.cxOpen, buddy.cxSteps, buddy.cxThreads, buddy.editing, buddy.forecast, buddy.lastHeld, buddy.lastTurnAt, buddy.limits, buddy.memory, buddy.mood, buddy.peek, buddy.recOn, buddy.receipt, buddy.second, buddy.skillScan, buddy.skillView, buddy.tab, buddy.threadKind, buddy.threadModel, buddy.tick",
       "./register.tsx surface modules: hooks/pet.tsx"
      ],
      "gatingHooks": [
@@ -1072,6 +1163,24 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__buddy__codex_start}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__buddy__codex_message}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__buddy__codex_threads}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=AskUserQuestion}",
        "hasCatch": false
       }
@@ -1081,5 +1190,5 @@
    "advice": []
   }
  },
- "sourceHash": "fe478f72c03caa3f"
+ "sourceHash": "566db591aa945e83"
 }

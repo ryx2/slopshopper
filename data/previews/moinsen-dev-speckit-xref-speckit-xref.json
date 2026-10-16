@@ -1,6 +1,6 @@
 {
  "slug": "moinsen-dev-speckit-xref-speckit-xref",
- "generatedAt": "2026-10-10T14:45:31.326Z",
+ "generatedAt": "2026-10-16T14:17:54.215Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -22,7 +22,19 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "Agent"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__speckit-xref__ask"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__speckit-xref__pause"
     }
    },
    {
@@ -68,6 +80,9 @@
     }
    },
    {
+    "event": "agent.spawn"
+   },
+   {
     "event": "tool.check"
    },
    {
@@ -111,8 +126,8 @@
   "commands": [
    {
     "name": "xref",
-    "description": "Spec X-Ref: status, or check | map | ack | approve | focus T### | auto on|night|off | pane | web",
-    "argumentHint": "[check | map | ack | approve | focus T### | auto on [steps]|night|off | pane | web]",
+    "description": "Spec X-Ref: status, or check | map | ack | approve | focus T### | auto on|night|off | next feature|change|bug <words> | ship | prd <path> | pane | web",
+    "argumentHint": "[check | map | ack | approve | focus T### | auto on [steps]|night|off | next feature|change|bug <words> | ship | prd <path> | pane | web]",
     "output": "This folder has code, but no Spec Kit yet (no .specify/). Say \"set up Spec Kit here\" to bring this project under Spec Kit, or press Set up Spec Kit in the pane."
    },
    {
@@ -140,6 +155,10 @@
     "description": "Spec Kit autopilot: call this when, and only when, the work needs a decision only the person can make (the product idea, a [NEEDS CLARIFICATION] question, a conflict between their request and the spec, anything destructive or irreversible, credentials). It asks the person at once where it can and returns their answer; otherwise the autopilot waits for it. Never call it to ask whether to continue."
    },
    {
+    "name": "pause",
+    "description": "Spec Kit autopilot: pause the run because the person said so in this conversation (stop, wait, I take over). Never to skip or end a step of your own accord. Stopping the autopilot altogether stays the person's command (/xref auto off)."
+   },
+   {
     "name": "link",
     "description": "Spec Kit: tie a file to a task (T###) or a requirement (FR-### / SC-###, optionally <feature>/FR-###), so an edit outside the planned files is no longer drift."
    }
@@ -150,16 +169,17 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.fs.exists": 13,
+   "$.fs.exists": 18,
    "$.state.get": 37,
    "$.state.set": 10,
-   "$.process.run": 5,
+   "$.process.run": 14,
    "$.env.get": 7,
-   "$.fs.list": 10,
-   "$.fs.read": 11,
+   "$.fs.list": 11,
+   "$.fs.read": 20,
    "$.fs.stat": 12,
    "$.command.register": 2,
-   "$.tool.register": 5,
+   "$.tool.register": 6,
+   "$.agent.register": 3,
    "$.clock.after": 1,
    "$.ui.resolve": 1
   },
@@ -243,6 +263,15 @@
   "script": [
    "$.process.run(which specify) → exit 0",
    "$.process.run(which uvx) → exit 0",
+   "$.process.run(which maestro) → exit 0",
+   "$.process.run(which npx) → exit 0",
+   "$.process.run(which google-chrome) → exit 0",
+   "$.process.run(which eas) → exit 0",
+   "$.process.run(which wrangler) → exit 0",
+   "$.process.run(which vercel) → exit 0",
+   "$.process.run(which netlify) → exit 0",
+   "$.process.run(which firebase) → exit 0",
+   "$.process.run(which fastlane) → exit 0",
    "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
    "$.process.run(git rev-parse --is-inside-work-tree) → exit 0",
    "$.process.run(git rev-parse --verify --quiet HEAD) → exit 0",
@@ -274,7 +303,9 @@
    "prompt.compose",
    "prompt.submit",
    "tool.call",
+   "tool.call{tool=Agent}",
    "tool.call{tool=mcp__speckit-xref__ask}",
+   "tool.call{tool=mcp__speckit-xref__pause}",
    "tool.call{tool=mcp__speckit-xref__status}",
    "tool.call{tool=mcp__speckit-xref__focus}",
    "tool.call{tool=mcp__speckit-xref__where}",
@@ -284,6 +315,7 @@
    "classic.UserPromptExpansion",
    "command.run",
    "command.run{command=xref-stop}",
+   "agent.spawn",
    "tool.check",
    "skill.prompt",
    "session.compact",
@@ -297,33 +329,38 @@
    "$.agent.register",
    "$.clock.after",
    "$.clock.every",
-   "$.clock.now (via advance",
-   "afterTurn",
-   "runCost",
-   "stamp",
-   "startAutopilot)",
+   "$.clock.now",
    "$.command.register",
    "$.command.run (via toSpec)",
    "$.env.get",
    "$.fs.exists (via exists",
    "projectRoot)",
-   "$.fs.list (via checklists",
+   "$.fs.list (via acceptanceReports",
+   "checklists",
    "dashboardDocs",
    "folderKind",
    "installedCommands",
    "listFeatures",
+   "prdState",
    "scan)",
    "$.fs.read (via readText)",
    "$.fs.stat (via mtime)",
    "$.fs.write (via asTask",
    "decideIdea",
+   "decidePrd",
+   "ensureBranch",
+   "importPrd",
+   "learnProfile",
    "logRun",
    "persist",
    "reopenIdea",
    "writeBriefing",
-   "writeDashboard)",
-   "$.model.classify (via afterTurn)",
-   "$.model.complete (via runCheck",
+   "writeDashboard",
+   "writeHandoff)",
+   "$.model.classify (via afterTurn",
+   "takeNext)",
+   "$.model.complete (via callDeputy",
+   "runCheck",
    "runMap)",
    "$.model.fork (via runCheck)",
    "$.process.run (via changedFiles",
@@ -331,29 +368,28 @@
    "currentBranch",
    "designGit",
    "diffOf",
+   "diffText",
+   "ensureBranch",
    "hasCommits",
    "hashFiles",
    "head",
    "onPath",
    "openDashboard",
+   "openPullRequest",
    "reopenIdea",
    "runTests",
-   "scanAnchors)",
+   "scanAnchors",
+   "stepDiff",
+   "workingTree)",
    "$.prompt.submit (via advance",
    "answerDecision",
    "askApproval",
    "askClaude",
+   "changeAssumption",
+   "changeDecision",
    "sharpenIdea",
    "toSpec)",
-   "$.session.cwd",
-   "$.session.usage (via runCost",
-   "sessionCost)",
-   "$.state.get",
-   "$.state.set",
-   "$.tool.register",
-   "$.turn.abort (via turnOffAutopilot)",
-   "$.ui.ask (via ask",
-   "… [+118 chars]"
+   "$.… [+358 chars]"
   ],
   "stateReads": [
    "speckit-xref.active",
@@ -363,6 +399,7 @@
    "speckit-xref.chips",
    "speckit-xref.details",
    "speckit-xref.ledger",
+   "speckit-xref.permits",
    "speckit-xref.queue",
    "speckit-xref.seenAt",
    "speckit-xref.snapshot",
@@ -377,6 +414,7 @@
    "speckit-xref.chips",
    "speckit-xref.details",
    "speckit-xref.ledger",
+   "speckit-xref.permits",
    "speckit-xref.queue",
    "speckit-xref.seenAt",
    "speckit-xref.snapshot",
@@ -399,7 +437,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: speckit-xref.snapshot, speckit-xref.ledger, speckit-xref.active, speckit-xref.checking, speckit-xref.autopilot, speckit-xref.asked, speckit-xref.turnFiles, speckit-xref.turn, speckit-xref.queue, speckit-xref.details, speckit-xref.seenAt, speckit-xref.chips"
+     "types ./types/index.d.ts declares state: speckit-xref.snapshot, speckit-xref.ledger, speckit-xref.active, speckit-xref.checking, speckit-xref.autopilot, speckit-xref.asked, speckit-xref.turnFiles, speckit-xref.turn, speckit-xref.queue, speckit-xref.details, speckit-xref.seenAt, speckit-xref.chips, speckit-xref.permits"
     ],
     "gatingHooks": []
    },
@@ -410,10 +448,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, prompt.compose, prompt.submit, tool.call, tool.call{tool=mcp__speckit-xref__ask}, tool.call{tool=mcp__speckit-xref__status}, tool.call{tool=mcp__speckit-xref__focus}, tool.call{tool=mcp__speckit-xref__where}, tool.call{tool=mcp__speckit-xref__link}, turn.complete, classic.Stop, classic.UserPromptExpansion, command.run, command.run{command=xref-stop}, tool.check, skill.prompt, session.compact, command.run{command=xref}, ui.render{component=ToolUse}, ui.render{component=UserMessage}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=speckit-xref}",
+      "./register.tsx hooks: session.start, turn.start, prompt.compose, prompt.submit, tool.call, tool.call{tool=Agent}, tool.call{tool=mcp__speckit-xref__ask}, tool.call{tool=mcp__speckit-xref__pause}, tool.call{tool=mcp__speckit-xref__status}, tool.call{tool=mcp__speckit-xref__focus}, tool.call{tool=mcp__speckit-xref__where}, tool.call{tool=mcp__speckit-xref__link}, turn.complete, classic.Stop, classic.UserPromptExpansion, command.run, command.run{command=xref-stop}, agent.spawn, tool.check, skill.prompt, session.compact, command.run{command=xref}, ui.render{component=ToolUse}, ui.render{component=UserMessage}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=speckit-xref}",
+      "./register.tsx hooks on prompt.compose, classic.Stop, classic.UserPromptExpansion, skill.prompt, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook with .catch: tool.call{tool=Agent}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__speckit-xref__ask}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__speckit-xref__pause}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__speckit-xref__status}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__speckit-xref__focus}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__speckit-xref__where}",
@@ -422,14 +463,15 @@
       "./register.tsx gating hook without .catch: classic.UserPromptExpansion",
       "./register.tsx gating hook without .catch: command.run",
       "./register.tsx gating hook without .catch: command.run{command=xref-stop}",
+      "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.check",
       "./register.tsx gating hook without .catch: session.compact",
       "./register.tsx gating hook without .catch: command.run{command=xref}",
-      "./register.tsx calls: $.agent.register, $.clock.after, $.clock.every, $.clock.now (via advance, afterTurn, runCost, stamp, startAutopilot), $.command.register, $.command.run (via toSpec), $.env.get, $.fs.exists (via exists, projectRoot), $.fs.list (via checklists, dashboardDocs, folderKind, installedCommands, listFeatures, scan), $.fs.read (via readText), $.fs.stat (via mtime), $.fs.write (via asTask, decideIdea, logRun, persist, reopenIdea, writeBriefing, writeDashboard), $.model.classify (via afterTurn), $.model.complete (via runCheck, runMap), $.model.fork (via runCheck), $.process.run (via changedFiles, commitTasks, currentBranch, designGit, diffOf, hasCommits, hashFiles, head, onPath, openDashboard, reopenIdea, runTests, scanAnchors), $.prompt.submit (via advance, answerDecision, askApproval, askClaude, sharpenIdea, toSpec), $.session.cwd, $.session.usage (via runCost, sessionCost), $.state.get, $.state.set, $.tool.register, $.turn.abort (via turnOffAutopilot), $.ui.ask (via ask, … [+118 chars]",
+      "./register.tsx calls: $.agent.register, $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via toSpec), $.env.get, $.fs.exists (via exists, projectRoot), $.fs.list (via acceptanceReports, checklists, dashboardDocs, folderKind, installedCommands, listFeatures, prdState, scan), $.fs.read (via readText), $.fs.stat (via mtime), $.fs.write (via asTask, decideIdea, decidePrd, ensureBranch, importPrd, learnProfile, logRun, persist, reopenIdea, writeBriefing, writeDashboard, writeHandoff), $.model.classify (via afterTurn, takeNext), $.model.complete (via callDeputy, runCheck, runMap), $.model.fork (via runCheck), $.process.run (via changedFiles, commitTasks, currentBranch, designGit, diffOf, diffText, ensureBranch, hasCommits, hashFiles, head, onPath, openDashboard, openPullRequest, reopenIdea, runTests, scanAnchors, stepDiff, workingTree), $.prompt.submit (via advance, answerDecision, askApproval, askClaude, changeAssumption, changeDecision, sharpenIdea, toSpec), $.… [+358 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: SPECIFY_FEATURE, SPECIFY_FEATURE_DIRECTORY, SPECKIT_XREF_AUTOPILOT",
-      "./register.tsx state writes: speckit-xref.active, speckit-xref.asked, speckit-xref.autopilot, speckit-xref.checking, speckit-xref.chips, speckit-xref.details, speckit-xref.ledger, speckit-xref.queue, speckit-xref.seenAt, speckit-xref.snapshot, speckit-xref.turn, speckit-xref.turnFiles",
-      "./register.tsx state reads: speckit-xref.active, speckit-xref.asked, speckit-xref.autopilot, speckit-xref.checking, speckit-xref.chips, speckit-xref.details, speckit-xref.ledger, speckit-xref.queue, speckit-xref.seenAt, speckit-xref.snapshot, speckit-xref.turn, speckit-xref.turnFiles"
+      "./register.tsx state writes: speckit-xref.active, speckit-xref.asked, speckit-xref.autopilot, speckit-xref.checking, speckit-xref.chips, speckit-xref.details, speckit-xref.ledger, speckit-xref.permits, speckit-xref.queue, speckit-xref.seenAt, speckit-xref.snapshot, speckit-xref.turn, speckit-xref.turnFiles",
+      "./register.tsx state reads: speckit-xref.active, speckit-xref.asked, speckit-xref.autopilot, speckit-xref.checking, speckit-xref.chips, speckit-xref.details, speckit-xref.ledger, speckit-xref.permits, speckit-xref.queue, speckit-xref.seenAt, speckit-xref.snapshot, speckit-xref.turn, speckit-xref.turnFiles"
      ],
      "gatingHooks": [
       {
@@ -447,7 +489,19 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__speckit-xref__ask}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__speckit-xref__pause}",
        "hasCatch": true
       },
       {
@@ -500,6 +554,12 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.check",
        "hook": "tool.check",
        "hasCatch": false
@@ -522,5 +582,5 @@
    "advice": []
   }
  },
- "sourceHash": "95c711d4d384d236"
+ "sourceHash": "4dbfa2922386c061"
 }

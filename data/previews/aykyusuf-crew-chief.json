@@ -1,6 +1,6 @@
 {
  "slug": "aykyusuf-crew-chief",
- "generatedAt": "2026-10-09T15:32:15.515Z",
+ "generatedAt": "2026-10-16T14:16:19.653Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -27,6 +27,39 @@
     "matcher": {
      "command": "saver"
     }
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__.+__crew_compact_checkpoint$/"
+    }
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "crew-compact"
+    }
+   },
+   {
+    "event": "classic.StopFailure"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "crew-tidy"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "crew-report"
+    }
    }
   ],
   "commands": [
@@ -35,25 +68,60 @@
     "description": "crew-chief token saver: on, off, or status (Opus subagents at medium effort)",
     "argumentHint": "[on|off|status]",
     "output": "saver off · 5-hour 31% · context 97k"
+   },
+   {
+    "name": "crew-compact",
+    "description": "crew-chief: propose a compaction now (updates the handoff files first)",
+    "argumentHint": "",
+    "output": "ok, I will ask when this turn ends."
+   },
+   {
+    "name": "crew-tidy",
+    "description": "crew-chief: audit what fills your context (oversized, stale, repeated); \"archive\" moves old PROGRESS.md entries",
+    "argumentHint": "[archive]",
+    "output": "Context audit (nothing was changed):\nNothing oversized, stale or repeated found in the files Claude loaded."
+   },
+   {
+    "name": "crew-report",
+    "description": "crew-chief: tokens and cost by model and by main/subagent in this session",
+    "argumentHint": "",
+    "output": "No requests recorded in this session yet."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "crew_compact_checkpoint",
+    "description": "Propose compacting the conversation. Call it once, and only when a note from crew-chief says the context is large AND you have just finished a phase (a task done, tests passing, before an unrelated area). Never call it in the middle of work. It asks the user; if they decline, do not call it again."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 19,
+   "$.env.get": 44,
    "$.settings.read": 2,
    "$.store.get": 1,
-   "$.command.register": 1,
-   "$.clock.now": 5,
-   "$.session.usage": 3,
+   "$.command.register": 4,
+   "$.tool.register": 1,
+   "$.clock.now": 8,
+   "$.session.usage": 5,
    "$.command.list": 1,
-   "$.store.set": 1
+   "$.store.set": 1,
+   "$.clock.after": 1,
+   "$.session.cwd": 2,
+   "$.session.root": 2,
+   "$.fs.list": 2,
+   "$.fs.exists": 6,
+   "$.fs.read": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 300
+   }
+  ],
   "sites": {},
   "script": [
    "session.start",
@@ -67,7 +135,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/saver → saver off · 5-hour 31% · context 97k"
+   "/saver → saver off · 5-hour 31% · context 97k",
+   "/crew-compact → ok, I will ask when this turn ends.",
+   "/crew-tidy → Context audit (nothing was changed):\nNothing oversized, stale or repeated found …",
+   "/crew-report → No requests recorded in this session yet."
   ],
   "console": [],
   "warnings": []
@@ -83,33 +154,65 @@
    "session.measure",
    "turn.complete",
    "turn.step",
-   "command.run{command=saver}"
+   "command.run{command=saver}",
+   "classic.Stop",
+   "tool.call{tool=/\"^mcp__.+__crew_compact_checkpoint$\"/}",
+   "session.compact",
+   "command.run{command=crew-compact}",
+   "classic.StopFailure",
+   "command.run{command=crew-tidy}",
+   "command.run{command=crew-report}"
   ],
   "calls": [
-   "$.clock.after (via offerAdvisor)",
+   "$.agent.list (via agentCounts)",
+   "$.clock.after",
    "$.clock.now",
    "$.clock.sleep (via advisorIsSet)",
    "$.command.list (via offerAdvisor)",
    "$.command.register",
    "$.command.run (via enableAdvisor)",
-   "$.env.get (via offerAdvisor",
+   "$.env.get (via buildTidyReport",
+   "cacheOnPrompt",
+   "dataDir",
+   "disabled",
+   "focusOff",
+   "limits",
+   "off",
+   "offerAdvisor",
    "onCloudProvider",
    "readConfig",
-   "resolveLang)",
+   "resolveLang",
+   "transcriptPath)",
+   "$.fs.exists (via archiveProgress",
+   "buildTidyReport",
+   "findHandoff",
+   "loadedFiles",
+   "pathExists",
+   "transcriptPath)",
+   "$.fs.list (via findHandoff",
+   "loadedFiles",
+   "prune)",
+   "$.fs.read (via archiveProgress",
+   "buildTidyReport",
+   "loadedFiles",
+   "pinnedItems)",
+   "$.fs.stat (via mtimeOf)",
+   "$.fs.write (via archiveProgress",
+   "backupSummary)",
+   "$.process.run (via backupSummary",
+   "copyTranscriptIfNeeded",
+   "dirtyFiles",
+   "prune",
+   "transcriptLines)",
+   "$.prompt.submit (via requestStateUpdate",
+   "sendContinue)",
+   "$.session.compact (via runCompaction)",
+   "$.session.cwd (via buildTidyReport",
+   "findHandoff",
+   "transcriptPath)",
+   "$.session.id (via transcriptPath)",
    "$.session.model (via offerAdvisor)",
-   "$.session.usage (via evaluate",
-   "statusText)",
-   "$.settings.read (via advisorIsSet",
-   "loadLanguageSetting",
-   "offerAdvisor)",
-   "$.store.get (via loadStoredLanguage",
-   "offerAdvisor)",
-   "$.store.set (via rememberAdvisorAnswer",
-   "resolveLang)",
-   "$.ui.ask (via askUser",
-   "offerAdvisor)",
-   "$.ui.log",
-   "$.ui.toast"
+   "$… [+468 chars]"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -120,12 +223,21 @@
    "CLAUDE_CODE_USE_BEDROCK",
    "CLAUDE_CODE_USE_FOUNDRY",
    "CLAUDE_CODE_USE_VERTEX",
+   "CLAUDE_PLUGIN_DATA",
    "CREW_CHIEF_ADVISOR_OFFER",
+   "CREW_CHIEF_CACHE_HINT",
+   "CREW_CHIEF_COMPACT",
+   "CREW_CHIEF_COMPACT_ARM",
+   "CREW_CHIEF_COMPACT_ASK",
+   "CREW_CHIEF_COMPACT_FOCUS",
    "CREW_CHIEF_LANG",
+   "CREW_CHIEF_RESET",
    "CREW_CHIEF_SAVER",
    "CREW_CHIEF_SAVER_FIVE_HOUR",
    "CREW_CHIEF_SAVER_SEVEN_DAY",
-   "LANG"
+   "HOME",
+   "LANG",
+   "TMPDIR"
   ],
   "raw": {
    "success": true,
@@ -146,12 +258,20 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, session.end, prompt.submit, session.measure, turn.complete, turn.step, command.run{command=saver}",
+      "./register.js hooks: session.start, session.end, prompt.submit, session.measure, turn.complete, turn.step, command.run{command=saver}, classic.Stop, tool.call{tool=/\"^mcp__.+__crew_compact_checkpoint$\"/}, session.compact, command.run{command=crew-compact}, classic.StopFailure, command.run{command=crew-tidy}, command.run{command=crew-report}",
+      "./register.js hooks on classic.Stop, session.compact, classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.js answers its own command: command.run{command=crew-compact}",
+      "./register.js answers its own command: command.run{command=crew-tidy}",
+      "./register.js answers its own command: command.run{command=crew-report}",
       "./register.js gating hook without .catch: prompt.submit",
       "./register.js gating hook without .catch: command.run{command=saver}",
-      "./register.js calls: $.clock.after (via offerAdvisor), $.clock.now, $.clock.sleep (via advisorIsSet), $.command.list (via offerAdvisor), $.command.register, $.command.run (via enableAdvisor), $.env.get (via offerAdvisor, onCloudProvider, readConfig, resolveLang), $.session.model (via offerAdvisor), $.session.usage (via evaluate, statusText), $.settings.read (via advisorIsSet, loadLanguageSetting, offerAdvisor), $.store.get (via loadStoredLanguage, offerAdvisor), $.store.set (via rememberAdvisorAnswer, resolveLang), $.ui.ask (via askUser, offerAdvisor), $.ui.log, $.ui.toast",
+      "./register.js gating hook without .catch: classic.Stop",
+      "./register.js gating hook without .catch: tool.call{tool=/\"^mcp__.+__crew_compact_checkpoint$\"/}",
+      "./register.js gating hook without .catch: session.compact",
+      "./register.js gating hook without .catch: classic.StopFailure",
+      "./register.js calls: $.agent.list (via agentCounts), $.clock.after, $.clock.now, $.clock.sleep (via advisorIsSet), $.command.list (via offerAdvisor), $.command.register, $.command.run (via enableAdvisor), $.env.get (via buildTidyReport, cacheOnPrompt, dataDir, disabled, focusOff, limits, off, offerAdvisor, onCloudProvider, readConfig, resolveLang, transcriptPath), $.fs.exists (via archiveProgress, buildTidyReport, findHandoff, loadedFiles, pathExists, transcriptPath), $.fs.list (via findHandoff, loadedFiles, prune), $.fs.read (via archiveProgress, buildTidyReport, loadedFiles, pinnedItems), $.fs.stat (via mtimeOf), $.fs.write (via archiveProgress, backupSummary), $.process.run (via backupSummary, copyTranscriptIfNeeded, dirtyFiles, prune, transcriptLines), $.prompt.submit (via requestStateUpdate, sendContinue), $.session.compact (via runCompaction), $.session.cwd (via buildTidyReport, findHandoff, transcriptPath), $.session.id (via transcriptPath), $.session.model (via offerAdvisor), $… [+468 chars]",
       "./register.js env writes: nothing",
-      "./register.js env reads: CLAUDE_CODE_DISABLE_ADVISOR_TOOL, CLAUDE_CODE_USE_ANTHROPIC_AWS, CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, CREW_CHIEF_ADVISOR_OFFER, CREW_CHIEF_LANG, CREW_CHIEF_SAVER, CREW_CHIEF_SAVER_FIVE_HOUR, CREW_CHIEF_SAVER_SEVEN_DAY, LANG"
+      "./register.js env reads: CLAUDE_CODE_DISABLE_ADVISOR_TOOL, CLAUDE_CODE_USE_ANTHROPIC_AWS, CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, CLAUDE_PLUGIN_DATA, CREW_CHIEF_ADVISOR_OFFER, CREW_CHIEF_CACHE_HINT, CREW_CHIEF_COMPACT, CREW_CHIEF_COMPACT_ARM, CREW_CHIEF_COMPACT_ASK, CREW_CHIEF_COMPACT_FOCUS, CREW_CHIEF_LANG, CREW_CHIEF_RESET, CREW_CHIEF_SAVER, CREW_CHIEF_SAVER_FIVE_HOUR, CREW_CHIEF_SAVER_SEVEN_DAY, HOME, LANG, TMPDIR"
      ],
      "gatingHooks": [
       {
@@ -165,6 +285,30 @@
        "pattern": "command.run",
        "hook": "command.run{command=saver}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__.+__crew_compact_checkpoint$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "classic.StopFailure",
+       "hook": "classic.StopFailure",
+       "hasCatch": false
       }
      ]
     }
@@ -172,5 +316,5 @@
    "advice": []
   }
  },
- "sourceHash": "768843b0285017f4"
+ "sourceHash": "65ae240dbedf361e"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "ktcrisis-flux7-mods-jukebox7",
- "generatedAt": "2026-10-09T15:32:38.210Z",
+ "generatedAt": "2026-10-16T14:17:38.581Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,13 @@
     "matcher": {
      "plugin": "avatar7",
      "key": "isVoicing"
+    }
+   },
+   {
+    "event": "state.set",
+    "matcher": {
+     "plugin": "avatar7",
+     "key": "musicNext"
     }
    },
    {
@@ -37,7 +44,7 @@
   "commands": [
    {
     "name": "music",
-    "description": "Play music from YouTube: /music <search>, /music find <search> then /music pick <n>, /music pause, /music next, /music similar, /music stop, /music vol [+|-]<n>, /music alone for what plays",
+    "description": "Play music from YouTube: /music <search>, /music find <search> then /music pick <n>, /music album <artist album>, /music pause, /music back, /music next, /music fav, /music favorites, /music similar, /music stop, /music vol [+|-]<n>, /music alone for what plays",
     "output": "Nothing played from here yet: pick a genre in the pane."
    }
   ],
@@ -233,6 +240,18 @@
              "key": "post-rock",
              "label": "post-rock",
              "hotkey": "0",
+             "plain": true,
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "favorites",
+             "label": "favorites",
+             "hotkey": "v",
              "plain": true,
              "dimColor": true,
              "onPress": "[fn]"
@@ -3554,6 +3573,7 @@
   ],
   "hooks": [
    "state.set{plugin=avatar7, key=isVoicing}",
+   "state.set{plugin=avatar7, key=musicNext}",
    "session.start",
    "session.end",
    "prompt.submit",
@@ -3564,10 +3584,16 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.model.complete",
+   "$.model.complete (via actOn)",
    "$.process.run",
    "$.state.get",
-   "$.state.set",
+   "$.state.set (via actOn",
+   "playAt",
+   "playGenre)",
+   "$.store.get (via favorites",
+   "learned)",
+   "$.store.set (via teach",
+   "toggleFavorite)",
    "$.ui.close (via stop)",
    "$.ui.invalidate",
    "$.ui.open",
@@ -3581,12 +3607,14 @@
    "avatar7.isVoicing",
    "avatar7.station",
    "jukebox7.found",
+   "jukebox7.history",
    "jukebox7.player",
    "jukebox7.searching",
    "jukebox7.volume"
   ],
   "stateWrites": [
    "jukebox7.found",
+   "jukebox7.history",
    "jukebox7.modelUse",
    "jukebox7.player",
    "jukebox7.say",
@@ -3611,7 +3639,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: jukebox7.player, jukebox7.volume, jukebox7.say, jukebox7.found, jukebox7.searching, jukebox7.modelUse, avatar7.avatar, avatar7.color, avatar7.isVoicing, avatar7.station"
+     "types ./types/index.d.ts declares state: jukebox7.player, jukebox7.volume, jukebox7.say, jukebox7.found, jukebox7.searching, jukebox7.modelUse, jukebox7.history, avatar7.avatar, avatar7.color, avatar7.isVoicing, avatar7.station, avatar7.musicNext"
     ],
     "gatingHooks": []
    },
@@ -3622,13 +3650,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: state.set{plugin=avatar7, key=isVoicing}, session.start, session.end, prompt.submit, command.run{command=music}, ui.render{component=Pane, requestId=jukebox7}",
+      "./register.tsx hooks: state.set{plugin=avatar7, key=isVoicing}, state.set{plugin=avatar7, key=musicNext}, session.start, session.end, prompt.submit, command.run{command=music}, ui.render{component=Pane, requestId=jukebox7}",
       "./register.tsx answers its own command: command.run{command=music}",
       "./register.tsx gating hook without .catch: state.set{plugin=avatar7, key=isVoicing}",
+      "./register.tsx gating hook without .catch: state.set{plugin=avatar7, key=musicNext}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.model.complete, $.process.run, $.state.get, $.state.set, $.ui.close (via stop), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: jukebox7.found, jukebox7.modelUse, jukebox7.player, jukebox7.say, jukebox7.searching, jukebox7.volume",
-      "./register.tsx state reads: avatar7.avatar, avatar7.color, avatar7.isVoicing, avatar7.station, jukebox7.found, jukebox7.player, jukebox7.searching, jukebox7.volume",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.model.complete (via actOn), $.process.run, $.state.get, $.state.set (via actOn, playAt, playGenre), $.store.get (via favorites, learned), $.store.set (via teach, toggleFavorite), $.ui.close (via stop), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: jukebox7.found, jukebox7.history, jukebox7.modelUse, jukebox7.player, jukebox7.say, jukebox7.searching, jukebox7.volume",
+      "./register.tsx state reads: avatar7.avatar, avatar7.color, avatar7.isVoicing, avatar7.station, jukebox7.found, jukebox7.history, jukebox7.player, jukebox7.searching, jukebox7.volume",
       "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): avatar7.avatar, avatar7.color, avatar7.isVoicing, avatar7.station"
      ],
      "gatingHooks": [
@@ -3636,6 +3665,12 @@
        "module": "./register.tsx",
        "pattern": "state.set",
        "hook": "state.set{plugin=avatar7, key=isVoicing}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "state.set",
+       "hook": "state.set{plugin=avatar7, key=musicNext}",
        "hasCatch": false
       },
       {
@@ -3650,5 +3685,5 @@
    "advice": []
   }
  },
- "sourceHash": "de61088b22fba0b2"
+ "sourceHash": "b90104e44f6e477a"
 }

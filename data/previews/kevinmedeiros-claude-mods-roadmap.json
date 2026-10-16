@@ -1,0 +1,323 @@
+{
+ "slug": "kevinmedeiros-claude-mods-roadmap",
+ "generatedAt": "2026-10-16T14:17:37.968Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__roadmap__roadmap_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__roadmap__roadmap_update"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__roadmap__roadmap_add"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "roadmap"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "roadmap"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "roadmap",
+    "description": "Mostra o roadmap do projeto num quadro: fases, o que está andando, as próximas e o que espera",
+    "output": "Sem roadmap em docs/roadmap.json"
+   }
+  ],
+  "tools": [
+   {
+    "name": "roadmap_status",
+    "description": "Mostra o roadmap do projeto: a fase atual e o %, as 5 próximas tarefas (com os ids), o que está com o usuário e o que está esperando na fase atual (as outras fases só como contagem), e se o roadmap está desatualizado. Para achar o id de um item, passe query com palavras do título (até 10 itens, com id, estado, dono, fase, rótulo curto e notas); phase lista uma fase inteira; all: true mostra tudo sem cortes. Sem roadmap no projeto, diz onde criar e mostra o formato, com cada campo."
+   },
+   {
+    "name": "roadmap_update",
+    "description": "Muda o estado de um item do roadmap pelo id (o roadmap_status com query acha o id). Use ao começar um item (doing), ao terminar (done, com a evidência: commit, arquivo, teste ou resultado), quando ele travar (blocked, com waitingOn) ou para reabrir (todo). \"done\" sem doneAt usa a data de hoje. \"short\" troca o rótulo curto do cartão no quadro (até 40 caracteres; \"\" tira). Com o id de uma fase, muda o estado da fase (done, doing ou todo), o \"short\" dela, e \"evidence\" vira o resultado do gate. Use esta ferramenta em vez de editar o arquivo à mão (vale para o JSON e para o ROADMAP.md)."
+   },
+   {
+    "name": "roadmap_add",
+    "description": "Cria um item no roadmap, numa fase que já existe; o id sai do título. Use quando surgir trabalho novo que faz parte do plano (não para o que vai fazer agora mesmo). \"after\" põe o item logo depois de outro, no arquivo e no caminho; sem ele, o item vai para o fim da fase. Com título longo, passe um \"short\" (o rótulo do cartão)."
+   }
+  ],
+  "panes": [
+   {
+    "id": "roadmap",
+    "title": "Roadmap"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.process.run": 5,
+   "$.fs.exists": 26,
+   "$.state.get": 9,
+   "$.state.set": 1,
+   "$.ui.status": 1,
+   "$.clock.after": 1,
+   "$.command.register": 1,
+   "$.tool.register": 3,
+   "$.clock.every": 2,
+   "$.clock.now": 3,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   },
+   {
+    "kind": "every",
+    "ms": 15000
+   },
+   {
+    "kind": "every",
+    "ms": 300000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "roadmap": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "borderStyle": "round",
+       "borderColor": "subtle",
+       "paddingX": 1,
+       "rowGap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Sem roadmap"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           " · ",
+           "docs/roadmap.json"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {},
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "roadmap-create",
+           "label": "Pedir ao Claude para criar",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Roadmap"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "$.process.run(git log -1 --format=%H -- docs/roadmap.json) → exit 0",
+   "$.process.run(git rev-list --count a1b2c3d fix: refresh expired tokens (2 minutes ago)\n9f8e7d6…) → exit 0",
+   "turn.complete",
+   "$.process.run(git log -1 --format=%H -- docs/roadmap.json) → exit 0",
+   "$.process.run(git rev-list --count a1b2c3d fix: refresh expired tokens (2 minutes ago)\n9f8e7d6…) → exit 0",
+   "$.ui.open(roadmap)",
+   "/roadmap → Sem roadmap em docs/roadmap.json"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call",
+   "turn.complete",
+   "tool.call{tool=mcp__roadmap__roadmap_status}",
+   "tool.call{tool=mcp__roadmap__roadmap_update}",
+   "tool.call{tool=mcp__roadmap__roadmap_add}",
+   "command.run{command=roadmap}",
+   "ui.render{component=Pane, requestId=roadmap}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.exists (via change",
+   "discover",
+   "load)",
+   "$.fs.read (via change",
+   "load)",
+   "$.fs.stat (via change",
+   "load)",
+   "$.fs.write (via change)",
+   "$.process.run",
+   "$.prompt.fill (via fill)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via load)",
+   "$.ui.toast (via change)"
+  ],
+  "stateReads": [
+   "roadmap.board",
+   "roadmap.decisions",
+   "roadmap.doneSeen",
+   "roadmap.expanded",
+   "roadmap.filter",
+   "roadmap.hidden",
+   "roadmap.selected",
+   "roadmap.stale"
+  ],
+  "stateWrites": [
+   "roadmap.board",
+   "roadmap.decisions",
+   "roadmap.doneSeen",
+   "roadmap.expanded",
+   "roadmap.filter",
+   "roadmap.hidden",
+   "roadmap.selected",
+   "roadmap.stale"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/kevinmedeiros-claude-mods-roadmap/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kevinmedeiros-claude-mods-roadmap/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: roadmap.board, roadmap.stale, roadmap.hidden, roadmap.filter, roadmap.expanded, roadmap.selected, roadmap.decisions, roadmap.doneSeen"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kevinmedeiros-claude-mods-roadmap/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call, turn.complete, tool.call{tool=mcp__roadmap__roadmap_status}, tool.call{tool=mcp__roadmap__roadmap_update}, tool.call{tool=mcp__roadmap__roadmap_add}, command.run{command=roadmap}, ui.render{component=Pane, requestId=roadmap}, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=roadmap}",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__roadmap__roadmap_status}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__roadmap__roadmap_update}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__roadmap__roadmap_add}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.fs.exists (via change, discover, load), $.fs.read (via change, load), $.fs.stat (via change, load), $.fs.write (via change), $.process.run, $.prompt.fill (via fill), $.state.get, $.state.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.status (via load), $.ui.toast (via change)",
+      "./register.tsx state writes: roadmap.board, roadmap.decisions, roadmap.doneSeen, roadmap.expanded, roadmap.filter, roadmap.hidden, roadmap.selected, roadmap.stale",
+      "./register.tsx state reads: roadmap.board, roadmap.decisions, roadmap.doneSeen, roadmap.expanded, roadmap.filter, roadmap.hidden, roadmap.selected, roadmap.stale"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__roadmap__roadmap_status}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__roadmap__roadmap_update}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__roadmap__roadmap_add}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "b00aeb011dd421bd"
+}

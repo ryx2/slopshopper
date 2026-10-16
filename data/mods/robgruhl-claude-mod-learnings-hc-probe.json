@@ -1,0 +1,8 @@
+{
+ "slug": "robgruhl-claude-mod-learnings-hc-probe",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const register: Register = on => {\n  on('command.run', { command: 'probe' }, async ($, e) => {\n    const g = globalThis as Record<string, unknown>\n    const has = (k: string) => (typeof g[k] === 'undefined' ? 'no' : typeof g[k])\n    let timer = 'not tried'\n    try {\n      const t0 = performance.now()\n      await new Promise<void>((resolve, reject) => {\n        const st = g.setTimeout as (f: () => void, ms: number) => unknown\n        try { st(() => resolve(), 20) } catch (err) { reject(err) }\n      })\n      timer = `fired after ${(performance.now() - t0).toFixed(1)} ms`\n    } catch (err) {\n      timer = `threw: ${String(err)}`\n    }\n    return { text: JSON.stringify({ Date: has('Date'), performance: has('performance'), setTimeout: has('setTimeout'), setInterval: has('setInterval'), timer, process: has('process'), fetch: has('fetch'), require: has('require'), crypto: has('crypto'), URL: has('URL'), TextEncoder: has('TextEncoder'), AbortController: has('AbortController'), WebSocket: has('WebSocket'), XMLHttpRequest: has('XMLHttpRequest'), Bun: has('Bun'), Deno: has('Deno') }) }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"hc-probe\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Probe what the mods runtime offers\",\n  \"author\": {\n    \"name\": \"Rob Gruhl\"\n  }\n}"
+ }
+}

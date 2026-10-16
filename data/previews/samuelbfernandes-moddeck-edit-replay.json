@@ -1,0 +1,372 @@
+{
+ "slug": "samuelbfernandes-moddeck-edit-replay",
+ "generatedAt": "2026-10-16T14:18:07.376Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "replay"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^(Edit|Write|MultiEdit|NotebookEdit)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "edit-replay"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "replay",
+    "description": "Step through the file edits from the last turn",
+    "argumentHint": "[all]",
+    "output": "Replay · 3 edits in the last turn"
+   }
+  ],
+  "tools": [],
+  "panes": [
+   {
+    "id": "edit-replay",
+    "title": "Replay"
+   }
+  ],
+  "toasts": [
+   "3 files changed · /replay to review"
+  ],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.state.get": 22,
+   "$.state.set": 10,
+   "$.fs.exists": 2,
+   "$.session.surfaces": 1,
+   "$.clock.now": 1,
+   "$.ui.toast": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "key": "replay-band",
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "replay-row",
+        "gap": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          "● 3 edits in 3 files"
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "open",
+          "label": "Replay",
+          "hotkey": "r",
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "edit-replay": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Replay · 1 of 3"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         "/work/app/src/auth.ts"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Edit · +2 −1 · last turn"
+        ]
+       },
+       {
+        "type": "Code",
+        "props": {
+         "source": "@@ -1,1 +1,2 @@\n-if (!claims) throw new Error('invalid token')\n+if (!claims || claims.exp < Date.now() / 1000) throw new Error('invalid token')\n+  await audit('refresh', claims.sub)",
+         "format": "diff",
+         "path": "/work/app/src/auth.ts"
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "prev",
+           "label": "Prev",
+           "hotkey": "p",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "next",
+           "label": "Next",
+           "hotkey": "n",
+           "variant": "primary",
+           "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "Close",
+           "hotkey": "c",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Line numbers are relative to the change"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Shell edits are not replayed"
+        ]
+       }
+      ]
+     },
+     "title": "Replay"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(edit-replay)",
+   "/replay → Replay · 3 edits in the last turn"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "command.run{command=replay}",
+   "tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}",
+   "tool.call{tool=Bash}",
+   "turn.start",
+   "turn.complete",
+   "prompt.submit",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=edit-replay}"
+  ],
+  "calls": [
+   "$.clock.now (via hintAfterTurn)",
+   "$.command.register",
+   "$.fs.exists (via readPrior)",
+   "$.fs.read (via readPrior)",
+   "$.fs.stat (via readPrior)",
+   "$.session.surfaces (via hintAfterTurn)",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.close",
+   "$.ui.open (via openReplay)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "edit-replay.edits",
+   "edit-replay.hintAt",
+   "edit-replay.ready",
+   "edit-replay.shellTurns",
+   "edit-replay.turn",
+   "edit-replay.view"
+  ],
+  "stateWrites": [
+   "edit-replay.edits",
+   "edit-replay.hintAt",
+   "edit-replay.ready",
+   "edit-replay.shellTurns",
+   "edit-replay.turn",
+   "edit-replay.view"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/samuelbfernandes-moddeck-edit-replay/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/samuelbfernandes-moddeck-edit-replay/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: edit-replay.edits, edit-replay.turn, edit-replay.shellTurns, edit-replay.ready, edit-replay.view, edit-replay.hintAt"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/samuelbfernandes-moddeck-edit-replay/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, command.run{command=replay}, tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}, tool.call{tool=Bash}, turn.start, turn.complete, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=edit-replay}",
+      "./register.tsx answers its own command: command.run{command=replay}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx calls: $.clock.now (via hintAfterTurn), $.command.register, $.fs.exists (via readPrior), $.fs.read (via readPrior), $.fs.stat (via readPrior), $.session.surfaces (via hintAfterTurn), $.state.get, $.state.set, $.ui.close, $.ui.open (via openReplay), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: edit-replay.edits, edit-replay.hintAt, edit-replay.ready, edit-replay.shellTurns, edit-replay.turn, edit-replay.view",
+      "./register.tsx state reads: edit-replay.edits, edit-replay.hintAt, edit-replay.ready, edit-replay.shellTurns, edit-replay.turn, edit-replay.view"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "86b0064f165dee09"
+}

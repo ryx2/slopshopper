@@ -1,0 +1,366 @@
+{
+ "slug": "achimcc-nixos-config-werkbank",
+ "generatedAt": "2026-10-16T14:18:28.261Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "laufend"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "fertig"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "uebergabe"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__werkbank__startprompt"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "werkbank-laufend"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "laufend",
+    "description": "Zeigt, was diese Sitzung gerade laufen hat, mit Laufzeit, dazu lotse status",
+    "output": "Diese Sitzung hat nichts laufen."
+   },
+   {
+    "name": "fertig",
+    "description": "Prüft: committed, in origin/main, CI grün, deployt, Newsletter — dann Worktree weg",
+    "argumentHint": "[ohne-newsletter] [ohne-deploy]",
+    "output": "Baum /work/app · Zweig feat/auth-refresh\n✘ Committed       1 geänderte Datei(en): M src/auth.ts\n! Ungetrackt      1: ?? src/auth.test.ts\n✔ In origin/main  gemergt und gepusht\n? CI              Antwort von gh nicht lesbar\n\nNicht fertig. Kein Worktree — nichts wegzuräumen."
+   },
+   {
+    "name": "uebergabe",
+    "description": "Stand ins Übergabeblatt, dann /clear und der frische Agent übernimmt (nur-blatt: ohne /clear)",
+    "argumentHint": "[nur-blatt] [Hinweis für den Nachfolger, z. B. Subagent je Aufgabe]",
+    "output": "Übergabe angestoßen (danach /clear und Nachfolger automatisch).\nHauptbaum: /work/app, Zweig feat/auth-refresh\n1 uncommittete Änderung(en)\n Commit(s) noch nicht auf origin/main (Stand des letzten fetch)"
+   }
+  ],
+  "tools": [
+   {
+    "name": "startprompt",
+    "description": "Legt den Startprompt fuer den Agenten, der diese Arbeit in einer frischen Sitzung uebernimmt, in die Zwischenablage des Nutzers. Nur im Ablauf von /uebergabe aufrufen, als letzten Schritt."
+   }
+  ],
+  "panes": [
+   {
+    "id": "werkbank-laufend",
+    "title": "Laufend"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 3,
+   "$.clock.every": 1,
+   "$.tool.register": 1,
+   "$.clock.now": 14,
+   "$.state.get": 39,
+   "$.state.set": 24,
+   "$.ui.status": 2,
+   "$.process.run": 19,
+   "$.ui.open": 1,
+   "$.clock.after": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 15000
+   },
+   {
+    "kind": "after",
+    "ms": 100
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "werkbank-laufend": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Diese Sitzung"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "nichts laufend"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {},
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "lotse status "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "vor 0 s "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "neu",
+           "label": "neu laden",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "l0",
+         "dimColor": true
+        },
+        "children": [
+         "(keine Ausgabe)"
+        ]
+       }
+      ]
+     },
+     "title": "Laufend"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(lotse status) → exit 0",
+   "$.ui.open(werkbank-laufend)",
+   "/laufend → Diese Sitzung hat nichts laufen.",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git branch --show-current) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git remote get-url origin) → exit 0",
+   "$.process.run(git status --porcelain) → exit 0",
+   "$.process.run(git fetch origin --quiet) → exit 0",
+   "$.process.run(git merge-base --is-ancestor HEAD origin/main) → exit 0",
+   "$.process.run(git rev-list --count origin/main..HEAD) → exit 0",
+   "$.process.run(gh run list --branch main --event push --limit 30 --json headSha,status,conclusi…) → exit 0",
+   "$.process.run(git reflog show --format=%H refs/heads/feat/auth-refresh) → exit 0",
+   "/fertig → Baum /work/app · Zweig feat/auth-refresh\n✘ Committed       1 geänderte Datei(en)…",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git branch --show-current) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-dir) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git remote get-url origin) → exit 0",
+   "$.process.run(git status --porcelain) → exit 0",
+   "$.process.run(git rev-list --count origin/main..HEAD) → exit 0",
+   "/uebergabe → Übergabe angestoßen (danach /clear und Nachfolger automatisch).\nHauptbaum: /work…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "session.start",
+   "command.run{command=laufend}",
+   "command.run{command=fertig}",
+   "command.run{command=uebergabe}",
+   "tool.call{tool=mcp__werkbank__startprompt}",
+   "tool.call",
+   "classic.Stop",
+   "prompt.submit",
+   "ui.render{component=Pane, requestId=werkbank-laufend}"
+  ],
+  "calls": [
+   "$.clock.after (via nachDemBefehl",
+   "wechselPlanen)",
+   "$.clock.every (via laufendStart)",
+   "$.clock.now (via laufendBefehl",
+   "laufendStop",
+   "laufendWerkzeug",
+   "lotseHolen",
+   "tick)",
+   "$.command.register (via fertigStart",
+   "laufendStart",
+   "uebergabeStart)",
+   "$.command.run (via wechseln)",
+   "$.process.run (via lotseHolen",
+   "run",
+   "uebergabeWerkzeug)",
+   "$.prompt.submit (via nachDemBefehl",
+   "wechseln)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register (via uebergabeStart)",
+   "$.ui.copy (via uebergabeWerkzeug)",
+   "$.ui.open (via laufendBefehl)",
+   "$.ui.resolve (via laufendPane)",
+   "$.ui.status (via tick)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "werkbank.hintergrund",
+   "werkbank.jetzt",
+   "werkbank.lotse",
+   "werkbank.lotseStand",
+   "werkbank.starts",
+   "werkbank.vordergrund"
+  ],
+  "stateWrites": [
+   "werkbank.hintergrund",
+   "werkbank.jetzt",
+   "werkbank.lotse",
+   "werkbank.lotseStand",
+   "werkbank.starts",
+   "werkbank.vordergrund"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/achimcc-nixos-config-werkbank/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/achimcc-nixos-config-werkbank/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: werkbank.hintergrund, werkbank.vordergrund, werkbank.starts, werkbank.lotse, werkbank.lotseStand, werkbank.jetzt"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/achimcc-nixos-config-werkbank/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=laufend}, command.run{command=fertig}, command.run{command=uebergabe}, tool.call{tool=mcp__werkbank__startprompt}, tool.call, classic.Stop, prompt.submit, ui.render{component=Pane, requestId=werkbank-laufend}",
+      "./register.tsx hooks on classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=laufend}",
+      "./register.tsx answers its own command: command.run{command=fertig}",
+      "./register.tsx answers its own command: command.run{command=uebergabe}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__werkbank__startprompt}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx calls: $.clock.after (via nachDemBefehl, wechselPlanen), $.clock.every (via laufendStart), $.clock.now (via laufendBefehl, laufendStop, laufendWerkzeug, lotseHolen, tick), $.command.register (via fertigStart, laufendStart, uebergabeStart), $.command.run (via wechseln), $.process.run (via lotseHolen, run, uebergabeWerkzeug), $.prompt.submit (via nachDemBefehl, wechseln), $.state.get, $.state.set, $.tool.register (via uebergabeStart), $.ui.copy (via uebergabeWerkzeug), $.ui.open (via laufendBefehl), $.ui.resolve (via laufendPane), $.ui.status (via tick), $.ui.toast",
+      "./register.tsx state writes: werkbank.hintergrund, werkbank.jetzt, werkbank.lotse, werkbank.lotseStand, werkbank.starts, werkbank.vordergrund",
+      "./register.tsx state reads: werkbank.hintergrund, werkbank.jetzt, werkbank.lotse, werkbank.lotseStand, werkbank.starts, werkbank.vordergrund"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__werkbank__startprompt}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "67128df1e7944132"
+}

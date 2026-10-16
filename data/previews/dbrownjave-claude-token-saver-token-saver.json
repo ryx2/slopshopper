@@ -1,11 +1,17 @@
 {
  "slug": "dbrownjave-claude-token-saver-token-saver",
- "generatedAt": "2026-10-10T14:45:08.840Z",
+ "generatedAt": "2026-10-16T14:19:15.633Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "clear"
+    }
    },
    {
     "event": "command.run",
@@ -41,7 +47,16 @@
     "event": "turn.step"
    },
    {
+    "event": "classic.SubagentStart"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
     "event": "session.compact"
+   },
+   {
+    "event": "classic.PreModelSwitch"
    },
    {
     "event": "ui.render",
@@ -169,7 +184,7 @@
            {
             "type": "Text",
             "props": {
-             "color": "inactive"
+             "color": "text"
             },
             "children": [
              "Context"
@@ -185,19 +200,10 @@
            {
             "type": "Text",
             "props": {
-             "color": "text"
+             "color": "inactive"
             },
             "children": [
-             "97.4k / 200k tok"
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "warning"
-            },
-            "children": [
-             " (49%)"
+             "97.4k / 200k (49%)"
             ]
            }
           ]
@@ -489,6 +495,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=clear}",
    "command.run{command=tokens}",
    "command.run{command=loadout}",
    "tool.call{tool=mcp__token-saver__progress}",
@@ -496,7 +503,10 @@
    "turn.start",
    "turn.complete",
    "turn.step",
+   "classic.SubagentStart",
+   "classic.SubagentStop",
    "session.compact",
+   "classic.PreModelSwitch",
    "ui.render{component=Pane, requestId=loadout}",
    "ui.close",
    "ui.render{component=Pane, requestId=context}",
@@ -507,19 +517,23 @@
    "$.clock.now",
    "$.command.register",
    "$.command.run (via clearSession",
-   "runFromPane)",
+   "runFromPane",
+   "submitCommand)",
    "$.env.get (via homeDir)",
    "$.fs.read (via readJson)",
    "$.model.fork (via tickKeepWarm)",
    "$.process.run (via runPython)",
    "$.process.spawn (via spawnPython)",
-   "$.prompt.submit (via compactNow)",
+   "$.prompt.fill (via submitCommand)",
    "$.session.compact (via compactNow)",
    "$.session.cwd",
    "$.session.usage",
    "$.store.get",
+   "$.store.keys (via loadAgentWeeks)",
    "$.store.set",
+   "$.tool.call (via askUser)",
    "$.tool.register",
+   "$.ui.ask (via askUser)",
    "$.ui.close (via clearSession",
    "renderContext",
    "runFromPane)",
@@ -555,18 +569,29 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, command.run{command=tokens}, command.run{command=loadout}, tool.call{tool=mcp__token-saver__progress}, tool.call{tool=Bash}, turn.start, turn.complete, turn.step, session.compact, ui.render{component=Pane, requestId=loadout}, ui.close, ui.render{component=Pane, requestId=context}, ui.render{component=AbovePrompt}",
+      "./register.js hooks: session.start, command.run{command=clear}, command.run{command=tokens}, command.run{command=loadout}, tool.call{tool=mcp__token-saver__progress}, tool.call{tool=Bash}, turn.start, turn.complete, turn.step, classic.SubagentStart, classic.SubagentStop, session.compact, classic.PreModelSwitch, ui.render{component=Pane, requestId=loadout}, ui.close, ui.render{component=Pane, requestId=context}, ui.render{component=AbovePrompt}",
+      "./register.js hooks on classic.SubagentStart, classic.SubagentStop, session.compact, classic.PreModelSwitch do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.js answers its own command: command.run{command=tokens}",
       "./register.js answers its own command: command.run{command=loadout}",
+      "./register.js gating hook without .catch: command.run{command=clear}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__token-saver__progress}",
       "./register.js gating hook without .catch: tool.call{tool=Bash}",
+      "./register.js gating hook without .catch: classic.SubagentStart",
+      "./register.js gating hook without .catch: classic.SubagentStop",
       "./register.js gating hook without .catch: session.compact",
+      "./register.js gating hook without .catch: classic.PreModelSwitch",
       "./register.js gating hook without .catch: ui.close",
-      "./register.js calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via clearSession, runFromPane), $.env.get (via homeDir), $.fs.read (via readJson), $.model.fork (via tickKeepWarm), $.process.run (via runPython), $.process.spawn (via spawnPython), $.prompt.submit (via compactNow), $.session.compact (via compactNow), $.session.cwd, $.session.usage, $.store.get, $.store.set, $.tool.register, $.ui.close (via clearSession, renderContext, runFromPane), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.js calls: $.clock.every, $.clock.now, $.command.register, $.command.run (via clearSession, runFromPane, submitCommand), $.env.get (via homeDir), $.fs.read (via readJson), $.model.fork (via tickKeepWarm), $.process.run (via runPython), $.process.spawn (via spawnPython), $.prompt.fill (via submitCommand), $.session.compact (via compactNow), $.session.cwd, $.session.usage, $.store.get, $.store.keys (via loadAgentWeeks), $.store.set, $.tool.call (via askUser), $.tool.register, $.ui.ask (via askUser), $.ui.close (via clearSession, renderContext, runFromPane), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
       "./register.js env writes: nothing",
       "./register.js env reads: HOME, USERPROFILE"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.js",
+       "pattern": "command.run",
+       "hook": "command.run{command=clear}",
+       "hasCatch": false
+      },
       {
        "module": "./register.js",
        "pattern": "tool.call",
@@ -581,8 +606,26 @@
       },
       {
        "module": "./register.js",
+       "pattern": "classic.SubagentStart",
+       "hook": "classic.SubagentStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
        "pattern": "session.compact",
        "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "classic.PreModelSwitch",
+       "hook": "classic.PreModelSwitch",
        "hasCatch": false
       },
       {
@@ -597,5 +640,5 @@
    "advice": []
   }
  },
- "sourceHash": "72fa721f273e8fdd"
+ "sourceHash": "b9b78dc93d53cb73"
 }

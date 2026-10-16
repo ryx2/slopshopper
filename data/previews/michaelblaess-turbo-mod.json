@@ -1,6 +1,6 @@
 {
  "slug": "michaelblaess-turbo-mod",
- "generatedAt": "2026-10-09T15:33:54.210Z",
+ "generatedAt": "2026-10-16T14:20:50.613Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,13 @@
     "event": "command.run",
     "matcher": {
      "command": "turbo"
+    }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "turbo-mod"
     }
    },
    {
@@ -31,7 +38,7 @@
    {
     "name": "turbo",
     "description": "Turbo-MOD: show or hide the pane, set color scheme, language and repo folder",
-    "argumentHint": "[theme <name> | repos [remove] <path> | ticket <url> | feed <command> | lang <de|en> | clear | effect | demo]",
+    "argumentHint": "[todo <text> | theme <name> | repos [remove] <path> | ticket <url> | feed <command> | lang <de|en> | clear | effect | demo]",
     "output": "Turbo-MOD hidden. /turbo shows it again."
    }
   ],
@@ -47,17 +54,19 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 8,
-   "$.state.get": 32,
-   "$.state.set": 14,
+   "$.store.get": 9,
+   "$.state.get": 40,
+   "$.state.set": 16,
    "$.command.register": 1,
-   "$.env.get": 4,
-   "$.process.run": 2,
+   "$.env.get": 9,
+   "$.process.run": 7,
+   "$.fs.exists": 1,
+   "$.clock.now": 7,
    "$.session.usage": 1,
-   "$.clock.now": 2,
-   "$.clock.every": 5,
+   "$.clock.every": 6,
    "$.ui.open": 1,
-   "$.fs.stat": 6,
+   "$.fs.stat": 10,
+   "$.session.cwd": 4,
    "$.ui.panes": 1,
    "$.ui.close": 1,
    "$.ui.resolve": 1
@@ -78,6 +87,10 @@
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 15000
    },
    {
     "kind": "every",
@@ -117,7 +130,7 @@
            "dimColor": true
           },
           "children": [
-           " v0.13.0 · ",
+           " v0.16.0 · ",
            {
             "type": "Link",
             "props": {
@@ -446,9 +459,7 @@
           },
           "children": [
            "    ",
-           "193 B",
-           " · ",
-           "10-09 08:52:20",
+           "193 B · 10-09 08:52:20",
            ""
           ]
          },
@@ -616,7 +627,7 @@
            "wrap": "wrap"
           },
           "children": [
-           "No splittable terminal found. Windows Terminal and tmux are supported."
+           "Ghostty found. It cannot be split from outside, start Claude in tmux inside it."
           ]
          }
         ]
@@ -663,6 +674,63 @@
           },
           "children": [
            "Repos"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "",
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "───────────────────────────────────────────────────────"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {},
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "fold:todo",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": [
+             "▸"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "suggestion"
+          },
+          "children": [
+           "TODO"
           ]
          },
          {
@@ -933,6 +1001,7 @@
   "script": [
    "$.process.run(uname -s) → exit 0",
    "$.process.run(which nvim) → exit 0",
+   "$.process.run(git -C /Users/dev/.claude rev-parse --is-inside-work-tree) → exit 0",
    "$.ui.open(turbo-mod)",
    "session.start",
    "tool.call Read",
@@ -940,9 +1009,13 @@
    "tool.call Edit",
    "tool.call Write",
    "tool.call Write",
+   "$.process.run(git rev-parse --show-toplevel HEAD) → exit 0",
    "tool.call Bash bun test",
+   "$.process.run(git rev-parse --show-toplevel HEAD) → exit 0",
    "tool.call Bash git status --porcelain",
+   "$.process.run(git rev-parse --show-toplevel HEAD) → exit 0",
    "tool.call Bash rm -rf build && git push --force origin main",
+   "$.process.run(git rev-parse --show-toplevel HEAD) → exit 0",
    "tool.call Bash cat .env",
    "turn.complete",
    "/turbo → Turbo-MOD hidden. /turbo shows it again."
@@ -957,6 +1030,7 @@
   "hooks": [
    "session.start",
    "command.run{command=turbo}",
+   "ui.focus{component=Pane, requestId=turbo-mod}",
    "session.measure",
    "tool.call",
    "ui.render{component=Pane, requestId=turbo-mod}"
@@ -965,19 +1039,22 @@
    "$.clock.after",
    "$.clock.every (via startTimers",
    "startTitleLoop)",
-   "$.clock.now (via keepUsage",
-   "refreshFeed",
-   "refreshRepos",
-   "toggleDemo)",
+   "$.clock.now",
    "$.command.register (via restore)",
    "$.command.run (via clearSession)",
    "$.env.get (via restore)",
+   "$.fs.exists (via loadTodoFile)",
    "$.fs.list (via refreshRepos)",
+   "$.fs.read (via loadTodoFile)",
    "$.fs.stat",
+   "$.fs.write (via writeTodos)",
    "$.process.run (via findEditor",
+   "isInRepo",
+   "noteShellChanges",
    "pickReposRoot",
    "pullRepo",
    "readRepo",
+   "readTopHead",
    "refreshFeed",
    "refreshRepos",
    "restore",
@@ -990,6 +1067,7 @@
    "$.store.get (via restore)",
    "$.store.set",
    "$.ui.close",
+   "$.ui.focus (via editTodo)",
    "$.ui.open",
    "$.ui.panes (via isPaneUp)",
    "$.ui.resolve",
@@ -1011,6 +1089,7 @@
    "turbo-mod.theme",
    "turbo-mod.ticketUrl",
    "turbo-mod.title",
+   "turbo-mod.todo",
    "turbo-mod.usage"
   ],
   "stateWrites": [
@@ -1029,12 +1108,18 @@
    "turbo-mod.theme",
    "turbo-mod.ticketUrl",
    "turbo-mod.title",
+   "turbo-mod.todo",
    "turbo-mod.usage"
   ],
   "envReads": [
+   "HOME",
+   "KITTY_LISTEN_ON",
+   "KITTY_WINDOW_ID",
    "OS",
+   "TERM_PROGRAM",
    "TMUX",
    "TURBO_MOD_REPOS",
+   "USERPROFILE",
    "WT_SESSION"
   ],
   "raw": {
@@ -1048,7 +1133,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: turbo-mod.files, turbo-mod.filePage, turbo-mod.collapsed, turbo-mod.repos, turbo-mod.host, turbo-mod.theme, turbo-mod.title, turbo-mod.ready, turbo-mod.accepted, turbo-mod.pulse, turbo-mod.armed, turbo-mod.lang, turbo-mod.editorPath, turbo-mod.usage, turbo-mod.feed, turbo-mod.ticketUrl"
+     "types ./types/index.d.ts declares state: turbo-mod.files, turbo-mod.filePage, turbo-mod.collapsed, turbo-mod.repos, turbo-mod.host, turbo-mod.theme, turbo-mod.title, turbo-mod.ready, turbo-mod.accepted, turbo-mod.pulse, turbo-mod.armed, turbo-mod.lang, turbo-mod.editorPath, turbo-mod.usage, turbo-mod.feed, turbo-mod.todo, turbo-mod.ticketUrl"
     ],
     "gatingHooks": []
    },
@@ -1059,20 +1144,27 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=turbo}, session.measure, tool.call, ui.render{component=Pane, requestId=turbo-mod}",
+      "./register.tsx hooks: session.start, command.run{command=turbo}, ui.focus{component=Pane, requestId=turbo-mod}, session.measure, tool.call, ui.render{component=Pane, requestId=turbo-mod}",
       "./register.tsx gating hook without .catch: command.run{command=turbo}",
+      "./register.tsx gating hook without .catch: ui.focus{component=Pane, requestId=turbo-mod}",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.clock.after, $.clock.every (via startTimers, startTitleLoop), $.clock.now (via keepUsage, refreshFeed, refreshRepos, toggleDemo), $.command.register (via restore), $.command.run (via clearSession), $.env.get (via restore), $.fs.list (via refreshRepos), $.fs.stat, $.process.run (via findEditor, pickReposRoot, pullRepo, readRepo, refreshFeed, refreshRepos, restore, run), $.session.compact (via compactSession), $.session.cwd, $.session.usage (via readUsage), $.state.get, $.state.set, $.store.get (via restore), $.store.set, $.ui.close, $.ui.open, $.ui.panes (via isPaneUp), $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.clock.every (via startTimers, startTitleLoop), $.clock.now, $.command.register (via restore), $.command.run (via clearSession), $.env.get (via restore), $.fs.exists (via loadTodoFile), $.fs.list (via refreshRepos), $.fs.read (via loadTodoFile), $.fs.stat, $.fs.write (via writeTodos), $.process.run (via findEditor, isInRepo, noteShellChanges, pickReposRoot, pullRepo, readRepo, readTopHead, refreshFeed, refreshRepos, restore, run), $.session.compact (via compactSession), $.session.cwd, $.session.usage (via readUsage), $.state.get, $.state.set, $.store.get (via restore), $.store.set, $.ui.close, $.ui.focus (via editTodo), $.ui.open, $.ui.panes (via isPaneUp), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: OS, TMUX, TURBO_MOD_REPOS, WT_SESSION",
-      "./register.tsx state writes: turbo-mod.accepted, turbo-mod.armed, turbo-mod.collapsed, turbo-mod.editorPath, turbo-mod.feed, turbo-mod.filePage, turbo-mod.files, turbo-mod.host, turbo-mod.lang, turbo-mod.pulse, turbo-mod.ready, turbo-mod.repos, turbo-mod.theme, turbo-mod.ticketUrl, turbo-mod.title, turbo-mod.usage",
-      "./register.tsx state reads: turbo-mod.accepted, turbo-mod.armed, turbo-mod.collapsed, turbo-mod.editorPath, turbo-mod.feed, turbo-mod.filePage, turbo-mod.files, turbo-mod.host, turbo-mod.lang, turbo-mod.pulse, turbo-mod.ready, turbo-mod.repos, turbo-mod.theme, turbo-mod.ticketUrl, turbo-mod.title, turbo-mod.usage"
+      "./register.tsx env reads: HOME, KITTY_LISTEN_ON, KITTY_WINDOW_ID, OS, TERM_PROGRAM, TMUX, TURBO_MOD_REPOS, USERPROFILE, WT_SESSION",
+      "./register.tsx state writes: turbo-mod.accepted, turbo-mod.armed, turbo-mod.collapsed, turbo-mod.editorPath, turbo-mod.feed, turbo-mod.filePage, turbo-mod.files, turbo-mod.host, turbo-mod.lang, turbo-mod.pulse, turbo-mod.ready, turbo-mod.repos, turbo-mod.theme, turbo-mod.ticketUrl, turbo-mod.title, turbo-mod.todo, turbo-mod.usage",
+      "./register.tsx state reads: turbo-mod.accepted, turbo-mod.armed, turbo-mod.collapsed, turbo-mod.editorPath, turbo-mod.feed, turbo-mod.filePage, turbo-mod.files, turbo-mod.host, turbo-mod.lang, turbo-mod.pulse, turbo-mod.ready, turbo-mod.repos, turbo-mod.theme, turbo-mod.ticketUrl, turbo-mod.title, turbo-mod.todo, turbo-mod.usage"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "command.run",
        "hook": "command.run{command=turbo}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=Pane, requestId=turbo-mod}",
        "hasCatch": false
       },
       {
@@ -1087,5 +1179,5 @@
    "advice": []
   }
  },
- "sourceHash": "1741555a1bd16a5d"
+ "sourceHash": "57d64568b0fb6f12"
 }

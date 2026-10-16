@@ -1,6 +1,6 @@
 {
  "slug": "phalegethon-sgs-kit-savvy-progress",
- "generatedAt": "2026-10-09T15:32:43.972Z",
+ "generatedAt": "2026-10-16T14:16:12.593Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -15,6 +15,15 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agent-routing"
+    }
    },
    {
     "event": "command.run",
@@ -68,6 +77,12 @@
     "name": "agents-info",
     "description": "Show or hide the panel of subagents: running, finished and planned, with model, context, cost and time",
     "output": "Agents panel opened."
+   },
+   {
+    "name": "agent-routing",
+    "description": "Show or set the model Explore and general-purpose subagents get when the Agent call names none",
+    "argumentHint": "[on | off | explore <model> | general <model>]",
+    "output": "Subagent model routing, for an Agent call that names no model:\n  Explore: inherit\n  general-purpose: inherit\n\nUsage: /agent-routing on | off | explore <model> | general <model>, with model one of inherit, haiku, sonnet, opus, fable. inherit: the main session's model; opus: Opus whatever the main session runs on."
    }
   ],
   "tools": [
@@ -94,11 +109,11 @@
    "$.settings.read": 1,
    "$.env.get": 3,
    "$.tool.register": 2,
-   "$.command.register": 1,
+   "$.command.register": 2,
    "$.session.usage": 2,
-   "$.state.get": 23,
+   "$.state.get": 27,
    "$.state.set": 10,
-   "$.clock.now": 6,
+   "$.clock.now": 10,
    "$.clock.every": 1,
    "$.ui.panes": 2,
    "$.ui.open": 1,
@@ -198,7 +213,7 @@
            " · ",
            "Elapsed",
            " ",
-           "30:00",
+           "30 min",
            " · ",
            "Active",
            " ",
@@ -368,7 +383,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(savvy-agents)",
-   "/agents-info → Agents panel opened."
+   "/agents-info → Agents panel opened.",
+   "/agent-routing → Subagent model routing, for an Agent call that names no model:\n  Explore: inheri…"
   ],
   "console": [],
   "warnings": []
@@ -382,6 +398,8 @@
    "session.measure",
    "prompt.submit",
    "turn.start",
+   "ui.close",
+   "command.run{command=agent-routing}",
    "command.run{command=agents-info}",
    "tool.call{tool=mcp__savvy-progress__progress}",
    "tool.call{tool=mcp__savvy-progress__step}",
@@ -393,9 +411,11 @@
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.agent.list (via reconcile)",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
+   "$.config.set",
    "$.env.get (via detectLang)",
    "$.session.usage",
    "$.settings.read (via detectLang)",
@@ -405,24 +425,23 @@
    "$.ui.close (via togglePane)",
    "$.ui.open (via autoOpen",
    "togglePane)",
-   "$.ui.panes (via isPaneOpen",
-   "togglePane)",
+   "$.ui.panes (via isPaneShown)",
    "$.ui.resolve"
   ],
   "stateReads": [
    "savvy-progress.agents",
    "savvy-progress.flow",
+   "savvy-progress.frame",
    "savvy-progress.main",
    "savvy-progress.meter",
-   "savvy-progress.now",
    "savvy-progress.panel"
   ],
   "stateWrites": [
    "savvy-progress.agents",
    "savvy-progress.flow",
+   "savvy-progress.frame",
    "savvy-progress.main",
    "savvy-progress.meter",
-   "savvy-progress.now",
    "savvy-progress.panel"
   ],
   "envReads": [
@@ -441,7 +460,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: savvy-progress.flow, savvy-progress.agents, savvy-progress.panel, savvy-progress.now, savvy-progress.main, savvy-progress.meter"
+     "types ./types/index.d.ts declares state: savvy-progress.flow, savvy-progress.agents, savvy-progress.panel, savvy-progress.frame, savvy-progress.main, savvy-progress.meter"
     ],
     "gatingHooks": []
    },
@@ -452,24 +471,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, prompt.submit, turn.start, command.run{command=agents-info}, tool.call{tool=mcp__savvy-progress__progress}, tool.call{tool=mcp__savvy-progress__step}, tool.call{tool=Agent}, agent.spawn, turn.step, turn.complete, ui.render{component=Pane, requestId=savvy-agents}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, session.measure, prompt.submit, turn.start, ui.close, command.run{command=agent-routing}, command.run{command=agents-info}, tool.call{tool=mcp__savvy-progress__progress}, tool.call{tool=mcp__savvy-progress__step}, tool.call{tool=Agent}, agent.spawn, turn.step, turn.complete, ui.render{component=Pane, requestId=savvy-agents}, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=agent-routing}",
       "./register.tsx answers its own command: command.run{command=agents-info}",
       "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__savvy-progress__progress}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__savvy-progress__step}",
       "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
       "./register.tsx gating hook without .catch: agent.spawn",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via detectLang), $.session.usage, $.settings.read (via detectLang), $.state.get, $.state.set, $.tool.register, $.ui.close (via togglePane), $.ui.open (via autoOpen, togglePane), $.ui.panes (via isPaneOpen, togglePane), $.ui.resolve",
+      "./register.tsx calls: $.agent.list (via reconcile), $.clock.every, $.clock.now, $.command.register, $.config.set, $.env.get (via detectLang), $.session.usage, $.settings.read (via detectLang), $.state.get, $.state.set, $.tool.register, $.ui.close (via togglePane), $.ui.open (via autoOpen, togglePane), $.ui.panes (via isPaneShown), $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: LANG, LC_ALL, LC_MESSAGES",
-      "./register.tsx state writes: savvy-progress.agents, savvy-progress.flow, savvy-progress.main, savvy-progress.meter, savvy-progress.now, savvy-progress.panel",
-      "./register.tsx state reads: savvy-progress.agents, savvy-progress.flow, savvy-progress.main, savvy-progress.meter, savvy-progress.now, savvy-progress.panel"
+      "./register.tsx state writes: savvy-progress.agents, savvy-progress.flow, savvy-progress.frame, savvy-progress.main, savvy-progress.meter, savvy-progress.panel",
+      "./register.tsx state reads: savvy-progress.agents, savvy-progress.flow, savvy-progress.frame, savvy-progress.main, savvy-progress.meter, savvy-progress.panel"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
        "hasCatch": false
       },
       {
@@ -502,5 +529,5 @@
    "advice": []
   }
  },
- "sourceHash": "bfc985c7cf9995c1"
+ "sourceHash": "7c6656147d4b9c5"
 }

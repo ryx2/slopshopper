@@ -1,6 +1,6 @@
 {
  "slug": "joeldg-claude-mods-job-watch",
- "generatedAt": "2026-10-08T15:54:10.509Z",
+ "generatedAt": "2026-10-16T14:17:35.924Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,9 +8,40 @@
     "event": "session.start"
    },
    {
+    "event": "prompt.context"
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": [
+      "mcp__job-watch__jobs_list",
+      "mcp__job-watch__jobs_watch",
+      "mcp__job-watch__jobs_unwatch"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__job-watch__jobs_list"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__job-watch__jobs_watch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__job-watch__jobs_unwatch"
     }
    },
    {
@@ -58,7 +89,20 @@
     "output": "Removed 0 job(s)."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "jobs_list",
+    "description": "List the long-running jobs job-watch follows: background Bash tasks, detached nohup launches, and anything added with jobs_watch. For each: its state (running, quiet, stalled, or finished with its exit code), how long since it last wrote output, progress and ETA when its log shows them, its last log line and its log path. Call this to follow or wait for long-running work instead of writing `until … sleep` / `while … sleep` loops or running `ps`: background Bash jobs (run_in_background: true) are picked up automatically the moment they start."
+   },
+   {
+    "name": "jobs_watch",
+    "description": "Add a process or a log file to the jobs job-watch follows, so jobs_list can report on it: `pid` (followed until it exits), `log` (a file whose growth, progress figures and last line are read), or both; `name` labels it and `quietMinutes` says after how long without output it counts as stalled. Only needed for work started outside this session's Bash (another session, a cron job, a pid you were given): background Bash tasks (run_in_background: true) and `nohup … > log 2>&1 &` launches are picked up automatically. It does not start commands: run those with Bash. Use it instead of `ps` or sleep loops."
+   },
+   {
+    "name": "jobs_unwatch",
+    "description": "Stop following a job, by the name or id jobs_list prints; `done` removes every finished job, `all` removes them all."
+   }
+  ],
   "panes": [
    {
     "id": "job-watch",
@@ -71,14 +115,15 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 3,
+   "$.tool.register": 3,
    "$.clock.every": 1,
+   "$.clock.now": 3,
    "$.process.run": 1,
    "$.state.get": 8,
    "$.state.set": 2,
    "$.ui.status": 3,
    "$.ui.open": 1,
-   "$.ui.resolve": 1,
-   "$.clock.now": 1
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -139,7 +184,12 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "prompt.context",
    "tool.call{tool=Bash}",
+   "tool.check{tool=?}",
+   "tool.call{tool=mcp__job-watch__jobs_list}",
+   "tool.call{tool=mcp__job-watch__jobs_watch}",
+   "tool.call{tool=mcp__job-watch__jobs_unwatch}",
    "command.run{command=jobs}",
    "command.run{command=watch}",
    "command.run{command=unwatch}",
@@ -150,19 +200,20 @@
    "$.clock.now",
    "$.command.register",
    "$.env.get",
-   "$.fs.exists",
-   "$.fs.stat (via readJob)",
-   "$.process.run (via readJob",
-   "refreshDisks",
-   "tick)",
+   "$.fs.exists (via watchJob)",
+   "$.fs.stat (via readLog)",
+   "$.process.run (via probe",
+   "readLog)",
    "$.session.cwd",
    "$.state.get",
    "$.state.set",
+   "$.tool.register (via registerTools)",
    "$.ui.log",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.status",
-   "$.ui.toast (via tick)"
+   "$.ui.status (via pass",
+   "removeJobs)",
+   "$.ui.toast (via announce)"
   ],
   "stateReads": [
    "job-watch.disks",
@@ -197,12 +248,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=Bash}, command.run{command=jobs}, command.run{command=watch}, command.run{command=unwatch}, ui.render{component=Pane, requestId=job-watch}",
+      "./register.tsx hooks: session.start, prompt.context, tool.call{tool=Bash}, tool.check{tool=?}, tool.call{tool=mcp__job-watch__jobs_list}, tool.call{tool=mcp__job-watch__jobs_watch}, tool.call{tool=mcp__job-watch__jobs_unwatch}, command.run{command=jobs}, command.run{command=watch}, command.run{command=unwatch}, ui.render{component=Pane, requestId=job-watch}",
+      "./register.tsx hooks on prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=jobs}",
       "./register.tsx answers its own command: command.run{command=watch}",
       "./register.tsx answers its own command: command.run{command=unwatch}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.every (via ensureTimer), $.clock.now, $.command.register, $.env.get, $.fs.exists, $.fs.stat (via readJob), $.process.run (via readJob, refreshDisks, tick), $.session.cwd, $.state.get, $.state.set, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via tick)",
+      "./register.tsx gating hook without .catch: tool.check{tool=?}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__job-watch__jobs_list}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__job-watch__jobs_watch}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__job-watch__jobs_unwatch}",
+      "./register.tsx calls: $.clock.every (via ensureTimer), $.clock.now, $.command.register, $.env.get, $.fs.exists (via watchJob), $.fs.stat (via readLog), $.process.run (via probe, readLog), $.session.cwd, $.state.get, $.state.set, $.tool.register (via registerTools), $.ui.log, $.ui.open, $.ui.resolve, $.ui.status (via pass, removeJobs), $.ui.toast (via announce)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
       "./register.tsx state writes: job-watch.disks, job-watch.jobs",
@@ -214,11 +270,36 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__job-watch__jobs_list}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__job-watch__jobs_watch}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__job-watch__jobs_unwatch}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "b901266551ac9ba5"
+ "sourceHash": "a16bbf3d120ef6cc"
 }

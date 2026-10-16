@@ -1,6 +1,6 @@
 {
  "slug": "lua-erissatallan-claude-mods-allan",
- "generatedAt": "2026-10-10T14:45:26.579Z",
+ "generatedAt": "2026-10-16T14:20:31.054Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -82,6 +82,149 @@
      "component": "Pane",
      "requestId": "allan-pulse"
     }
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "session.compact",
+    "matcher": {
+     "trigger": "auto"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handover"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "close"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "sessions"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "relay"
+    }
+   },
+   {
+    "event": "session.send"
+   },
+   {
+    "event": "session.receive"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "NotebookEdit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "build"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "promote"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "allan-release"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "surface": "/terminal|desktop|vscode|mobile/"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "logs"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "session.append"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "testmode"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "secret"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "answer"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/./"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "outbox"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "allan-outbox"
+    }
    }
   ],
   "commands": [
@@ -89,7 +232,7 @@
     "name": "mods",
     "description": "List Allan's mods, or switch one: /mods off watch · /mods on watch · /mods set commitIdentity warn",
     "argumentHint": "[on|off|set] [feature|field] [value]",
-    "output": "Allan's mods\non   voice      voiceStyle=normal\non   commit     commitIdentity=block  commitEmail=allan@luaimplementation.ai  commitInternalIds=warn\non   pulse      pulseStaleDays=7\n\n/mods off <feature>  ·  /mods on <feature>  ·  /mods set <field> <value>\nEverything off at once: start Claude with ALLAN_MODS_OFF=1, or /plugin disable allan@allan-mods."
+    "output": "Allan's mods\non   voice      voiceStyle=normal\non   commit     commitIdentity=block  commitEmail=allan@luaimplementation.ai  commitInternalIds=warn\non   pulse      pulseStaleDays=7\non   handover   handoverThresholds=60,70,80,90  handoverLeadPattern=^(Orchestrator|Lead|Code)  handoverBlockAutoCompact=true\non   relay      \non   askmode    askmodeUseModel=false\non   release    \non   watch      watchIntervalMin=10\non   testguard  \non   outbox     \n\n/mods off <feature>  ·  /mods on <feature>  ·  /mods set <field> <value>\nEverything off at once: start Claude with ALLAN_MODS_OFF=1, or /plugin disable allan@allan-mods."
    },
    {
     "name": "style",
@@ -113,6 +256,60 @@
     "description": "Remove parked item n (as numbered by /pending): /unpark 2",
     "argumentHint": "<n>",
     "output": "Usage: /unpark <n>, numbered as /pending lists them."
+   },
+   {
+    "name": "handover",
+    "description": "Write Claude_Memory/HANDOVER_<successor>.md from this session and copy the kickoff prompt: /handover Code-4",
+    "argumentHint": "<successor> [--force]",
+    "output": "Usage: /handover <successor>, for example /handover Code-4"
+   },
+   {
+    "name": "close",
+    "description": "Before closing this session: git clean, INDEX and HANDOFFS updated today, nothing of yours parked too long.",
+    "output": "✔ git: working tree clean\n✔ INDEX.md: not in this project (skipped)\n✔ HANDOFFS.md: not in this project (skipped)\n✔ ⏳ Parked: nothing of this session older than 7 days\n✘ Only in this conversation: OK\n\nNot yet: 1 item above."
+   },
+   {
+    "name": "sessions",
+    "description": "Your open Claude Code sessions, this project first, then the others by project.",
+    "output": "No open sessions found."
+   },
+   {
+    "name": "relay",
+    "description": "Send text, or the last START/END block of my last reply, to another session: /relay Code-4 last · /relay Jackfruit/Code-QC <text>",
+    "argumentHint": "<name|Project/name> <text|last>",
+    "output": "Usage: /relay <name> <text|last>, for example /relay Code-4 last"
+   },
+   {
+    "name": "build",
+    "description": "This turn may change files and production after all (askmode marked it a question).",
+    "output": "Nothing was held: this turn was not marked a question."
+   },
+   {
+    "name": "promote",
+    "description": "Promote the newest staged version of this agent and its paired agents, from a pane with one Promote button per agent. Refuses on a dirty git tree.",
+    "output": "No lua.skill.yaml or Claude_Memory above this folder."
+   },
+   {
+    "name": "logs",
+    "description": "What watch saw in the agent logs since you last asked: errors, preprocessor blocks, gate bypasses, failing checks.",
+    "output": "watch has not looked yet (it runs every 10 min in a folder with lua.skill.yaml, or set \"agent\" in .claude-mods.json)."
+   },
+   {
+    "name": "testmode",
+    "description": "Protect real recipients while you test: /testmode on | off | status. Bash naming a protected address, or lua env setting a recipient key, is refused while on.",
+    "argumentHint": "on|off|status",
+    "output": "Test mode is off. Protected: (none in .claude-mods.json)."
+   },
+   {
+    "name": "secret",
+    "description": "Hold a secret for this session from the clipboard, never in the transcript: /secret set NAME, then use $NAME in commands. /secret list · /secret clear",
+    "argumentHint": "set <NAME> | list | clear",
+    "output": "Usage: /secret set NAME (the value is read from the clipboard) · /secret list · /secret clear"
+   },
+   {
+    "name": "outbox",
+    "description": "Drafts for your contacts kept in Claude_Memory/MESSAGES.md, in a pane with Copy, Copy for Slack and Mark sent.",
+    "output": "No Claude_Memory above this folder, so no MESSAGES.md."
    }
   ],
   "tools": [],
@@ -122,16 +319,32 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 1,
-   "$.command.register": 5,
-   "$.session.cwd": 6,
-   "$.fs.exists": 30,
-   "$.state.get": 17,
-   "$.state.set": 12,
-   "$.process.run": 2,
-   "$.ui.resolve": 1
+   "$.env.get": 7,
+   "$.command.register": 15,
+   "$.session.usage": 1,
+   "$.ui.status": 2,
+   "$.session.cwd": 14,
+   "$.fs.exists": 76,
+   "$.state.get": 54,
+   "$.state.set": 16,
+   "$.clock.after": 1,
+   "$.clock.every": 1,
+   "$.process.run": 3,
+   "$.clock.now": 3,
+   "$.model.fork": 1,
+   "$.session.id": 1,
+   "$.ui.resolve": 3
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 15000
+   },
+   {
+    "kind": "every",
+    "ms": 600000
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
@@ -151,12 +364,79 @@
          "dimColor": true
         },
         "children": [
-         "Press a hotkey in the band (digits for parked, letters for handoffs) to see it here."
+         "Press p (parked), h (handoffs) or i (inbox) in the band to see them here."
         ]
        }
       ]
      },
      "title": "allan-pulse"
+    },
+    "allan-release": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Promote (each button runs lua version promote with LUA_DEPLOY_CONFIRMED=1)"
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "role": "dismiss",
+         "onPress": "[fn]"
+        },
+        "children": [
+         "Close"
+        ]
+       }
+      ]
+     },
+     "title": "allan-release"
+    },
+    "allan-outbox": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Outbox: ",
+         "0",
+         " draft",
+         "s",
+         ". ",
+         "Re-read the live systems behind every claim before you send this."
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "role": "dismiss",
+         "onPress": "[fn]"
+        },
+        "children": [
+         "Close"
+        ]
+       }
+      ]
+     },
+     "title": "allan-outbox"
     }
    }
   },
@@ -178,7 +458,18 @@
    "/style → Reply style: normal",
    "/pending → No Claude_Memory/INDEX.md above this folder.",
    "/park → Usage: /park \"what\" \"next step\"",
-   "/unpark → Usage: /unpark <n>, numbered as /pending lists them."
+   "/unpark → Usage: /unpark <n>, numbered as /pending lists them.",
+   "/handover → Usage: /handover <successor>, for example /handover Code-4",
+   "$.process.run(git -C /work/app status --porcelain) → exit 0",
+   "/close → ✔ git: working tree clean\n✔ INDEX.md: not in this project (skipped)\n✔ HANDOFFS.m…",
+   "/sessions → No open sessions found.",
+   "/relay → Usage: /relay <name> <text|last>, for example /relay Code-4 last",
+   "/build → Nothing was held: this turn was not marked a question.",
+   "/promote → No lua.skill.yaml or Claude_Memory above this folder.",
+   "/logs → watch has not looked yet (it runs every 10 min in a folder with lua.skill.yaml, …",
+   "/testmode → Test mode is off. Protected: (none in .claude-mods.json).",
+   "/secret → Usage: /secret set NAME (the value is read from the clipboard) · /secret list · …",
+   "/outbox → No Claude_Memory above this folder, so no MESSAGES.md."
   ],
   "console": [],
   "warnings": []
@@ -203,44 +494,109 @@
    "command.run{command=park}",
    "command.run{command=unpark}",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=allan-pulse}"
+   "ui.render{component=Pane, requestId=allan-pulse}",
+   "session.measure",
+   "session.compact{trigger=auto}",
+   "command.run{command=handover}",
+   "command.run{command=close}",
+   "command.run{command=sessions}",
+   "command.run{command=relay}",
+   "session.send",
+   "session.receive",
+   "prompt.submit",
+   "tool.call{tool=Edit}",
+   "tool.call{tool=Write}",
+   "tool.call{tool=NotebookEdit}",
+   "tool.call{tool=Bash}",
+   "command.run{command=build}",
+   "command.run{command=promote}",
+   "ui.render{component=Pane, requestId=allan-release}",
+   "session.start{surface=/\"terminal|desktop|vscode|mobile\"/}",
+   "command.run{command=logs}",
+   "tool.call{tool=Bash}",
+   "session.append",
+   "command.run{command… [+175 chars]"
   ],
   "calls": [
+   "$.clock.after",
+   "$.clock.every",
    "$.clock.now",
    "$.command.register",
    "$.config.set",
    "$.env.get",
-   "$.fs.exists (via findProject",
-   "readOr)",
+   "$.fs.exists",
+   "$.fs.list (via sessionFiles)",
    "$.fs.read",
+   "$.fs.stat (via close)",
    "$.fs.write",
-   "$.process.run (via git)",
-   "$.session.cwd (via dirOf",
-   "findProject)",
+   "$.model.classify",
+   "$.model.fork (via close",
+   "writeHandover)",
+   "$.process.run (via git",
+   "gitPorcelain",
+   "lua",
+   "prepare",
+   "registry",
+   "secret",
+   "tick)",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.messages (via send)",
+   "$.session.send (via send)",
+   "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.store.get (via tick)",
+   "$.store.set (via tick)",
+   "$.ui.copy",
    "$.ui.open",
    "$.ui.resolve",
+   "$.ui.status",
    "$.ui.toast"
   ],
   "stateReads": [
+   "allan.askTurn",
    "allan.handoffItems",
+   "allan.handoverFired",
+   "allan.inbox",
+   "allan.outboxDrafts",
+   "allan.outboxNote",
    "allan.parkedItems",
    "allan.pulse",
+   "allan.releaseLog",
+   "allan.releasePlan",
+   "allan.secrets",
    "allan.selected",
    "allan.session",
-   "allan.style"
+   "allan.style",
+   "allan.testMode",
+   "allan.watchLight",
+   "allan.watchRecent",
+   "allan.watchUnseen"
   ],
   "stateWrites": [
+   "allan.askTurn",
    "allan.handoffItems",
+   "allan.handoverFired",
+   "allan.inbox",
+   "allan.outboxDrafts",
+   "allan.outboxNote",
    "allan.parkedItems",
    "allan.pulse",
+   "allan.releaseLog",
+   "allan.releasePlan",
+   "allan.secrets",
    "allan.selected",
    "allan.session",
-   "allan.style"
+   "allan.style",
+   "allan.testMode",
+   "allan.watchLight",
+   "allan.watchRecent",
+   "allan.watchUnseen"
   ],
   "envReads": [
    "ALLAN_MODS_OFF",
+   "ALLAN_TESTMODE",
    "HOME"
   ],
   "raw": {
@@ -254,7 +610,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: allan.style, allan.pulse, allan.session, allan.parkedItems, allan.handoffItems, allan.selected"
+     "types ./types/index.d.ts declares state: allan.style, allan.pulse, allan.session, allan.parkedItems, allan.handoffItems, allan.selected, allan.handoverFired, allan.inbox, allan.askTurn, allan.releasePlan, allan.releaseLog, allan.watchLight, allan.watchUnseen, allan.watchRecent, allan.testMode, allan.secrets, allan.outboxDrafts, allan.outboxNote"
     ],
     "gatingHooks": []
    },
@@ -265,7 +621,8 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.compose, command.run{command=mods}, command.run{command=style}, attribution.text, tool.call{tool=Bash}, tool.call{tool=Write}, session.start{isInteractive=true}, classic.SessionStart, classic.UserPromptSubmit, turn.complete, command.run{command=pending}, command.run{command=park}, command.run{command=unpark}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=allan-pulse}",
+      "./register.ts hooks: session.start, prompt.compose, command.run{command=mods}, command.run{command=style}, attribution.text, tool.call{tool=Bash}, tool.call{tool=Write}, session.start{isInteractive=true}, classic.SessionStart, classic.UserPromptSubmit, turn.complete, command.run{command=pending}, command.run{command=park}, command.run{command=unpark}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=allan-pulse}, session.measure, session.compact{trigger=auto}, command.run{command=handover}, command.run{command=close}, command.run{command=sessions}, command.run{command=relay}, session.send, session.receive, prompt.submit, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=NotebookEdit}, tool.call{tool=Bash}, command.run{command=build}, command.run{command=promote}, ui.render{component=Pane, requestId=allan-release}, session.start{surface=/\"terminal|desktop|vscode|mobile\"/}, command.run{command=logs}, tool.call{tool=Bash}, session.append, command.run{command… [+175 chars]",
+      "./register.ts hooks on prompt.compose, attribution.text, classic.SessionStart, classic.UserPromptSubmit, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts gating hook without .catch: command.run{command=mods}",
       "./register.ts gating hook without .catch: command.run{command=style}",
       "./register.ts gating hook with .catch: tool.call{tool=Bash}",
@@ -275,11 +632,31 @@
       "./register.ts gating hook without .catch: command.run{command=pending}",
       "./register.ts gating hook without .catch: command.run{command=park}",
       "./register.ts gating hook without .catch: command.run{command=unpark}",
-      "./register.ts calls: $.clock.now, $.command.register, $.config.set, $.env.get, $.fs.exists (via findProject, readOr), $.fs.read, $.fs.write, $.process.run (via git), $.session.cwd (via dirOf, findProject), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.ts gating hook with .catch: session.compact{trigger=auto}",
+      "./register.ts gating hook without .catch: command.run{command=handover}",
+      "./register.ts gating hook without .catch: command.run{command=close}",
+      "./register.ts gating hook without .catch: command.run{command=sessions}",
+      "./register.ts gating hook without .catch: command.run{command=relay}",
+      "./register.ts gating hook without .catch: session.send",
+      "./register.ts gating hook without .catch: session.receive",
+      "./register.ts gating hook with .catch: prompt.submit",
+      "./register.ts gating hook with .catch: tool.call{tool=Edit}",
+      "./register.ts gating hook with .catch: tool.call{tool=Write}",
+      "./register.ts gating hook with .catch: tool.call{tool=NotebookEdit}",
+      "./register.ts gating hook with .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook without .catch: command.run{command=build}",
+      "./register.ts gating hook without .catch: command.run{command=promote}",
+      "./register.ts gating hook without .catch: command.run{command=logs}",
+      "./register.ts gating hook with .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook with .catch: session.append",
+      "./register.ts gating hook without .catch: command.run{command=testmode}",
+      "./register.ts gating hook without .catch: command.run{command=secret}",
+      "./register.ts gating hook without .catch: command.run{command=outbox}",
+      "./register.ts calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.config.set, $.env.get, $.fs.exists, $.fs.list (via sessionFiles), $.fs.read, $.fs.stat (via close), $.fs.write, $.model.classify, $.model.fork (via close, writeHandover), $.process.run (via git, gitPorcelain, lua, prepare, registry, secret, tick), $.session.cwd, $.session.id, $.session.messages (via send), $.session.send (via send), $.session.usage, $.state.get, $.state.set, $.store.get (via tick), $.store.set (via tick), $.ui.copy, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: ALLAN_MODS_OFF, HOME",
-      "./register.ts state writes: allan.handoffItems, allan.parkedItems, allan.pulse, allan.selected, allan.session, allan.style",
-      "./register.ts state reads: allan.handoffItems, allan.parkedItems, allan.pulse, allan.selected, allan.session, allan.style"
+      "./register.ts env reads: ALLAN_MODS_OFF, ALLAN_TESTMODE, HOME",
+      "./register.ts state writes: allan.askTurn, allan.handoffItems, allan.handoverFired, allan.inbox, allan.outboxDrafts, allan.outboxNote, allan.parkedItems, allan.pulse, allan.releaseLog, allan.releasePlan, allan.secrets, allan.selected, allan.session, allan.style, allan.testMode, allan.watchLight, allan.watchRecent, allan.watchUnseen",
+      "./register.ts state reads: allan.askTurn, allan.handoffItems, allan.handoverFired, allan.inbox, allan.outboxDrafts, allan.outboxNote, allan.parkedItems, allan.pulse, allan.releaseLog, allan.releasePlan, allan.secrets, allan.selected, allan.session, allan.style, allan.testMode, allan.watchLight, allan.watchRecent, allan.watchUnseen"
      ],
      "gatingHooks": [
       {
@@ -335,6 +712,126 @@
        "pattern": "command.run",
        "hook": "command.run{command=unpark}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact{trigger=auto}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=handover}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=close}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=sessions}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=relay}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.send",
+       "hook": "session.send",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.receive",
+       "hook": "session.receive",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=NotebookEdit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=build}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=promote}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=logs}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=testmode}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=secret}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=outbox}",
+       "hasCatch": false
       }
      ]
     }
@@ -342,5 +839,5 @@
    "advice": []
   }
  },
- "sourceHash": "58e0b6a33d76c2c7"
+ "sourceHash": "61de723510ab1350"
 }

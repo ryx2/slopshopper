@@ -1,0 +1,8 @@
+{
+ "slug": "arjunkambj-claude-mods-done-sound",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Only turns long enough that you may have looked away.\nconst MIN_MS = 60_000\n// macOS's own Glass sound, read from the system so the mod ships no audio file.\nconst SOUND = '/System/Library/Sounds/Glass.aiff'\n\nexport const register: Register = on => {\n  on('turn.complete', async ($, e, next) => {\n    const result = await next(e)\n\n    if (!e.agentId && !e.isAborted && e.durationMs >= MIN_MS) {\n      void $.fs\n        .read(SOUND, { as: 'bytes' })\n        .then(({ base64 }) => $.audio.play({ base64, mime: 'audio/aiff' }))\n        .catch(() => undefined)\n    }\n\n    return result\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"done-sound\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Plays a chime when a long task finishes\",\n  \"author\": {\n    \"name\": \"Arjun Kamboj\"\n  }\n}"
+ }
+}

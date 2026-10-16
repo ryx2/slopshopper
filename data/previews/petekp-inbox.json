@@ -1,6 +1,6 @@
 {
  "slug": "petekp-inbox",
- "generatedAt": "2026-10-09T15:31:42.445Z",
+ "generatedAt": "2026-10-16T14:15:37.322Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -42,12 +42,6 @@
     }
    },
    {
-    "event": "tool.check",
-    "matcher": {
-     "tool": "mcp__inbox__record_finding"
-    }
-   },
-   {
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__inbox__record_finding"
@@ -60,45 +54,9 @@
     }
    },
    {
-    "event": "tool.check",
-    "matcher": {
-     "tool": "mcp__inbox__close"
-    }
-   },
-   {
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__inbox__close"
-    }
-   },
-   {
-    "event": "tool.describe",
-    "matcher": {
-     "tool": "mcp__inbox__run_check"
-    }
-   },
-   {
-    "event": "tool.check",
-    "matcher": {
-     "tool": "mcp__inbox__run_check"
-    }
-   },
-   {
-    "event": "tool.check",
-    "matcher": {
-     "tool": "Read"
-    }
-   },
-   {
-    "event": "tool.check",
-    "matcher": {
-     "tool": "Grep"
-    }
-   },
-   {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "mcp__inbox__run_check"
     }
    },
    {
@@ -145,6 +103,12 @@
     }
    },
    {
+    "event": "ui.press"
+   },
+   {
+    "event": "ui.message"
+   },
+   {
     "event": "ui.close",
     "matcher": {
      "id": "inbox"
@@ -174,21 +138,18 @@
    {
     "name": "inbox",
     "description": "Show where this session stands and what is waiting on you",
+    "immediate": true,
     "output": "Opened the inbox."
    }
   ],
   "tools": [
    {
     "name": "record_finding",
-    "description": "Record a finding for the user. It waits in the Findings tab of the /inbox pane until it is closed, and from there the user can ask you to address it or discuss it. Record what a careful senior engineer would flag to a teammate, and leave out style nits and anything the user already decided."
+    "description": "Record a finding for the user. It waits in the Findings tab of the /inbox pane until it is closed, and from there the user can ask you to address it or discuss it. Record what a careful senior engineer would flag to a teammate, and leave out style nits, anything the user already decided, and todos or ideas the user mentioned."
    },
    {
     "name": "close",
     "description": "Close an open item or finding by its id, such as i35 or f12, as listed in the latest \"inbox:\" text beside the user's prompt. Pass the user's answer when their message answered it, and a reason otherwise."
-   },
-   {
-    "name": "run_check",
-    "description": "Run tests, type checks, lints, builds and validation scripts with this tool, not with Bash. Each command is one check, such as \"npm test\", \"npx vitest run src/a.test.ts\" or \"tsc --noEmit\", with no pipe, redirect or other command. They run in order in the shell's current folder; to check another folder, cd there with Bash first. Each check's full output goes to a log file, and you get back whether it passed, its summary, the lines that name what failed, and the log's path."
    }
   ],
   "panes": [
@@ -202,21 +163,22 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.clock.now": 10,
+   "$.state.get": 126,
+   "$.state.set": 27,
    "$.command.register": 1,
-   "$.tool.register": 3,
-   "$.config.list": 1,
-   "$.state.get": 105,
-   "$.state.set": 26,
+   "$.tool.register": 2,
    "$.clock.every": 2,
    "$.session.id": 1,
    "$.session.root": 1,
-   "$.env.get": 3,
-   "$.process.run": 6,
-   "$.store.get": 2,
+   "$.store.get": 1,
+   "$.config.list": 1,
    "$.session.turns": 1,
-   "$.ui.panes": 4,
-   "$.session.cwd": 1,
+   "$.env.get": 4,
+   "$.clock.now": 12,
+   "$.ui.panes": 5,
+   "$.store.delete": 1,
+   "$.store.set": 1,
+   "$.store.keys": 1,
    "$.model.complete": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 2
@@ -233,28 +195,7 @@
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": true,
-    "tree": {
-     "type": "Box",
-     "props": {
-      "flexDirection": "column"
-     },
-     "children": [
-      {
-       "type": "Text",
-       "props": {
-        "wrap": "truncate-end",
-        "color": "error",
-        "dimColor": false
-       },
-       "children": [
-        "  ",
-        "✗ bun test, 3 pass, 1 fail",
-        ""
-       ]
-      }
-     ]
-    }
+    "ok": "engine"
    },
    "Pane": {
     "inbox": {
@@ -272,33 +213,52 @@
          "paddingLeft": 1,
          "paddingRight": 1,
          "flexDirection": "row",
-         "flexWrap": "wrap",
-         "alignItems": "center",
-         "justifyContent": "space-between",
-         "columnGap": 3
+         "overflow": "hidden"
         },
         "children": [
          {
           "type": "Box",
           "props": {
+           "position": "absolute",
+           "bottom": 0,
+           "left": 0,
+           "right": 0,
+           "height": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "userMessageBackground"
+            },
+            "children": [
+             "────────────────────────────────────────────────────────"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
            "flexDirection": "row",
+           "flexWrap": "wrap",
            "columnGap": 1
           },
           "children": [
            {
             "type": "Box",
             "props": {
-             "flexDirection": "column"
+             "flexDirection": "column",
+             "flexShrink": 0
             },
             "children": [
              {
               "type": "Text",
               "props": {
-               "color": "warning",
-               "backgroundColor": "subtle"
+               "color": "subtle"
               },
               "children": [
-               "▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
+               "▄▄▄▄▄▄▄▄▄▄▄▄▄"
               ]
              },
              {
@@ -319,28 +279,16 @@
                  "Needs you"
                 ]
                },
-               {
-                "type": "Text",
-                "props": {
-                 "bold": true,
-                 "color": "text",
-                 "backgroundColor": "subtle"
-                },
-                "children": [
-                 " ",
-                 "1"
-                ]
-               },
                "  "
               ]
              },
              {
               "type": "Text",
               "props": {
-               "backgroundColor": "subtle"
+               "color": "subtle"
               },
               "children": [
-               "               "
+               "▀▀▀▀▀▀▀▀▀▀▀▀▀"
               ]
              }
             ]
@@ -350,7 +298,7 @@
             "props": {
              "key": "tab-block-findings",
              "flexDirection": "column",
-             "backgroundColor": "userMessageBackground"
+             "flexShrink": 0
             },
             "children": [
              {
@@ -358,21 +306,35 @@
               "props": {
                "plain": true,
                "key": "tab-findings-above",
-               "label": "            ",
                "hover": {
                 "dimColor": false,
-                "backgroundColor": "subtle",
-                "inverse": false,
-                "color": "text"
+                "color": "subtle",
+                "inverse": false
                },
                "onPress": "[fn]"
               },
-              "children": []
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "userMessageBackground",
+                 "hover": {
+                  "dimColor": false,
+                  "color": "subtle",
+                  "inverse": false
+                 }
+                },
+                "children": [
+                 "▄▄▄▄▄▄▄▄▄▄▄▄"
+                ]
+               }
+              ]
              },
              {
               "type": "Box",
               "props": {
-               "flexDirection": "row"
+               "flexDirection": "row",
+               "backgroundColor": "userMessageBackground"
               },
               "children": [
                {
@@ -430,16 +392,29 @@
               "props": {
                "plain": true,
                "key": "tab-findings-below",
-               "label": "            ",
                "hover": {
                 "dimColor": false,
-                "backgroundColor": "subtle",
-                "inverse": false,
-                "color": "text"
+                "color": "subtle",
+                "inverse": false
                },
                "onPress": "[fn]"
               },
-              "children": []
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "userMessageBackground",
+                 "hover": {
+                  "dimColor": false,
+                  "color": "subtle",
+                  "inverse": false
+                 }
+                },
+                "children": [
+                 "▀▀▀▀▀▀▀▀▀▀▀▀"
+                ]
+               }
+              ]
              }
             ]
            },
@@ -448,7 +423,7 @@
             "props": {
              "key": "tab-block-prs",
              "flexDirection": "column",
-             "backgroundColor": "userMessageBackground"
+             "flexShrink": 0
             },
             "children": [
              {
@@ -456,21 +431,35 @@
               "props": {
                "plain": true,
                "key": "tab-prs-above",
-               "label": "       ",
                "hover": {
                 "dimColor": false,
-                "backgroundColor": "subtle",
-                "inverse": false,
-                "color": "text"
+                "color": "subtle",
+                "inverse": false
                },
                "onPress": "[fn]"
               },
-              "children": []
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "userMessageBackground",
+                 "hover": {
+                  "dimColor": false,
+                  "color": "subtle",
+                  "inverse": false
+                 }
+                },
+                "children": [
+                 "▄▄▄▄▄▄▄"
+                ]
+               }
+              ]
              },
              {
               "type": "Box",
               "props": {
-               "flexDirection": "row"
+               "flexDirection": "row",
+               "backgroundColor": "userMessageBackground"
               },
               "children": [
                {
@@ -528,42 +517,30 @@
               "props": {
                "plain": true,
                "key": "tab-prs-below",
-               "label": "       ",
                "hover": {
                 "dimColor": false,
-                "backgroundColor": "subtle",
-                "inverse": false,
-                "color": "text"
+                "color": "subtle",
+                "inverse": false
                },
                "onPress": "[fn]"
               },
-              "children": []
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "userMessageBackground",
+                 "hover": {
+                  "dimColor": false,
+                  "color": "subtle",
+                  "inverse": false
+                 }
+                },
+                "children": [
+                 "▀▀▀▀▀▀▀"
+                ]
+               }
+              ]
              }
-            ]
-           }
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
-           "flexDirection": "row",
-           "columnGap": 2
-          },
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "dimColor": true
-            },
-            "children": [
-             "Not updated yet"
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {},
-            "children": [
-             "update failed, retries after the next reply"
             ]
            }
           ]
@@ -571,12 +548,22 @@
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "color": "userMessageBackground"
+         "flexDirection": "column",
+         "paddingX": 1,
+         "paddingTop": 1
         },
         "children": [
-         "▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "wrap"
+          },
+          "children": [
+           "Last update failed. Items from that reply may be missing. It retries after your next message."
+          ]
+         }
         ]
        },
        {
@@ -584,6 +571,7 @@
         "props": {
          "flexDirection": "column",
          "paddingX": 1,
+         "paddingTop": 1,
          "flexGrow": 1
         },
         "children": [
@@ -591,555 +579,52 @@
           "type": "Box",
           "props": {
            "flexDirection": "column",
-           "gap": 1
+           "flexGrow": 1,
+           "justifyContent": "center",
+           "alignItems": "center"
           },
           "children": [
            {
             "type": "Box",
             "props": {
              "flexDirection": "column",
-             "paddingY": 1
+             "alignItems": "center",
+             "paddingLeft": 0
             },
             "children": [
              {
-              "type": "Box",
+              "type": "Text",
               "props": {
-               "paddingLeft": 2
+               "bold": true
               },
               "children": [
-               {
-                "type": "Text",
-                "props": {},
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": true
-                  },
-                  "children": [
-                   "Failing checks"
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "inactive"
-                  },
-                  "children": [
-                   " ",
-                   "1"
-                  ]
-                 }
-                ]
-               }
+               "Nothing needs you."
               ]
              },
              {
               "type": "Box",
               "props": {
-               "paddingLeft": 1
+               "flexDirection": "column",
+               "alignItems": "center",
+               "marginTop": 1
               },
               "children": [
                {
                 "type": "Text",
                 "props": {
-                 "color": "subtle"
+                 "color": "inactive"
                 },
                 "children": [
-                 "│"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "key": "row-check:.:bun test",
-               "flexDirection": "row",
-               "overflow": "hidden"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "width": 1,
-                 "flexShrink": 0
-                },
-                "children": []
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "width": 3,
-                 "flexShrink": 0
-                },
-                "children": []
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "width": 3,
-                 "flexShrink": 0,
-                 "paddingLeft": 0,
-                 "paddingY": 1
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "error"
-                  },
-                  "children": [
-                   "✗"
-                  ]
-                 }
+                 "Claude's questions and the tasks"
                 ]
                },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "column",
-                 "flexShrink": 1,
-                 "flexGrow": 1,
-                 "paddingRight": 1,
-                 "paddingY": 1
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "wrap"
-                  },
-                  "children": [
-                   {
-                    "type": "Text",
-                    "props": {
-                     "bold": true
-                    },
-                    "children": [
-                     "bun test · 1 of 4 failed"
-                    ]
-                   }
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "inactive"
-                  },
-                  "children": [
-                   "just now"
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "marginTop": 1
-                  },
-                  "children": [
-                   {
-                    "type": "Box",
-                    "props": {
-                     "flexDirection": "column"
-                    },
-                    "children": [
-                     {
-                      "type": "Text",
-                      "props": {
-                       "wrap": "truncate-end"
-                      },
-                      "children": [
-                       "revokes on logout"
-                      ]
-                     },
-                     {
-                      "type": "Text",
-                      "props": {
-                       "wrap": "truncate-end"
-                      },
-                      "children": [
-                       "expected 401, got 200"
-                      ]
-                     },
-                     {
-                      "type": "Text",
-                      "props": {
-                       "wrap": "wrap",
-                       "color": "inactive"
-                      },
-                      "children": [
-                       "",
-                       "$ ",
-                       "bun test"
-                      ]
-                     }
-                    ]
-                   }
-                  ]
-                 },
-                 {
-                  "type": "Box",
-                  "props": {
-                   "flexDirection": "column",
-                   "marginTop": 1
-                  },
-                  "children": [
-                   {
-                    "type": "Box",
-                    "props": {
-                     "flexDirection": "row",
-                     "flexWrap": "wrap",
-                     "columnGap": 2
-                    },
-                    "children": [
-                     {
-                      "type": "Box",
-                      "props": {
-                       "key": "keyed-fix-check:.:bun test",
-                       "flexDirection": "row"
-                      },
-                      "children": [
-                       {
-                        "type": "Text",
-                        "props": {
-                         "color": "remember",
-                         "hover": {
-                          "color": "inactive",
-                          "inverse": true
-                         }
-                        },
-                        "children": [
-                         "a"
-                        ]
-                       },
-                       {
-                        "type": "Button",
-                        "props": {
-                         "plain": true,
-                         "key": "fix-check:.:bun test",
-                         "label": ": Fix",
-                         "done": false,
-                         "onPress": "[fn]",
-                         "hover": {
-                          "color": "inactive",
-                          "inverse": true
-                         }
-                        },
-                        "children": []
-                       }
-                      ]
-                     },
-                     {
-                      "type": "Text",
-                      "props": {
-                       "color": "inactive"
-                      },
-                      "children": [
-                       "·"
-                      ]
-                     },
-                     {
-                      "type": "Box",
-                      "props": {
-                       "key": "keyed-dismiss-check:.:bun test",
-                       "flexDirection": "row"
-                      },
-                      "children": [
-                       {
-                        "type": "Text",
-                        "props": {
-                         "color": "remember",
-                         "hover": {
-                          "color": "inactive",
-                          "inverse": true
-                         }
-                        },
-                        "children": [
-                         "x"
-                        ]
-                       },
-                       {
-                        "type": "Button",
-                        "props": {
-                         "plain": true,
-                         "key": "dismiss-check:.:bun test",
-                         "label": ": Dismiss",
-                         "done": false,
-                         "onPress": "[fn]",
-                         "hover": {
-                          "color": "inactive",
-                          "inverse": true
-                         }
-                        },
-                        "children": []
-                       }
-                      ]
-                     }
-                    ]
-                   }
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "position": "absolute",
-                 "top": 0,
-                 "bottom": 0,
-                 "left": 1,
-                 "width": 2
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "subtle"
-                  },
-                  "children": [
-                   "│\n└─\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n "
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "key": "view-check:.:bun test",
-                 "position": "absolute",
-                 "top": 0,
-                 "bottom": 0,
-                 "left": 0,
-                 "width": 1
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "remember"
-                  },
-                  "children": [
-                   "▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌\n▌"
-                  ]
-                 }
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "paddingY": 1
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "paddingLeft": 2
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {},
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": true
-                  },
-                  "children": [
-                   "Questions"
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "paddingLeft": 1
-              },
-              "children": [
                {
                 "type": "Text",
                 "props": {
-                 "color": "subtle"
+                 "color": "inactive"
                 },
                 "children": [
-                 "│"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "key": "empty-question",
-               "flexDirection": "row",
-               "overflow": "hidden"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "width": 4,
-                 "flexShrink": 0
-                },
-                "children": []
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "column",
-                 "flexShrink": 1,
-                 "flexGrow": 1,
-                 "paddingRight": 1
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "inactive",
-                   "wrap": "wrap"
-                  },
-                  "children": [
-                   "No questions are waiting on you."
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "position": "absolute",
-                 "top": 0,
-                 "bottom": 0,
-                 "left": 1,
-                 "width": 2
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "subtle"
-                  },
-                  "children": [
-                   "└─\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n "
-                  ]
-                 }
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "paddingY": 1
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "paddingLeft": 2
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {},
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "bold": true
-                  },
-                  "children": [
-                   "Your tasks"
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "paddingLeft": 1
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "color": "subtle"
-                },
-                "children": [
-                 "│"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "key": "empty-task",
-               "flexDirection": "row",
-               "overflow": "hidden"
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "width": 4,
-                 "flexShrink": 0
-                },
-                "children": []
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "column",
-                 "flexShrink": 1,
-                 "flexGrow": 1,
-                 "paddingRight": 1
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "inactive",
-                   "wrap": "wrap"
-                  },
-                  "children": [
-                   "No tasks are waiting on you."
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Box",
-                "props": {
-                 "position": "absolute",
-                 "top": 0,
-                 "bottom": 0,
-                 "left": 1,
-                 "width": 2
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "subtle"
-                  },
-                  "children": [
-                   "└─\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n "
-                  ]
-                 }
+                 "only you can do show up here."
                 ]
                }
               ]
@@ -1162,7 +647,9 @@
           "type": "Box",
           "props": {
            "flexDirection": "row",
-           "paddingX": 1
+           "paddingX": 1,
+           "justifyContent": "space-between",
+           "columnGap": 3
           },
           "children": [
            {
@@ -1175,6 +662,15 @@
              "onPress": "[fn]"
             },
             "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             ""
+            ]
            }
           ]
          }
@@ -1191,9 +687,8 @@
           "props": {
            "key": "tab-key-needsYou",
            "plain": true,
-           "label": "Needs you",
            "hotkey": "1",
-           "done": false,
+           "label": "Needs you",
            "onPress": "[fn]"
           },
           "children": []
@@ -1203,9 +698,8 @@
           "props": {
            "key": "tab-key-findings",
            "plain": true,
-           "label": "Findings",
            "hotkey": "2",
-           "done": false,
+           "label": "Findings",
            "onPress": "[fn]"
           },
           "children": []
@@ -1215,33 +709,8 @@
           "props": {
            "key": "tab-key-prs",
            "plain": true,
-           "label": "PRs",
            "hotkey": "3",
-           "done": false,
-           "onPress": "[fn]"
-          },
-          "children": []
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "fix-check:.:bun test-key",
-           "plain": true,
-           "label": "Fix",
-           "hotkey": "a",
-           "done": false,
-           "onPress": "[fn]"
-          },
-          "children": []
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "dismiss-check:.:bun test-key",
-           "plain": true,
-           "label": "Dismiss",
-           "hotkey": "x",
-           "done": false,
+           "label": "PRs",
            "onPress": "[fn]"
           },
           "children": []
@@ -1255,22 +724,16 @@
    }
   },
   "script": [
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "tool.call Edit",
    "tool.call Write",
    "tool.call Write",
-   "$.process.run(git --no-optional-locks status --porcelain=v1 -z -uall) → exit 0",
-   "$.process.run(git --no-optional-locks rev-parse --verify -q HEAD) → exit 0",
    "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "$.process.run(git --no-optional-locks status --porcelain=v1 -z -uall) → exit 0",
-   "$.process.run(git --no-optional-locks rev-parse --verify -q HEAD) → exit 0",
    "turn.complete",
    "$.ui.open(inbox)",
    "/inbox → Opened the inbox."
@@ -1281,10 +744,7 @@
  "validate": {
   "ok": true,
   "errors": [],
-  "warnings": [
-   "No version specified. Consider adding a version following semver (e.g., \"1.0.0\")",
-   "No author information provided. Consider adding author details for plugin attribution"
-  ],
+  "warnings": [],
   "hooks": [
    "session.start",
    "session.attach{surface=desktop}",
@@ -1294,15 +754,9 @@
    "turn.start",
    "prompt.compose",
    "tool.describe{tool=mcp__inbox__record_finding}",
-   "tool.check{tool=mcp__inbox__record_finding}",
    "tool.call{tool=mcp__inbox__record_finding}",
    "tool.describe{tool=mcp__inbox__close}",
-   "tool.check{tool=mcp__inbox__close}",
    "tool.call{tool=mcp__inbox__close}",
-   "tool.describe{tool=mcp__inbox__run_check}",
-   "tool.check{tool=mcp__inbox__run_check}",
-   "tool.check{tool=Read|Grep}",
-   "tool.call{tool=mcp__inbox__run_check}",
    "tool.call",
    "classic.PermissionRequest",
    "classic.StopFailure",
@@ -1313,6 +767,8 @@
    "origin has {kind=plugin, name=inbox}}",
    "session.append{door=command}",
    "command.run{command=inbox}",
+   "ui.press",
+   "ui.message",
    "ui.close{id=inbox}",
    "ui.render{component=AbovePrompt}",
    "config.set{key=theme}",
@@ -1321,97 +777,89 @@
   "calls": [
    "$.clock.every (via turnOn)",
    "$.clock.now",
-   "$.clock.sleep (via expireSettled",
-   "jumpTo",
+   "$.clock.sleep (via later",
    "redrawWhileLeaving",
-   "select)",
+   "scrollToRow)",
    "$.command.register (via turnOn)",
    "$.config.list (via syncTheme)",
-   "$.env.get (via checkLogs",
-   "loadConversation",
-   "openPath",
-   "publishStatus)",
-   "$.fs.exists (via dropGoneFolders",
-   "openPath)",
-   "$.fs.stat (via openPath",
-   "treeIO)",
-   "$.fs.write (via runChecks)",
+   "$.env.get",
+   "$.fs.exists (via openPath)",
+   "$.fs.stat (via openPath)",
    "$.model.complete (via askLedgerModel)",
    "$.model.fork (via catchUp)",
    "$.process.run (via gh",
-   "loadConversation",
    "openPath",
    "openUrl",
-   "publishStatus",
-   "repoOf",
-   "treeIO)",
+   "publishStatus)",
    "$.prompt.submit (via send)",
    "$.session.append (via appendContext)",
-   "$.session.cwd",
    "$.session.id (via turnOn)",
    "$.session.messages (via catchUp)",
    "$.session.root (via loadConversation)",
    "$.session.surfaces",
-   "$.session.turns (via loadConversation)",
+   "$.session.turns (via loadConversation",
+   "readAgain)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via save)",
-   "$.store.get (via loadConversation)",
+   "$.store.get (via readSaved)",
    "$.store.keys (via save)",
    "$.store.set (via save)",
-   "$.tool.call (via runChecks)",
    "$.tool.register (via turnOn)",
-   "$.ui.copy (via useHelp)",
-   "$.u… [+150 chars]"
+   "$.ui.copy (via perform)",
+   "$.ui.focus",
+   "$.ui.open (via openPane)",
+   "$.ui.panes (via isPaneShown)",
+   "$.ui.resolve",
+   "$.ui.scroll (via scrollToOpenRow",
+   "scrollToRow)"
   ],
   "stateReads": [
-   "inbox.arrival",
-   "inbox.checks",
+   "inbox.demo",
    "inbox.dialogs",
-   "inbox.isDemo",
+   "inbox.drafts",
+   "inbox.foldHover",
+   "inbox.isDemoRecording",
    "inbox.isKeyListShown",
    "inbox.lastActions",
    "inbox.ledger",
-   "inbox.prFixesSent",
+   "inbox.notes",
+   "inbox.optionsShown",
    "inbox.prViews",
    "inbox.presence",
-   "inbox.previous",
    "inbox.selection",
-   "inbox.settled",
-   "inbox.shownDetails",
-   "inbox.snapshots",
    "inbox.stop",
    "inbox.tab",
    "inbox.theme",
    "inbox.typing",
-   "inbox.unfolded"
+   "inbox.unfolded",
+   "inbox.unreadable"
   ],
   "stateWrites": [
-   "inbox.arrival",
-   "inbox.checks",
+   "inbox.demo",
    "inbox.dialogs",
-   "inbox.isDemo",
+   "inbox.drafts",
+   "inbox.foldHover",
+   "inbox.isDemoRecording",
    "inbox.isKeyListShown",
    "inbox.lastActions",
    "inbox.ledger",
-   "inbox.prFixesSent",
+   "inbox.notes",
+   "inbox.optionsShown",
    "inbox.prViews",
    "inbox.presence",
-   "inbox.previous",
    "inbox.selection",
-   "inbox.settled",
-   "inbox.shownDetails",
-   "inbox.snapshots",
    "inbox.stop",
    "inbox.tab",
    "inbox.theme",
    "inbox.typing",
-   "inbox.unfolded"
+   "inbox.unfolded",
+   "inbox.unreadable"
   ],
   "envReads": [
    "HERDR_PANE_ID",
    "HOME",
-   "TMPDIR"
+   "TERM_PROGRAM"
   ],
   "raw": {
    "success": true,
@@ -1421,21 +869,10 @@
     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/petekp-inbox/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
-    "warnings": [
-     {
-      "path": "version",
-      "message": "No version specified. Consider adding a version following semver (e.g., \"1.0.0\")",
-      "code": null
-     },
-     {
-      "path": "author",
-      "message": "No author information provided. Consider adding author details for plugin attribution",
-      "code": null
-     }
-    ],
+    "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: inbox.theme, inbox.ledger, inbox.presence, inbox.previous, inbox.tab, inbox.prViews, inbox.prFixesSent, inbox.selection, inbox.stop, inbox.dialogs, inbox.checks, inbox.snapshots, inbox.typing, inbox.settled, inbox.arrival, inbox.lastActions, inbox.unfolded, inbox.shownDetails, inbox.isKeyListShown, inbox.isDemo"
+     "types ./types/index.d.ts declares state: inbox.theme, inbox.ledger, inbox.presence, inbox.tab, inbox.prViews, inbox.selection, inbox.stop, inbox.dialogs, inbox.typing, inbox.drafts, inbox.notes, inbox.lastActions, inbox.unfolded, inbox.foldHover, inbox.optionsShown, inbox.isKeyListShown, inbox.demo, inbox.isDemoRecording, inbox.unreadable"
     ],
     "gatingHooks": []
    },
@@ -1446,17 +883,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.attach{surface=desktop}, classic.SessionStart{source=clear|resume|fork}, session.end, prompt.submit, turn.start, prompt.compose, tool.describe{tool=mcp__inbox__record_finding}, tool.check{tool=mcp__inbox__record_finding}, tool.call{tool=mcp__inbox__record_finding}, tool.describe{tool=mcp__inbox__close}, tool.check{tool=mcp__inbox__close}, tool.call{tool=mcp__inbox__close}, tool.describe{tool=mcp__inbox__run_check}, tool.check{tool=mcp__inbox__run_check}, tool.check{tool=Read|Grep}, tool.call{tool=mcp__inbox__run_check}, tool.call, classic.PermissionRequest, classic.StopFailure, classic.Stop, turn.complete, prompt.context, session.append{door=prompt|delivery, origin has {kind=plugin, name=inbox}}, session.append{door=command}, command.run{command=inbox}, ui.close{id=inbox}, ui.render{component=AbovePrompt}, config.set{key=theme}, ui.render{component=Pane, requestId=inbox}",
+      "./register.tsx hooks: session.start, session.attach{surface=desktop}, classic.SessionStart{source=clear|resume|fork}, session.end, prompt.submit, turn.start, prompt.compose, tool.describe{tool=mcp__inbox__record_finding}, tool.call{tool=mcp__inbox__record_finding}, tool.describe{tool=mcp__inbox__close}, tool.call{tool=mcp__inbox__close}, tool.call, classic.PermissionRequest, classic.StopFailure, classic.Stop, turn.complete, prompt.context, session.append{door=prompt|delivery, origin has {kind=plugin, name=inbox}}, session.append{door=command}, command.run{command=inbox}, ui.press, ui.message, ui.close{id=inbox}, ui.render{component=AbovePrompt}, config.set{key=theme}, ui.render{component=Pane, requestId=inbox}",
+      "./register.tsx hooks on classic.SessionStart, prompt.compose, classic.PermissionRequest, classic.StopFailure, classic.Stop, prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=inbox}",
       "./register.tsx gating hook without .catch: classic.SessionStart{source=clear|resume|fork}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx gating hook without .catch: tool.check{tool=mcp__inbox__record_finding}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__inbox__record_finding}",
-      "./register.tsx gating hook without .catch: tool.check{tool=mcp__inbox__close}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__inbox__close}",
-      "./register.tsx gating hook without .catch: tool.check{tool=mcp__inbox__run_check}",
-      "./register.tsx gating hook without .catch: tool.check{tool=Read|Grep}",
-      "./register.tsx gating hook without .catch: tool.call{tool=mcp__inbox__run_check}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
       "./register.tsx gating hook without .catch: classic.StopFailure",
@@ -1465,11 +898,12 @@
       "./register.tsx gating hook without .catch: session.append{door=command}",
       "./register.tsx gating hook without .catch: ui.close{id=inbox}",
       "./register.tsx gating hook without .catch: config.set{key=theme}",
-      "./register.tsx calls: $.clock.every (via turnOn), $.clock.now, $.clock.sleep (via expireSettled, jumpTo, redrawWhileLeaving, select), $.command.register (via turnOn), $.config.list (via syncTheme), $.env.get (via checkLogs, loadConversation, openPath, publishStatus), $.fs.exists (via dropGoneFolders, openPath), $.fs.stat (via openPath, treeIO), $.fs.write (via runChecks), $.model.complete (via askLedgerModel), $.model.fork (via catchUp), $.process.run (via gh, loadConversation, openPath, openUrl, publishStatus, repoOf, treeIO), $.prompt.submit (via send), $.session.append (via appendContext), $.session.cwd, $.session.id (via turnOn), $.session.messages (via catchUp), $.session.root (via loadConversation), $.session.surfaces, $.session.turns (via loadConversation), $.state.get, $.state.set, $.store.delete (via save), $.store.get (via loadConversation), $.store.keys (via save), $.store.set (via save), $.tool.call (via runChecks), $.tool.register (via turnOn), $.ui.copy (via useHelp), $.u… [+150 chars]",
+      "./register.tsx calls: $.clock.every (via turnOn), $.clock.now, $.clock.sleep (via later, redrawWhileLeaving, scrollToRow), $.command.register (via turnOn), $.config.list (via syncTheme), $.env.get, $.fs.exists (via openPath), $.fs.stat (via openPath), $.model.complete (via askLedgerModel), $.model.fork (via catchUp), $.process.run (via gh, openPath, openUrl, publishStatus), $.prompt.submit (via send), $.session.append (via appendContext), $.session.id (via turnOn), $.session.messages (via catchUp), $.session.root (via loadConversation), $.session.surfaces, $.session.turns (via loadConversation, readAgain), $.state.get, $.state.set, $.store.delete (via save), $.store.get (via readSaved), $.store.keys (via save), $.store.set (via save), $.tool.register (via turnOn), $.ui.copy (via perform), $.ui.focus, $.ui.open (via openPane), $.ui.panes (via isPaneShown), $.ui.resolve, $.ui.scroll (via scrollToOpenRow, scrollToRow)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HERDR_PANE_ID, HOME, TMPDIR",
-      "./register.tsx state writes: inbox.arrival, inbox.checks, inbox.dialogs, inbox.isDemo, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.prFixesSent, inbox.prViews, inbox.presence, inbox.previous, inbox.selection, inbox.settled, inbox.shownDetails, inbox.snapshots, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded",
-      "./register.tsx state reads: inbox.arrival, inbox.checks, inbox.dialogs, inbox.isDemo, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.prFixesSent, inbox.prViews, inbox.presence, inbox.previous, inbox.selection, inbox.settled, inbox.shownDetails, inbox.snapshots, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded"
+      "./register.tsx env reads: HERDR_PANE_ID, HOME, TERM_PROGRAM",
+      "./register.tsx state writes: inbox.demo, inbox.dialogs, inbox.drafts, inbox.foldHover, inbox.isDemoRecording, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.notes, inbox.optionsShown, inbox.prViews, inbox.presence, inbox.selection, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded, inbox.unreadable",
+      "./register.tsx state reads: inbox.demo, inbox.dialogs, inbox.drafts, inbox.foldHover, inbox.isDemoRecording, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.notes, inbox.optionsShown, inbox.prViews, inbox.presence, inbox.selection, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded, inbox.unreadable",
+      "./register.tsx surface modules: hooks/fold-client.tsx, hooks/links-client.tsx, hooks/row-client.tsx, hooks/tabs-client.tsx, hooks/undo-client.tsx"
      ],
      "gatingHooks": [
       {
@@ -1486,44 +920,14 @@
       },
       {
        "module": "./register.tsx",
-       "pattern": "tool.check",
-       "hook": "tool.check{tool=mcp__inbox__record_finding}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__inbox__record_finding}",
        "hasCatch": false
       },
       {
        "module": "./register.tsx",
-       "pattern": "tool.check",
-       "hook": "tool.check{tool=mcp__inbox__close}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__inbox__close}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
-       "pattern": "tool.check",
-       "hook": "tool.check{tool=mcp__inbox__run_check}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
-       "pattern": "tool.check",
-       "hook": "tool.check{tool=Read|Grep}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
-       "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__inbox__run_check}",
        "hasCatch": false
       },
       {
@@ -1580,5 +984,5 @@
    "advice": []
   }
  },
- "sourceHash": "c24922014a1fc84a"
+ "sourceHash": "8e8bc89c0f4284d"
 }

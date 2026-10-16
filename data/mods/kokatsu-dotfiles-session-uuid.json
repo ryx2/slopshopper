@@ -1,0 +1,8 @@
+{
+ "slug": "kokatsu-dotfiles-session-uuid",
+ "files": {
+  "hooks/register.ts": "import type { Register } from \"claude-code\";\n\nexport const register: Register = (on) => {\n  // /clear reloads no module (no session.start fires for it), so the ending\n  // session's id waits here for the fresh session's SessionStart.\n  let previous: string | undefined;\n\n  on(\"session.end\", (_$, e, next) => {\n    if (e.reason === \"clear\") previous = e.sessionId;\n    return next(e);\n  });\n\n  on(\"classic.SessionStart\", { source: \"clear\" }, async ($, e, next) => {\n    const result = await next(e);\n    if (!e.agent_id && previous) {\n      $.ui.log(`Previous session UUID: ${previous}`);\n      previous = undefined;\n    }\n    return result;\n  });\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"session-uuid\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Show the previous session's UUID in the transcript after clear\"\n}"
+ }
+}

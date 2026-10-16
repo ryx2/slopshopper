@@ -1,6 +1,6 @@
 {
  "slug": "davila7-claude-code-templates-prompt-cache-control",
- "generatedAt": "2026-10-07T15:21:24.824Z",
+ "generatedAt": "2026-10-16T14:15:24.961Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,9 @@
    },
    {
     "event": "session.end"
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "turn.step"
@@ -56,17 +59,18 @@
   ],
   "toasts": [],
   "logs": [
-   "prompt-cache-control loaded: 1h cache (Claude subscription default), /cache opens the table"
+   "prompt-cache-control loaded: 1h cache (Claude subscription default), /cache opens the table",
+   "prompt-cache-control: idle compaction off, rollout flag not found in ~/.claude.json (rollout flag not found)"
   ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 8,
+   "$.env.get": 13,
    "$.session.cwd": 1,
-   "$.fs.read": 3,
+   "$.fs.read": 4,
    "$.session.usage": 1,
    "$.command.register": 1,
-   "$.ui.log": 1,
+   "$.ui.log": 2,
    "$.clock.every": 1,
    "$.ui.open": 1,
    "$.ui.invalidate": 1,
@@ -154,6 +158,35 @@
           },
           "children": [
            "○ no request yet: the first one writes the cache"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "idle",
+         "marginTop": 1,
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "dimColor": true
+          },
+          "children": [
+           "⇣ idle compaction off"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "rollout flag not found in ~/.claude.json"
           ]
          }
         ]
@@ -406,6 +439,7 @@
   "hooks": [
    "session.start",
    "session.end",
+   "session.compact",
    "turn.step",
    "command.run{command=cache}",
    "ui.close",
@@ -417,8 +451,9 @@
    "$.clock.every",
    "$.command.register",
    "$.env.get",
-   "$.fs.read (via readSetting)",
-   "$.session.cwd (via readSetting)",
+   "$.fs.read (via readGlobalConfig",
+   "readSettings)",
+   "$.session.cwd (via readSettings)",
    "$.session.usage",
    "$.ui.close",
    "$.ui.invalidate",
@@ -431,7 +466,11 @@
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "CLAUDE_CODE_IDLE_COMPACT_MIN_TOKENS",
    "CLAUDE_CODE_PROMPT_CACHE_TTL",
+   "CLAUDE_CONFIG_DIR",
+   "DISABLE_AUTO_COMPACT",
+   "DISABLE_COMPACT",
    "DISABLE_PROMPT_CACHING",
    "DISABLE_PROMPT_CACHING_HAIKU",
    "DISABLE_PROMPT_CACHING_OPUS",
@@ -459,14 +498,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./prompt-cache-control.tsx hooks: session.start, session.end, turn.step, command.run{command=cache}, ui.close, ui.press, ui.render{component=AbovePrompt}, ui.render{component=Pane}",
+      "./prompt-cache-control.tsx hooks: session.start, session.end, session.compact, turn.step, command.run{command=cache}, ui.close, ui.press, ui.render{component=AbovePrompt}, ui.render{component=Pane}",
+      "./prompt-cache-control.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./prompt-cache-control.tsx gating hook without .catch: session.compact",
       "./prompt-cache-control.tsx gating hook without .catch: command.run{command=cache}",
       "./prompt-cache-control.tsx gating hook without .catch: ui.close",
-      "./prompt-cache-control.tsx calls: $.clock.every, $.command.register, $.env.get, $.fs.read (via readSetting), $.session.cwd (via readSetting), $.session.usage, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./prompt-cache-control.tsx calls: $.clock.every, $.command.register, $.env.get, $.fs.read (via readGlobalConfig, readSettings), $.session.cwd (via readSettings), $.session.usage, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
       "./prompt-cache-control.tsx env writes: nothing",
-      "./prompt-cache-control.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, DISABLE_PROMPT_CACHING, DISABLE_PROMPT_CACHING_HAIKU, DISABLE_PROMPT_CACHING_OPUS, DISABLE_PROMPT_CACHING_SONNET, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HOME"
+      "./prompt-cache-control.tsx env reads: CLAUDE_CODE_IDLE_COMPACT_MIN_TOKENS, CLAUDE_CODE_PROMPT_CACHE_TTL, CLAUDE_CONFIG_DIR, DISABLE_AUTO_COMPACT, DISABLE_COMPACT, DISABLE_PROMPT_CACHING, DISABLE_PROMPT_CACHING_HAIKU, DISABLE_PROMPT_CACHING_OPUS, DISABLE_PROMPT_CACHING_SONNET, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HOME"
      ],
      "gatingHooks": [
+      {
+       "module": "./prompt-cache-control.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
       {
        "module": "./prompt-cache-control.tsx",
        "pattern": "command.run",
@@ -481,8 +528,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "d375f16bee989857"
+ "sourceHash": "7e1bae30da03f7c2"
 }

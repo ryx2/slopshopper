@@ -1,0 +1,330 @@
+{
+ "slug": "harzerheribert-claude-modpack-delegate",
+ "generatedAt": "2026-10-16T14:19:45.398Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "delegate:reader"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "delegate:mechanic"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "delegate:builder"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "delegate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__delegate__hand_off"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__delegate__implement_spec"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ExitPlanMode"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "mcp__delegate__hand_off"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "mcp__delegate__implement_spec"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "delegate"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "props": {
+      "tool": "mcp__delegate__hand_off"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "props": {
+      "tool": "mcp__delegate__implement_spec"
+     }
+    }
+   },
+   {
+    "event": "prompt.submit"
+   }
+  ],
+  "commands": [
+   {
+    "name": "delegate",
+    "description": "What hand-offs to the worker model cost and saved, and how often their work came back",
+    "output": "No hand-offs logged yet."
+   }
+  ],
+  "tools": [
+   {
+    "name": "hand_off",
+    "description": "Outsources one self-contained task to a cheaper worker model. It returns when the worker is done (usually within a minute or two) with its report and evidence the tool gathered itself: for edit work the diff and the result of a check command it runs, where the change reaches (references, callers and doc mentions from the language server), and what the work cost.\n\nEach of your own steps re-reads your whole context; a worker's steps read only its own small one, but the hand-off itself takes you two to five steps (writing the task, reading the evidence, finishing). Measured on real tasks at the same quality: a feature from a precise spec and tests to a coverage target cost 23-35% less handed off, in a fresh session and in one holding 233k tokens; lookups, traces, explanations and small edits cost more handed off, up to 3.6 times as much in a session that already knows the code.\n\nOutsource work that is fully specified and would take you many steps in this session, where only the result matters to you: implementing a feature from a precise spec, writing tests to a target, one change applied across many files.\nThe \"kind\" you give decides the worker: read changes no file (find, list, trace, explain); mechanical changes files and the task spells out every change (a rename, one edit applied everywhere, moving code); build changes files and something is left to work out (a feature from a spec, tests to a target).\nKeep in house: lookups, tracing, explanations and small edits, design decisions, subtle debugging, and anything that depends on what was decided in this conversation unless the task states it. The worker knows only the task text.\n\nWrite the task so it stands alone: the goal, the files or symbols, constraints, and what done means. Name the symbols or file:line places it touches in focus so the tool can find where they are used. For edit work, give a check command (tests, a type check) that proves it. Don't edit the files an edit hand-off works on until its report is in.\n\nJudge what comes back by the diff and the check output, not by the worker's report. A follow-up task reaches the same worker while it is warm, its earlier reading still in its context. With background, the call returns at once and the report arrives as a notification: use it when you have other work to do meanwhile."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 2,
+   "$.session.id": 1,
+   "$.process.run": 1,
+   "$.tool.list": 1,
+   "$.agent.register": 3,
+   "$.tool.register": 1,
+   "$.command.register": 1,
+   "$.state.get": 5,
+   "$.session.cwd": 3,
+   "$.fs.read": 1,
+   "$.clock.now": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "delegate": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No hand-offs in this session yet."
+      ]
+     },
+     "title": "delegate"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(mkdir -p /tmp/claude-delegate/preview-session) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/delegate → No hand-offs logged yet."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "tool.call{tool=?}",
+   "session.start",
+   "turn.start",
+   "agent.offer{agent=?}",
+   "command.run{command=delegate}",
+   "tool.call{tool=?}",
+   "tool.call{tool=ExitPlanMode}",
+   "tool.call",
+   "turn.step",
+   "turn.complete",
+   "ui.render{component=ToolUse",
+   "props has {tool=?}}",
+   "ui.render{component=Pane, requestId=delegate}",
+   "ui.render{component=ToolResult",
+   "props has {tool=?}}",
+   "prompt.submit"
+  ],
+  "calls": [
+   "$.agent.register",
+   "$.agent.spawn (via startWorker)",
+   "$.clock.every (via animate)",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.read",
+   "$.fs.write (via diffOf",
+   "flush",
+   "reconcile",
+   "report",
+   "trackInEta",
+   "writeEta)",
+   "$.model.fork (via report)",
+   "$.process.run",
+   "$.prompt.submit (via handOver)",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.model (via report)",
+   "$.session.send (via startWorker)",
+   "$.session.usage (via report)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.call (via lsp",
+   "runCheck",
+   "trackInEta)",
+   "$.tool.list",
+   "$.tool.register",
+   "$.ui.invalidate (via animate)",
+   "$.ui.log (via refusedStart)",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve"
+  ],
+  "stateReads": [
+   "delegate.jobs",
+   "delegate.watching"
+  ],
+  "stateWrites": [
+   "delegate.jobs",
+   "delegate.watching"
+  ],
+  "envReads": [
+   "HOME",
+   "TMPDIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/harzerheribert-claude-modpack-delegate/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/harzerheribert-claude-modpack-delegate/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: delegate.jobs, delegate.watching"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/harzerheribert-claude-modpack-delegate/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: tool.call{tool=?}, session.start, turn.start, agent.offer{agent=?}, command.run{command=delegate}, tool.call{tool=?}, tool.call{tool=ExitPlanMode}, tool.call, turn.step, turn.complete, ui.render{component=ToolUse, props has {tool=?}}, ui.render{component=Pane, requestId=delegate}, ui.render{component=ToolResult, props has {tool=?}}, prompt.submit",
+      "./register.tsx answers its own command: command.run{command=delegate}",
+      "./register.tsx gating hook without .catch: tool.call{tool=?}",
+      "./register.tsx gating hook without .catch: agent.offer{agent=?}",
+      "./register.tsx gating hook with .catch: tool.call{tool=?}",
+      "./register.tsx gating hook with .catch: tool.call{tool=ExitPlanMode}",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx calls: $.agent.register, $.agent.spawn (via startWorker), $.clock.every (via animate), $.clock.now, $.command.register, $.env.get, $.fs.read, $.fs.write (via diffOf, flush, reconcile, report, trackInEta, writeEta), $.model.fork (via report), $.process.run, $.prompt.submit (via handOver), $.session.cwd, $.session.id, $.session.model (via report), $.session.send (via startWorker), $.session.usage (via report), $.state.get, $.state.set, $.tool.call (via lsp, runCheck, trackInEta), $.tool.list, $.tool.register, $.ui.invalidate (via animate), $.ui.log (via refusedStart), $.ui.open (via openPane), $.ui.resolve",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, TMPDIR",
+      "./register.tsx state writes: delegate.jobs, delegate.watching",
+      "./register.tsx state reads: delegate.jobs, delegate.watching"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=ExitPlanMode}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "b4740721023af0c"
+}

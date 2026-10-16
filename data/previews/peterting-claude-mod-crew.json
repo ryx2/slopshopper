@@ -1,0 +1,431 @@
+{
+ "slug": "peterting-claude-mod-crew",
+ "generatedAt": "2026-10-16T14:21:14.752Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "crew:pm"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "crew:qa"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "crew"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__board_read"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__board_write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__thread_post"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__thread_read"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__ask_person"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__crew"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__memory_save"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__memory_search"
+    }
+   },
+   {
+    "event": "session.receive"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "crew"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "crew",
+    "description": "crew 產品團隊：/crew start <PRD>、answer <Q-編號> <回答>、ask <pm|qa> <問題>、recall、remember、resume、status",
+    "output": "crew 面板已開啟。/crew start <PRD 檔案> 開始一份 PRD。"
+   }
+  ],
+  "tools": [
+   {
+    "name": "board_read",
+    "description": "讀 crew 看板：功能、驗收條件，以及每條驗收條件的 test case。可只讀一個功能。"
+   },
+   {
+    "name": "board_write",
+    "description": "寫 crew 看板，一次送出多筆操作，全部成功或全部不生效。PM：add_feature(title, summary, sources)、add_criterion(feature, text)、drop_criterion(id, reason)、drop_feature(id, reason)、link_requirements(feature, requirements)、drop_requirement(id, reason)。QA：add_test_case(criteria, title, steps, expected)。"
+   },
+   {
+    "name": "thread_post",
+    "description": "在某個項目的討論串留言給另一個角色。對方下次被叫醒時會看到。"
+   },
+   {
+    "name": "thread_read",
+    "description": "讀某個項目的討論串。"
+   },
+   {
+    "name": "ask_person",
+    "description": "把需要使用者決定的問題交給使用者，答案之後會轉給你。"
+   },
+   {
+    "name": "memory_save",
+    "description": "存一條長期記憶，換新 context 之後還找得到。DEC 決定、MEM 事實或限制、LES 教訓。新的取代舊的時填 supersedes。"
+   },
+   {
+    "name": "memory_search",
+    "description": "用關鍵字或編號找長期記憶。"
+   },
+   {
+    "name": "crew",
+    "description": "指揮 crew 產品團隊（PM、QA），使用者要團隊做事時用。start：開始拆一份 PRD；ask：問 PM 或 QA；answer：把使用者對 Q-編號問題的回答轉給團隊；status：進度；remember：記下使用者的偏好；recall：查團隊記憶；rotate：讓角色下次換新 context；resume：接續中斷的工作。角色的回覆和要使用者決定的事會再通知你。"
+   }
+  ],
+  "panes": [
+   {
+    "id": "crew",
+    "title": "Crew"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.state.get": 11,
+   "$.state.set": 3,
+   "$.store.get": 1,
+   "$.fs.exists": 2,
+   "$.clock.now": 1,
+   "$.agent.register": 2,
+   "$.command.register": 1,
+   "$.tool.register": 8,
+   "$.clock.every": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2,
+   "$.fs.stat": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 10000
+   },
+   {
+    "kind": "every",
+    "ms": 15000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "crew": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "用 /crew start <PRD 檔案> 開始一份 PRD，或用 /crew demo 看設計稿。"
+      ]
+     },
+     "title": "Crew"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(crew)",
+   "/crew → crew 面板已開啟。/crew start <PRD 檔案> 開始一份 PRD。"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "agent.offer{agent=crew:pm}",
+   "agent.offer{agent=crew:qa}",
+   "command.run{command=crew}",
+   "tool.call{tool=mcp__crew__board_read}",
+   "tool.call{tool=mcp__crew__board_write}",
+   "tool.call{tool=mcp__crew__thread_post}",
+   "tool.call{tool=mcp__crew__thread_read}",
+   "tool.call{tool=mcp__crew__ask_person}",
+   "tool.call{tool=mcp__crew__crew}",
+   "tool.call{tool=mcp__crew__memory_save}",
+   "tool.call{tool=mcp__crew__memory_search}",
+   "session.receive",
+   "prompt.submit",
+   "session.compact",
+   "turn.start",
+   "turn.step",
+   "turn.complete",
+   "ui.render{component=Pane, requestId=crew}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.agent.list (via resumeFlow",
+   "startRole)",
+   "$.agent.register",
+   "$.agent.spawn (via startRole)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.exists (via consolidateDue",
+   "readCrew",
+   "restore)",
+   "$.fs.list (via consolidateDue",
+   "restore)",
+   "$.fs.read (via boardState",
+   "crewVerb",
+   "readCrew",
+   "readPrd",
+   "resumeFlow)",
+   "$.fs.stat (via crewVerb",
+   "prdFile",
+   "realRoot",
+   "staysIn",
+   "versionOf)",
+   "$.fs.write (via saveBoard",
+   "writeCrew)",
+   "$.model.complete (via consolidate)",
+   "$.prompt.submit (via flushBrain)",
+   "$.session.send (via deliver)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via restore)",
+   "$.store.set (via saveState)",
+   "$.tool.register",
+   "$.ui.close (via crewVerb)",
+   "$.ui.log",
+   "$.ui.open (via crewVerb)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "crew.gate",
+   "crew.isDemo",
+   "crew.live",
+   "crew.scenario",
+   "crew.tab",
+   "crew.thread"
+  ],
+  "stateWrites": [
+   "crew.gate",
+   "crew.isDemo",
+   "crew.live",
+   "crew.scenario",
+   "crew.tab",
+   "crew.thread"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/peterting-claude-mod-crew/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/peterting-claude-mod-crew/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: crew.isDemo, crew.tab, crew.scenario, crew.thread, crew.gate, crew.live"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/peterting-claude-mod-crew/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, agent.offer{agent=crew:pm}, agent.offer{agent=crew:qa}, command.run{command=crew}, tool.call{tool=mcp__crew__board_read}, tool.call{tool=mcp__crew__board_write}, tool.call{tool=mcp__crew__thread_post}, tool.call{tool=mcp__crew__thread_read}, tool.call{tool=mcp__crew__ask_person}, tool.call{tool=mcp__crew__crew}, tool.call{tool=mcp__crew__memory_save}, tool.call{tool=mcp__crew__memory_search}, session.receive, prompt.submit, session.compact, turn.start, turn.step, turn.complete, ui.render{component=Pane, requestId=crew}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=crew}",
+      "./register.tsx gating hook without .catch: agent.offer{agent=crew:pm}",
+      "./register.tsx gating hook without .catch: agent.offer{agent=crew:qa}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__board_read}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__board_write}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__thread_post}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__thread_read}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__ask_person}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__crew}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__memory_save}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__memory_search}",
+      "./register.tsx gating hook without .catch: session.receive",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx calls: $.agent.list (via resumeFlow, startRole), $.agent.register, $.agent.spawn (via startRole), $.clock.every, $.clock.now, $.command.register, $.fs.exists (via consolidateDue, readCrew, restore), $.fs.list (via consolidateDue, restore), $.fs.read (via boardState, crewVerb, readCrew, readPrd, resumeFlow), $.fs.stat (via crewVerb, prdFile, realRoot, staysIn, versionOf), $.fs.write (via saveBoard, writeCrew), $.model.complete (via consolidate), $.prompt.submit (via flushBrain), $.session.send (via deliver), $.state.get, $.state.set, $.store.get (via restore), $.store.set (via saveState), $.tool.register, $.ui.close (via crewVerb), $.ui.log, $.ui.open (via crewVerb), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: crew.gate, crew.isDemo, crew.live, crew.scenario, crew.tab, crew.thread",
+      "./register.tsx state reads: crew.gate, crew.isDemo, crew.live, crew.scenario, crew.tab, crew.thread"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=crew:pm}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=crew:qa}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__board_read}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__board_write}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__thread_post}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__thread_read}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__ask_person}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__crew}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__memory_save}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__memory_search}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.receive",
+       "hook": "session.receive",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "6f974b7b2ae61523"
+}

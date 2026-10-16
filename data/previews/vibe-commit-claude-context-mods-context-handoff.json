@@ -1,6 +1,6 @@
 {
  "slug": "vibe-commit-claude-context-mods-context-handoff",
- "generatedAt": "2026-10-09T15:34:37.371Z",
+ "generatedAt": "2026-10-16T14:22:02.083Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,6 +32,12 @@
     "event": "turn.complete"
    },
    {
+    "event": "session.receive"
+   },
+   {
+    "event": "session.append"
+   },
+   {
     "event": "session.compact"
    }
   ],
@@ -57,7 +63,7 @@
   "apiCalls": {
    "$.tool.register": 1,
    "$.command.register": 1,
-   "$.state.get": 37,
+   "$.state.get": 38,
    "$.session.usage": 12
   },
   "timers": [],
@@ -80,11 +86,8 @@
   "warnings": []
  },
  "validate": {
-  "ok": false,
-  "errors": [
-   "context-handoff.lateMessages is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { lateMessages: ... } }",
-   "context-handoff.resumeTurnId is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { resumeTurnId: ... } }"
-  ],
+  "ok": true,
+  "errors": [],
   "warnings": [],
   "hooks": [
    "session.start",
@@ -94,17 +97,22 @@
    "prompt.submit",
    "turn.start",
    "turn.complete",
+   "session.receive",
+   "session.append",
    "session.compact"
   ],
   "calls": [
    "$.clock.after",
+   "$.clock.now",
    "$.command.register",
+   "$.command.run (via compactThenResume)",
    "$.env.get (via handoffDir)",
-   "$.fs.stat (via cleanup)",
+   "$.fs.stat (via cleanup",
+   "noteOf)",
    "$.fs.write",
    "$.process.run (via cleanup)",
    "$.prompt.submit",
-   "$.session.compact (via compactAndResume)",
+   "$.session.append",
    "$.session.id (via handoffDir)",
    "$.session.usage",
    "$.state.get",
@@ -115,30 +123,45 @@
    "$.ui.toast"
   ],
   "stateReads": [
+   "context-handoff.compactOutcome",
+   "context-handoff.foreignTurnId",
    "context-handoff.handoffCount",
    "context-handoff.handoffPath",
+   "context-handoff.heldHanded",
+   "context-handoff.heldMessages",
+   "context-handoff.holdToken",
    "context-handoff.isDisabled",
    "context-handoff.isFirmSent",
+   "context-handoff.isHoldReleased",
+   "context-handoff.isNoteRead",
    "context-handoff.isOvershootSent",
    "context-handoff.lateMessages",
    "context-handoff.phase",
    "context-handoff.resumeTurnId"
   ],
   "stateWrites": [
+   "context-handoff.compactOutcome",
+   "context-handoff.foreignTurnId",
    "context-handoff.handoffCount",
    "context-handoff.handoffPath",
+   "context-handoff.heldHanded",
+   "context-handoff.heldMessages",
+   "context-handoff.holdToken",
    "context-handoff.isDisabled",
    "context-handoff.isFirmSent",
+   "context-handoff.isHoldReleased",
+   "context-handoff.isNoteRead",
    "context-handoff.isOvershootSent",
    "context-handoff.lateMessages",
    "context-handoff.phase",
-   "context-handoff.resumeTurnId"
+   "context-handoff.resumeTurnId",
+   "context-handoff.watchdogToken"
   ],
   "envReads": [
    "HOME"
   ],
   "raw": {
-   "success": false,
+   "success": true,
    "strict": false,
    "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibe-commit-claude-context-mods-context-handoff/.claude-plugin/plugin.json",
    "manifest": {
@@ -148,7 +171,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: context-handoff.phase, context-handoff.handoffPath, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.isDisabled, context-handoff.handoffCount"
+     "types ./types/index.d.ts declares state: context-handoff.phase, context-handoff.handoffPath, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.isDisabled, context-handoff.handoffCount, context-handoff.resumeTurnId, context-handoff.lateMessages, context-handoff.compactOutcome, context-handoff.heldMessages, context-handoff.heldHanded, context-handoff.isNoteRead, context-handoff.isHoldReleased, context-handoff.holdToken, context-handoff.watchdogToken, context-handoff.foreignTurnId"
     ],
     "gatingHooks": []
    },
@@ -156,31 +179,23 @@
     {
      "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/vibe-commit-claude-context-mods-context-handoff/hooks/hooks.json",
      "type": "hooks",
-     "errors": [
-      {
-       "path": "modules../register.ts",
-       "message": "context-handoff.lateMessages is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { lateMessages: ... } }",
-       "code": null
-      },
-      {
-       "path": "modules../register.ts",
-       "message": "context-handoff.resumeTurnId is not declared: the manifest's types contract must name it in interface PluginState { context-handoff: { resumeTurnId: ... } }",
-       "code": null
-      }
-     ],
+     "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=handoff}, tool.call{tool=mcp__context-handoff__Handoff}, tool.call, prompt.submit, turn.start, turn.complete, session.compact",
+      "./register.ts hooks: session.start, command.run{command=handoff}, tool.call{tool=mcp__context-handoff__Handoff}, tool.call, prompt.submit, turn.start, turn.complete, session.receive, session.append, session.compact",
+      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=handoff}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__context-handoff__Handoff}",
       "./register.ts gating hook without .catch: tool.call",
       "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: session.receive",
+      "./register.ts gating hook without .catch: session.append",
       "./register.ts gating hook without .catch: session.compact",
-      "./register.ts calls: $.clock.after, $.command.register, $.env.get (via handoffDir), $.fs.stat (via cleanup), $.fs.write, $.process.run (via cleanup), $.prompt.submit, $.session.compact (via compactAndResume), $.session.id (via handoffDir), $.session.usage, $.state.get, $.state.set, $.tool.register, $.ui.log, $.ui.status, $.ui.toast",
+      "./register.ts calls: $.clock.after, $.clock.now, $.command.register, $.command.run (via compactThenResume), $.env.get (via handoffDir), $.fs.stat (via cleanup, noteOf), $.fs.write, $.process.run (via cleanup), $.prompt.submit, $.session.append, $.session.id (via handoffDir), $.session.usage, $.state.get, $.state.set, $.tool.register, $.ui.log, $.ui.status, $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: HOME",
-      "./register.ts state writes: context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.lateMessages, context-handoff.phase, context-handoff.resumeTurnId",
-      "./register.ts state reads: context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isOvershootSent, context-handoff.lateMessages, context-handoff.phase, context-handoff.resumeTurnId"
+      "./register.ts state writes: context-handoff.compactOutcome, context-handoff.foreignTurnId, context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.heldHanded, context-handoff.heldMessages, context-handoff.holdToken, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isHoldReleased, context-handoff.isNoteRead, context-handoff.isOvershootSent, context-handoff.lateMessages, context-handoff.phase, context-handoff.resumeTurnId, context-handoff.watchdogToken",
+      "./register.ts state reads: context-handoff.compactOutcome, context-handoff.foreignTurnId, context-handoff.handoffCount, context-handoff.handoffPath, context-handoff.heldHanded, context-handoff.heldMessages, context-handoff.holdToken, context-handoff.isDisabled, context-handoff.isFirmSent, context-handoff.isHoldReleased, context-handoff.isNoteRead, context-handoff.isOvershootSent, context-handoff.lateMessages, context-handoff.phase, context-handoff.resumeTurnId"
      ],
      "gatingHooks": [
       {
@@ -203,6 +218,18 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "session.receive",
+       "hook": "session.receive",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "session.compact",
        "hook": "session.compact",
        "hasCatch": false
@@ -213,5 +240,5 @@
    "advice": []
   }
  },
- "sourceHash": "51aeafa4be915ea4"
+ "sourceHash": "d652a1cc657bbac9"
 }

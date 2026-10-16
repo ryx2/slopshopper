@@ -1,6 +1,6 @@
 {
  "slug": "2steaks-skills-learning-gate",
- "generatedAt": "2026-10-10T14:44:11.451Z",
+ "generatedAt": "2026-10-16T14:15:42.188Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -58,7 +58,7 @@
    },
    {
     "name": "pickup",
-    "description": "Pick up the open learning checkpoint where you left off"
+    "description": "Pick up paused or unfinished work, from a menu when there are several"
    },
    {
     "name": "audit",
@@ -72,16 +72,19 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.session.id": 13,
+   "$.env.set": 5,
    "$.command.register": 3,
-   "$.session.cwd": 20,
-   "$.fs.exists": 52,
-   "$.state.get": 33,
+   "$.session.cwd": 28,
+   "$.fs.exists": 76,
+   "$.state.get": 43,
    "$.store.get": 8,
-   "$.env.get": 9,
+   "$.env.get": 17,
    "$.ui.status": 8,
    "$.state.set": 5,
    "$.command.list": 2,
-   "$.prompt.submit": 2
+   "$.prompt.submit": 2,
+   "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
@@ -132,14 +135,21 @@
    "$.command.run (via runSkill)",
    "$.env.get (via learnedSummary",
    "projectRecord)",
-   "$.fs.exists (via findUp",
+   "$.env.set (via tellShells)",
+   "$.fs.exists (via countUnfinished",
+   "editedLines",
+   "findUp",
    "keepPrivate",
    "learnedSummary",
+   "loadFloor",
    "trackGate",
    "writeEvent)",
-   "$.fs.list (via learnedSummary)",
-   "$.fs.read (via keepPrivate",
+   "$.fs.list (via countUnfinished",
+   "learnedSummary)",
+   "$.fs.read (via editedLines",
+   "keepPrivate",
    "learnedSummary",
+   "loadFloor",
    "readLock",
    "writeEvent)",
    "$.fs.write (via keepPrivate",
@@ -147,6 +157,7 @@
    "writeEvent)",
    "$.prompt.submit (via runSkill)",
    "$.session.cwd",
+   "$.session.id (via sessionId)",
    "$.state.get",
    "$.state.set",
    "$.store.get (via trackGate)",
@@ -158,15 +169,19 @@
   ],
   "stateReads": [
    "learning-gate.active",
+   "learning-gate.cover",
    "learning-gate.lock",
    "learning-gate.named",
-   "learning-gate.triage"
+   "learning-gate.triage",
+   "learning-gate.unfinished"
   ],
   "stateWrites": [
    "learning-gate.active",
+   "learning-gate.cover",
    "learning-gate.lock",
    "learning-gate.named",
-   "learning-gate.triage"
+   "learning-gate.triage",
+   "learning-gate.unfinished"
   ],
   "envReads": [
    "HOME"
@@ -182,7 +197,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: learning-gate.lock, learning-gate.triage, learning-gate.active, learning-gate.named"
+     "types ./types/index.d.ts declares state: learning-gate.lock, learning-gate.triage, learning-gate.active, learning-gate.named, learning-gate.unfinished, learning-gate.cover"
     ],
     "gatingHooks": []
    },
@@ -194,17 +209,18 @@
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, skill.prompt, tool.call, prompt.submit, prompt.compose, session.append{door=response}, ui.render{component=AbovePrompt}, command.run{command=learned}, command.run{command=pickup}, command.run{command=audit}",
+      "./register.tsx hooks on skill.prompt, prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=learned}",
       "./register.tsx answers its own command: command.run{command=pickup}",
       "./register.tsx answers its own command: command.run{command=audit}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.append{door=response}",
-      "./register.tsx calls: $.clock.now (via trackGate, writeEvent), $.command.list (via runSkill), $.command.register, $.command.run (via runSkill), $.env.get (via learnedSummary, projectRecord), $.fs.exists (via findUp, keepPrivate, learnedSummary, trackGate, writeEvent), $.fs.list (via learnedSummary), $.fs.read (via keepPrivate, learnedSummary, readLock, writeEvent), $.fs.write (via keepPrivate, lockIfOpen, writeEvent), $.prompt.submit (via runSkill), $.session.cwd, $.state.get, $.state.set, $.store.get (via trackGate), $.store.set (via trackGate), $.ui.resolve, $.ui.status (via showStatus), $.ui.toast (via keepPrivate, setLock)",
-      "./register.tsx env writes: nothing",
+      "./register.tsx calls: $.clock.now (via trackGate, writeEvent), $.command.list (via runSkill), $.command.register, $.command.run (via runSkill), $.env.get (via learnedSummary, projectRecord), $.env.set (via tellShells), $.fs.exists (via countUnfinished, editedLines, findUp, keepPrivate, learnedSummary, loadFloor, trackGate, writeEvent), $.fs.list (via countUnfinished, learnedSummary), $.fs.read (via editedLines, keepPrivate, learnedSummary, loadFloor, readLock, writeEvent), $.fs.write (via keepPrivate, lockIfOpen, writeEvent), $.prompt.submit (via runSkill), $.session.cwd, $.session.id (via sessionId), $.state.get, $.state.set, $.store.get (via trackGate), $.store.set (via trackGate), $.ui.resolve, $.ui.status (via showStatus), $.ui.toast (via keepPrivate, setLock)",
+      "./register.tsx env writes: LEARNING_GATE_SESSION",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: learning-gate.active, learning-gate.lock, learning-gate.named, learning-gate.triage",
-      "./register.tsx state reads: learning-gate.active, learning-gate.lock, learning-gate.named, learning-gate.triage"
+      "./register.tsx state writes: learning-gate.active, learning-gate.cover, learning-gate.lock, learning-gate.named, learning-gate.triage, learning-gate.unfinished",
+      "./register.tsx state reads: learning-gate.active, learning-gate.cover, learning-gate.lock, learning-gate.named, learning-gate.triage, learning-gate.unfinished"
      ],
      "gatingHooks": [
       {
@@ -231,5 +247,5 @@
    "advice": []
   }
  },
- "sourceHash": "f0a06aa9af0d215b"
+ "sourceHash": "4cbd12c96af27280"
 }

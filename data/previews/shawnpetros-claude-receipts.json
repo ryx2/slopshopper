@@ -1,6 +1,6 @@
 {
  "slug": "shawnpetros-claude-receipts",
- "generatedAt": "2026-10-08T15:54:43.682Z",
+ "generatedAt": "2026-10-16T14:21:39.881Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -16,6 +16,9 @@
       "fork"
      ]
     }
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "turn.start"
@@ -54,6 +57,12 @@
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
     }
    },
    {
@@ -121,7 +130,7 @@
    {
     "name": "receipts",
     "description": "Toggle the receipts pane, open its settings, or show calibration stats",
-    "argumentHint": "[tools|rows|clean|basis|stats|reset-history]",
+    "argumentHint": "[tools|rows|clean|basis|check|stats|wrong|reset-history]",
     "immediate": true
    }
   ],
@@ -138,39 +147,80 @@
   "rewrites": [
    {
     "event": "turn.complete",
-    "summary": "line under the answer: receipt · rm -rf build ✓ · 0s ago · 5h window 31% used, resets 09:53"
+    "summary": "line under the answer: receipt · rm -rf build · exit 0 · 0s ago · 5h window 31% used, resets 09:53"
    }
   ],
   "apiCalls": {
    "$.store.get": 2,
    "$.session.repo": 1,
-   "$.state.get": 14,
+   "$.state.get": 20,
    "$.fs.list": 1,
+   "$.state.set": 4,
    "$.command.register": 1,
-   "$.clock.now": 22,
+   "$.model.classify": 2,
+   "$.clock.after": 3,
+   "$.clock.now": 24,
    "$.session.cwd": 1,
-   "$.model.classify": 1,
-   "$.clock.after": 2,
-   "$.store.set": 2,
    "$.session.usage": 1,
+   "$.process.run": 1,
+   "$.store.set": 3,
    "$.agent.list": 1,
-   "$.state.set": 2,
    "$.ui.open": 1,
-   "$.ui.resolve": 3
+   "$.ui.resolve": 5
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 1000
+   },
    {
     "kind": "after",
     "ms": 1500
    },
    {
     "kind": "after",
-    "ms": 1500
+    "ms": 90000
    }
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column",
+      "width": 100
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "divider",
+        "flexDirection": "row"
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "───────────────────────────────────────────────────────────────────────────────────────"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          " Clean View ─"
+         ]
+        }
+       ]
+      }
+     ]
+    }
    },
    "Spinner": {
     "ok": true,
@@ -182,6 +232,45 @@
    },
    "TurnDuration": {
     "ok": "engine"
+   },
+   "SessionMode": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row",
+      "columnGap": 2
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "auto-accept edits"
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "tools-footer-box"
+       },
+       "children": [
+        {
+         "type": "Button",
+         "props": {
+          "key": "tools-footer",
+          "label": "◆ Shawn's Tools ▲",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
    },
    "InfoNotice": {
     "ok": "engine"
@@ -260,18 +349,7 @@
          "dimColor": true
         },
         "children": [
-         "plan · none given"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "m-0",
-         "wrap": "truncate-end",
-         "dimColor": true
-        },
-        "children": [
-         "✓ the task"
+         "plan · none recorded (Claude made no task list)"
         ]
        },
        {
@@ -293,7 +371,7 @@
          "color": "green"
         },
         "children": [
-         "receipt · rm -rf build ✓ · 0s ago"
+         "receipt · rm -rf build · exit 0 · 0s ago"
         ]
        },
        {
@@ -315,7 +393,7 @@
   },
   "script": [
    "session.start",
-   "turn.start: hook threw undefined is not an object (evaluating 'text.trim')",
+   "turn.start: hook threw undefined is not an object (evaluating 'text.slice')",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -325,6 +403,7 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(git diff -- /work/app/src/auth.ts /work/app/src/audit.ts /work/app/src/cache.ts) → exit 0",
    "turn.complete",
    "$.ui.open(receipts)",
    "/receipts → "
@@ -339,6 +418,7 @@
   "hooks": [
    "session.start",
    "classic.SessionStart{source=clear|resume|fork}",
+   "prompt.submit",
    "turn.start",
    "turn.step",
    "tool.call",
@@ -348,6 +428,7 @@
    "ui.close{id=?}",
    "ui.render{component=Pane}",
    "ui.render{component=AbovePrompt}",
+   "ui.render{component=SessionMode}",
    "ui.render{component=ToolUse}",
    "ui.render{component=ToolResult}",
    "ui.render{component=ToolGroup}",
@@ -372,6 +453,7 @@
    "$.fs.list (via hostOf)",
    "$.model.classify (via hostOf)",
    "$.model.complete (via hostOf)",
+   "$.process.run (via hostOf)",
    "$.session.cwd (via hostOf)",
    "$.session.model (via sessionModelOf)",
    "$.session.repo (via hostOf)",
@@ -384,22 +466,30 @@
    "$.ui.close",
    "$.ui.invalidate",
    "$.ui.open",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
-   "receipts.collapsed",
+   "buddy.switches",
+   "receipts.chatter",
+   "receipts.receiptLine",
    "receipts.rows",
    "receipts.rowsLast",
    "receipts.spike",
+   "receipts.switchRequests",
+   "receipts.switches",
    "receipts.tick",
    "receipts.toolsOpen",
    "receipts.working"
   ],
   "stateWrites": [
-   "receipts.collapsed",
+   "receipts.chatter",
+   "receipts.receiptLine",
    "receipts.rows",
    "receipts.rowsLast",
    "receipts.spike",
+   "receipts.switchRequests",
+   "receipts.switches",
    "receipts.tick",
    "receipts.toolsOpen",
    "receipts.working"
@@ -416,7 +506,7 @@
     "warnings": [],
     "notes": [
      "types ./.claude-plugin/types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./.claude-plugin/types/index.d.ts declares state: receipts.rows, receipts.rowsLast, receipts.working, receipts.collapsed, receipts.toolsOpen, receipts.spike, receipts.tick"
+     "types ./.claude-plugin/types/index.d.ts declares state: buddy.switches, receipts.rows, receipts.rowsLast, receipts.working, receipts.toolsOpen, receipts.chatter, receipts.receiptLine, receipts.switches, receipts.switchRequests, receipts.spike, receipts.tick"
     ],
     "gatingHooks": []
    },
@@ -427,21 +517,30 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, turn.start, turn.step, tool.call, classic.PostToolUse, turn.complete, command.run{command=receipts}, ui.close{id=?}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=Spinner}, ui.render{component=ToolProgress}, ui.render{component=TurnDuration}, ui.render{component=InfoNotice}, ui.render{component=CommandOutput}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}",
+      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, prompt.submit, turn.start, turn.step, tool.call, classic.PostToolUse, turn.complete, command.run{command=receipts}, ui.close{id=?}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, ui.render{component=SessionMode}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=Spinner}, ui.render{component=ToolProgress}, ui.render{component=TurnDuration}, ui.render{component=InfoNotice}, ui.render{component=CommandOutput}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}",
+      "./register.ts hooks on classic.SessionStart, classic.PostToolUse do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=receipts}",
       "./register.ts gating hook with .catch: classic.SessionStart{source=clear|resume|fork}",
+      "./register.ts gating hook with .catch: prompt.submit",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: classic.PostToolUse",
       "./register.ts gating hook with .catch: ui.close{id=?}",
-      "./register.ts calls: $.agent.list (via hostOf), $.agent.spawn (via hostOf), $.clock.after (via hostOf), $.clock.every (via hostOf), $.clock.now, $.command.register, $.command.run (via choose), $.config.list (via choose), $.config.set (via choose), $.fs.list (via hostOf), $.model.classify (via hostOf), $.model.complete (via hostOf), $.session.cwd (via hostOf), $.session.model (via sessionModelOf), $.session.repo (via hostOf), $.session.usage (via hostOf), $.state.get, $.state.set, $.store.delete (via hostOf), $.store.get (via hostOf), $.store.set (via hostOf), $.ui.close, $.ui.invalidate, $.ui.open, $.ui.resolve",
-      "./register.ts state writes: receipts.collapsed, receipts.rows, receipts.rowsLast, receipts.spike, receipts.tick, receipts.toolsOpen, receipts.working",
-      "./register.ts state reads: receipts.collapsed, receipts.rows, receipts.rowsLast, receipts.spike, receipts.tick, receipts.toolsOpen, receipts.working"
+      "./register.ts calls: $.agent.list (via hostOf), $.agent.spawn (via hostOf), $.clock.after (via hostOf), $.clock.every (via hostOf), $.clock.now, $.command.register, $.command.run (via choose), $.config.list (via choose), $.config.set (via choose), $.fs.list (via hostOf), $.model.classify (via hostOf), $.model.complete (via hostOf), $.process.run (via hostOf), $.session.cwd (via hostOf), $.session.model (via sessionModelOf), $.session.repo (via hostOf), $.session.usage (via hostOf), $.state.get, $.state.set, $.store.delete (via hostOf), $.store.get (via hostOf), $.store.set (via hostOf), $.ui.close, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.ts state writes: receipts.chatter, receipts.receiptLine, receipts.rows, receipts.rowsLast, receipts.spike, receipts.switchRequests, receipts.switches, receipts.tick, receipts.toolsOpen, receipts.working",
+      "./register.ts state reads: buddy.switches, receipts.chatter, receipts.receiptLine, receipts.rows, receipts.rowsLast, receipts.spike, receipts.switchRequests, receipts.switches, receipts.tick, receipts.toolsOpen, receipts.working",
+      "./register.ts state of other plugins, not checked (run validate in a session with them enabled): buddy.switches"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart{source=clear|resume|fork}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
        "hasCatch": true
       },
       {
@@ -464,8 +563,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "d1e4311e576a4e21"
+ "sourceHash": "e7b924033b997e90"
 }

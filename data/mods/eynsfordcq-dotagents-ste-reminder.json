@@ -1,0 +1,8 @@
+{
+ "slug": "eynsfordcq-dotagents-ste-reminder",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst EVERY = 3\nconst REMINDER = 'reminder: respond in ASD-STE100'\n// The terminal sends 'composer'. An SDK host (stream-json stdin) sends 'sdk'. Automatic prompts do not get the reminder.\nconst TYPED_ORIGINS = new Set(['composer', 'sdk'])\n\n// The reminder goes in a context block after the prompt. The model reads it, but the transcript keeps the prompt\n// as typed. The system prompt and earlier messages stay the same, so the prompt cache still matches.\nexport const register: Register = on => {\n  on('prompt.submit', async ($, e, next) => {\n    if (!TYPED_ORIGINS.has(e.origin.kind)) return next(e)\n\n    // The engine reads the count from the transcript, so it stays correct after a reload or a --resume.\n    // The count does not include this prompt.\n    const prompt = (await $.session.turns()) + 1\n    if (prompt % EVERY !== 0) return next(e)\n\n    return next({ ...e, context: [...(e.context ?? []), REMINDER] })\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"ste-reminder\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Appends an ASD-STE100 reminder line to every third prompt you type\"\n}"
+ }
+}

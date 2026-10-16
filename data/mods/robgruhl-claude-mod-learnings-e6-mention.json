@@ -1,0 +1,8 @@
+{
+ "slug": "robgruhl-claude-mod-learnings-e6-mention",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst SECRET = /(^|\\/)\\.env(\\.|$)|id_rsa|\\.pem$/\n\n// The guard everyone writes first: refuse Read on secret-looking paths.\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Read' }, async ($, e, next) => {\n    if (SECRET.test(e.file_path)) return { deny: `secret-guard: ${e.file_path} looks like a secret` }\n    return next(e)\n  }).catch(($, e, next) => (next.called ? next(e) : { deny: 'secret-guard failed' }))\n\n  // The second door: files named after @ in a prompt. Right shape: { deny } alone.\n  on('prompt.mention', { path: /\\/right\\// }, async ($, e, next) => {\n    if (SECRET.test(e.path)) return { deny: `secret-guard: @${e.mention} looks like a secret` }\n    return next(e)\n  }).catch(($, e, next) => (next.called ? next(e) : { deny: 'secret-guard failed' }))\n\n  // Our first attempt, kept on purpose: { type: null, deny } is not a shape prompt.mention accepts.\n  on('prompt.mention', { path: /\\/wrong\\// }, async ($, e, next) => {\n    if (SECRET.test(e.path)) return { type: null, deny: `secret-guard: @${e.mention} looks like a secret` } as never\n    return next(e)\n  }).catch(($, e, next) => (next.called ? next(e) : { deny: `catch handler answered (${next.error.kind})` }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"e6-mention\",\n  \"version\": \"0.1.0\",\n  \"description\": \"A secrets guard on tool.call alone, and on prompt.mention as well\",\n  \"author\": {\n    \"name\": \"Rob Gruhl\"\n  }\n}"
+ }
+}

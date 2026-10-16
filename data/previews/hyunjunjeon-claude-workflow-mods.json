@@ -1,6 +1,6 @@
 {
  "slug": "hyunjunjeon-claude-workflow-mods",
- "generatedAt": "2026-10-10T14:44:43.448Z",
+ "generatedAt": "2026-10-16T14:17:32.554Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -36,7 +36,13 @@
     "event": "skill.prompt"
    },
    {
+    "event": "prompt.edit"
+   },
+   {
     "event": "prompt.submit"
+   },
+   {
+    "event": "agent.spawn"
    },
    {
     "event": "classic.PermissionRequest"
@@ -54,6 +60,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__dag-workflow__dag"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__dag-workflow__board"
     }
    },
    {
@@ -86,6 +98,12 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "/^(?:Edit|Write)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "/^SubagentHandback$/"
     }
    },
@@ -104,15 +122,19 @@
    },
    {
     "name": "dag",
-    "description": "Open the DAG pane, or run, list, inspect, approve, cancel or retry DAG workflows, or set enforcement",
-    "argumentHint": "[list | run <file> | preview <file> | status <run> | cancel <run> | retry <run> [node...] | approve <run> | reject <run> [reason] | approval [off|always] | enforce [strict|guide|off]]",
+    "description": "Manage DAG workflows and enforcement, or learn and manage reusable skills from the whole session",
+    "argumentHint": "[list | run <file> | preview <file> | status <run> | cancel <run> | retry <run> [node...] | approve <run> | reject <run> [reason] | approval [off|always] | enforce [strict|auto|guide|off] | learn | learning [status|on|off|prune]]",
     "immediate": true
    }
   ],
   "tools": [
    {
     "name": "dag",
-    "description": "The only way to get work done in this session: plan the task as a dependency-ordered DAG of subagent nodes and run it here. start returns at once. Do not poll: when the run settles you receive a summary with every node's output. Treat node completion claims as false until you verify them. Every node needs verify: 1-16 checks run by the plugin before the node completes, {kind:\"file\",path,contains?|absent?|matches?|lastLine?|equals?} (path relative, or absolute read-only; a folder allows contains/absent) or {kind:\"command\",argv,expect?:{exit,stdout,stderr}} (exit 0 unless expect.exit); start/amend refuse nodes without them. A node receives the outputs of the nodes in its dependsOn, so list exactly the nodes whose results it needs. Ready nodes run in parallel waves; a failed node skips its dependents. Definition: \"key\" (same key and definition returns the existing run; a different definition under that key is refused), \"name\", optional \"goal\" (shown to every node) and \"nodes\". \"review\":{request} and \"commit\":[{message,paths}] add the review pair and a commit node. Node: \"id\", a self-contained \"prompt\" saying what to do and produce, optional \"dependsOn\", \"category\" (model routing; Jev may override it), \"agent\" (subagent type such as Explore), \"writes\" (project-relative paths, for session conflict display), \"label\", \"task_summary\", \"load_skills\". Actions: start {definition} or start {path} (a project-relative .yaml/.yml/.json definition file); start {..., dryRun:true} validates and previews waves, models, write conflicts and warnings, starting nothing; list; context; decisions; sessions; snapshot {run_id}; wait {run_id} (current snapshot, never blocks); cancel {run_id, reason}; retry {run_id, node_id|node_ids, prompt} (failed/cancelled nodes and their skipped dependents; completed nodes are reused); amend {run_id, definition} (re-runs changed nodes and their dependents, adds nodes); send {run_id, node_id, message} (steer a running node); attach {run_id} (adopt a run from another session)."
+    "description": "The only way to get work done in this session: plan the task as a dependency-ordered DAG of subagent nodes and run it here. start returns at once. Do not poll: when the run settles you receive a summary with every node's output. Treat node completion claims as false until you verify them. Every node needs verify: 1-16 checks run by the plugin before the node completes, {kind:\"file\",path,contains?|absent?|matches?|lastLine?|equals?} (path relative, or absolute read-only; a folder allows contains/absent) or {kind:\"command\",argv,expect?:{exit,stdout,stderr}} (exit 0 unless expect.exit); start/amend refuse nodes without them. A node receives the outputs of the nodes in its dependsOn, so list exactly the nodes whose results it needs. Ready nodes run in parallel waves; a failed node skips its dependents. Definition: \"key\" (same key and definition returns the existing run; a different definition under that key is refused), \"name\", optional \"goal\" (shown to every node) and \"nodes\". \"review\":{request} and \"commit\":[{message,paths}] add the review pair and a commit node. Node: \"id\", a self-contained \"prompt\" saying what to do and produce, optional \"dependsOn\", \"category\" (model routing; Jev may override), \"agent\" (subagent type such as Explore), \"writes\" (project-relative paths, for session conflict display), \"label\", \"task_summary\", \"load_skills\". Actions: start {definition} or start {path} (a project-relative .yaml/.yml/.json definition file); start {..., dryRun:true} previews waves, models, write conflicts and warnings, starting nothing; start {preview_id} runs it as previewed; list; context; decisions; sessions; snapshot {run_id}; wait {run_id} (current snapshot, never blocks); cancel {run_id, reason}; retry {run_id, node_id|node_ids, prompt} (failed/cancelled nodes and their skipped dependents; completed nodes are reused); amend {run_id, definition} (re-runs changed nodes and their dependents, adds nodes); send {run_id, node_id, message} (steer a running node); attach {run_id} (adopt a run from another session)."
+   },
+   {
+    "name": "board",
+    "description": "The board is shown to the user in the /dag pane's Board section (key b). Use it when the user asks to understand something with several parts (how it works, a comparison, what changed, a decision) and for the interview and PM ledgers. Write in this order: a section (what and why), ONE diagram (flow: branches; sequence: who calls whom), then the few lines that carry the mechanism (code_peek; code: your snippet; trace: a run quote; diff: a git change). Draw a few blocks per edit; call open once after the first edit. Read the board back with get before you finish. Flow edges may not form a cycle: draw a loop as a note. code_peek and diff take a project-relative path and at most 40 lines. Edits are atomic. Actions: create {title} returns board_id; edit {board_id, edits} (1-20); get {board_id}; list; open {board_id} shows it; export {board_id} returns markdown. Edits: {op:\"insert\", block, afterId?} (appends, or after afterId); {op:\"update\", id, changes} (merges fields; \"\" clears an optional one; never id, type or lines); {op:\"replace\", id, block}; {op:\"remove\", id}; {op:\"move\", id, afterId?} (after afterId, else to the end). Blocks (limits in characters; ? = optional; all but section and divider take title? 80): section {title 1-80, text? 4000}; callout {tone info|decision|risk|warning, text 1-1000}; table {columns 1-6, rows <=30 (each as long as columns, cells <=80)}; code_peek {path, ref?, start, end (1-based, end-start < 40), note? 200}; code {code 1-4000 as sent, <=40 lines of <=240, language? 20, note? 200}; trace {run, node, part output|answer|error|verification, note? 200}; diff {ref, path?, note? 200} quotes a git diff the host runs; flow {nodes 1-24 [{id, label 1-40, kind? process|decision|terminal, note? 80}], edges <=48 [{from, to, label?, style? dashed}]}; sequence {participants 2-8 [{id, label 1-24}], steps 1-40 [{from, to, label 1-60, kind? call|return|async|note, note? 80}]}; board_ref {board} links another board of this session; divider {} is a rule between groups. A board holds at most 60 blocks."
    }
   ],
   "panes": [
@@ -124,61 +146,42 @@
   "toasts": [],
   "logs": [
    "Jev API inactive: TYPESAFE_API_KEY is not set; using the session model, billed to your Claude plan",
-   "refused Grep in the main conversation; work runs in DAG nodes",
-   "refused Edit in the main conversation; work runs in DAG nodes",
-   "refused Write in the main conversation; work runs in DAG nodes",
-   "refused Write in the main conversation; work runs in DAG nodes",
-   "refused Bash in the main conversation; work runs in DAG nodes",
-   "refused Bash in the main conversation; work runs in DAG nodes"
+   "could not initialize session learning: ENOENT: /Users/dev/.claude/dag-workflow/learning/sessions",
+   "dag-workflow: Jev model fallback started (2 question(s) in 1 request(s))",
+   "Jev model fallback returned incomplete decisions; keeping existing decisions for unanswered questions",
+   "dag-workflow: turn mode direct: Jev invalid-response",
+   "dag-workflow: turn surface chat: Jev invalid-response"
   ],
-  "denies": [
-   {
-    "tool": "Grep: ",
-    "reason": "dag-workflow refused Grep in the main conversation: Grep changes state or delegates work.\nDAG orchestration is mandatory here: this conversation only plans, reads (Read, LSP, read-only Bash, web), asks and orchestrates.\nPut this work into a DAG node instead: plan it with the dag-workflow:planning sk"
-   },
-   {
-    "tool": "Edit: /work/app/src/auth.ts",
-    "reason": "dag-workflow refused Edit in the main conversation: Edit changes state or delegates work.\nDAG orchestration is mandatory here: this conversation only plans, reads (Read, LSP, read-only Bash, web), asks and orchestrates.\nPut this work into a DAG node instead: plan it with the dag-workflow:planning sk"
-   },
-   {
-    "tool": "Write: /work/app/src/audit.ts",
-    "reason": "dag-workflow refused Write in the main conversation: Write changes state or delegates work.\nDAG orchestration is mandatory here: this conversation only plans, reads (Read, LSP, read-only Bash, web), asks and orchestrates.\nPut this work into a DAG node instead: plan it with the dag-workflow:planning "
-   },
-   {
-    "tool": "Write: /work/app/src/cache.ts",
-    "reason": "dag-workflow refused Write in the main conversation: Write changes state or delegates work.\nDAG orchestration is mandatory here: this conversation only plans, reads (Read, LSP, read-only Bash, web), asks and orchestrates.\nPut this work into a DAG node instead: plan it with the dag-workflow:planning "
-   },
-   {
-    "tool": "Bash: bun test",
-    "reason": "dag-workflow refused Bash in the main conversation: this Bash command is not read-only (bun is not on the read-only command list).\nDAG orchestration is mandatory here: this conversation only plans, reads (Read, LSP, read-only Bash, web), asks and orchestrates.\nPut this work into a DAG node instead: "
-   },
-   {
-    "tool": "Bash: rm -rf build && git push --force origin main",
-    "reason": "dag-workflow refused Bash in the main conversation: this Bash command is not read-only (rm is not on the read-only command list).\nDAG orchestration is mandatory here: this conversation only plans, reads (Read, LSP, read-only Bash, web), asks and orchestrates.\nPut this work into a DAG node instead: p"
-   }
-  ],
+  "denies": [],
   "rewrites": [
    {
     "event": "prompt.submit",
-    "summary": "context added: [\"[dag-workflow] DAG orchestration is mandatory for this task.\\n- Before your first DAG in this session, load the dag-workflow:planning skil…"
+    "summary": "context added: [\"[dag-workflow] This request is small: do it directly in this conversation; no DAG is needed.\\n- If it turns out to need three or more inde…"
    }
   ],
   "apiCalls": {
    "$.state.get": 1,
-   "$.env.get": 1,
-   "$.ui.log": 7,
+   "$.env.get": 2,
+   "$.ui.log": 6,
    "$.session.id": 1,
-   "$.tool.register": 1,
+   "$.tool.register": 2,
    "$.session.cwd": 1,
-   "$.fs.exists": 6,
+   "$.fs.exists": 9,
    "$.store.keys": 2,
-   "$.clock.now": 6,
+   "$.clock.now": 9,
+   "$.process.run": 2,
+   "$.fs.stat": 1,
    "$.store.set": 1,
    "$.store.get": 3,
    "$.agent.list": 2,
-   "$.ui.invalidate": 1,
+   "$.ui.invalidate": 2,
    "$.clock.every": 2,
    "$.command.register": 2,
+   "$.session.messages": 1,
+   "$.clock.after": 1,
+   "$.model.complete": 1,
+   "$.fs.write": 2,
+   "$.fs.read": 7,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -190,6 +193,10 @@
    {
     "kind": "every",
     "ms": 10000
+   },
+   {
+    "kind": "after",
+    "ms": 8000
    }
   ],
   "sites": {
@@ -267,6 +274,17 @@
              "hotkey": "s",
              "plain": true,
              "label": "Sessions",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "section-board",
+             "hotkey": "b",
+             "plain": true,
+             "label": "Board",
              "onPress": "[fn]"
             },
             "children": []
@@ -416,15 +434,19 @@
    }
   },
   "script": [
+   "$.process.run(mkdir -p /Users/dev/.claude/dag-workflow/learning/sessions) → exit 0",
    "session.start",
+   "$.process.run(mkdir -p /work/app/.claude/dag/decisions) → exit 0",
+   "$.fs.write(/work/app/.claude/dag/.gitignore)",
+   "$.fs.write(/work/app/.claude/dag/decisions/preview-session.json)",
    "tool.call Read",
-   "tool.call Grep denied: dag-workflow refused Grep in the main conversation: Grep changes state or delegates work.\nDAG orches…",
-   "tool.call Edit denied: dag-workflow refused Edit in the main conversation: Edit changes state or delegates work.\nDAG orches…",
-   "tool.call Write denied: dag-workflow refused Write in the main conversation: Write changes state or delegates work.\nDAG orch…",
-   "tool.call Write denied: dag-workflow refused Write in the main conversation: Write changes state or delegates work.\nDAG orch…",
-   "tool.call Bash denied: dag-workflow refused Bash in the main conversation: this Bash command is not read-only (bun is not o…",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
-   "tool.call Bash denied: dag-workflow refused Bash in the main conversation: this Bash command is not read-only (rm is not on…",
+   "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
    "/dag-ping → dag-workflow loaded",
@@ -447,27 +469,34 @@
    "session.compact",
    "turn.step",
    "skill.prompt",
+   "prompt.edit",
    "prompt.submit",
+   "agent.spawn",
    "classic.PermissionRequest",
    "tool.check",
    "tool.call",
    "turn.complete",
    "tool.call{tool=mcp__dag-workflow__dag}",
+   "tool.call{tool=mcp__dag-workflow__board}",
    "command.run{command=dag-ping}",
    "command.run{command=dag}",
    "turn.start",
    "ui.render{component=Pane}",
    "ui.render{component=AbovePrompt}",
+   "tool.call{tool=/\"^(?:Edit|Write)$\"/}",
    "tool.call{tool=/\"^SubagentHandback$\"/}",
    "ui.message",
    "ui.close"
   ],
   "calls": [
    "$.agent.list (via drawPane",
+   "initializeLearning",
    "recoverRuns)",
-   "$.agent.spawn (via startNode)",
+   "$.agent.spawn (via startLearning",
+   "startNode)",
    "$.clock.after (via afterHook",
    "evaluateJevHttp",
+   "evaluateJevWithin",
    "waitForBackground)",
    "$.clock.every",
    "$.clock.now",
@@ -475,42 +504,44 @@
    "$.env.get",
    "$.fs.exists (via clearStaleNotes",
    "ensureDir",
+   "fileCheckResult",
+   "inheritBoards",
+   "initializeLearning",
    "listIfPresent",
+   "loadBoards",
    "loadMetadata",
    "loadRuns",
-   "refreshExternalRuns)",
+   "pruneLearningData",
+   "publishLearningTransaction",
+   "readLearningLibrary",
+   "readTrace",
+   "refreshExternalRuns",
+   "updateLockedLibrary)",
    "$.fs.list (via folderFiles",
    "listIfPresent",
    "loadRuns",
+   "pruneLearningData",
    "refreshExternalRuns)",
    "$.fs.read (via fileCheckResult",
    "folderCheckResult",
    "handoffAction",
+   "inheritBoards",
+   "initializeLearning",
+   "lensExpansion",
+   "loadBoards",
    "loadMetadata",
    "loadRuns",
+   "pruneLearningData",
+   "publishLearningTransaction",
    "readDefinitionFile",
-   "refreshExternalRuns)",
-   "$.fs.stat (via fileCheckResult",
-   "handoffAction)",
-   "$.fs.write (via ensureDir",
-   "persist",
-   "persistContext",
-   "persistDecisions",
-   "verifyNode",
-   "writeReport)",
-   "$.http.fetch (via evaluateJevHttp)",
-   "$.model.complete (via completeJevPart)",
-   "$.process.run (via commandCheckResult",
-   "ensureDir",
-   "handoffAction",
-   "holdUntilSettled",
-   "removePath)",
-   "$.prompt.submit (via submitRunNews)",
-   "$.session.cwd (via commandFilePath",
-   "loadRuns",
-   "requestedDefinition)",
-   "$.session.id",
-   "$.session.messages (via pollTran… [+571 chars]"
+   "readLearningLibrary",
+   "readOrEmpty",
+   "readPeek",
+   "readTrace",
+   "refreshExternalRuns",
+   "reviewerFindings",
+   "updateLockedLibrary)",
+   "$.fs.stat (via fileCheckRes… [+1327 chars]"
   ],
   "stateReads": [
    "dag-workflow.planningLoaded"
@@ -519,6 +550,7 @@
    "dag-workflow.planningLoaded"
   ],
   "envReads": [
+   "HOME",
    "TYPESAFE_API_KEY"
   ],
   "raw": {
@@ -543,22 +575,26 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, session.end, session.receive, prompt.context, session.compact, turn.step, skill.prompt, prompt.submit, classic.PermissionRequest, tool.check, tool.call, turn.complete, tool.call{tool=mcp__dag-workflow__dag}, command.run{command=dag-ping}, command.run{command=dag}, turn.start, ui.render{component=Pane}, ui.render{component=AbovePrompt}, tool.call{tool=/\"^SubagentHandback$\"/}, ui.message, ui.close",
+      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, session.end, session.receive, prompt.context, session.compact, turn.step, skill.prompt, prompt.edit, prompt.submit, agent.spawn, classic.PermissionRequest, tool.check, tool.call, turn.complete, tool.call{tool=mcp__dag-workflow__dag}, tool.call{tool=mcp__dag-workflow__board}, command.run{command=dag-ping}, command.run{command=dag}, turn.start, ui.render{component=Pane}, ui.render{component=AbovePrompt}, tool.call{tool=/\"^(?:Edit|Write)$\"/}, tool.call{tool=/\"^SubagentHandback$\"/}, ui.message, ui.close",
+      "./register.ts hooks on classic.SessionStart, prompt.context, session.compact, skill.prompt, classic.PermissionRequest do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=dag-ping}",
       "./register.ts answers its own command: command.run{command=dag}",
       "./register.ts gating hook without .catch: classic.SessionStart{source=clear|resume|fork}",
       "./register.ts gating hook without .catch: session.receive",
       "./register.ts gating hook without .catch: session.compact",
       "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: agent.spawn",
       "./register.ts gating hook without .catch: classic.PermissionRequest",
       "./register.ts gating hook without .catch: tool.check",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.call{tool=mcp__dag-workflow__dag}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__dag-workflow__board}",
+      "./register.ts gating hook without .catch: tool.call{tool=/\"^(?:Edit|Write)$\"/}",
       "./register.ts gating hook without .catch: tool.call{tool=/\"^SubagentHandback$\"/}",
       "./register.ts gating hook without .catch: ui.close",
-      "./register.ts calls: $.agent.list (via drawPane, recoverRuns), $.agent.spawn (via startNode), $.clock.after (via afterHook, evaluateJevHttp, waitForBackground), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via clearStaleNotes, ensureDir, listIfPresent, loadMetadata, loadRuns, refreshExternalRuns), $.fs.list (via folderFiles, listIfPresent, loadRuns, refreshExternalRuns), $.fs.read (via fileCheckResult, folderCheckResult, handoffAction, loadMetadata, loadRuns, readDefinitionFile, refreshExternalRuns), $.fs.stat (via fileCheckResult, handoffAction), $.fs.write (via ensureDir, persist, persistContext, persistDecisions, verifyNode, writeReport), $.http.fetch (via evaluateJevHttp), $.model.complete (via completeJevPart), $.process.run (via commandCheckResult, ensureDir, handoffAction, holdUntilSettled, removePath), $.prompt.submit (via submitRunNews), $.session.cwd (via commandFilePath, loadRuns, requestedDefinition), $.session.id, $.session.messages (via pollTran… [+571 chars]",
+      "./register.ts calls: $.agent.list (via drawPane, initializeLearning, recoverRuns), $.agent.spawn (via startLearning, startNode), $.clock.after (via afterHook, evaluateJevHttp, evaluateJevWithin, waitForBackground), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via clearStaleNotes, ensureDir, fileCheckResult, inheritBoards, initializeLearning, listIfPresent, loadBoards, loadMetadata, loadRuns, pruneLearningData, publishLearningTransaction, readLearningLibrary, readTrace, refreshExternalRuns, updateLockedLibrary), $.fs.list (via folderFiles, listIfPresent, loadRuns, pruneLearningData, refreshExternalRuns), $.fs.read (via fileCheckResult, folderCheckResult, handoffAction, inheritBoards, initializeLearning, lensExpansion, loadBoards, loadMetadata, loadRuns, pruneLearningData, publishLearningTransaction, readDefinitionFile, readLearningLibrary, readOrEmpty, readPeek, readTrace, refreshExternalRuns, reviewerFindings, updateLockedLibrary), $.fs.stat (via fileCheckRes… [+1327 chars]",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: TYPESAFE_API_KEY",
+      "./register.ts env reads: HOME, TYPESAFE_API_KEY",
       "./register.ts state writes: dag-workflow.planningLoaded",
       "./register.ts state reads: dag-workflow.planningLoaded",
       "./register.ts surface modules: hooks/ui/graph-client.ts, hooks/ui/inspector-client.ts"
@@ -590,6 +626,12 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "classic.PermissionRequest",
        "hook": "classic.PermissionRequest",
        "hasCatch": false
@@ -615,6 +657,18 @@
       {
        "module": "./register.ts",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__dag-workflow__board}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^(?:Edit|Write)$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=/\"^SubagentHandback$\"/}",
        "hasCatch": false
       },
@@ -630,5 +684,5 @@
    "advice": []
   }
  },
- "sourceHash": "c03d6672984e583c"
+ "sourceHash": "3be616bfaf525540"
 }

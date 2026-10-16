@@ -1,9 +1,21 @@
 {
  "slug": "ak110-dotfiles-agent-toolkit",
- "generatedAt": "2026-10-10T14:44:54.166Z",
+ "generatedAt": "2026-10-16T14:18:36.047Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "/^mcp__/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__/"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -11,19 +23,10 @@
     "event": "turn.complete"
    },
    {
-    "event": "tool.check",
-    "matcher": {
-     "tool": "/__compact_conversation$/"
-    }
-   },
-   {
     "event": "tool.call",
     "matcher": {
      "tool": "/__compact_conversation$/"
     }
-   },
-   {
-    "event": "tool.check"
    },
    {
     "event": "tool.call"
@@ -45,13 +48,28 @@
     "matcher": {
      "tool": "mcp__plugin_agent-toolkit_agents_server__start"
     }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "turnId": "/^/"
+    }
+   },
+   {
+    "event": "classic.StopFailure",
+    "matcher": {
+     "error": "rate_limit"
+    }
    }
   ],
   "commands": [],
   "tools": [
    {
     "name": "send_to_user",
-    "description": "ユーザーへ届ける本文を、途中・末尾ともにユーザーの画面へそのまま表示する。質問への回答、確認結果、判明した事実や原因、成果物、進捗、作業完了報告と次の工程の予告に使う。ユーザーの判断を求める確認は、このツールではなく既存の質問手段を使う。推論は送らない。"
+    "description": "ユーザーへ届ける本文を、途中・末尾ともにユーザーの画面へそのまま表示する。質問への回答、確認結果、判明した事実や原因、成果物、進捗、作業完了報告と次の工程の予告に使う。ユーザーの判断を求める確認には既存の質問手段を使う。推論は送らない。"
    },
    {
     "name": "compact_conversation",
@@ -64,10 +82,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.env.get": 8,
    "$.tool.register": 2,
-   "$.env.get": 5,
    "$.session.id": 2,
    "$.fs.write": 2,
+   "$.clock.now": 1,
+   "$.session.usage": 1,
    "$.fs.read": 1
   },
   "timers": [],
@@ -99,18 +119,22 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "tool.check{tool=/\"^mcp__\"/}",
+   "tool.call{tool=/\"^mcp__\"/}",
    "session.start",
    "turn.complete",
-   "tool.check{tool=/\"__compact_conversation$\"/}",
    "tool.call{tool=/\"__compact_conversation$\"/}",
-   "tool.check",
    "tool.call",
    "ui.render{component=ToolUse}",
    "ui.render{component=ToolResult}",
-   "tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}"
+   "tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
+   "turn.start",
+   "turn.complete{turnId=/\"^\"/}",
+   "classic.StopFailure{error=rate_limit}"
   ],
   "calls": [
    "$.clock.after",
+   "$.clock.now",
    "$.command.run",
    "$.env.get",
    "$.fs.read",
@@ -118,16 +142,19 @@
    "$.process.run (via mount)",
    "$.prompt.submit",
    "$.session.id",
+   "$.session.usage",
    "$.tool.call (via deleteSessionCrons",
    "mount)",
    "$.tool.check (via deleteSessionCrons",
    "mount)",
    "$.tool.register",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.status (via schedule)"
   ],
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "AGENT_TOOLKIT_DELEGATED_SESSION",
    "AGENT_TOOLKIT_OWNER_SESSION",
    "CLAUDE_CONFIG_DIR",
    "HOME",
@@ -152,34 +179,36 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.complete, tool.check{tool=/\"__compact_conversation$\"/}, tool.call{tool=/\"__compact_conversation$\"/}, tool.check, tool.call, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
-      "./register.ts gating hook without .catch: tool.check{tool=/\"__compact_conversation$\"/}",
+      "./register.ts hooks: tool.check{tool=/\"^mcp__\"/}, tool.call{tool=/\"^mcp__\"/}, session.start, turn.complete, tool.call{tool=/\"__compact_conversation$\"/}, tool.call, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}, turn.start, turn.complete{turnId=/\"^\"/}, classic.StopFailure{error=rate_limit}",
+      "./register.ts hooks on classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook with .catch: tool.check{tool=/\"^mcp__\"/}",
+      "./register.ts gating hook with .catch: tool.call{tool=/\"^mcp__\"/}",
       "./register.ts gating hook without .catch: tool.call{tool=/\"__compact_conversation$\"/}",
-      "./register.ts gating hook with .catch: tool.check",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
-      "./register.ts calls: $.clock.after, $.command.run, $.env.get, $.fs.read, $.fs.write, $.process.run (via mount), $.prompt.submit, $.session.id, $.tool.call (via deleteSessionCrons, mount), $.tool.check (via deleteSessionCrons, mount), $.tool.register, $.ui.resolve",
+      "./register.ts gating hook without .catch: classic.StopFailure{error=rate_limit}",
+      "./register.ts calls: $.clock.after, $.clock.now, $.command.run, $.env.get, $.fs.read, $.fs.write, $.process.run (via mount), $.prompt.submit, $.session.id, $.session.usage, $.tool.call (via deleteSessionCrons, mount), $.tool.check (via deleteSessionCrons, mount), $.tool.register, $.ui.resolve, $.ui.status (via schedule)",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: AGENT_TOOLKIT_OWNER_SESSION, CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
+      "./register.ts env reads: AGENT_TOOLKIT_DELEGATED_SESSION, AGENT_TOOLKIT_OWNER_SESSION, CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "tool.check",
-       "hook": "tool.check{tool=/\"__compact_conversation$\"/}",
-       "hasCatch": false
+       "hook": "tool.check{tool=/\"^mcp__\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__\"/}",
+       "hasCatch": true
       },
       {
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=/\"__compact_conversation$\"/}",
        "hasCatch": false
-      },
-      {
-       "module": "./register.ts",
-       "pattern": "tool.check",
-       "hook": "tool.check",
-       "hasCatch": true
       },
       {
        "module": "./register.ts",
@@ -192,6 +221,12 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__plugin_agent-toolkit_agents_server__start}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.StopFailure",
+       "hook": "classic.StopFailure{error=rate_limit}",
+       "hasCatch": false
       }
      ]
     }
@@ -199,5 +234,5 @@
    "advice": []
   }
  },
- "sourceHash": "9053abb33d39cc0f"
+ "sourceHash": "a5ce7c6043b9cc2a"
 }

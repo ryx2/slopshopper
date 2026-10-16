@@ -1,9 +1,12 @@
 {
  "slug": "zycck-claude-mods-plan-progress",
- "generatedAt": "2026-10-09T15:31:41.883Z",
+ "generatedAt": "2026-10-16T14:15:41.047Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "prompt.attachment"
+   },
    {
     "event": "turn.start"
    },
@@ -24,6 +27,9 @@
    },
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "prompt.compose"
@@ -67,6 +73,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "plan-progress-settings"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "progress-clear"
     }
    },
@@ -74,6 +86,13 @@
     "event": "ui.render",
     "matcher": {
      "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "settings"
     }
    },
    {
@@ -117,7 +136,12 @@
    {
     "name": "plan-progress-autoclose",
     "description": "Turn on or off finished bars leaving on their own",
-    "output": "Finished bars stay until closed; /plan-progress-autoclose turns auto-close back on."
+    "output": "Finished bars leave 30 s after they finish; /plan-progress-autoclose keeps them."
+   },
+   {
+    "name": "plan-progress-settings",
+    "description": "Open the plan-progress settings",
+    "output": "Settings are open."
    }
   ],
   "tools": [
@@ -126,25 +150,49 @@
     "description": "Live progress bar above the prompt, one per id. Create with title + stages; update with short ops (next, done, active, failed) or state."
    }
   ],
-  "panes": [],
-  "toasts": [],
-  "logs": [],
+  "panes": [
+   {
+    "id": "settings",
+    "title": "Plan progress"
+   }
+  ],
+  "toasts": [
+   "plan-progress: the mcp__plan-progress__plan_progress tool did not reach this session, so Claude cannot draw bars. An antivirus web filter (AVG Web Shield, for one) or a proxy is likely blocking 127.0.0.1: add 127.0.0.1 to its exceptions, or set NO_PROXY=127.0.0.1,localhost, then restart Claude Code."
+  ],
+  "logs": [
+   "plan-progress: the mcp__plan-progress__plan_progress tool did not reach this session, so Claude cannot draw bars. An antivirus web filter (AVG Web Shield, for one) or a proxy is likely blocking 127.0.0.1: add 127.0.0.1 to its exceptions, or set NO_PROXY=127.0.0.1,localhost, then restart Claude Code."
+  ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 13,
+   "$.state.get": 23,
+   "$.store.get": 5,
+   "$.state.set": 4,
+   "$.clock.now": 2,
    "$.tool.register": 1,
    "$.session.id": 1,
-   "$.store.get": 2,
-   "$.config.list": 1,
-   "$.clock.every": 1,
-   "$.command.register": 4,
-   "$.state.set": 1,
-   "$.clock.now": 1,
+   "$.config.list": 2,
+   "$.env.get": 10,
+   "$.fs.read": 6,
+   "$.clock.after": 1,
+   "$.clock.every": 2,
+   "$.command.register": 5,
+   "$.tool.list": 1,
+   "$.ui.log": 1,
+   "$.ui.toast": 1,
    "$.store.set": 1,
-   "$.ui.resolve": 1
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 15000
+   },
+   {
+    "kind": "every",
+    "ms": 1800000
+   },
    {
     "kind": "every",
     "ms": 1000
@@ -165,11 +213,21 @@
      },
      "children": [
       {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "⚡   – tok/s"
+       ]
+      },
+      {
        "type": "Button",
        "props": {
-        "key": "progress-toggle",
+        "key": "settings",
+        "plain": true,
         "dimColor": true,
-        "label": "Progress",
+        "label": "⚙",
         "onPress": "[fn]"
        },
        "children": []
@@ -184,6 +242,558 @@
        }
       }
      ]
+    }
+   },
+   "Pane": {
+    "settings": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "section-0",
+         "flexDirection": "column",
+         "marginTop": 0
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Appearance"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-twinkle",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "alignItems": "center",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate"
+                },
+                "children": [
+                 "Effects"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "twinkle",
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "suggestion",
+                 "dimColor": false
+                },
+                "children": [
+                 "━━●"
+                ]
+               },
+               " On "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "Twinkling dots in the bar and the agent rows"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-speed",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "alignItems": "center",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate"
+                },
+                "children": [
+                 "Speed"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "speed",
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "suggestion",
+                 "dimColor": false
+                },
+                "children": [
+                 "━━●"
+                ]
+               },
+               " On "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "Show ⚡ – tok/s in the footer"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "section-1",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Behavior"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-autoclose",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "alignItems": "center",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate"
+                },
+                "children": [
+                 "Auto-close"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "autoclose",
+               "autoFocus": true,
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "suggestion",
+                 "dimColor": false
+                },
+                "children": [
+                 "━━●"
+                ]
+               },
+               " On "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "A finished bar leaves on its own"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-stays",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "alignItems": "center",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate"
+                },
+                "children": [
+                 "Stays for"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "key": "stays",
+               "flexDirection": "row",
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "stay-10",
+                 "dimColor": false,
+                 "label": "10 s",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "stay-30",
+                 "dimColor": false,
+                 "variant": "primary",
+                 "label": "30 s",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               },
+               {
+                "type": "Button",
+                "props": {
+                 "key": "stay-60",
+                 "dimColor": false,
+                 "label": "60 s",
+                 "onPress": "[fn]"
+                },
+                "children": []
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "How long a finished bar stays"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-sounds",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "alignItems": "center",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate"
+                },
+                "children": [
+                 "Sounds"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "sounds",
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "suggestion",
+                 "dimColor": false
+                },
+                "children": [
+                 "━━●"
+                ]
+               },
+               " On "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "A chime on an error, a question and the finish"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "section-2",
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "About"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-updateCheck",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "alignItems": "center",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate"
+                },
+                "children": [
+                 "Check for updates"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "updateCheck",
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "suggestion",
+                 "dimColor": false
+                },
+                "children": [
+                 "━━●"
+                ]
+               },
+               " On "
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "Look for a new release every 6 hours"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "row-version",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "alignItems": "center",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexGrow": 1,
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate"
+                },
+                "children": [
+                 "Version"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "version",
+               "dimColor": false,
+               "label": "↻ ?",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "Press it to look for a newer release"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Plan progress"
     }
    }
   },
@@ -202,7 +812,9 @@
    "/progress → No plan yet. A bar appears when Claude starts a task with several steps.",
    "/progress-clear → Progress bars removed.",
    "/progress-agents → No agent strips to fold.",
-   "/plan-progress-autoclose → Finished bars stay until closed; /plan-progress-autoclose turns auto-close back …"
+   "/plan-progress-autoclose → Finished bars leave 30 s after they finish; /plan-progress-autoclose keeps them.",
+   "$.ui.open(settings)",
+   "/plan-progress-settings → Settings are open."
   ],
   "console": [],
   "warnings": []
@@ -212,12 +824,14 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "prompt.attachment",
    "turn.start",
    "prompt.submit",
    "tool.call",
    "classic.Stop",
    "config.set{key=theme}",
    "session.start",
+   "session.end",
    "prompt.compose",
    "tool.call{tool=mcp__plan-progress__plan_progress}",
    "tool.call{tool=AskUserQuestion}",
@@ -225,8 +839,10 @@
    "command.run{command=progress}",
    "command.run{command=progress-agents}",
    "command.run{command=plan-progress-autoclose}",
+   "command.run{command=plan-progress-settings}",
    "command.run{command=progress-clear}",
    "ui.render{component=SessionMode}",
+   "ui.render{component=Pane, requestId=settings}",
    "ui.render{component=AbovePrompt}",
    "agent.spawn",
    "classic.PermissionRequest",
@@ -235,42 +851,79 @@
    "turn.complete"
   ],
   "calls": [
+   "$.agent.list",
    "$.audio.play (via play)",
-   "$.clock.after (via runReel)",
+   "$.clock.after",
    "$.clock.every",
    "$.clock.now",
+   "$.clock.sleep (via setOption)",
    "$.command.register",
+   "$.command.run (via reloadPlugins)",
    "$.config.list",
-   "$.fs.write (via runReel)",
+   "$.config.set (via setOption)",
+   "$.env.get (via autoCheck",
+   "claudeCli",
+   "fetchNewest",
+   "readAppLocale",
+   "readInstall",
+   "readSystemLocale)",
+   "$.fs.read (via readAppLocale",
+   "readInstall)",
+   "$.http.fetch (via fetchNewest)",
    "$.process.run (via play",
    "probeAppearance",
    "readGnome",
    "readMac",
-   "readOmarchy)",
-   "$.session.id (via restorePlans",
-   "savePlans)",
+   "readOmarchy",
+   "readSystemLocale",
+   "updateVersion)",
+   "$.session.id",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via savePlans)",
-   "$.store.get",
+   "$.store.get (via fromStore)",
    "$.store.keys (via savePlans)",
-   "$.store.set",
+   "$.store.set (via dismissVersion",
+   "fetchNewest",
+   "savePlans",
+   "setChoice)",
+   "$.tool.list",
    "$.tool.register",
    "$.ui.blit (via blitPlans)",
+   "$.ui.focus (via ringOn)",
+   "$.ui.log",
+   "$.ui.open (via openSettings)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
    "plan-progress.isOpen",
    "plan-progress.plans",
-   "plan-progress.tick"
+   "plan-progress.prefs",
+   "plan-progress.speed",
+   "plan-progress.tick",
+   "plan-progress.version"
   ],
   "stateWrites": [
    "plan-progress.isOpen",
    "plan-progress.plans",
-   "plan-progress.tick"
+   "plan-progress.prefs",
+   "plan-progress.speed",
+   "plan-progress.tick",
+   "plan-progress.version"
   ],
-  "envReads": [],
+  "envReads": [
+   "APPDATA",
+   "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
+   "CLAUDE_CODE_EXECPATH",
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "LANG",
+   "LC_ALL",
+   "LC_MESSAGES",
+   "PLAN_PROGRESS_RELEASES_URL",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -282,7 +935,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: plan-progress.plans, plan-progress.isOpen, plan-progress.tick"
+     "types ./types/index.d.ts declares state: plan-progress.plans, plan-progress.isOpen, plan-progress.tick, plan-progress.speed, plan-progress.prefs, plan-progress.version"
     ],
     "gatingHooks": []
    },
@@ -293,10 +946,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: turn.start, prompt.submit, tool.call, classic.Stop, config.set{key=theme}, session.start, prompt.compose, tool.call{tool=mcp__plan-progress__plan_progress}, tool.call{tool=AskUserQuestion}, tool.call{tool=ExitPlanMode}, command.run{command=progress}, command.run{command=progress-agents}, command.run{command=plan-progress-autoclose}, command.run{command=progress-clear}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, agent.spawn, classic.PermissionRequest, classic.PermissionDenied, turn.step, turn.complete",
+      "./register.tsx hooks: prompt.attachment, turn.start, prompt.submit, tool.call, classic.Stop, config.set{key=theme}, session.start, session.end, prompt.compose, tool.call{tool=mcp__plan-progress__plan_progress}, tool.call{tool=AskUserQuestion}, tool.call{tool=ExitPlanMode}, command.run{command=progress}, command.run{command=progress-agents}, command.run{command=plan-progress-autoclose}, command.run{command=plan-progress-settings}, command.run{command=progress-clear}, ui.render{component=SessionMode}, ui.render{component=Pane, requestId=settings}, ui.render{component=AbovePrompt}, agent.spawn, classic.PermissionRequest, classic.PermissionDenied, turn.step, turn.complete",
+      "./register.tsx hooks on prompt.attachment, classic.Stop, prompt.compose, classic.PermissionRequest, classic.PermissionDenied do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=progress}",
       "./register.tsx answers its own command: command.run{command=progress-agents}",
       "./register.tsx answers its own command: command.run{command=plan-progress-autoclose}",
+      "./register.tsx answers its own command: command.run{command=plan-progress-settings}",
       "./register.tsx answers its own command: command.run{command=progress-clear}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call",
@@ -308,9 +963,11 @@
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
       "./register.tsx gating hook without .catch: classic.PermissionDenied",
-      "./register.tsx calls: $.audio.play (via play), $.clock.after (via runReel), $.clock.every, $.clock.now, $.command.register, $.config.list, $.fs.write (via runReel), $.process.run (via play, probeAppearance, readGnome, readMac, readOmarchy), $.session.id (via restorePlans, savePlans), $.state.get, $.state.set, $.store.delete (via savePlans), $.store.get, $.store.keys (via savePlans), $.store.set, $.tool.register, $.ui.blit (via blitPlans), $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: plan-progress.isOpen, plan-progress.plans, plan-progress.tick",
-      "./register.tsx state reads: plan-progress.isOpen, plan-progress.plans, plan-progress.tick"
+      "./register.tsx calls: $.agent.list, $.audio.play (via play), $.clock.after, $.clock.every, $.clock.now, $.clock.sleep (via setOption), $.command.register, $.command.run (via reloadPlugins), $.config.list, $.config.set (via setOption), $.env.get (via autoCheck, claudeCli, fetchNewest, readAppLocale, readInstall, readSystemLocale), $.fs.read (via readAppLocale, readInstall), $.http.fetch (via fetchNewest), $.process.run (via play, probeAppearance, readGnome, readMac, readOmarchy, readSystemLocale, updateVersion), $.session.id, $.state.get, $.state.set, $.store.delete (via savePlans), $.store.get (via fromStore), $.store.keys (via savePlans), $.store.set (via dismissVersion, fetchNewest, savePlans, setChoice), $.tool.list, $.tool.register, $.ui.blit (via blitPlans), $.ui.focus (via ringOn), $.ui.log, $.ui.open (via openSettings), $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: APPDATA, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, CLAUDE_CODE_EXECPATH, CLAUDE_CONFIG_DIR, HOME, LANG, LC_ALL, LC_MESSAGES, PLAN_PROGRESS_RELEASES_URL, USERPROFILE",
+      "./register.tsx state writes: plan-progress.isOpen, plan-progress.plans, plan-progress.prefs, plan-progress.speed, plan-progress.tick, plan-progress.version",
+      "./register.tsx state reads: plan-progress.isOpen, plan-progress.plans, plan-progress.prefs, plan-progress.speed, plan-progress.tick, plan-progress.version"
      ],
      "gatingHooks": [
       {
@@ -379,5 +1036,5 @@
    "advice": []
   }
  },
- "sourceHash": "70f76f60abb63774"
+ "sourceHash": "5cde6767ffe1fe38"
 }

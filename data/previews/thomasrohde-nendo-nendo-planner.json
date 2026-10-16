@@ -1,11 +1,17 @@
 {
  "slug": "thomasrohde-nendo-nendo-planner",
- "generatedAt": "2026-10-06T05:28:17.196Z",
+ "generatedAt": "2026-10-16T14:18:16.654Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "gate"
+    }
    },
    {
     "event": "command.run",
@@ -28,6 +34,11 @@
     "name": "planner",
     "description": "Refresh and print the Nendo planner's Now and Next lanes",
     "output": "Planner.nendo is not open."
+   },
+   {
+    "name": "gate",
+    "description": "Show how far the running Test-Production.ps1 has got",
+    "output": "No run of Test-Production.ps1 in the last ten minutes."
    }
   ],
   "tools": [],
@@ -37,19 +48,24 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.session.root": 3,
-   "$.clock.every": 1,
+   "$.command.register": 2,
+   "$.session.root": 5,
+   "$.clock.every": 2,
+   "$.clock.now": 5,
    "$.fs.list": 3,
-   "$.clock.now": 3,
+   "$.fs.read": 2,
+   "$.state.get": 6,
    "$.state.set": 3,
-   "$.ui.status": 3,
-   "$.state.get": 2
+   "$.ui.status": 3
   },
   "timers": [
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 2000
    }
   ],
   "sites": {
@@ -69,7 +85,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/planner → Planner.nendo is not open."
+   "/planner → Planner.nendo is not open.",
+   "/gate → No run of Test-Production.ps1 in the last ten minutes."
   ],
   "console": [],
   "status": "Nendo: nothing open",
@@ -83,29 +100,39 @@
   ],
   "hooks": [
    "session.start",
+   "command.run{command=gate}",
    "command.run{command=planner}",
    "turn.complete",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.clock.every",
-   "$.clock.now (via refresh)",
+   "$.clock.now (via pollGate",
+   "refresh)",
    "$.command.register",
    "$.env.get (via plannerEndpoint)",
    "$.fs.list (via openFiles",
    "plannerEndpoint)",
-   "$.fs.read (via plannerEndpoint)",
+   "$.fs.read (via plannerEndpoint",
+   "plannerOwner",
+   "pollGate)",
    "$.http.fetch (via rpc)",
-   "$.session.root (via refresh)",
+   "$.process.run (via processAlive)",
+   "$.session.root (via pollGate",
+   "refresh)",
    "$.state.get",
-   "$.state.set (via refresh)",
+   "$.state.set (via pollGate",
+   "refresh)",
    "$.ui.resolve",
-   "$.ui.status (via refresh)"
+   "$.ui.status (via refresh)",
+   "$.ui.toast (via pollGate)"
   ],
   "stateReads": [
+   "nendo-planner.gate",
    "nendo-planner.snapshot"
   ],
   "stateWrites": [
+   "nendo-planner.gate",
    "nendo-planner.snapshot"
   ],
   "envReads": [
@@ -114,9 +141,9 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/thomasrohde-nendo-nendo-planner/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/thomasrohde-nendo-nendo-planner/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/thomasrohde-nendo-nendo-planner/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/thomasrohde-nendo-nendo-planner/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [
@@ -128,26 +155,31 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: nendo-planner.snapshot"
-    ]
+     "types ./types/index.d.ts declares state: nendo-planner.snapshot, nendo-planner.gate"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/thomasrohde-nendo-nendo-planner/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/thomasrohde-nendo-nendo-planner/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=planner}, turn.complete, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.every, $.clock.now (via refresh), $.command.register, $.env.get (via plannerEndpoint), $.fs.list (via openFiles, plannerEndpoint), $.fs.read (via plannerEndpoint), $.http.fetch (via rpc), $.session.root (via refresh), $.state.get, $.state.set (via refresh), $.ui.resolve, $.ui.status (via refresh)",
+      "./register.tsx hooks: session.start, command.run{command=gate}, command.run{command=planner}, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=gate}",
+      "./register.tsx answers its own command: command.run{command=planner}",
+      "./register.tsx calls: $.clock.every, $.clock.now (via pollGate, refresh), $.command.register, $.env.get (via plannerEndpoint), $.fs.list (via openFiles, plannerEndpoint), $.fs.read (via plannerEndpoint, plannerOwner, pollGate), $.http.fetch (via rpc), $.process.run (via processAlive), $.session.root (via pollGate, refresh), $.state.get, $.state.set (via pollGate, refresh), $.ui.resolve, $.ui.status (via refresh), $.ui.toast (via pollGate)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: LOCALAPPDATA",
-      "./register.tsx state writes: nendo-planner.snapshot",
-      "./register.tsx state reads: nendo-planner.snapshot"
-     ]
+      "./register.tsx state writes: nendo-planner.gate, nendo-planner.snapshot",
+      "./register.tsx state reads: nendo-planner.gate, nendo-planner.snapshot"
+     ],
+     "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "eb9713334209a963"
+ "sourceHash": "791e68e8b05798da"
 }

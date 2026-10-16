@@ -1,0 +1,244 @@
+{
+ "slug": "jaimerodriguez-claude-code-plugins-turn-receipt",
+ "generatedAt": "2026-10-16T14:19:58.895Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "receipt"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "receipt-total"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "receipt-month"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "receipt-clear"
+    }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "TurnDuration"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "receipt",
+    "description": "Show this session's turns, subagent runs, tokens and cost, and save them.",
+    "output": "This session (preview-session):\n  turns 1 | agent runs 0 | $0.420\n  tokens 98.9k: in:2.1k | out:1.5k | cache read:91k | cache write:4.3k\nSaved."
+   },
+   {
+    "name": "receipt-total",
+    "description": "Total the saved sessions of the last N days (the kept days by default).",
+    "argumentHint": "[days]",
+    "output": "Last 14 days: 1 session\n  turns 1 | agent runs 0 | $0.420\n  tokens 98.9k: in:2.1k | out:1.5k | cache read:91k | cache write:4.3k"
+   },
+   {
+    "name": "receipt-month",
+    "description": "Show a month's tally of sessions, turns, tokens and cost (this month by default).",
+    "argumentHint": "[YYYY-MM]",
+    "output": "2025-10: 1 session\n  turns 1 | agent runs 0 | $0.00\n  tokens 98.9k: in:2.1k | out:1.5k | cache read:91k | cache write:4.3k"
+   },
+   {
+    "name": "receipt-clear",
+    "description": "Save this session, then drop the other saved session records. The monthly tallies stay.",
+    "output": "Dropped 0 session records. This session's record and the monthly tallies are kept."
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 4,
+   "$.session.usage": 3,
+   "$.session.id": 1,
+   "$.store.get": 4,
+   "$.clock.now": 7,
+   "$.store.keys": 5,
+   "$.process.run": 1,
+   "$.session.surfaces": 2,
+   "$.store.set": 5,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "TurnDuration": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "Worked for 42s"
+       ]
+      },
+      {
+       "type": "Markdown",
+       "props": {
+        "text": "- **receipt** · in **2.1k** · out **1.5k** · cache read **91k** · cache write **4.3k** · **$0.00** · opus-5-5\n- **session** · **1** turn · **98.9k** tokens · **$0.420**"
+       },
+       "children": []
+      }
+     ]
+    }
+   }
+  },
+  "script": [
+   "$.process.run(sh -c echo $PPID) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/receipt → This session (preview-session):\n  turns 1 | agent runs 0 | $0.420\n  tokens 98.9k…",
+   "/receipt-total → Last 14 days: 1 session\n  turns 1 | agent runs 0 | $0.420\n  tokens 98.9k: in:2.1…",
+   "/receipt-month → 2025-10: 1 session\n  turns 1 | agent runs 0 | $0.00\n  tokens 98.9k: in:2.1k | ou…",
+   "/receipt-clear → Dropped 0 session records. This session's record and the monthly tallies are kep…"
+  ],
+  "console": [
+   "turn-receipt session.start: host pid unknown, receipt ui, surface terminal, attached terminal\n  session preview-session: turns 0, agent runs 0, ledger $0.420\n  banked: turns 0, agent runs 0, tokens 0, $0.420, months none\n  months: none"
+  ],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "command.run{command=receipt}",
+   "command.run{command=receipt-total}",
+   "command.run{command=receipt-month}",
+   "command.run{command=receipt-clear}",
+   "agent.spawn",
+   "turn.complete",
+   "ui.render{component=TurnDuration}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.now (via monthReport",
+   "prune",
+   "save",
+   "totalReport)",
+   "$.command.register",
+   "$.process.run (via hostPid)",
+   "$.session.id (via loadSession)",
+   "$.session.surfaces",
+   "$.session.usage (via loadSession",
+   "readLedger)",
+   "$.store.delete (via clearReport",
+   "prune)",
+   "$.store.get (via bank",
+   "loadSession",
+   "monthReport",
+   "prune",
+   "totalReport",
+   "trace)",
+   "$.store.keys (via clearReport",
+   "monthReport",
+   "prune",
+   "totalReport",
+   "trace)",
+   "$.store.set (via bank",
+   "save)",
+   "$.ui.invalidate",
+   "$.ui.log",
+   "$.ui.resolve"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/jaimerodriguez-claude-code-plugins-turn-receipt/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/jaimerodriguez-claude-code-plugins-turn-receipt/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/jaimerodriguez-claude-code-plugins-turn-receipt/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./turn-receipt.mjs hooks: session.start, session.end, command.run{command=receipt}, command.run{command=receipt-total}, command.run{command=receipt-month}, command.run{command=receipt-clear}, agent.spawn, turn.complete, ui.render{component=TurnDuration}, ui.render{component=AbovePrompt}",
+      "./turn-receipt.mjs answers its own command: command.run{command=receipt}",
+      "./turn-receipt.mjs answers its own command: command.run{command=receipt-total}",
+      "./turn-receipt.mjs answers its own command: command.run{command=receipt-month}",
+      "./turn-receipt.mjs answers its own command: command.run{command=receipt-clear}",
+      "./turn-receipt.mjs gating hook with .catch: agent.spawn",
+      "./turn-receipt.mjs calls: $.clock.now (via monthReport, prune, save, totalReport), $.command.register, $.process.run (via hostPid), $.session.id (via loadSession), $.session.surfaces, $.session.usage (via loadSession, readLedger), $.store.delete (via clearReport, prune), $.store.get (via bank, loadSession, monthReport, prune, totalReport, trace), $.store.keys (via clearReport, monthReport, prune, totalReport, trace), $.store.set (via bank, save), $.ui.invalidate, $.ui.log, $.ui.resolve"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./turn-receipt.mjs",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "8ac4c6755d85ae26"
+}

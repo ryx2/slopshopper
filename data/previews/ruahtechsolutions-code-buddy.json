@@ -1,6 +1,6 @@
 {
  "slug": "ruahtechsolutions-code-buddy",
- "generatedAt": "2026-10-10T14:45:46.033Z",
+ "generatedAt": "2026-10-16T14:21:32.408Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,7 +14,22 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "code-buddy:code-buddy"
+    }
+   },
+   {
+    "event": "command.describe",
+    "matcher": {
+     "command": "code-buddy:code-buddy"
+    }
+   },
+   {
     "event": "tool.call"
+   },
+   {
+    "event": "session.attach"
    },
    {
     "event": "agent.spawn"
@@ -46,6 +61,13 @@
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
+     "requestId": "code-buddy-control"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
      "requestId": "code-buddy-hold"
     }
    },
@@ -60,8 +82,8 @@
    {
     "name": "code-buddy",
     "description": "Code Buddy: status and held calls; replay, agents or config",
-    "argumentHint": "[replay | agents | config]",
-    "output": "Code Buddy · guard on · 1 held this session\n  Production: (none)\n  Staging:    (none) (production wins on overlap)\n  Protected:  main\n  Subagents:  budget off · auto-open on\n\nHeld calls, newest first:\n  10 min ago Bash     refused: no answer in 10 min\n      push to protected branch: origin/main; destructive: rm -rf; destructive: git push --force\n      rm -rf build && git push --force origin main\n\nMore: /code-buddy replay · /code-buddy agents · /code-buddy config"
+    "argumentHint": "[control | pause <feature> [30m] | resume | replay | agents | config]",
+    "output": "Code Buddy · 1 held this session\n  Features:   Staging guard on · Blast radius on · Replay on · Agents panel on\n  Production: (none)\n  Staging:    (none) (production wins on overlap)\n  Protected:  main\n  Subagents:  budget off · auto-open on\n\nHeld calls, newest first:\n  10 min ago Bash     refused: no answer in 10 min\n      push to protected branch: origin/main; destructive: rm -rf; destructive: git push --force\n      rm -rf build && git push --force origin main\n\nMore: /code-buddy control · pause · resume · replay · agents · config"
    }
   ],
   "tools": [],
@@ -83,19 +105,19 @@
   ],
   "rewrites": [],
   "apiCalls": {
+   "$.state.get": 53,
+   "$.state.set": 12,
+   "$.fs.read": 2,
    "$.command.register": 1,
    "$.clock.every": 1,
-   "$.state.get": 24,
-   "$.state.set": 11,
    "$.fs.exists": 3,
-   "$.fs.read": 1,
    "$.session.cwd": 8,
    "$.process.run": 2227,
-   "$.clock.now": 2228,
+   "$.clock.now": 2231,
    "$.session.surfaces": 1,
    "$.ui.open": 1,
    "$.ui.invalidate": 2,
-   "$.ui.resolve": 7,
+   "$.ui.resolve": 8,
    "$.ui.close": 1,
    "$.ui.toast": 1
   },
@@ -451,6 +473,609 @@
      },
      "title": "code-buddy-agents"
     },
+    "code-buddy-control": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 0,
+       "paddingX": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "key": "head",
+         "wrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "backgroundColor": "#0745A4",
+           "color": "#FFFFFF",
+           "bold": true
+          },
+          "children": [
+           " ≋ CODE BUDDY "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "  4 of 4 features on · 1 held this session"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "all",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "pause30-all",
+           "label": "Pause all 30m",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "l-features",
+         "bold": true,
+         "color": "#1E99D5"
+        },
+        "children": [
+         "\nFEATURES"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "f-guard",
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Staging guard"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#1FA971",
+             "dimColor": false,
+             "bold": true
+            },
+            "children": [
+             "  ● on"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "holds calls to production, live keys, protected-branch pushes and deploys"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "b-guard",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause30-guard",
+             "label": "Pause 30m",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause-guard",
+             "label": "Pause",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "off-guard",
+             "label": "Turn off",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "f-blast",
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Blast radius"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#1FA971",
+             "dimColor": false,
+             "bold": true
+            },
+            "children": [
+             "  ● on"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "holds destructive shell commands"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "b-blast",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause30-blast",
+             "label": "Pause 30m",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause-blast",
+             "label": "Pause",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "off-blast",
+             "label": "Turn off",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "f-replay",
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Replay"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#1FA971",
+             "dimColor": false,
+             "bold": true
+            },
+            "children": [
+             "  ● on"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "records each turn's edits for /code-buddy replay"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "b-replay",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause30-replay",
+             "label": "Pause 30m",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause-replay",
+             "label": "Pause",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "off-replay",
+             "label": "Turn off",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "f-agents",
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Agents panel"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#1FA971",
+             "dimColor": false,
+             "bold": true
+            },
+            "children": [
+             "  ● on"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "tracks subagents in the band and the panel"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "b-agents",
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause30-agents",
+             "label": "Pause 30m",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "pause-agents",
+             "label": "Pause",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "off-agents",
+             "label": "Turn off",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "pause-note",
+         "dimColor": true,
+         "italic": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "Pauses last for this session only. Turn off keeps a feature off in every session until you turn it on again."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "l-settings",
+         "bold": true,
+         "color": "#1E99D5"
+        },
+        "children": [
+         "\nSETTINGS"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "set-production",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Input",
+          "props": {
+           "key": "in-production",
+           "label": "Production domains",
+           "placeholder": "example.com, *.example.com",
+           "value": "",
+           "submitLabel": "save",
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "Calls that target one are held. *.example.com matches every subdomain."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "set-staging",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Input",
+          "props": {
+           "key": "in-staging",
+           "label": "Staging domains",
+           "placeholder": "staging.example.com",
+           "value": "",
+           "submitLabel": "save",
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "Production wins on overlap: only an exact host listed here goes through."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "set-branch",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Input",
+          "props": {
+           "key": "in-branch",
+           "label": "Protected branch",
+           "placeholder": "main",
+           "value": "main",
+           "submitLabel": "save",
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "Pushes to it and merges into it are held. Comma-separated; * matches within a name."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "set-budget",
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Input",
+          "props": {
+           "key": "in-budget",
+           "label": "Subagent budget (USD)",
+           "placeholder": "off",
+           "value": "off",
+           "submitLabel": "save",
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "Estimated subagent spend per session; past it the agents bar turns coral. 0 or off turns it off."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "autoopen",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "Auto-open agents panel: on"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "autoopen-toggle",
+           "label": "Turn off",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "settings-note",
+         "dimColor": true,
+         "italic": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "Edit a field and press Enter to save. Settings apply to every session; Code Buddy reloads with them."
+        ]
+       }
+      ]
+     },
+     "title": "code-buddy-control"
+    },
     "code-buddy-hold": {
      "ok": true,
      "tree": {
@@ -483,7 +1108,7 @@
    "tool.call Bash denied: Code Buddy held this call and did not run it: nobody answered within 10 minutes. Rule: push to prote…",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/code-buddy → Code Buddy · guard on · 1 held this session\n  Production: (none)\n  Staging:    (…"
+   "/code-buddy → Code Buddy · 1 held this session\n  Features:   Staging guard on · Blast radius o…"
   ],
   "console": [],
   "warnings": []
@@ -495,13 +1120,17 @@
   "hooks": [
    "session.start",
    "command.run{command=code-buddy}",
+   "command.run{command=code-buddy:code-buddy}",
+   "command.describe{command=code-buddy:code-buddy}",
    "tool.call",
+   "session.attach",
    "agent.spawn",
    "turn.step",
    "turn.start",
    "turn.complete",
    "ui.render{component=Pane, requestId=code-buddy-replay}",
    "ui.render{component=Pane, requestId=code-buddy-agents}",
+   "ui.render{component=Pane, requestId=code-buddy-control}",
    "ui.render{component=Pane, requestId=code-buddy-hold}",
    "ui.render{component=AbovePrompt}"
   ],
@@ -509,10 +1138,11 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.config.set (via setConfig)",
+   "$.config.set",
    "$.fs.exists (via stepFor)",
    "$.fs.list (via ioOf)",
-   "$.fs.read (via stepFor)",
+   "$.fs.read (via readVersion",
+   "stepFor)",
    "$.process.run (via ioOf",
    "pause)",
    "$.session.cwd",
@@ -520,13 +1150,17 @@
    "$.state.get",
    "$.state.set",
    "$.ui.close",
+   "$.ui.copy (via copyText)",
    "$.ui.invalidate",
    "$.ui.open (via hold",
    "maybeAutoOpen",
+   "openControl",
    "openReplay",
+   "selectAgent",
    "toggleAgents",
    "toggleCompact)",
    "$.ui.panes (via maybeAutoOpen",
+   "selectAgent",
    "toggleAgents",
    "toggleCompact)",
    "$.ui.resolve",
@@ -536,19 +1170,25 @@
    "code-buddy.agents",
    "code-buddy.agentsUi",
    "code-buddy.batch",
+   "code-buddy.details",
    "code-buddy.log",
+   "code-buddy.pauses",
    "code-buddy.queue",
    "code-buddy.recording",
-   "code-buddy.replay"
+   "code-buddy.replay",
+   "code-buddy.seenSurface"
   ],
   "stateWrites": [
    "code-buddy.agents",
    "code-buddy.agentsUi",
    "code-buddy.batch",
+   "code-buddy.details",
    "code-buddy.log",
+   "code-buddy.pauses",
    "code-buddy.queue",
    "code-buddy.recording",
-   "code-buddy.replay"
+   "code-buddy.replay",
+   "code-buddy.seenSurface"
   ],
   "envReads": [],
   "raw": {
@@ -562,7 +1202,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: code-buddy.queue, code-buddy.log, code-buddy.recording, code-buddy.replay, code-buddy.agents, code-buddy.batch, code-buddy.agentsUi"
+     "types ./types/index.d.ts declares state: code-buddy.queue, code-buddy.log, code-buddy.recording, code-buddy.replay, code-buddy.agents, code-buddy.batch, code-buddy.agentsUi, code-buddy.pauses, code-buddy.seenSurface, code-buddy.details"
     ],
     "gatingHooks": []
    },
@@ -573,15 +1213,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=code-buddy}, tool.call, agent.spawn, turn.step, turn.start, turn.complete, ui.render{component=Pane, requestId=code-buddy-replay}, ui.render{component=Pane, requestId=code-buddy-agents}, ui.render{component=Pane, requestId=code-buddy-hold}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=code-buddy}, command.run{command=code-buddy:code-buddy}, command.describe{command=code-buddy:code-buddy}, tool.call, session.attach, agent.spawn, turn.step, turn.start, turn.complete, ui.render{component=Pane, requestId=code-buddy-replay}, ui.render{component=Pane, requestId=code-buddy-agents}, ui.render{component=Pane, requestId=code-buddy-control}, ui.render{component=Pane, requestId=code-buddy-hold}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=code-buddy}",
+      "./register.tsx gating hook without .catch: command.run{command=code-buddy:code-buddy}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: agent.spawn",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.config.set (via setConfig), $.fs.exists (via stepFor), $.fs.list (via ioOf), $.fs.read (via stepFor), $.process.run (via ioOf, pause), $.session.cwd, $.session.surfaces (via hold), $.state.get, $.state.set, $.ui.close, $.ui.invalidate, $.ui.open (via hold, maybeAutoOpen, openReplay, toggleAgents, toggleCompact), $.ui.panes (via maybeAutoOpen, toggleAgents, toggleCompact), $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: code-buddy.agents, code-buddy.agentsUi, code-buddy.batch, code-buddy.log, code-buddy.queue, code-buddy.recording, code-buddy.replay",
-      "./register.tsx state reads: code-buddy.agents, code-buddy.agentsUi, code-buddy.batch, code-buddy.log, code-buddy.queue, code-buddy.recording, code-buddy.replay"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.config.set, $.fs.exists (via stepFor), $.fs.list (via ioOf), $.fs.read (via readVersion, stepFor), $.process.run (via ioOf, pause), $.session.cwd, $.session.surfaces (via hold), $.state.get, $.state.set, $.ui.close, $.ui.copy (via copyText), $.ui.invalidate, $.ui.open (via hold, maybeAutoOpen, openControl, openReplay, selectAgent, toggleAgents, toggleCompact), $.ui.panes (via maybeAutoOpen, selectAgent, toggleAgents, toggleCompact), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: code-buddy.agents, code-buddy.agentsUi, code-buddy.batch, code-buddy.details, code-buddy.log, code-buddy.pauses, code-buddy.queue, code-buddy.recording, code-buddy.replay, code-buddy.seenSurface",
+      "./register.tsx state reads: code-buddy.agents, code-buddy.agentsUi, code-buddy.batch, code-buddy.details, code-buddy.log, code-buddy.pauses, code-buddy.queue, code-buddy.recording, code-buddy.replay, code-buddy.seenSurface"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=code-buddy:code-buddy}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -600,5 +1247,5 @@
    "advice": []
   }
  },
- "sourceHash": "8f66de57d69af7fa"
+ "sourceHash": "9116fa353c8285a1"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "thorstenhornung-kinitro-ai-kinitro-ai",
- "generatedAt": "2026-10-10T14:45:54.551Z",
+ "generatedAt": "2026-10-16T14:21:53.966Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -39,7 +39,7 @@
   "tools": [
    {
     "name": "probe",
-    "description": "kinitro-ai harness control. action \"status\" (default): diagnostics; \"comments\": check the open UI comments of the bound domain now and return them with the check time; \"test-mode\" with value on|off: refresh the instructions every 2 minutes instead of daily; \"selection-start\": remember the approved domains and return the selection page address (call before the user chooses on that page); \"selection-done\": compare with that list and bind the newly approved domain, or return the list to ask from; \"set-domain\" with domain \"<slug>\": bind this session to a kinitro.ai domain (slug from list-domains) and reload; \"reload\": re-read the briefing from kinitro.ai; \"arm-test\": inject EVERY briefing section, conditional ones included, into the next user prompt, marked [TEST]; \"invalidate-context\": re-render the first-message context block (persona) on the next request."
+    "description": "kinitro-ai harness control. action \"status\" (default): diagnostics; \"comments\": check the open UI comments of the bound domain now and return them with the check time; \"test-mode\" with value on|off: refresh the instructions every 2 minutes instead of daily; \"mirror\" with value on|off: switch the chat mirror into the kinitro.ai chat of the agent on or off (default on; off sends and fetches nothing, on resumes from the next turn without backfill); \"selection-start\": remember the approved domains and return the selection page address (call before the user chooses on that page); \"selection-done\": compare with that list and bind the newly approved domain, or return the list to ask from; \"set-domain\" with domain \"<slug>\": bind this session to a kinitro.ai domain (slug from list-domains) and reload; \"reload\": re-read the briefing from kinitro.ai; \"arm-test\": inject EVERY briefing section, conditional ones included, into the next user prompt, marked [TEST]; \"invalidate-context\": re-render the first-message context block (persona) on the next request."
    }
   ],
   "panes": [],
@@ -49,26 +49,28 @@
   "rewrites": [
    {
     "event": "prompt.submit",
-    "summary": "context added: [\"[kinitro-ai 0.20.0] context 49 % · briefing MISSING (this connection serves 0 domains (); set this session's domain with mcp__kinitro-ai__…"
+    "summary": "context added: [\"[kinitro-ai 0.23.4] context 49 % · briefing MISSING (this connection serves 0 domains (); set this session's domain with mcp__kinitro-ai__…"
    }
   ],
   "apiCalls": {
    "$.session.id": 3,
    "$.session.root": 1,
-   "$.env.get": 1,
-   "$.fs.exists": 8,
-   "$.fs.write": 8,
+   "$.env.get": 2,
+   "$.fs.exists": 10,
+   "$.fs.write": 10,
    "$.clock.every": 2,
    "$.session.surfaces": 1,
-   "$.tool.list": 2,
+   "$.clock.now": 3,
    "$.tool.register": 1,
+   "$.tool.list": 2,
    "$.tool.call": 2,
    "$.state.get": 12,
    "$.state.set": 4,
    "$.session.cwd": 3,
-   "$.clock.sleep": 1,
+   "$.clock.sleep": 2,
    "$.session.turns": 2,
    "$.session.usage": 1,
+   "$.http.fetch": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -123,6 +125,9 @@
    "$.fs.write(/work/app/kinitro-ai.log)",
    "session.start",
    "$.fs.write(/work/app/kinitro-ai.log)",
+   "$.http.fetch(https://methos.kinitro.ai/download/plugins/claude/marketplace.json) → blocked in preview",
+   "$.fs.write(/work/app/kinitro-ai.log)",
+   "$.fs.write(/work/app/.kinitro-ai-state.json)",
    "$.fs.write(/work/app/.kinitro-ai-state.json)",
    "$.fs.write(/work/app/kinitro-ai.log)",
    "tool.call Read",
@@ -157,12 +162,17 @@
   ],
   "calls": [
    "$.clock.every",
+   "$.clock.now",
    "$.clock.sleep (via checkUiComments",
-   "waitForBriefing)",
-   "$.env.get (via sessionHome)",
+   "updateCheck",
+   "waitForBriefing",
+   "withDeadline)",
+   "$.env.get (via downloadBase",
+   "sessionHome)",
    "$.fs.exists",
    "$.fs.read",
    "$.fs.write",
+   "$.http.fetch (via updateCheck)",
    "$.mcp.call (via mcp)",
    "$.session.cwd",
    "$.session.id",
@@ -175,7 +185,7 @@
    "$.tool.call (via mcp",
    "openInPane",
    "switchedOnPage)",
-   "$.tool.list (via kinitroPrefix)",
+   "$.tool.list (via kinitroTools)",
    "$.tool.register",
    "$.ui.invalidate",
    "$.ui.resolve",
@@ -205,6 +215,7 @@
   ],
   "envReads": [
    "HOME",
+   "KINITRO_AI_DOWNLOAD_BASE",
    "USERPROFILE"
   ],
   "raw": {
@@ -230,12 +241,13 @@
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, tool.call{tool=mcp__kinitro-ai__probe}, prompt.context, prompt.compose, prompt.submit, session.compact, turn.complete, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on prompt.context, prompt.compose, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__kinitro-ai__probe}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.clock.every, $.clock.sleep (via checkUiComments, waitForBriefing), $.env.get (via sessionHome), $.fs.exists, $.fs.read, $.fs.write, $.mcp.call (via mcp), $.session.cwd, $.session.id, $.session.root (via sessionHome), $.session.surfaces, $.session.turns, $.session.usage (via contextPercent), $.state.get, $.state.set, $.tool.call (via mcp, openInPane, switchedOnPage), $.tool.list (via kinitroPrefix), $.tool.register, $.ui.invalidate, $.ui.resolve, $.ui.toast (via bindDomain)",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.clock.sleep (via checkUiComments, updateCheck, waitForBriefing, withDeadline), $.env.get (via downloadBase, sessionHome), $.fs.exists, $.fs.read, $.fs.write, $.http.fetch (via updateCheck), $.mcp.call (via mcp), $.session.cwd, $.session.id, $.session.root (via sessionHome), $.session.surfaces, $.session.turns, $.session.usage (via contextPercent), $.state.get, $.state.set, $.tool.call (via mcp, openInPane, switchedOnPage), $.tool.list (via kinitroTools), $.tool.register, $.ui.invalidate, $.ui.resolve, $.ui.toast (via bindDomain)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME, USERPROFILE",
+      "./register.tsx env reads: HOME, KINITRO_AI_DOWNLOAD_BASE, USERPROFILE",
       "./register.tsx state writes: kinitro-ai.approved, kinitro-ai.bandNote, kinitro-ai.bound, kinitro-ai.chooser, kinitro-ai.contextKey, kinitro-ai.current, kinitro-ai.selectorUrl, kinitro-ai.startPack, kinitro-ai.testMode",
       "./register.tsx state reads: kinitro-ai.approved, kinitro-ai.bandNote, kinitro-ai.bound, kinitro-ai.chooser, kinitro-ai.contextKey, kinitro-ai.current, kinitro-ai.selectorUrl, kinitro-ai.startPack, kinitro-ai.testMode"
      ],
@@ -264,5 +276,5 @@
    "advice": []
   }
  },
- "sourceHash": "ca64e396c734603b"
+ "sourceHash": "1ea811d4f877243d"
 }

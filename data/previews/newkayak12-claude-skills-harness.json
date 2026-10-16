@@ -1,6 +1,6 @@
 {
  "slug": "newkayak12-claude-skills-harness",
- "generatedAt": "2026-10-08T15:53:12.555Z",
+ "generatedAt": "2026-10-16T14:16:23.667Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -10,14 +10,14 @@
    {
     "event": "command.run",
     "matcher": {
-     "command": "harness-gate"
+     "command": "harness-status"
     }
    },
    {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
-     "requestId": "harness-gate"
+     "requestId": "harness-status"
     }
    },
    {
@@ -29,15 +29,15 @@
   ],
   "commands": [
    {
-    "name": "harness-gate",
-    "description": "Why the harness gate denied the last call, and how to engage it",
+    "name": "harness-status",
+    "description": "Open or close the harness status pane: run flow and detail, why the gate denied the last call",
     "output": "pane opened"
    }
   ],
   "tools": [],
   "panes": [
    {
-    "id": "harness-gate",
+    "id": "harness-status",
     "title": "Harness"
    }
   ],
@@ -47,17 +47,18 @@
   "rewrites": [],
   "apiCalls": {
    "$.session.surfaces": 1,
+   "$.clock.now": 4,
    "$.settings.read": 1,
    "$.state.get": 15,
    "$.state.set": 7,
    "$.command.register": 1,
+   "$.fs.exists": 2,
    "$.session.cwd": 1,
-   "$.clock.now": 2,
    "$.process.run": 1,
-   "$.fs.list": 2,
+   "$.fs.list": 3,
    "$.ui.status": 1,
-   "$.fs.exists": 1,
    "$.clock.every": 1,
+   "$.ui.panes": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -72,7 +73,7 @@
     "ok": "engine"
    },
    "Pane": {
-    "harness-gate": {
+    "harness-status": {
      "ok": true,
      "tree": {
       "type": "Box",
@@ -100,7 +101,7 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "Harness gate"
+             "Harness status"
             ]
            }
           ]
@@ -117,41 +118,57 @@
          {
           "type": "Box",
           "props": {
-           "columnGap": 3
+           "flexShrink": 0
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "columnGap": 3
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "flow",
+               "plain": true,
+               "hotkey": "1",
+               "dimColor": true,
+               "label": "Flow",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "detail",
+               "plain": true,
+               "hotkey": "2",
+               "dimColor": false,
+               "label": "● Detail",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexShrink": 0,
+           "marginLeft": 2
           },
           "children": [
            {
             "type": "Button",
             "props": {
-             "key": "run",
-             "plain": true,
-             "hotkey": "1",
-             "dimColor": true,
-             "label": "Run",
-             "onPress": "[fn]"
-            },
-            "children": []
-           },
-           {
-            "type": "Button",
-            "props": {
-             "key": "units",
-             "plain": true,
-             "hotkey": "2",
-             "dimColor": true,
-             "label": "Units",
-             "onPress": "[fn]"
-            },
-            "children": []
-           },
-           {
-            "type": "Button",
-            "props": {
-             "key": "gate",
-             "plain": true,
-             "hotkey": "3",
-             "dimColor": false,
-             "label": "● Gate",
+             "key": "close",
+             "role": "dismiss",
+             "label": "close [q]",
+             "hotkey": "q",
              "onPress": "[fn]"
             },
             "children": []
@@ -186,8 +203,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.ui.open(harness-gate)",
-   "/harness-gate → pane opened"
+   "$.ui.open(harness-status)",
+   "/harness-status → pane opened"
   ],
   "console": [],
   "warnings": []
@@ -201,8 +218,8 @@
   ],
   "hooks": [
    "session.start",
-   "command.run{command=harness-gate}",
-   "ui.render{component=Pane, requestId=harness-gate}",
+   "command.run{command=harness-status}",
+   "ui.render{component=Pane, requestId=harness-status}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
@@ -219,9 +236,13 @@
    "$.settings.read",
    "$.state.get",
    "$.state.set",
+   "$.tool.call",
+   "$.ui.close",
    "$.ui.open",
+   "$.ui.panes",
    "$.ui.resolve",
-   "$.ui.status"
+   "$.ui.status",
+   "$.ui.toast"
   ],
   "stateReads": [
    "harness.armed",
@@ -239,6 +260,7 @@
    "harness.broken",
    "harness.lang",
    "harness.last",
+   "harness.outcome",
    "harness.patterns",
    "harness.run",
    "harness.runs",
@@ -263,7 +285,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: harness.last, harness.armed, harness.patterns, harness.windowHours, harness.runs, harness.run, harness.broken, harness.view, harness.lang"
+     "types ./types/index.d.ts declares state: harness.last, harness.armed, harness.patterns, harness.windowHours, harness.runs, harness.run, harness.broken, harness.view, harness.lang, harness.outcome"
     ],
     "gatingHooks": []
    },
@@ -280,16 +302,17 @@
       }
      ],
      "notes": [
-      "./mod.tsx hooks: session.start, command.run{command=harness-gate}, ui.render{component=Pane, requestId=harness-gate}, ui.render{component=AbovePrompt}",
-      "./mod.tsx answers its own command: command.run{command=harness-gate}",
-      "./mod.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.exists, $.fs.list (via countStages, ls), $.fs.read, $.process.run (via countStages), $.session.cwd, $.session.surfaces, $.settings.read, $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status",
-      "./mod.tsx state writes: harness.armed, harness.broken, harness.lang, harness.last, harness.patterns, harness.run, harness.runs, harness.view, harness.windowHours",
+      "./mod.tsx hooks: session.start, command.run{command=harness-status}, ui.render{component=Pane, requestId=harness-status}, ui.render{component=AbovePrompt}",
+      "./mod.tsx answers its own command: command.run{command=harness-status}",
+      "./mod.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.exists, $.fs.list (via countStages, ls), $.fs.read, $.process.run (via countStages), $.session.cwd, $.session.surfaces, $.settings.read, $.state.get, $.state.set, $.tool.call, $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./mod.tsx state writes: harness.armed, harness.broken, harness.lang, harness.last, harness.outcome, harness.patterns, harness.run, harness.runs, harness.view, harness.windowHours",
       "./mod.tsx state reads: harness.armed, harness.broken, harness.lang, harness.last, harness.patterns, harness.run, harness.runs, harness.view, harness.windowHours"
      ],
      "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "1d0ff56d16e58dc9"
+ "sourceHash": "54153835c7bb7d68"
 }

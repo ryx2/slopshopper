@@ -1,11 +1,14 @@
 {
  "slug": "jh-jaehyuk-plan-checklist",
- "generatedAt": "2026-10-10T14:45:19.670Z",
+ "generatedAt": "2026-10-16T14:20:03.188Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart"
    },
    {
     "event": "tool.call",
@@ -26,7 +29,10 @@
     }
    },
    {
-    "event": "prompt.compose"
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "classic.Stop"
    },
    {
     "event": "session.end"
@@ -41,7 +47,7 @@
   "commands": [
    {
     "name": "checklist",
-    "description": "Show the steps of the plan in progress with their evidence",
+    "description": "Show the steps of the plan in progress with their evidence; close stops tracking it",
     "output": "No plan in progress. Approve a plan in plan mode to start tracking it."
    }
   ],
@@ -59,7 +65,8 @@
   "apiCalls": {
    "$.tool.register": 1,
    "$.command.register": 1,
-   "$.state.get": 2
+   "$.state.get": 5,
+   "$.session.messages": 1
   },
   "timers": [],
   "sites": {
@@ -90,15 +97,18 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "classic.SessionStart",
    "tool.call{tool=ExitPlanMode}",
    "tool.call{tool=mcp__plan-checklist__plan_check}",
    "command.run{command=checklist}",
-   "prompt.compose",
+   "classic.UserPromptSubmit",
+   "classic.Stop",
    "session.end",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.command.register",
+   "$.session.messages (via restore)",
    "$.state.get",
    "$.state.set",
    "$.tool.register",
@@ -107,10 +117,12 @@
   ],
   "stateReads": [
    "plan-checklist.isExpanded",
+   "plan-checklist.nudgedAt",
    "plan-checklist.plan"
   ],
   "stateWrites": [
    "plan-checklist.isExpanded",
+   "plan-checklist.nudgedAt",
    "plan-checklist.plan"
   ],
   "envReads": [],
@@ -125,7 +137,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: plan-checklist.plan, plan-checklist.isExpanded"
+     "types ./types/index.d.ts declares state: plan-checklist.plan, plan-checklist.isExpanded, plan-checklist.nudgedAt"
     ],
     "gatingHooks": []
    },
@@ -136,15 +148,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=ExitPlanMode}, tool.call{tool=mcp__plan-checklist__plan_check}, command.run{command=checklist}, prompt.compose, session.end, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, classic.SessionStart, tool.call{tool=ExitPlanMode}, tool.call{tool=mcp__plan-checklist__plan_check}, command.run{command=checklist}, classic.UserPromptSubmit, classic.Stop, session.end, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on classic.SessionStart, classic.UserPromptSubmit, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=checklist}",
+      "./register.tsx gating hook with .catch: classic.SessionStart",
       "./register.tsx gating hook with .catch: tool.call{tool=ExitPlanMode}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__plan-checklist__plan_check}",
-      "./register.tsx calls: $.command.register, $.state.get, $.state.set, $.tool.register, $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: plan-checklist.isExpanded, plan-checklist.plan",
-      "./register.tsx state reads: plan-checklist.isExpanded, plan-checklist.plan"
+      "./register.tsx gating hook with .catch: classic.UserPromptSubmit",
+      "./register.tsx gating hook with .catch: classic.Stop",
+      "./register.tsx calls: $.command.register, $.session.messages (via restore), $.state.get, $.state.set, $.tool.register, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: plan-checklist.isExpanded, plan-checklist.nudgedAt, plan-checklist.plan",
+      "./register.tsx state reads: plan-checklist.isExpanded, plan-checklist.nudgedAt, plan-checklist.plan"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -156,6 +178,18 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__plan-checklist__plan_check}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
       }
      ]
     }
@@ -163,5 +197,5 @@
    "advice": []
   }
  },
- "sourceHash": "b6f35b87f5b6fa66"
+ "sourceHash": "a2411932b42833bf"
 }

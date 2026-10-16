@@ -1,11 +1,20 @@
 {
  "slug": "paradox07127-claude-utopia-harness",
- "generatedAt": "2026-10-06T05:30:04.344Z",
+ "generatedAt": "2026-10-16T14:21:11.234Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
+    "event": "classic.PreToolUse",
+    "matcher": {
+     "tool": "/^(?:Bash|Read|Edit|Write|Grep)$/"
+    }
+   },
+   {
     "event": "agent.spawn"
+   },
+   {
+    "event": "prompt.mention"
    },
    {
     "event": "agent.offer",
@@ -42,22 +51,87 @@
    },
    {
     "event": "classic.Stop"
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "memory-check"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "reflect"
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "answer"
+    }
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "wait": [
+      true,
+      false
+     ]
+    }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "memory-check",
+    "description": "List problems in Claude Code memory: broken index links, unlisted files, bad frontmatter, paths gone; `all` for every project",
+    "output": "No memory directory for /work/app"
+   },
+   {
+    "name": "reflect",
+    "description": "Count the last 7 days of friction (guard blocks, likely false positives, long subagents, corrections, reply language) and draft proposals into .notes/reflect/",
+    "output": "Reflection failed; see the debug log"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
-  "logs": [],
+  "logs": [
+   "harness: reflect failed: SyntaxError: JSON Parse error: Unexpected identifier \"dev\""
+  ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.state.get": 5,
+   "$.command.register": 2,
+   "$.clock.after": 2,
    "$.state.set": 2,
-   "$.clock.now": 2,
-   "$.clock.after": 1
+   "$.clock.now": 3,
+   "$.settings.read": 3,
+   "$.env.get": 7,
+   "$.session.root": 2,
+   "$.fs.read": 1,
+   "$.fs.exists": 2,
+   "$.session.repo": 1,
+   "$.process.run": 1,
+   "$.ui.log": 1
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   },
    {
     "kind": "after",
     "ms": 2999980
@@ -75,7 +149,10 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/memory-check → No memory directory for /work/app",
+   "$.process.run(python3 /plugins/harness/../hooks/reflect.py --project=-work-app --since 2025-10…) → exit 0",
+   "/reflect → Reflection failed; see the debug log"
   ],
   "console": [],
   "warnings": []
@@ -85,7 +162,9 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "classic.PreToolUse{tool=/\"^(?:Bash|Read|Edit|Write|Grep)$\"/}",
    "agent.spawn",
+   "prompt.mention",
    "agent.offer{agent=general-purpose}",
    "tool.describe{tool=AskUserQuestion}",
    "session.start",
@@ -95,22 +174,56 @@
    "session.end",
    "classic.SessionStart",
    "classic.PostModelSwitch",
-   "classic.Stop"
+   "classic.Stop",
+   "session.start{cwd=/\"^\"/}",
+   "command.run{command=memory-check}",
+   "session.start{cwd=/\"^\"/}",
+   "command.run{command=reflect}",
+   "turn.complete{reason=answer}",
+   "prompt.submit{wait=true|false}"
   ],
   "calls": [
-   "$.clock.after (via armIdle)",
+   "$.agent.list (via agentOf)",
+   "$.clock.after",
    "$.clock.now",
+   "$.command.register",
+   "$.command.run (via compactIdle)",
    "$.env.get",
+   "$.fs.exists (via checkDir",
+   "memoryCheck",
+   "recordBlock",
+   "recordHint",
+   "reflect)",
+   "$.fs.list (via guardIo",
+   "memoryCheck",
+   "readMemoryDir)",
+   "$.fs.read (via memoryCheck",
+   "readMemoryDir",
+   "recordBlock",
+   "recordHint)",
    "$.fs.stat",
+   "$.fs.write (via recordBlock",
+   "recordHint",
+   "reflect)",
+   "$.model.complete (via reflect)",
    "$.process.run",
    "$.session.compact (via compactIdle)",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.messages (via agentOf)",
+   "$.session.repo (via projectKey",
+   "recordHint)",
    "$.session.root",
    "$.session.usage (via compactIdle)",
    "$.settings.read (via resolveLang)",
    "$.state.get",
    "$.state.set",
-   "$.ui.log (via logFailure)",
-   "$.ui.toast (via compactIdle)"
+   "$.store.delete (via saveState)",
+   "$.store.get (via stateOf)",
+   "$.store.set (via saveState)",
+   "$.ui.log",
+   "$.ui.toast (via compactIdle",
+   "reflect)"
   ],
   "stateReads": [
    "harness.idle"
@@ -119,6 +232,10 @@
    "harness.idle"
   ],
   "envReads": [
+   "GIT_COMMON_DIR",
+   "GIT_DIR",
+   "GIT_INDEX_FILE",
+   "GIT_WORK_TREE",
    "HOME",
    "LANG",
    "LC_ALL"
@@ -126,34 +243,116 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/paradox07127-claude-utopia-harness/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/paradox07127-claude-utopia-harness/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/paradox07127-claude-utopia-harness/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/paradox07127-claude-utopia-harness/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
      "types ./types/index.d.ts declares state: harness.idle"
-    ]
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/paradox07127-claude-utopia-harness/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/paradox07127-claude-utopia-harness/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: agent.spawn, agent.offer{agent=general-purpose}, tool.describe{tool=AskUserQuestion}, session.start, turn.step, turn.complete, prompt.submit, session.end, classic.SessionStart, classic.PostModelSwitch, classic.Stop",
-      "./register.tsx calls: $.clock.after (via armIdle), $.clock.now, $.env.get, $.fs.stat, $.process.run, $.session.compact (via compactIdle), $.session.root, $.session.usage (via compactIdle), $.settings.read (via resolveLang), $.state.get, $.state.set, $.ui.log (via logFailure), $.ui.toast (via compactIdle)",
-      "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME, LANG, LC_ALL",
-      "./register.tsx state writes: harness.idle",
-      "./register.tsx state reads: harness.idle"
+      "./index.ts hooks: classic.PreToolUse{tool=/\"^(?:Bash|Read|Edit|Write|Grep)$\"/}, agent.spawn, prompt.mention, agent.offer{agent=general-purpose}, tool.describe{tool=AskUserQuestion}, session.start, turn.step, turn.complete, prompt.submit, session.end, classic.SessionStart, classic.PostModelSwitch, classic.Stop, session.start{cwd=/\"^\"/}, command.run{command=memory-check}, session.start{cwd=/\"^\"/}, command.run{command=reflect}, turn.complete{reason=answer}, prompt.submit{wait=true|false}",
+      "./index.ts hooks on classic.PreToolUse, classic.SessionStart, classic.PostModelSwitch, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./index.ts gating hook with .catch: classic.PreToolUse{tool=/\"^(?:Bash|Read|Edit|Write|Grep)$\"/}",
+      "./index.ts gating hook with .catch: agent.spawn",
+      "./index.ts gating hook with .catch: prompt.mention",
+      "./index.ts gating hook with .catch: agent.offer{agent=general-purpose}",
+      "./index.ts gating hook with .catch: prompt.submit",
+      "./index.ts gating hook with .catch: classic.SessionStart",
+      "./index.ts gating hook with .catch: classic.PostModelSwitch",
+      "./index.ts gating hook with .catch: classic.Stop",
+      "./index.ts gating hook without .catch: command.run{command=memory-check}",
+      "./index.ts gating hook without .catch: command.run{command=reflect}",
+      "./index.ts gating hook with .catch: prompt.submit{wait=true|false}",
+      "./index.ts calls: $.agent.list (via agentOf), $.clock.after, $.clock.now, $.command.register, $.command.run (via compactIdle), $.env.get, $.fs.exists (via checkDir, memoryCheck, recordBlock, recordHint, reflect), $.fs.list (via guardIo, memoryCheck, readMemoryDir), $.fs.read (via memoryCheck, readMemoryDir, recordBlock, recordHint), $.fs.stat, $.fs.write (via recordBlock, recordHint, reflect), $.model.complete (via reflect), $.process.run, $.session.compact (via compactIdle), $.session.cwd, $.session.id, $.session.messages (via agentOf), $.session.repo (via projectKey, recordHint), $.session.root, $.session.usage (via compactIdle), $.settings.read (via resolveLang), $.state.get, $.state.set, $.store.delete (via saveState), $.store.get (via stateOf), $.store.set (via saveState), $.ui.log, $.ui.toast (via compactIdle, reflect)",
+      "./index.ts env writes: nothing",
+      "./index.ts env reads: GIT_COMMON_DIR, GIT_DIR, GIT_INDEX_FILE, GIT_WORK_TREE, HOME, LANG, LC_ALL",
+      "./index.ts state writes: harness.idle",
+      "./index.ts state reads: harness.idle"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./index.ts",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse{tool=/\"^(?:Bash|Read|Edit|Write|Grep)$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "prompt.mention",
+       "hook": "prompt.mention",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=general-purpose}",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "classic.PostModelSwitch",
+       "hook": "classic.PostModelSwitch",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=memory-check}",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=reflect}",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{wait=true|false}",
+       "hasCatch": true
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "aaf9c028a0af3080"
+ "sourceHash": "2e5af74fd75aac9"
 }

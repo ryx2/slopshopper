@@ -1,6 +1,6 @@
 {
  "slug": "novacon-ohmyjev",
- "generatedAt": "2026-10-10T14:45:36.465Z",
+ "generatedAt": "2026-10-16T14:17:00.715Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,7 +14,22 @@
     "event": "agent.spawn"
    },
    {
+    "event": "classic.SubagentStop"
+   },
+   {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.attachment",
+    "matcher": {
+     "type": "skill_listing"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.check"
    },
    {
     "event": "command.run",
@@ -59,13 +74,13 @@
    {
     "name": "omj",
     "description": "ohmyjev: this session's Jev calls, denies, cost and key source; stats opens the dashboard; on/off for this session",
-    "argumentHint": "[stats|settings|on|off]",
+    "argumentHint": "[stats|config [section|name value]|on|off]",
     "output": "jev ⚠ no key\ncalls 0 · errors 0 · cost $0.000000 · p50 0ms\ndenies: none\nkey: none (set TYPESAFE_API_KEY or the apiKey setting)"
    },
    {
     "name": "ohmyjev",
     "description": "ohmyjev: this session's Jev calls, denies, cost and key source; stats opens the dashboard; on/off for this session",
-    "argumentHint": "[stats|settings|on|off]",
+    "argumentHint": "[stats|config [section|name value]|on|off]",
     "output": "jev ⚠ no key\ncalls 0 · errors 0 · cost $0.000000 · p50 0ms\ndenies: none\nkey: none (set TYPESAFE_API_KEY or the apiKey setting)"
    }
   ],
@@ -73,6 +88,10 @@
    {
     "name": "ask_jev",
     "description": "Ask Jev, a fast (~300 ms) and nearly free decision model, one question about repo files or text: yes/no (noul), multiple choice (choice), or a position on levels (score). Use it for a judgment ABOUT content without reading it into your context: is this file relevant, does this log show the failure, which of these is riskiest. Read the file yourself when you need to edit or quote it. Values under ~0.7 mean Jev is unsure."
+   },
+   {
+    "name": "find_code",
+    "description": "Find code by describing what it does, even when the codebase names it differently (\"where is the register flow\" finds a signup handler). Jev reads the files, not you: it screens every source file, re-checks the best in full and returns the files that carry it out, with the line. \"No match\" is a real answer. Use it before grepping for a concept."
    }
   ],
   "panes": [],
@@ -83,9 +102,9 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 1,
+   "$.env.get": 38,
+   "$.tool.register": 2,
    "$.command.register": 2,
-   "$.env.get": 37,
    "$.ui.log": 1,
    "$.session.id": 1,
    "$.process.run": 7,
@@ -105,7 +124,7 @@
    "$.process.run(mkdir -p -m 700 /Users/dev/.ohmyjev /Users/dev/.ohmyjev/log /Users/dev/.ohmyjev/…) → exit 0",
    "$.process.run(chmod 700 /Users/dev/.ohmyjev /Users/dev/.ohmyjev/log /Users/dev/.ohmyjev/sessio…) → exit 0",
    "session.start",
-   "turn.start: hook threw undefined is not an object (evaluating 'text.trim')",
+   "turn.start: hook threw undefined is not an object (evaluating 'e.text.trim')",
    "$.process.run(git -C /work/app worktree list --porcelain) → exit 0",
    "tool.call Read",
    "tool.call Grep",
@@ -137,7 +156,11 @@
    "turn.start",
    "turn.step",
    "agent.spawn",
+   "classic.SubagentStop",
    "session.start",
+   "prompt.attachment{type=skill_listing}",
+   "prompt.submit",
+   "tool.check",
    "command.run{command=omj|ohmyjev}",
    "tool.call{tool=Bash|WebFetch|Read|Write|Edit|NotebookEdit|/\"^mcp__\"/}",
    "classic.Stop",
@@ -148,31 +171,37 @@
   "calls": [
    "$.clock.sleep (via askJev",
    "loadSession)",
+   "$.command.list",
    "$.command.register",
-   "$.env.get (via answerAsk",
-   "keyOf",
-   "pathAllowed",
-   "paths)",
+   "$.env.get",
    "$.fs.exists (via place)",
-   "$.fs.read (via answerAsk",
-   "jevReport",
-   "loadSession)",
+   "$.fs.read",
    "$.fs.stat (via place)",
-   "$.fs.write (via openDashboard",
+   "$.fs.write (via loadProseRules",
+   "openDashboard",
    "writeSession)",
    "$.http.fetch (via askJev)",
    "$.model.classify (via classifyBuiltin)",
+   "$.model.complete (via loadProseRules)",
    "$.process.run (via appendLog",
+   "codeIO",
    "ensureDirs",
    "openDashboard",
+   "runBrowse",
    "worktrees)",
    "$.session.compact",
    "$.session.cwd (via answerAsk",
+   "answerFind",
+   "codeIO",
    "gate",
+   "loadProseRules",
+   "narrowCall",
    "readOutsideRepo)",
    "$.session.id (via paths)",
    "$.session.messages",
-   "$.session.root (via pathAllowed)",
+   "$.session.root (via answerFind",
+   "loadProseRules",
+   "pathAllowed)",
    "$.tool.register",
    "$.ui.log (via say)",
    "$.ui.status (via showStatus)"
@@ -181,7 +210,9 @@
   "stateWrites": [],
   "envReads": [
    "HOME",
+   "OHMYJEV_PI",
    "OPENROUTER_API_KEY",
+   "TEXT_MODEL_API_KEY",
    "TMPDIR",
    "TYPESAFE_API_KEY"
   ],
@@ -204,21 +235,43 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./ohmyjev.ts hooks: turn.start, turn.step, agent.spawn, session.start, command.run{command=omj|ohmyjev}, tool.call{tool=Bash|WebFetch|Read|Write|Edit|NotebookEdit|/\"^mcp__\"/}, classic.Stop, session.measure, session.compact, session.end",
+      "./ohmyjev.ts hooks: turn.start, turn.step, agent.spawn, classic.SubagentStop, session.start, prompt.attachment{type=skill_listing}, prompt.submit, tool.check, command.run{command=omj|ohmyjev}, tool.call{tool=Bash|WebFetch|Read|Write|Edit|NotebookEdit|/\"^mcp__\"/}, classic.Stop, session.measure, session.compact, session.end",
+      "./ohmyjev.ts hooks on classic.SubagentStop, prompt.attachment, classic.Stop, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./ohmyjev.ts gating hook with .catch: agent.spawn",
+      "./ohmyjev.ts gating hook without .catch: classic.SubagentStop",
+      "./ohmyjev.ts gating hook with .catch: prompt.submit",
+      "./ohmyjev.ts gating hook with .catch: tool.check",
       "./ohmyjev.ts gating hook with .catch: command.run{command=omj|ohmyjev}",
       "./ohmyjev.ts gating hook with .catch: tool.call{tool=Bash|WebFetch|Read|Write|Edit|NotebookEdit|/\"^mcp__\"/}",
       "./ohmyjev.ts gating hook without .catch: classic.Stop",
-      "./ohmyjev.ts gating hook without .catch: session.compact",
-      "./ohmyjev.ts calls: $.clock.sleep (via askJev, loadSession), $.command.register, $.env.get (via answerAsk, keyOf, pathAllowed, paths), $.fs.exists (via place), $.fs.read (via answerAsk, jevReport, loadSession), $.fs.stat (via place), $.fs.write (via openDashboard, writeSession), $.http.fetch (via askJev), $.model.classify (via classifyBuiltin), $.process.run (via appendLog, ensureDirs, openDashboard, worktrees), $.session.compact, $.session.cwd (via answerAsk, gate, readOutsideRepo), $.session.id (via paths), $.session.messages, $.session.root (via pathAllowed), $.tool.register, $.ui.log (via say), $.ui.status (via showStatus)",
+      "./ohmyjev.ts gating hook with .catch: session.compact",
+      "./ohmyjev.ts calls: $.clock.sleep (via askJev, loadSession), $.command.list, $.command.register, $.env.get, $.fs.exists (via place), $.fs.read, $.fs.stat (via place), $.fs.write (via loadProseRules, openDashboard, writeSession), $.http.fetch (via askJev), $.model.classify (via classifyBuiltin), $.model.complete (via loadProseRules), $.process.run (via appendLog, codeIO, ensureDirs, openDashboard, runBrowse, worktrees), $.session.compact, $.session.cwd (via answerAsk, answerFind, codeIO, gate, loadProseRules, narrowCall, readOutsideRepo), $.session.id (via paths), $.session.messages, $.session.root (via answerFind, loadProseRules, pathAllowed), $.tool.register, $.ui.log (via say), $.ui.status (via showStatus)",
       "./ohmyjev.ts env writes: nothing",
-      "./ohmyjev.ts env reads: HOME, OPENROUTER_API_KEY, TMPDIR, TYPESAFE_API_KEY"
+      "./ohmyjev.ts env reads: HOME, OHMYJEV_PI, OPENROUTER_API_KEY, TEXT_MODEL_API_KEY, TMPDIR, TYPESAFE_API_KEY"
      ],
      "gatingHooks": [
       {
        "module": "./ohmyjev.ts",
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./ohmyjev.ts",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": false
+      },
+      {
+       "module": "./ohmyjev.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./ohmyjev.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check",
        "hasCatch": true
       },
       {
@@ -243,7 +296,7 @@
        "module": "./ohmyjev.ts",
        "pattern": "session.compact",
        "hook": "session.compact",
-       "hasCatch": false
+       "hasCatch": true
       }
      ]
     }
@@ -251,5 +304,5 @@
    "advice": []
   }
  },
- "sourceHash": "3f4a2fbb4199887b"
+ "sourceHash": "3883bd86d62a8e13"
 }

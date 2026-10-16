@@ -1,0 +1,144 @@
+{
+ "slug": "brianjmeier-claude-codemode",
+ "generatedAt": "2026-10-16T14:18:56.879Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__codemode__run"
+    }
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult"
+    }
+   }
+  ],
+  "commands": [],
+  "tools": [
+   {
+    "name": "run",
+    "description": "Run one JavaScript program that calls Claude Code's own tools and returns only its final value.\n\nUse it to loop, branch, filter and aggregate over many tool calls without each raw result entering the conversation.\n\nThe program is the body of an async function:\n- `await tool(\"Read\", { file_path: \"README.md\" })` calls any tool you can call, by name, with its usual arguments.\n- `await tools.Grep({ pattern: \"TODO\" })` is the same call for names that are valid property names.\n- Each call resolves `{ text, result, isError }`: `text` is what you would have read, `result` the tool's structured record (Read: `result.file.content`; Bash: `result.stdout`, `result.stderr`). A tool that fails resolves with `isError: true`.\n- A call the permission check refuses throws `ToolDenied` (`e.tool`, `e.reason`).\n- `await ask({ model: \"haiku\", prompt: \"...\" })` asks a model one question with no tools and resolves its answer as text; hand it the text it needs. Several can run at once with `Promise.all`. Start each prompt with what differs (`prs: summarize…`): the person sees the first words of every call.\n- `await agent({ type: \"Explore\", prompt: \"...\" })` starts a subagent and resolves `{ agentId }` at once; its answer reaches you as a normal subagent hand-back, not the program.\n- `await listTools()` returns `[{ name, description }]`.\n- `await canCall(name, args)` returns `\"allow\"`, `\"ask\"` or `\"deny\"`: what the permission check would decide, without running anything.\n- `await cwd()` returns the session's working directory, for absolute paths.\n- `log(...values)` adds a line to the output.\n- `return` the value you want back; objects come back as JSON.\n\nEvery call goes through the same permission check, hooks and dialog as if you had made it directly. The program has no filesystem, network, process, imports or eval of its own: side effects happen only through tools."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 1
+  },
+  "timers": [],
+  "sites": {
+   "ToolUse": {
+    "ok": "engine"
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__codemode__run}",
+   "turn.step",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=ToolResult}"
+  ],
+  "calls": [
+   "$.agent.spawn (via hostOf)",
+   "$.clock.now (via hostOf)",
+   "$.model.complete (via hostOf)",
+   "$.session.cwd (via hostOf)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.call (via hostOf)",
+   "$.tool.check (via hostOf)",
+   "$.tool.list (via hostOf)",
+   "$.tool.register",
+   "$.ui.resolve"
+  ],
+  "stateReads": [
+   "codemode.runs",
+   "codemode.typed"
+  ],
+  "stateWrites": [
+   "codemode.runs",
+   "codemode.typed"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/brianjmeier-claude-codemode/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/brianjmeier-claude-codemode/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: codemode.runs, codemode.typed"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/brianjmeier-claude-codemode/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__codemode__run}, turn.step, ui.render{component=ToolUse}, ui.render{component=ToolResult}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__codemode__run}",
+      "./register.tsx calls: $.agent.spawn (via hostOf), $.clock.now (via hostOf), $.model.complete (via hostOf), $.session.cwd (via hostOf), $.state.get, $.state.set, $.tool.call (via hostOf), $.tool.check (via hostOf), $.tool.list (via hostOf), $.tool.register, $.ui.resolve",
+      "./register.tsx state writes: codemode.runs, codemode.typed",
+      "./register.tsx state reads: codemode.runs, codemode.typed"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__codemode__run}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "8a59853773e5ebce"
+}

@@ -1,11 +1,14 @@
 {
  "slug": "opum-ai-quest-cli",
- "generatedAt": "2026-10-07T15:23:41.850Z",
+ "generatedAt": "2026-10-16T14:21:09.242Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "tool.call",
@@ -31,7 +34,7 @@
   "tools": [
    {
     "name": "dashboard",
-    "description": "Open the Quest pane: the tasks being worked on across the operator's Quest workspaces, and the detail of one. Use it when the person asks to see the board or a task in the pane."
+    "description": "Open the Quest pane: the tasks being worked on in this session's own repository, and the detail of one. Use it when the person asks to see the board or a task in the pane."
    }
   ],
   "panes": [
@@ -45,11 +48,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.root": 6,
-   "$.process.run": 8,
-   "$.fs.list": 2,
+   "$.env.get": 1,
    "$.store.get": 2,
    "$.tool.register": 1,
+   "$.session.root": 5,
+   "$.process.run": 4,
    "$.state.get": 8,
    "$.ui.open": 1,
    "$.clock.every": 2,
@@ -119,41 +122,6 @@
         "type": "Box",
         "props": {},
         "children": [
-         {
-          "type": "Button",
-          "props": {
-           "key": "fleet",
-           "label": "Fleet",
-           "hotkey": "f",
-           "variant": "primary",
-           "onPress": "[fn]"
-          },
-          "children": []
-         },
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           " "
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "local",
-           "label": "app",
-           "hotkey": "l",
-           "onPress": "[fn]"
-          },
-          "children": []
-         },
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           " "
-          ]
-         },
          {
           "type": "Button",
           "props": {
@@ -268,25 +236,6 @@
            "onSelect": "[fn]"
           },
           "children": []
-         },
-         {
-          "type": "Select",
-          "props": {
-           "key": "repo",
-           "label": "Repo",
-           "value": "all",
-           "options": [
-            {
-             "value": "all",
-             "label": "All repos"
-            },
-            {
-             "value": "app"
-            }
-           ],
-           "onSelect": "[fn]"
-          },
-          "children": []
          }
         ]
        },
@@ -297,18 +246,18 @@
          "wrap": "truncate"
         },
         "children": [
-         "0 in progress tasks in 0 repos, checked 08:53"
+         "0 in progress tasks in app, checked 08:53"
         ]
        },
        {
-        "type": "Text",
+        "type": "Input",
         "props": {
-         "dimColor": true,
-         "wrap": "truncate"
+         "key": "new-task",
+         "placeholder": "New task in app",
+         "submitLabel": "Create",
+         "onSubmit": "[fn]"
         },
-        "children": [
-         "No Quest workspaces found above /work. Add the plugin's root or repos option, or use this-repo scope."
-        ]
+        "children": []
        },
        {
         "type": "Box",
@@ -403,9 +352,6 @@
   "script": [
    "$.process.run(git -C /work/app rev-parse --git-common-dir) → exit 0",
    "$.ui.open(quest-board)",
-   "$.process.run(git -C /work/app rev-parse --git-common-dir) → exit 0",
-   "$.process.run(git -C /work/app rev-parse --git-common-dir) → exit 0",
-   "$.process.run(git -C /work/app rev-parse --git-common-dir) → exit 0",
    "$.process.run(git status --porcelain -- .quest) → exit 0",
    "$.process.run(quest decision list --json) → exit 0",
    "session.start",
@@ -419,8 +365,7 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete",
-   "$.process.run(git -C /work/app rev-parse --git-common-dir) → exit 0"
+   "turn.complete"
   ],
   "console": [],
   "warnings": []
@@ -431,21 +376,21 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.end",
    "tool.call{tool=?}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=quest-board}"
   ],
   "calls": [
-   "$.clock.every",
+   "$.clock.every (via ensureClock",
+   "startAlerts)",
    "$.clock.now",
-   "$.fs.exists (via resolveFleet)",
-   "$.fs.list (via resolveFleet)",
+   "$.env.get",
    "$.process.run (via countUncommitted",
    "quest",
-   "resolveLocal)",
+   "resolveLocalAndReport)",
    "$.prompt.fill",
-   "$.session.root (via resolveFleet",
-   "resolveLocal)",
+   "$.session.root (via resolveLocalAndReport)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
@@ -477,7 +422,9 @@
    "opum-quest.edits",
    "opum-quest.view"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDECODE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -500,9 +447,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=?}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=quest-board}",
+      "./register.tsx hooks: session.start, session.end, tool.call{tool=?}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=quest-board}",
       "./register.tsx gating hook without .catch: tool.call{tool=?}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.fs.exists (via resolveFleet), $.fs.list (via resolveFleet), $.process.run (via countUncommitted, quest, resolveLocal), $.prompt.fill, $.session.root (via resolveFleet, resolveLocal), $.state.get, $.state.set, $.store.get, $.store.set (via checkAlerts, savePrefs), $.tool.register, $.ui.ask (via closeTask), $.ui.close, $.ui.copy, $.ui.invalidate (via openBoardFromBand), $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.status (via checkAlerts, setWaiting), $.ui.toast (via checkAlerts, createTask, write)",
+      "./register.tsx calls: $.clock.every (via ensureClock, startAlerts), $.clock.now, $.env.get, $.process.run (via countUncommitted, quest, resolveLocalAndReport), $.prompt.fill, $.session.root (via resolveLocalAndReport), $.state.get, $.state.set, $.store.get, $.store.set (via checkAlerts, savePrefs), $.tool.register, $.ui.ask (via closeTask), $.ui.close, $.ui.copy, $.ui.invalidate (via openBoardFromBand), $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.status (via checkAlerts, setWaiting), $.ui.toast (via checkAlerts, createTask, write)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDECODE",
       "./register.tsx state writes: opum-quest.board, opum-quest.detail, opum-quest.edits, opum-quest.view",
       "./register.tsx state reads: opum-quest.board, opum-quest.detail, opum-quest.edits, opum-quest.view"
      ],
@@ -515,8 +464,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "2258cc441d023776"
+ "sourceHash": "89c505e386bcbea1"
 }

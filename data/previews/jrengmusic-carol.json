@@ -1,6 +1,6 @@
 {
  "slug": "jrengmusic-carol",
- "generatedAt": "2026-10-10T14:44:44.144Z",
+ "generatedAt": "2026-10-16T14:17:36.917Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -37,6 +37,12 @@
     "matcher": {
      "tool": "Bash"
     }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Monitor"
+    }
    }
   ],
   "commands": [],
@@ -47,7 +53,7 @@
   "denies": [
    {
     "tool": "Bash: rm -rf build && git push --force origin main",
-    "reason": "This git command needs ARCHITECT's instruction, and ARCHITECT's last prompt names no git command (CAROL.md Git). Read-only git is allowed, and MACHINIST also runs push and pull. Do not retry. Read the working tree with the Read tool, or report what you need."
+    "reason": "This git command needs ARCHITECT's instruction, and ARCHITECT's last prompt names no git command (CAROL.md Git). Read-only git is allowed in the main session and in Pathfinder, never in another subagent, and the MACHINIST main session also runs push and pull. Do not retry. Read the working tree with"
    }
   ],
   "rewrites": [
@@ -57,8 +63,8 @@
    }
   ],
   "apiCalls": {
-   "$.state.get": 10,
-   "$.state.set": 4
+   "$.state.get": 9,
+   "$.state.set": 3
   },
   "timers": [],
   "sites": {},
@@ -88,10 +94,12 @@
    "classic.Stop",
    "tool.call{tool=AskUserQuestion|EnterPlanMode|ExitPlanMode}",
    "tool.call{tool=Agent|Task}",
-   "tool.call{tool=Bash}"
+   "tool.call{tool=Bash}",
+   "tool.call{tool=Monitor}"
   ],
   "calls": [
-   "$.clock.now",
+   "$.agent.list (via getSubagentType)",
+   "$.clock.now (via armNoGate)",
    "$.env.get (via getExpectedModel",
    "getRole)",
    "$.fs.exists (via getExpectedModel",
@@ -143,14 +151,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: classic.UserPromptSubmit, prompt.submit, classic.Stop, tool.call{tool=AskUserQuestion|EnterPlanMode|ExitPlanMode}, tool.call{tool=Agent|Task}, tool.call{tool=Bash}",
+      "./register.js hooks: classic.UserPromptSubmit, prompt.submit, classic.Stop, tool.call{tool=AskUserQuestion|EnterPlanMode|ExitPlanMode}, tool.call{tool=Agent|Task}, tool.call{tool=Bash}, tool.call{tool=Monitor}",
+      "./register.js hooks on classic.UserPromptSubmit, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.js gating hook without .catch: classic.UserPromptSubmit",
       "./register.js gating hook without .catch: prompt.submit",
       "./register.js gating hook without .catch: classic.Stop",
       "./register.js gating hook with .catch: tool.call{tool=AskUserQuestion|EnterPlanMode|ExitPlanMode}",
       "./register.js gating hook with .catch: tool.call{tool=Agent|Task}",
       "./register.js gating hook with .catch: tool.call{tool=Bash}",
-      "./register.js calls: $.clock.now, $.env.get (via getExpectedModel, getRole), $.fs.exists (via getExpectedModel, getRole, isSprintLogNewer), $.fs.read (via getExpectedModel, getRole), $.fs.stat (via isSprintLogNewer), $.state.get, $.state.set",
+      "./register.js gating hook with .catch: tool.call{tool=Monitor}",
+      "./register.js calls: $.agent.list (via getSubagentType), $.clock.now (via armNoGate), $.env.get (via getExpectedModel, getRole), $.fs.exists (via getExpectedModel, getRole, isSprintLogNewer), $.fs.read (via getExpectedModel, getRole), $.fs.stat (via isSprintLogNewer), $.state.get, $.state.set",
       "./register.js env writes: nothing",
       "./register.js env reads: CAROL_ROLE, CAROL_ROOT",
       "./register.js state writes: carol.armedAtMs, carol.isGitInstructed, carol.isNoGateArmed, carol.promptCount, carol.sessionAgentType",
@@ -192,6 +202,12 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Monitor}",
+       "hasCatch": true
       }
      ]
     }
@@ -199,5 +215,5 @@
    "advice": []
   }
  },
- "sourceHash": "20c65bb117a2e19f"
+ "sourceHash": "1e6740dc58df8df6"
 }

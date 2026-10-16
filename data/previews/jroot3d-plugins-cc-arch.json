@@ -1,6 +1,6 @@
 {
  "slug": "jroot3d-plugins-cc-arch",
- "generatedAt": "2026-10-08T15:53:30.217Z",
+ "generatedAt": "2026-10-16T14:17:36.976Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,45 @@
     "event": "command.run",
     "matcher": {
      "command": "arch-graph"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "arch-board"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "arch-share"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "arch-release"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "arch-unlock"
+    }
+   },
+   {
+    "event": "skill.prompt"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Write"
     }
    },
    {
@@ -29,6 +68,26 @@
     "name": "arch-graph",
     "description": "Show the arch dependency graph (.arch/index.json) in a pane",
     "output": "Arch graph pane opened."
+   },
+   {
+    "name": "arch-board",
+    "description": "Open .arch/board.html: the board state and dependency graph, live in the browser",
+    "output": "dev"
+   },
+   {
+    "name": "arch-share",
+    "description": "Give the arch board its own git branch and per-node locks, or set this clone up for a shared board: /arch-share [branch]",
+    "output": "dev"
+   },
+   {
+    "name": "arch-release",
+    "description": "Commit and push .arch/, then free the arch nodes you hold",
+    "output": "dev"
+   },
+   {
+    "name": "arch-unlock",
+    "description": "Free an abandoned arch lock, yours or another person's: /arch-unlock <node>",
+    "output": "usage: /arch-unlock <node, #briefs or #context>"
    }
   ],
   "tools": [],
@@ -43,12 +102,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
+   "$.command.register": 5,
    "$.fs.exists": 1,
    "$.ui.open": 1,
    "$.ui.invalidate": 1,
    "$.ui.resolve": 2,
-   "$.fs.read": 2
+   "$.fs.read": 2,
+   "$.process.run": 5,
+   "$.ui.status": 2
   },
   "timers": [],
   "sites": {
@@ -83,7 +144,16 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(arch-graph)",
-   "/arch-graph → Arch graph pane opened."
+   "/arch-graph → Arch graph pane opened.",
+   "$.process.run(node /plugins/arch/scripts/arch.mjs board --open) → exit 0",
+   "/arch-board → dev",
+   "$.process.run(node /plugins/arch/scripts/arch.mjs share) → exit 0",
+   "$.process.run(node /plugins/arch/scripts/arch.mjs sync) → exit 0",
+   "/arch-share → dev",
+   "$.process.run(node /plugins/arch/scripts/arch.mjs release) → exit 0",
+   "$.process.run(node /plugins/arch/scripts/arch.mjs sync) → exit 0",
+   "/arch-release → dev",
+   "/arch-unlock → usage: /arch-unlock <node, #briefs or #context>"
   ],
   "console": [],
   "warnings": []
@@ -95,6 +165,13 @@
   "hooks": [
    "session.start",
    "command.run{command=arch-graph}",
+   "command.run{command=arch-board}",
+   "command.run{command=arch-share}",
+   "command.run{command=arch-release}",
+   "command.run{command=arch-unlock}",
+   "skill.prompt",
+   "tool.call{tool=Edit}",
+   "tool.call{tool=Write}",
    "tool.call",
    "ui.render{component=Pane, requestId=arch-graph}"
   ],
@@ -103,9 +180,11 @@
    "$.command.run (via explore)",
    "$.fs.exists",
    "$.fs.read",
+   "$.process.run (via arch)",
    "$.ui.invalidate",
    "$.ui.open (via open)",
    "$.ui.resolve",
+   "$.ui.status (via sync)",
    "$.ui.toast (via explore)"
   ],
   "stateReads": [],
@@ -130,12 +209,31 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=arch-graph}, tool.call, ui.render{component=Pane, requestId=arch-graph}",
+      "./register.tsx hooks: session.start, command.run{command=arch-graph}, command.run{command=arch-board}, command.run{command=arch-share}, command.run{command=arch-release}, command.run{command=arch-unlock}, skill.prompt, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call, ui.render{component=Pane, requestId=arch-graph}",
+      "./register.tsx hooks on skill.prompt do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=arch-graph}",
+      "./register.tsx answers its own command: command.run{command=arch-board}",
+      "./register.tsx answers its own command: command.run{command=arch-share}",
+      "./register.tsx answers its own command: command.run{command=arch-release}",
+      "./register.tsx answers its own command: command.run{command=arch-unlock}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Edit}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Write}",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.command.register, $.command.run (via explore), $.fs.exists, $.fs.read, $.ui.invalidate, $.ui.open (via open), $.ui.resolve, $.ui.toast (via explore)"
+      "./register.tsx calls: $.command.register, $.command.run (via explore), $.fs.exists, $.fs.read, $.process.run (via arch), $.ui.invalidate, $.ui.open (via open), $.ui.resolve, $.ui.status (via sync), $.ui.toast (via explore)"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write}",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -144,8 +242,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "60661d8d3310785b"
+ "sourceHash": "373c84b45ea9cb53"
 }

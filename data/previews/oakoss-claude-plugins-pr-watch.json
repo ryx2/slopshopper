@@ -1,9 +1,18 @@
 {
  "slug": "oakoss-claude-plugins-pr-watch",
- "generatedAt": "2026-10-09T15:34:07.671Z",
+ "generatedAt": "2026-10-16T14:21:06.713Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "prompt.submit"
+   },
    {
     "event": "session.start"
    },
@@ -42,7 +51,7 @@
   "tools": [
    {
     "name": "watch",
-    "description": "Watches a GitHub pull request in pr-watch and returns what it shows now. Its line above the prompt follows its checks, and pr-watch tells you in this conversation, as /config allows, when it turns ready to merge, a check fails, it has conflicts or requested changes, someone comments or reviews, or its merge's checks finish. Pull requests you open with gh pr create, or merge with gh pr merge and a number, URL or branch, are watched already; use this for any other you are waiting on, instead of polling gh pr checks or sleeping."
+    "description": "Watches a GitHub pull request in pr-watch and returns what it shows now. Its line above the prompt follows its checks, and pr-watch tells you in this conversation, as /config allows, when a check fails, it has conflicts or requested changes, or someone comments or reviews. That it turned ready to merge, or its merge's checks passed, comes with the user's next message, unless review-cycle lets you merge unasked. Pull requests you open with gh pr create, or merge with gh pr merge and a number, URL or branch, are watched already; use this for any other you are waiting on, instead of polling gh pr checks or sleeping."
    },
    {
     "name": "unwatch",
@@ -60,9 +69,12 @@
   "rewrites": [],
   "apiCalls": {
    "$.tool.register": 3,
+   "$.session.id": 1,
+   "$.state.get": 8,
+   "$.store.get": 1,
+   "$.state.set": 3,
    "$.clock.every": 1,
-   "$.clock.now": 1,
-   "$.state.get": 1
+   "$.clock.now": 1
   },
   "timers": [
    {
@@ -96,6 +108,9 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "turn.start",
+   "turn.complete",
+   "prompt.submit",
    "session.start",
    "tool.call{tool=Bash}",
    "tool.call{tool=mcp__pr-watch__watch}",
@@ -106,29 +121,47 @@
   "calls": [
    "$.clock.every",
    "$.clock.now",
+   "$.config.list (via isMergeUnasked)",
    "$.process.run (via followMerge",
+   "isOpen",
    "learnEstimates",
+   "learnRerunStart",
    "readGh",
    "viewedTarget)",
    "$.prompt.submit (via wake)",
+   "$.prompt.suggest (via suggest)",
+   "$.session.id",
+   "$.settings.read (via isMergeUnasked",
+   "suggest)",
    "$.state.get",
    "$.state.set",
+   "$.store.delete (via prune)",
+   "$.store.get (via prune",
+   "remember",
+   "restore)",
+   "$.store.keys (via prune)",
+   "$.store.set (via remember)",
    "$.tool.register (via registerTools)",
+   "$.ui.notify (via refresh)",
    "$.ui.resolve",
-   "$.ui.toast (via followMerge",
-   "refresh",
-   "registerTools",
-   "safeTick",
-   "wake)"
+   "$.ui.toast"
   ],
   "stateReads": [
    "pr-watch.estimates",
    "pr-watch.now",
+   "pr-watch.ownMerges",
+   "pr-watch.quiet",
+   "pr-watch.restored",
+   "pr-watch.turn",
    "pr-watch.watches"
   ],
   "stateWrites": [
    "pr-watch.estimates",
    "pr-watch.now",
+   "pr-watch.ownMerges",
+   "pr-watch.quiet",
+   "pr-watch.restored",
+   "pr-watch.turn",
    "pr-watch.watches"
   ],
   "envReads": [],
@@ -143,7 +176,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: pr-watch.watches, pr-watch.estimates, pr-watch.now"
+     "types ./types/index.d.ts declares state: pr-watch.watches, pr-watch.estimates, pr-watch.now, pr-watch.turn, pr-watch.ownMerges, pr-watch.quiet, pr-watch.restored"
     ],
     "gatingHooks": []
    },
@@ -154,16 +187,23 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=Bash}, tool.call{tool=mcp__pr-watch__watch}, tool.call{tool=mcp__pr-watch__unwatch}, tool.call{tool=mcp__pr-watch__watches}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: turn.start, turn.complete, prompt.submit, session.start, tool.call{tool=Bash}, tool.call{tool=mcp__pr-watch__watch}, tool.call{tool=mcp__pr-watch__unwatch}, tool.call{tool=mcp__pr-watch__watches}, ui.render{component=AbovePrompt}",
+      "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__pr-watch__watch}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__pr-watch__unwatch}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__pr-watch__watches}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.process.run (via followMerge, learnEstimates, readGh, viewedTarget), $.prompt.submit (via wake), $.state.get, $.state.set, $.tool.register (via registerTools), $.ui.resolve, $.ui.toast (via followMerge, refresh, registerTools, safeTick, wake)",
-      "./register.tsx state writes: pr-watch.estimates, pr-watch.now, pr-watch.watches",
-      "./register.tsx state reads: pr-watch.estimates, pr-watch.now, pr-watch.watches"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.config.list (via isMergeUnasked), $.process.run (via followMerge, isOpen, learnEstimates, learnRerunStart, readGh, viewedTarget), $.prompt.submit (via wake), $.prompt.suggest (via suggest), $.session.id, $.settings.read (via isMergeUnasked, suggest), $.state.get, $.state.set, $.store.delete (via prune), $.store.get (via prune, remember, restore), $.store.keys (via prune), $.store.set (via remember), $.tool.register (via registerTools), $.ui.notify (via refresh), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: pr-watch.estimates, pr-watch.now, pr-watch.ownMerges, pr-watch.quiet, pr-watch.restored, pr-watch.turn, pr-watch.watches",
+      "./register.tsx state reads: pr-watch.estimates, pr-watch.now, pr-watch.ownMerges, pr-watch.quiet, pr-watch.restored, pr-watch.turn, pr-watch.watches"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -194,5 +234,5 @@
    "advice": []
   }
  },
- "sourceHash": "bd3e17941e719afb"
+ "sourceHash": "eaa485fef3b6722e"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "oikon48-prompt-rail-prompt-rail",
- "generatedAt": "2026-10-06T05:26:56.733Z",
+ "generatedAt": "2026-10-16T14:15:42.266Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -109,6 +109,11 @@
     "name": "prompt-rail-prev",
     "description": "Jump to the previous prompt in the prompt rail.",
     "immediate": true
+   },
+   {
+    "name": "prompt-rail-toggle",
+    "description": "Toggle the rail: off ↔ the mode last on (vertical or horizontal).",
+    "immediate": true
    }
   ],
   "tools": [],
@@ -121,16 +126,17 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 3,
+   "$.command.register": 4,
    "$.store.get": 3,
    "$.session.id": 2,
-   "$.ui.close": 2,
+   "$.ui.close": 3,
    "$.fs.stat": 2,
-   "$.store.set": 1,
+   "$.store.set": 2,
    "$.store.keys": 1,
-   "$.state.get": 4,
-   "$.state.set": 2,
+   "$.state.get": 5,
+   "$.state.set": 3,
    "$.ui.toast": 2,
+   "$.config.set": 1,
    "$.clock.after": 2,
    "$.ui.resolve": 1
   },
@@ -203,7 +209,8 @@
    "turn.complete",
    "/prompt-rail → ",
    "/prompt-rail-next → ",
-   "/prompt-rail-prev → "
+   "/prompt-rail-prev → ",
+   "/prompt-rail-toggle → "
   ],
   "console": [],
   "warnings": []
@@ -238,15 +245,14 @@
    "$.config.set (via writeMode)",
    "$.fs.read (via readTranscript)",
    "$.fs.stat (via readTranscript)",
-   "$.process.spawn (via streamRows)",
+   "$.process.spawn (via startStream)",
    "$.session.id",
    "$.state.get",
    "$.state.set (via redrawRail)",
    "$.store.delete",
    "$.store.get",
    "$.store.keys (via rememberTranscript)",
-   "$.store.set (via rememberTranscript",
-   "writeMode)",
+   "$.store.set",
    "$.ui.close (via seatRail)",
    "$.ui.open (via seatRail)",
    "$.ui.resolve",
@@ -263,32 +269,86 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/oikon48-prompt-rail-prompt-rail/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/oikon48-prompt-rail-prompt-rail/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/oikon48-prompt-rail-prompt-rail/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/oikon48-prompt-rail-prompt-rail/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/prompt-rail.d.ts declares on $: nothing (no EngineInterface member)",
      "types ./types/prompt-rail.d.ts declares state: prompt-rail.moved"
-    ]
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/oikon48-prompt-rail-prompt-rail/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/oikon48-prompt-rail-prompt-rail/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
       "./index.tsx hooks: session.start, command.run, classic.SessionStart, classic.Stop, turn.start, turn.complete, prompt.submit, session.receive, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=Pane, requestId=prompt-rail}, ui.render{component=AbovePrompt}, ui.focus{component=AbovePrompt, plugin=prompt-rail}, ui.focus{component=Pane, requestId=prompt-rail, plugin=prompt-rail}, ui.press{plugin=prompt-rail}",
-      "./index.tsx calls: $.clock.after, $.command.register, $.config.set (via writeMode), $.fs.read (via readTranscript), $.fs.stat (via readTranscript), $.process.spawn (via streamRows), $.session.id, $.state.get, $.state.set (via redrawRail), $.store.delete, $.store.get, $.store.keys (via rememberTranscript), $.store.set (via rememberTranscript, writeMode), $.ui.close (via seatRail), $.ui.open (via seatRail), $.ui.resolve, $.ui.scroll (via jumpTo), $.ui.toast",
+      "./index.tsx hooks on classic.SessionStart, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./index.tsx gating hook without .catch: command.run",
+      "./index.tsx gating hook without .catch: classic.SessionStart",
+      "./index.tsx gating hook without .catch: classic.Stop",
+      "./index.tsx gating hook without .catch: prompt.submit",
+      "./index.tsx gating hook without .catch: session.receive",
+      "./index.tsx gating hook without .catch: ui.focus{component=AbovePrompt, plugin=prompt-rail}",
+      "./index.tsx gating hook without .catch: ui.focus{component=Pane, requestId=prompt-rail, plugin=prompt-rail}",
+      "./index.tsx calls: $.clock.after, $.command.register, $.config.set (via writeMode), $.fs.read (via readTranscript), $.fs.stat (via readTranscript), $.process.spawn (via startStream), $.session.id, $.state.get, $.state.set (via redrawRail), $.store.delete, $.store.get, $.store.keys (via rememberTranscript), $.store.set, $.ui.close (via seatRail), $.ui.open (via seatRail), $.ui.resolve, $.ui.scroll (via jumpTo), $.ui.toast",
       "./index.tsx state writes: prompt-rail.moved",
       "./index.tsx state reads: prompt-rail.moved"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./index.tsx",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.tsx",
+       "pattern": "session.receive",
+       "hook": "session.receive",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=AbovePrompt, plugin=prompt-rail}",
+       "hasCatch": false
+      },
+      {
+       "module": "./index.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=Pane, requestId=prompt-rail, plugin=prompt-rail}",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "c76cc6508ff196f7"
+ "sourceHash": "92683cce2222292c"
 }

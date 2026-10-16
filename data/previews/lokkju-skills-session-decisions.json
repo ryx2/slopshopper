@@ -1,6 +1,6 @@
 {
  "slug": "lokkju-skills-session-decisions",
- "generatedAt": "2026-10-09T15:33:48.543Z",
+ "generatedAt": "2026-10-16T14:20:29.409Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,26 @@
    },
    {
     "event": "classic.SessionStart"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "TaskCreate",
+      "TaskGet",
+      "TaskList",
+      "TaskUpdate"
+     ]
+    }
    },
    {
     "event": "tool.call",
@@ -26,6 +46,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__session-decisions__decision_add"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-decisions__decision_update"
     }
    },
    {
@@ -70,6 +96,21 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "mcp__session-decisions__decision_update"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolGroup"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "Pane",
      "requestId": "session-decisions"
     }
@@ -90,8 +131,12 @@
     "description": "Fallback for the session-decisions queue, only when TaskCreate is not available: adds a DECIDE or ACTION item and returns its labelled subject."
    },
    {
+    "name": "decision_update",
+    "description": "Revises an open fallback-ledger item from decision_add when its question, options, recommendation or context change, keeping its label. Task-list items are revised with TaskUpdate instead."
+   },
+   {
     "name": "decision_close",
-    "description": "Settles a fallback-ledger item from decision_add with the user's ruling. Task-list items are settled with TaskUpdate instead."
+    "description": "Settles a fallback-ledger item from decision_add with the user's ruling. Task-list items are settled with TaskUpdate instead, unless TaskUpdate is not available in this session."
    }
   ],
   "panes": [],
@@ -101,16 +146,17 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.tool.register": 2,
-   "$.env.get": 5,
-   "$.state.get": 13,
-   "$.state.set": 5,
+   "$.tool.register": 3,
+   "$.process.run": 2,
+   "$.env.get": 6,
+   "$.state.get": 17,
+   "$.state.set": 7,
    "$.ui.status": 1,
    "$.session.id": 1,
-   "$.store.get": 1,
    "$.fs.list": 1,
+   "$.store.get": 1,
    "$.store.keys": 1,
-   "$.clock.now": 1,
+   "$.clock.now": 2,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -173,6 +219,8 @@
    }
   },
   "script": [
+   "$.process.run(git config --get-regexp ^tracker\\.(forge|web)$) → exit 0",
+   "$.process.run(git remote get-url origin) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -196,17 +244,21 @@
   "hooks": [
    "session.start",
    "classic.SessionStart",
+   "classic.UserPromptSubmit",
+   "classic.Stop",
+   "agent.spawn",
+   "tool.call{tool=TaskCreate|TaskGet|TaskList|TaskUpdate}",
    "tool.call{tool=TaskCreate}",
    "tool.call{tool=TaskUpdate}",
    "tool.call{tool=mcp__session-decisions__decision_add}",
+   "tool.call{tool=mcp__session-decisions__decision_update}",
    "tool.call{tool=mcp__session-decisions__decision_close}",
    "command.run{command=decisions}",
    "ui.close",
    "ui.render{component=SessionMode}",
    "ui.render{component=ToolUse",
-   "props has {tool=TaskCreate}}",
-   "ui.render{component=ToolUse",
-   "props has {tool=mcp__session-decisions__decision_add}}",
+   "props has {tool=?}}",
+   "ui.render{component=ToolGroup}",
    "ui.render{component=Pane, requestId=session-decisions}"
   ],
   "calls": [
@@ -216,41 +268,58 @@
    "$.fs.exists (via readTaskFiles)",
    "$.fs.list (via readTaskFiles)",
    "$.fs.read (via readTaskFiles)",
+   "$.process.run (via repoForge)",
    "$.prompt.fill (via answer)",
    "$.prompt.read (via answer)",
    "$.prompt.submit",
    "$.session.id (via sessionId)",
    "$.state.get",
    "$.state.set",
-   "$.store.delete (via prune)",
-   "$.store.get (via loadRecord",
+   "$.store.delete (via loadRecord",
    "prune)",
-   "$.store.keys (via prune)",
-   "$.store.set (via persist)",
+   "$.store.get (via forkedFrom",
+   "loadRecord",
+   "persist",
+   "prune)",
+   "$.store.keys (via forkedFrom",
+   "prune)",
+   "$.store.set (via loadRecord",
+   "persist)",
+   "$.tool.list (via taskUpdateOffered)",
    "$.tool.register",
+   "$.ui.ask (via popup)",
    "$.ui.close (via publish)",
+   "$.ui.copy (via copy)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.status",
-   "$.ui.toast (via announce)"
+   "$.ui.toast"
   ],
   "stateReads": [
    "session-decisions.ascii",
    "session-decisions.autoOpened",
+   "session-decisions.closed",
    "session-decisions.counters",
    "session-decisions.created",
+   "session-decisions.handoffNudge",
    "session-decisions.items",
+   "session-decisions.loops",
    "session-decisions.paneDismissed",
-   "session-decisions.showSettled"
+   "session-decisions.showSettled",
+   "session-decisions.turnStarted"
   ],
   "stateWrites": [
    "session-decisions.ascii",
    "session-decisions.autoOpened",
+   "session-decisions.closed",
    "session-decisions.counters",
    "session-decisions.created",
+   "session-decisions.handoffNudge",
    "session-decisions.items",
+   "session-decisions.loops",
    "session-decisions.paneDismissed",
-   "session-decisions.showSettled"
+   "session-decisions.showSettled",
+   "session-decisions.turnStarted"
   ],
   "envReads": [
    "CLAUDE_CODE_TASK_LIST_ID",
@@ -270,7 +339,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-decisions.items, session-decisions.counters, session-decisions.created, session-decisions.showSettled, session-decisions.paneDismissed, session-decisions.autoOpened, session-decisions.ascii"
+     "types ./types/index.d.ts declares state: session-decisions.items, session-decisions.counters, session-decisions.created, session-decisions.closed, session-decisions.loops, session-decisions.turnStarted, session-decisions.handoffNudge, session-decisions.showSettled, session-decisions.paneDismissed, session-decisions.autoOpened, session-decisions.ascii"
     ],
     "gatingHooks": []
    },
@@ -281,25 +350,55 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.SessionStart, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=mcp__session-decisions__decision_add}, tool.call{tool=mcp__session-decisions__decision_close}, command.run{command=decisions}, ui.close, ui.render{component=SessionMode}, ui.render{component=ToolUse, props has {tool=TaskCreate}}, ui.render{component=ToolUse, props has {tool=mcp__session-decisions__decision_add}}, ui.render{component=Pane, requestId=session-decisions}",
+      "./register.tsx hooks: session.start, classic.SessionStart, classic.UserPromptSubmit, classic.Stop, agent.spawn, tool.call{tool=TaskCreate|TaskGet|TaskList|TaskUpdate}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, tool.call{tool=mcp__session-decisions__decision_add}, tool.call{tool=mcp__session-decisions__decision_update}, tool.call{tool=mcp__session-decisions__decision_close}, command.run{command=decisions}, ui.close, ui.render{component=SessionMode}, ui.render{component=ToolUse, props has {tool=?}}, ui.render{component=ToolGroup}, ui.render{component=Pane, requestId=session-decisions}",
+      "./register.tsx hooks on classic.SessionStart, classic.UserPromptSubmit, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=decisions}",
       "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call{tool=TaskCreate|TaskGet|TaskList|TaskUpdate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskCreate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskUpdate}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-decisions__decision_add}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-decisions__decision_update}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-decisions__decision_close}",
       "./register.tsx gating hook without .catch: ui.close",
-      "./register.tsx calls: $.clock.now, $.command.register, $.env.get, $.fs.exists (via readTaskFiles), $.fs.list (via readTaskFiles), $.fs.read (via readTaskFiles), $.prompt.fill (via answer), $.prompt.read (via answer), $.prompt.submit, $.session.id (via sessionId), $.state.get, $.state.set, $.store.delete (via prune), $.store.get (via loadRecord, prune), $.store.keys (via prune), $.store.set (via persist), $.tool.register, $.ui.close (via publish), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via announce)",
+      "./register.tsx calls: $.clock.now, $.command.register, $.env.get, $.fs.exists (via readTaskFiles), $.fs.list (via readTaskFiles), $.fs.read (via readTaskFiles), $.process.run (via repoForge), $.prompt.fill (via answer), $.prompt.read (via answer), $.prompt.submit, $.session.id (via sessionId), $.state.get, $.state.set, $.store.delete (via loadRecord, prune), $.store.get (via forkedFrom, loadRecord, persist, prune), $.store.keys (via forkedFrom, prune), $.store.set (via loadRecord, persist), $.tool.list (via taskUpdateOffered), $.tool.register, $.ui.ask (via popup), $.ui.close (via publish), $.ui.copy (via copy), $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_TASK_LIST_ID, CLAUDE_CONFIG_DIR, HOME, NO_COLOR, TERM",
-      "./register.tsx state writes: session-decisions.ascii, session-decisions.autoOpened, session-decisions.counters, session-decisions.created, session-decisions.items, session-decisions.paneDismissed, session-decisions.showSettled",
-      "./register.tsx state reads: session-decisions.ascii, session-decisions.autoOpened, session-decisions.counters, session-decisions.created, session-decisions.items, session-decisions.paneDismissed, session-decisions.showSettled"
+      "./register.tsx state writes: session-decisions.ascii, session-decisions.autoOpened, session-decisions.closed, session-decisions.counters, session-decisions.created, session-decisions.handoffNudge, session-decisions.items, session-decisions.loops, session-decisions.paneDismissed, session-decisions.showSettled, session-decisions.turnStarted",
+      "./register.tsx state reads: session-decisions.ascii, session-decisions.autoOpened, session-decisions.closed, session-decisions.counters, session-decisions.created, session-decisions.handoffNudge, session-decisions.items, session-decisions.loops, session-decisions.paneDismissed, session-decisions.showSettled, session-decisions.turnStarted"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskCreate|TaskGet|TaskList|TaskUpdate}",
        "hasCatch": false
       },
       {
@@ -323,6 +422,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-decisions__decision_update}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__session-decisions__decision_close}",
        "hasCatch": false
       },
@@ -338,5 +443,5 @@
    "advice": []
   }
  },
- "sourceHash": "116654b1b09c90d4"
+ "sourceHash": "ed77f23219a85a27"
 }

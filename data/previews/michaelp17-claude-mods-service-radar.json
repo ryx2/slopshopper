@@ -1,6 +1,6 @@
 {
  "slug": "michaelp17-claude-mods-service-radar",
- "generatedAt": "2026-10-06T05:27:38.380Z",
+ "generatedAt": "2026-10-16T14:16:57.701Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,6 +20,13 @@
     }
    },
    {
+    "event": "ui.press",
+    "matcher": {
+     "plugin": "mod-hub",
+     "element": "service-radar:open"
+    }
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "clear"
@@ -31,12 +38,19 @@
      "component": "Pane",
      "requestId": "service-radar"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
    }
   ],
   "commands": [
    {
     "name": "services",
-    "description": "Show the services Claude started and stop them"
+    "description": "Show the services Claude started and stop them",
+    "immediate": true
    }
   ],
   "tools": [],
@@ -52,11 +66,10 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.store.get": 3,
+   "$.store.get": 6,
+   "$.state.get": 10,
    "$.store.set": 2,
-   "$.state.get": 6,
    "$.state.set": 3,
-   "$.ui.status": 2,
    "$.session.cwd": 4,
    "$.env.get": 4,
    "$.ui.open": 1,
@@ -64,6 +77,9 @@
   },
   "timers": [],
   "sites": {
+   "SessionMode": {
+    "ok": "engine"
+   },
    "Pane": {
     "service-radar": {
      "ok": true,
@@ -143,8 +159,10 @@
    "session.start",
    "tool.call{tool=Bash}",
    "command.run{command=services}",
+   "ui.press{plugin=mod-hub, element=service-radar:open}",
    "command.run{command=clear}",
-   "ui.render{component=Pane, requestId=service-radar}"
+   "ui.render{component=Pane, requestId=service-radar}",
+   "ui.render{component=SessionMode}"
   ],
   "calls": [
    "$.clock.after (via inBackground)",
@@ -152,6 +170,7 @@
    "$.command.register",
    "$.env.get",
    "$.fs.exists (via resolveExecutable)",
+   "$.hub.set (via publish)",
    "$.process.run (via runCommand)",
    "$.session.cwd",
    "$.state.get",
@@ -160,18 +179,19 @@
    "$.store.set (via saveServices)",
    "$.ui.ask",
    "$.ui.close",
-   "$.ui.open",
+   "$.ui.open (via openServices)",
    "$.ui.resolve",
-   "$.ui.status (via saveServices)",
    "$.ui.toast"
   ],
   "stateReads": [
    "service-radar.isBusy",
+   "service-radar.isHubbed",
    "service-radar.message",
    "service-radar.services"
   ],
   "stateWrites": [
    "service-radar.isBusy",
+   "service-radar.isHubbed",
    "service-radar.message",
    "service-radar.services"
   ],
@@ -182,34 +202,53 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/michaelp17-claude-mods-service-radar/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/michaelp17-claude-mods-service-radar/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/michaelp17-claude-mods-service-radar/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/michaelp17-claude-mods-service-radar/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: service-radar.services, service-radar.isBusy, service-radar.message"
-    ]
+     "types ./types/index.d.ts declares state: service-radar.services, service-radar.isBusy, service-radar.message, service-radar.isHubbed"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/michaelp17-claude-mods-service-radar/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/michaelp17-claude-mods-service-radar/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=Bash}, command.run{command=services}, command.run{command=clear}, ui.render{component=Pane, requestId=service-radar}",
-      "./register.tsx calls: $.clock.after (via inBackground), $.clock.now, $.command.register, $.env.get, $.fs.exists (via resolveExecutable), $.process.run (via runCommand), $.session.cwd, $.state.get, $.state.set, $.store.get (via loadServices), $.store.set (via saveServices), $.ui.ask, $.ui.close, $.ui.open, $.ui.resolve, $.ui.status (via saveServices), $.ui.toast",
+      "./register.tsx hooks: session.start, tool.call{tool=Bash}, command.run{command=services}, ui.press{plugin=mod-hub, element=service-radar:open}, command.run{command=clear}, ui.render{component=Pane, requestId=service-radar}, ui.render{component=SessionMode}",
+      "./register.tsx answers its own command: command.run{command=services}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook without .catch: command.run{command=clear}",
+      "./register.tsx calls: $.clock.after (via inBackground), $.clock.now, $.command.register, $.env.get, $.fs.exists (via resolveExecutable), $.hub.set (via publish), $.process.run (via runCommand), $.session.cwd, $.state.get, $.state.set, $.store.get (via loadServices), $.store.set (via saveServices), $.ui.ask, $.ui.close, $.ui.open (via openServices), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, PATH",
-      "./register.tsx state writes: service-radar.isBusy, service-radar.message, service-radar.services",
-      "./register.tsx state reads: service-radar.isBusy, service-radar.message, service-radar.services"
+      "./register.tsx state writes: service-radar.isBusy, service-radar.isHubbed, service-radar.message, service-radar.services",
+      "./register.tsx state reads: service-radar.isBusy, service-radar.isHubbed, service-radar.message, service-radar.services"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=clear}",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "2389c40ff5bbc3e3"
+ "sourceHash": "abba9189228cecb5"
 }

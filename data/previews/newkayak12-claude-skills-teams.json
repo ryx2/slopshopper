@@ -1,6 +1,6 @@
 {
  "slug": "newkayak12-claude-skills-teams",
- "generatedAt": "2026-10-08T15:53:12.971Z",
+ "generatedAt": "2026-10-16T14:16:23.847Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -10,14 +10,14 @@
    {
     "event": "command.run",
     "matcher": {
-     "command": "teams-live"
+     "command": "teams-status"
     }
    },
    {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
-     "requestId": "teams-live"
+     "requestId": "teams-status"
     }
    },
    {
@@ -41,15 +41,15 @@
   ],
   "commands": [
    {
-    "name": "teams-live",
-    "description": "Open the teams live pane",
+    "name": "teams-status",
+    "description": "Open or close the teams status pane",
     "output": "pane opened"
    }
   ],
   "tools": [],
   "panes": [
    {
-    "id": "teams-live",
+    "id": "teams-status",
     "title": "Teams"
    }
   ],
@@ -65,6 +65,7 @@
    "$.command.register": 1,
    "$.clock.now": 1,
    "$.clock.every": 1,
+   "$.ui.panes": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -79,7 +80,7 @@
     "ok": "engine"
    },
    "Pane": {
-    "teams-live": {
+    "teams-status": {
      "ok": true,
      "tree": {
       "type": "Box",
@@ -93,6 +94,18 @@
         "children": [
          "No teams run in this session."
         ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "close",
+         "role": "dismiss",
+         "plain": true,
+         "hotkey": "q",
+         "label": "close",
+         "onPress": "[fn]"
+        },
+        "children": []
        }
       ]
      },
@@ -112,8 +125,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.ui.open(teams-live)",
-   "/teams-live → pane opened"
+   "$.ui.open(teams-status)",
+   "/teams-status → pane opened"
   ],
   "console": [],
   "warnings": []
@@ -127,8 +140,8 @@
   ],
   "hooks": [
    "session.start",
-   "command.run{command=teams-live}",
-   "ui.render{component=Pane, requestId=teams-live}",
+   "command.run{command=teams-status}",
+   "ui.render{component=Pane, requestId=teams-status}",
    "ui.render{component=AbovePrompt}",
    "tool.call{tool=/\"__(tm_open|tm_run)$\"/}",
    "tool.call{tool=/\"__team_status$\"/}"
@@ -142,7 +155,9 @@
    "$.session.surfaces",
    "$.settings.read",
    "$.state.get",
-   "$.state.set",
+   "$.state.set (via pushEvent)",
+   "$.tool.call (via pushEvent)",
+   "$.ui.close",
    "$.ui.open",
    "$.ui.panes",
    "$.ui.resolve",
@@ -152,22 +167,29 @@
   "stateReads": [
    "teams.cardReport",
    "teams.cursor",
+   "teams.decisions",
    "teams.ended",
    "teams.lang",
    "teams.report",
+   "teams.selected",
    "teams.status",
    "teams.summary",
+   "teams.teams",
    "teams.view",
    "teams.watch"
   ],
   "stateWrites": [
    "teams.cardReport",
    "teams.cursor",
+   "teams.decisions",
    "teams.ended",
    "teams.lang",
+   "teams.outcome",
    "teams.report",
+   "teams.selected",
    "teams.status",
    "teams.summary",
+   "teams.teams",
    "teams.view",
    "teams.watch"
   ],
@@ -189,7 +211,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: teams.cursor, teams.watch, teams.status, teams.summary, teams.view, teams.report, teams.cardReport, teams.ended, teams.lang"
+     "types ./types/index.d.ts declares state: teams.cursor, teams.watch, teams.status, teams.summary, teams.view, teams.teams, teams.decisions, teams.selected, teams.report, teams.cardReport, teams.ended, teams.lang, teams.outcome"
     ],
     "gatingHooks": []
    },
@@ -206,13 +228,13 @@
       }
      ],
      "notes": [
-      "./mod.tsx hooks: session.start, command.run{command=teams-live}, ui.render{component=Pane, requestId=teams-live}, ui.render{component=AbovePrompt}, tool.call{tool=/\"__(tm_open|tm_run)$\"/}, tool.call{tool=/\"__team_status$\"/}",
-      "./mod.tsx answers its own command: command.run{command=teams-live}",
+      "./mod.tsx hooks: session.start, command.run{command=teams-status}, ui.render{component=Pane, requestId=teams-status}, ui.render{component=AbovePrompt}, tool.call{tool=/\"__(tm_open|tm_run)$\"/}, tool.call{tool=/\"__team_status$\"/}",
+      "./mod.tsx answers its own command: command.run{command=teams-status}",
       "./mod.tsx gating hook with .catch: tool.call{tool=/\"__(tm_open|tm_run)$\"/}",
       "./mod.tsx gating hook with .catch: tool.call{tool=/\"__team_status$\"/}",
-      "./mod.tsx calls: $.clock.every, $.clock.now, $.command.register, $.process.run, $.session.cwd, $.session.surfaces, $.settings.read, $.state.get, $.state.set, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./mod.tsx state writes: teams.cardReport, teams.cursor, teams.ended, teams.lang, teams.report, teams.status, teams.summary, teams.view, teams.watch",
-      "./mod.tsx state reads: teams.cardReport, teams.cursor, teams.ended, teams.lang, teams.report, teams.status, teams.summary, teams.view, teams.watch"
+      "./mod.tsx calls: $.clock.every, $.clock.now, $.command.register, $.process.run, $.session.cwd, $.session.surfaces, $.settings.read, $.state.get, $.state.set (via pushEvent), $.tool.call (via pushEvent), $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./mod.tsx state writes: teams.cardReport, teams.cursor, teams.decisions, teams.ended, teams.lang, teams.outcome, teams.report, teams.selected, teams.status, teams.summary, teams.teams, teams.view, teams.watch",
+      "./mod.tsx state reads: teams.cardReport, teams.cursor, teams.decisions, teams.ended, teams.lang, teams.report, teams.selected, teams.status, teams.summary, teams.teams, teams.view, teams.watch"
      ],
      "gatingHooks": [
       {
@@ -229,8 +251,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "47dd504502fe74bc"
+ "sourceHash": "8f5be33fffd90a4c"
 }

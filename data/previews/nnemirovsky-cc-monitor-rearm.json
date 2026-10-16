@@ -1,9 +1,15 @@
 {
  "slug": "nnemirovsky-cc-monitor-rearm",
- "generatedAt": "2026-10-10T14:45:35.960Z",
+ "generatedAt": "2026-10-16T14:21:04.454Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "classic.FileChanged"
+   },
    {
     "event": "tool.call",
     "matcher": {
@@ -18,6 +24,9 @@
    },
    {
     "event": "classic.PostToolUse"
+   },
+   {
+    "event": "classic.PostToolUseFailure"
    },
    {
     "event": "tool.call",
@@ -47,11 +56,14 @@
   "logs": [],
   "denies": [],
   "rewrites": [],
-  "apiCalls": {},
+  "apiCalls": {
+   "$.fs.write": 1
+  },
   "timers": [],
   "sites": {},
   "script": [
    "session.start",
+   "$.fs.write(/tmp/monitor-rearm/preview-session)",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -71,16 +83,24 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "classic.SessionStart",
+   "classic.FileChanged",
    "tool.call{tool=Monitor}",
    "tool.check{tool=Monitor}",
    "classic.PostToolUse",
+   "classic.PostToolUseFailure",
    "tool.call{tool=TaskStop}",
    "prompt.submit{origin has {kind=task-notification}}",
    "session.append{door=notice}"
   ],
   "calls": [
+   "$.clock.after (via ring",
+   "swap)",
    "$.clock.now",
-   "$.tool.call (via rearm)"
+   "$.fs.write",
+   "$.prompt.submit (via swap)",
+   "$.tool.call (via restart",
+   "swap)"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -104,16 +124,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: tool.call{tool=Monitor}, tool.check{tool=Monitor}, classic.PostToolUse, tool.call{tool=TaskStop}, prompt.submit{origin has {kind=task-notification}}, session.append{door=notice}",
+      "./register.ts hooks: classic.SessionStart, classic.FileChanged, tool.call{tool=Monitor}, tool.check{tool=Monitor}, classic.PostToolUse, classic.PostToolUseFailure, tool.call{tool=TaskStop}, prompt.submit{origin has {kind=task-notification}}, session.append{door=notice}",
+      "./register.ts hooks on classic.SessionStart, classic.FileChanged, classic.PostToolUse, classic.PostToolUseFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook without .catch: classic.SessionStart",
+      "./register.ts gating hook without .catch: classic.FileChanged",
       "./register.ts gating hook without .catch: tool.call{tool=Monitor}",
       "./register.ts gating hook without .catch: tool.check{tool=Monitor}",
       "./register.ts gating hook without .catch: classic.PostToolUse",
+      "./register.ts gating hook without .catch: classic.PostToolUseFailure",
       "./register.ts gating hook without .catch: tool.call{tool=TaskStop}",
       "./register.ts gating hook without .catch: prompt.submit{origin has {kind=task-notification}}",
       "./register.ts gating hook without .catch: session.append{door=notice}",
-      "./register.ts calls: $.clock.now, $.tool.call (via rearm)"
+      "./register.ts calls: $.clock.after (via ring, swap), $.clock.now, $.fs.write, $.prompt.submit (via swap), $.tool.call (via restart, swap)"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.FileChanged",
+       "hook": "classic.FileChanged",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "tool.call",
@@ -130,6 +166,12 @@
        "module": "./register.ts",
        "pattern": "classic.PostToolUse",
        "hook": "classic.PostToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.PostToolUseFailure",
+       "hook": "classic.PostToolUseFailure",
        "hasCatch": false
       },
       {
@@ -156,5 +198,5 @@
    "advice": []
   }
  },
- "sourceHash": "4b989393b314793d"
+ "sourceHash": "ddab7b8f7ce4b5e0"
 }

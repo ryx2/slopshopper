@@ -1,14 +1,49 @@
 {
  "slug": "othrayte-claude-multitask-react",
- "generatedAt": "2026-10-10T14:45:38.989Z",
+ "generatedAt": "2026-10-16T14:17:59.580Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": "/^(composer|sdk|bridge)$/"
+     }
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "element": "claude-multitask-welcome-dismiss"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt",
+     "props": {
+      "hasSurvey": false
+     }
+    }
+   },
    {
     "event": "session.start"
    },
    {
     "event": "command.run",
+    "matcher": {
+     "command": "react"
+    }
+   },
+   {
+    "event": "command.describe",
     "matcher": {
      "command": "react"
     }
@@ -44,9 +79,9 @@
   "commands": [
    {
     "name": "react",
-    "description": "Turn emoji reactions on or off in this chat",
-    "argumentHint": "[default | place corner|under]",
-    "output": "Reactions are off in this chat."
+    "description": "Turn emoji reactions on or off in this chat, or by default in new chats",
+    "argumentHint": "[on|off|toggle|status|default [on|off]]",
+    "output": "Reactions are already on; this chat now keeps them on."
    }
   ],
   "tools": [],
@@ -66,13 +101,21 @@
    "$.session.id": 5,
    "$.session.messages": 5,
    "$.store.keys": 1,
-   "$.state.get": 26,
-   "$.state.set": 4,
+   "$.state.get": 44,
+   "$.state.set": 5,
+   "$.ui.invalidate": 2,
    "$.clock.now": 4,
-   "$.store.set": 4
+   "$.store.set": 4,
+   "$.env.get": 4,
+   "$.fs.stat": 1,
+   "$.session.surfaces": 1,
+   "$.ui.ask": 1
   },
   "timers": [],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "UserMessage": {
     "ok": "engine"
    },
@@ -81,6 +124,8 @@
    }
   },
   "script": [
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -92,7 +137,9 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/react → Reactions are off in this chat."
+   "$.ui.ask(Reactions in this chat?) → \"On (current)\"",
+   "/react → Reactions are already on; this chat now keeps them on.",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)"
   ],
   "console": [],
   "warnings": []
@@ -104,8 +151,14 @@
    "No author information provided. Consider adding author details for plugin attribution"
   ],
   "hooks": [
+   "prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
+   "session.start{cwd=/\"^\"/}",
+   "ui.press{element=claude-multitask-welcome-dismiss}",
+   "ui.render{component=AbovePrompt",
+   "props has {hasSurvey=false}}",
    "session.start",
    "command.run{command=react}",
+   "command.describe{command=react}",
    "prompt.submit",
    "session.compact",
    "session.append",
@@ -117,31 +170,37 @@
   "calls": [
    "$.clock.now (via keep)",
    "$.command.register",
+   "$.env.get (via configPath",
+   "switchNote)",
+   "$.fs.read (via isSavedOff)",
+   "$.fs.stat (via isSavedOff)",
    "$.session.id (via keep",
    "kept)",
    "$.session.messages (via keep",
    "kept",
    "takeUp)",
+   "$.session.surfaces (via sessionOf",
+   "switchNote)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via keep",
-   "kept",
-   "takeUpDefault",
-   "takeUpPlace)",
+   "$.store.get",
    "$.store.keys (via kept)",
-   "$.store.set (via choosePlace",
-   "flipDefault",
-   "keep)",
-   "$.ui.resolve"
+   "$.store.set",
+   "$.ui.ask (via sessionOf)",
+   "$.ui.invalidate (via redescribe)",
+   "$.ui.resolve",
+   "$.ui.toast (via switchNote)"
   ],
   "stateReads": [
+   "multitask.welcome",
    "react.answering",
    "react.choice",
    "react.isBriefed",
    "react.isOn",
    "react.isOnByDefault",
-   "react.place",
-   "react.reactions"
+   "react.reactions",
+   "react.welcome",
+   "thread-chat.welcome"
   ],
   "stateWrites": [
    "react.answering",
@@ -149,10 +208,15 @@
    "react.isBriefed",
    "react.isOn",
    "react.isOnByDefault",
-   "react.place",
-   "react.reactions"
+   "react.reactions",
+   "react.welcome"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "DISABLE_GROWTHBOOK",
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -170,7 +234,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: react.isOn, react.choice, react.isOnByDefault, react.isBriefed, react.reactions, react.answering, react.place"
+     "types ./types/index.d.ts declares state: react.isOn, react.choice, react.isOnByDefault, react.isBriefed, react.reactions, react.answering, react.welcome"
     ],
     "gatingHooks": []
    },
@@ -181,16 +245,27 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=react}, prompt.submit, session.compact, session.append, turn.step, turn.complete, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}",
+      "./register.tsx hooks: prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}, session.start{cwd=/\"^\"/}, ui.press{element=claude-multitask-welcome-dismiss}, ui.render{component=AbovePrompt, props has {hasSurvey=false}}, session.start, command.run{command=react}, command.describe{command=react}, prompt.submit, session.compact, session.append, turn.step, turn.complete, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=react}",
+      "./register.tsx gating hook without .catch: prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.compact",
       "./register.tsx gating hook without .catch: session.append",
-      "./register.tsx calls: $.clock.now (via keep), $.command.register, $.session.id (via keep, kept), $.session.messages (via keep, kept, takeUp), $.state.get, $.state.set, $.store.get (via keep, kept, takeUpDefault, takeUpPlace), $.store.keys (via kept), $.store.set (via choosePlace, flipDefault, keep), $.ui.resolve",
-      "./register.tsx state writes: react.answering, react.choice, react.isBriefed, react.isOn, react.isOnByDefault, react.place, react.reactions",
-      "./register.tsx state reads: react.answering, react.choice, react.isBriefed, react.isOn, react.isOnByDefault, react.place, react.reactions"
+      "./register.tsx calls: $.clock.now (via keep), $.command.register, $.env.get (via configPath, switchNote), $.fs.read (via isSavedOff), $.fs.stat (via isSavedOff), $.session.id (via keep, kept), $.session.messages (via keep, kept, takeUp), $.session.surfaces (via sessionOf, switchNote), $.state.get, $.state.set, $.store.get, $.store.keys (via kept), $.store.set, $.ui.ask (via sessionOf), $.ui.invalidate (via redescribe), $.ui.resolve, $.ui.toast (via switchNote)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, DISABLE_GROWTHBOOK, HOME, USERPROFILE",
+      "./register.tsx state writes: react.answering, react.choice, react.isBriefed, react.isOn, react.isOnByDefault, react.reactions, react.welcome",
+      "./register.tsx state reads: multitask.welcome, react.answering, react.choice, react.isBriefed, react.isOn, react.isOnByDefault, react.reactions, react.welcome, thread-chat.welcome",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): multitask.welcome, thread-chat.welcome"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -215,5 +290,5 @@
    "advice": []
   }
  },
- "sourceHash": "85ecbbbdcfedf9ba"
+ "sourceHash": "790e934d6ba6c3fb"
 }

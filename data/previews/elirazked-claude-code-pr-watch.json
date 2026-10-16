@@ -1,6 +1,6 @@
 {
  "slug": "elirazked-claude-code-pr-watch",
- "generatedAt": "2026-10-09T15:32:31.990Z",
+ "generatedAt": "2026-10-16T14:16:13.893Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -37,13 +37,19 @@
      "component": "Pane",
      "requestId": "pr-watch"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    }
   ],
   "commands": [
    {
     "name": "pr-watch",
-    "description": "Open the PR pane; /pr-watch <url> watches a PR, /pr-watch stop <number|url|all> stops",
-    "argumentHint": "[<pr url> | stop <number|url|all>]",
+    "description": "Open the PR pane; /pr-watch <url> watches a PR, /pr-watch stop <number|url|all> stops, /pr-watch theme <name> restyles it",
+    "argumentHint": "[<pr url> | stop <number|url|all> | theme [<name>]]",
     "output": "PR panel opened."
    }
   ],
@@ -65,9 +71,11 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.config.list": 1,
+   "$.env.get": 6,
    "$.tool.register": 1,
    "$.clock.every": 1,
-   "$.state.get": 33,
+   "$.state.get": 38,
    "$.process.run": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 2
@@ -79,6 +87,9 @@
    }
   ],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "Pane": {
     "pr-watch": {
      "ok": true,
@@ -201,6 +212,24 @@
           ]
          }
         ]
+       },
+       {
+        "type": "Box",
+        "props": {},
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "label": "Close",
+           "hotkey": "x",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
        }
       ]
      },
@@ -239,55 +268,84 @@
    "tool.check{tool=mcp__pr-watch__watch}",
    "tool.call",
    "prompt.submit",
-   "ui.render{component=Pane, requestId=pr-watch}"
+   "ui.render{component=Pane, requestId=pr-watch}",
+   "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.clock.after",
    "$.clock.every",
    "$.clock.now",
-   "$.clock.sleep (via takeLease)",
+   "$.clock.sleep (via query",
+   "sayNewer",
+   "takeLease)",
    "$.command.register",
-   "$.env.get (via root)",
+   "$.config.list (via pickTheme",
+   "readMode)",
+   "$.config.set (via pickTheme)",
+   "$.env.get (via home",
+   "readDepth",
+   "readMode)",
    "$.fs.list (via liveUrls)",
-   "$.fs.read (via readJson)",
-   "$.fs.write (via writeJson)",
+   "$.fs.read (via logFailure",
+   "readJson",
+   "readOwnVersion)",
+   "$.fs.write (via logFailure",
+   "writeJson)",
    "$.process.run (via gh",
    "liveUrls)",
    "$.prompt.fill (via handOver)",
    "$.prompt.read (via handOver)",
-   "$.prompt.submit (via sendFix)",
+   "$.prompt.submit (via sendHandoff)",
    "$.state.get",
    "$.state.set",
    "$.tool.register",
    "$.ui.blit (via syncAnimation)",
-   "$.ui.close (via dismiss)",
+   "$.ui.close",
+   "$.ui.invalidate",
    "$.ui.open",
    "$.ui.panes (via restore)",
    "$.ui.resolve",
    "$.ui.status (via refreshStatus)",
    "$.ui.toast (via apply",
+   "sayNewer",
    "show)"
   ],
   "stateReads": [
+   "pr-watch.addressing",
    "pr-watch.dropped",
    "pr-watch.fixing",
+   "pr-watch.ghHelp",
+   "pr-watch.limits",
    "pr-watch.merging",
+   "pr-watch.newer",
    "pr-watch.now",
    "pr-watch.prs",
    "pr-watch.refused",
+   "pr-watch.resolving",
    "pr-watch.suggested"
   ],
   "stateWrites": [
+   "pr-watch.addressing",
    "pr-watch.dropped",
    "pr-watch.fixing",
+   "pr-watch.ghHelp",
+   "pr-watch.limits",
    "pr-watch.merging",
+   "pr-watch.newer",
    "pr-watch.now",
    "pr-watch.prs",
    "pr-watch.refused",
+   "pr-watch.resolving",
    "pr-watch.suggested"
   ],
   "envReads": [
-   "HOME"
+   "CLAUDE_CODE_TMUX_TRUECOLOR",
+   "COLORFGBG",
+   "COLORTERM",
+   "HOME",
+   "TERM",
+   "TERM_PROGRAM",
+   "TMUX"
   ],
   "raw": {
    "success": true,
@@ -300,7 +358,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: pr-watch.prs, pr-watch.now, pr-watch.suggested, pr-watch.dropped, pr-watch.merging, pr-watch.refused, pr-watch.fixing"
+     "types ./types/index.d.ts declares state: pr-watch.prs, pr-watch.now, pr-watch.suggested, pr-watch.dropped, pr-watch.merging, pr-watch.refused, pr-watch.fixing, pr-watch.addressing, pr-watch.resolving, pr-watch.newer, pr-watch.limits, pr-watch.ghHelp"
     ],
     "gatingHooks": []
    },
@@ -311,17 +369,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: config.set, session.start, session.end, command.run{command=pr-watch}, tool.check{tool=mcp__pr-watch__watch}, tool.call, prompt.submit, ui.render{component=Pane, requestId=pr-watch}",
+      "./register.tsx hooks: config.set, session.start, session.end, command.run{command=pr-watch}, tool.check{tool=mcp__pr-watch__watch}, tool.call, prompt.submit, ui.render{component=Pane, requestId=pr-watch}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=pr-watch}",
       "./register.tsx gating hook with .catch: config.set",
       "./register.tsx gating hook without .catch: tool.check{tool=mcp__pr-watch__watch}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.clock.sleep (via takeLease), $.command.register, $.env.get (via root), $.fs.list (via liveUrls), $.fs.read (via readJson), $.fs.write (via writeJson), $.process.run (via gh, liveUrls), $.prompt.fill (via handOver), $.prompt.read (via handOver), $.prompt.submit (via sendFix), $.state.get, $.state.set, $.tool.register, $.ui.blit (via syncAnimation), $.ui.close (via dismiss), $.ui.open, $.ui.panes (via restore), $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast (via apply, show)",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.clock.sleep (via query, sayNewer, takeLease), $.command.register, $.config.list (via pickTheme, readMode), $.config.set (via pickTheme), $.env.get (via home, readDepth, readMode), $.fs.list (via liveUrls), $.fs.read (via logFailure, readJson, readOwnVersion), $.fs.write (via logFailure, writeJson), $.process.run (via gh, liveUrls), $.prompt.fill (via handOver), $.prompt.read (via handOver), $.prompt.submit (via sendHandoff), $.state.get, $.state.set, $.tool.register, $.ui.blit (via syncAnimation), $.ui.close, $.ui.invalidate, $.ui.open, $.ui.panes (via restore), $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast (via apply, sayNewer, show)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME",
-      "./register.tsx state writes: pr-watch.dropped, pr-watch.fixing, pr-watch.merging, pr-watch.now, pr-watch.prs, pr-watch.refused, pr-watch.suggested",
-      "./register.tsx state reads: pr-watch.dropped, pr-watch.fixing, pr-watch.merging, pr-watch.now, pr-watch.prs, pr-watch.refused, pr-watch.suggested"
+      "./register.tsx env reads: CLAUDE_CODE_TMUX_TRUECOLOR, COLORFGBG, COLORTERM, HOME, TERM, TERM_PROGRAM, TMUX",
+      "./register.tsx state writes: pr-watch.addressing, pr-watch.dropped, pr-watch.fixing, pr-watch.ghHelp, pr-watch.limits, pr-watch.merging, pr-watch.newer, pr-watch.now, pr-watch.prs, pr-watch.refused, pr-watch.resolving, pr-watch.suggested",
+      "./register.tsx state reads: pr-watch.addressing, pr-watch.dropped, pr-watch.fixing, pr-watch.ghHelp, pr-watch.limits, pr-watch.merging, pr-watch.newer, pr-watch.now, pr-watch.prs, pr-watch.refused, pr-watch.resolving, pr-watch.suggested"
      ],
      "gatingHooks": [
       {
@@ -354,5 +412,5 @@
    "advice": []
   }
  },
- "sourceHash": "e5a927c21a46299"
+ "sourceHash": "37e48809af55f90d"
 }

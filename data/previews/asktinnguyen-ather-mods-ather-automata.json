@@ -1,6 +1,6 @@
 {
  "slug": "asktinnguyen-ather-mods-ather-automata",
- "generatedAt": "2026-10-10T14:44:58.906Z",
+ "generatedAt": "2026-10-16T14:18:45.777Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,27 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "session.attach"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "isAborted": false
+    }
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "isAborted": true
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "warm"
+    }
    },
    {
     "event": "tool.call",
@@ -80,18 +101,15 @@
     }
    },
    {
+    "event": "turn.start"
+   },
+   {
     "event": "turn.complete"
    },
    {
     "event": "command.run",
     "matcher": {
      "command": "ather"
-    }
-   },
-   {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "mcp__ather-automata__repos"
     }
    },
    {
@@ -115,7 +133,8 @@
    {
     "event": "ui.render",
     "matcher": {
-     "component": "Pane"
+     "component": "Pane",
+     "requestId": "ather"
     }
    },
    {
@@ -126,7 +145,7 @@
    {
     "name": "ather",
     "description": "Ather Automata: what needs you, and what is next",
-    "argumentHint": "[pick | find <words> | issues | issue <number> | tour | skip | role <role> | checked | intent <name> | untrack | repos [add | remove <folder>]]",
+    "argumentHint": "[pick | find <words> | issues | issue <number> | tour | skip | role <role> | checked | intent <name> | untrack]",
     "output": "Ather Automata works in repositories with intents (a docs/intent folder); none here."
    },
    {
@@ -134,6 +153,12 @@
     "description": "Ather Automata: going away? hand over with full autonomy, decisions recorded",
     "argumentHint": "[tonight | 8h | 30m | until 9am | until done] [goal] | stop",
     "output": "Ather Automata works in repositories with intents (a docs/intent folder); none here."
+   },
+   {
+    "name": "warm",
+    "description": "Ather Automata: keep the prompt cache warm while you are idle",
+    "argumentHint": "[on | off | <n>h]",
+    "output": "Keep the cache warm: off. Cap 3 hours, from the plugin settings.\n/warm on keeps it warm while you are idle; /warm 2h sets the cap."
    }
   ],
   "tools": [
@@ -148,10 +173,6 @@
    {
     "name": "profile",
     "description": "Ather Automata: record the user's role and area when they state them, and which intent this session tracks when they choose one, for example during the Ather tour. The role shapes the next step Ather suggests and what Prove asks for; the area orders the intents Ather offers."
-   },
-   {
-    "name": "repos",
-    "description": "Ather Automata: the folders Ather lists besides this session's own checkout; their intents, issues and PRs show in the Ather pane. Use it when the user asks to add, remove or show a repository or folder in Ather (\"add the lancaster repository to Ather\"). \"add\" keeps the folder's git checkout for this machine and lists it at once: the pane redraws by itself, with that checkout's worktrees too, and no restart or command is needed. \"remove\" takes a kept folder out. \"list\" shows every folder listed and where it comes from. Nothing on disk changes."
    }
   ],
   "panes": [],
@@ -163,17 +184,21 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
-   "$.session.root": 27,
-   "$.fs.exists": 62,
-   "$.session.id": 46,
-   "$.fs.read": 12,
-   "$.fs.list": 2,
-   "$.process.run": 80,
+   "$.command.register": 3,
+   "$.session.root": 25,
+   "$.fs.exists": 54,
+   "$.session.id": 49,
+   "$.fs.read": 8,
+   "$.fs.list": 1,
+   "$.process.run": 74,
    "$.fs.stat": 1,
-   "$.store.get": 25,
    "$.ui.log": 2,
-   "$.tool.register": 4,
+   "$.store.get": 34,
+   "$.clock.now": 4,
+   "$.session.usage": 4,
+   "$.ui.status": 3,
+   "$.ui.invalidate": 1,
+   "$.tool.register": 3,
    "$.clock.every": 1,
    "$.ui.resolve": 1,
    "$.env.get": 2,
@@ -439,20 +464,41 @@
        {
         "type": "Box",
         "props": {
-         "key": "home-repos-row",
+         "key": "warm",
          "flexDirection": "column",
          "width": "100%",
          "marginTop": 1
         },
         "children": [
          {
+          "type": "Text",
+          "props": {
+           "key": "warm-label",
+           "color": "#C9CCCC",
+           "bold": true
+          },
+          "children": [
+           "S T E P P I N G   O U T ?"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "warm-pitch",
+           "color": "#8E918A",
+           "wrap": "wrap"
+          },
+          "children": [
+           "Keep the prompt cache warm while you are away from the keyboard, so your next turn reads the context instead of paying to write it again."
+          ]
+         },
+         {
           "type": "Button",
           "props": {
-           "key": "home-repos",
-           "label": "Repositories ›",
-           "hotkey": "r",
+           "key": "warm-toggle",
+           "label": "Keep the cache warm",
+           "hotkey": "w",
            "plain": true,
-           "dimColor": true,
            "onPress": "[fn]"
           },
           "children": []
@@ -488,14 +534,14 @@
   },
   "script": [
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(powershell -NoProfile -Command (Get-Date).ToString('zzz')) → exit 0",
    "$.process.run(date +%z) → exit 0",
    "session.start",
@@ -505,81 +551,76 @@
    "tool.call Write",
    "tool.call Write",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "tool.call Bash bun test",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "tool.call Bash git status --porcelain",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "tool.call Bash rm -rf build && git push --force origin main",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "tool.call Bash cat .env",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "turn.complete",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "/ather → Ather Automata works in repositories with intents (a docs/intent folder); none h…",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "/away → Ather Automata works in repositories with intents (a docs/intent folder); none h…",
+   "/warm → Keep the cache warm: off. Cap 3 hours, from the plugin settings.\n/warm on keeps …",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
+   "$.process.run(git config user.email) → exit 0",
    "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
    "$.process.run(git config user.name) → exit 0",
-   "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
-   "$.process.run(git config user.name) → exit 0",
-   "$.process.run(git config --get remote.origin.url) → exit 0",
-   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
-   "$.process.run(git config user.name) → exit 0"
+   "$.process.run(git config user.email) → exit 0"
   ],
   "console": [],
   "warnings": []
@@ -592,6 +633,10 @@
    "session.start",
    "session.end",
    "prompt.submit",
+   "session.attach",
+   "turn.complete{isAborted=false}",
+   "turn.complete{isAborted=true}",
+   "command.run{command=warm}",
    "tool.call{tool=mcp__ather-automata__status}",
    "tool.call{tool=mcp__ather-automata__away}",
    "tool.call{tool=mcp__ather-automata__profile}",
@@ -605,28 +650,32 @@
    "tool.call",
    "session.start{isInteractive=true}",
    "session.start{isInteractive=false}",
+   "turn.start",
    "turn.complete",
    "command.run{command=ather}",
-   "tool.call{tool=mcp__ather-automata__repos}",
    "command.run{command=away}",
    "tool.call{tool=AskUserQuestion}",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane}",
+   "ui.render{component=Pane, requestId=ather}",
    "ui.close"
   ],
   "calls": [
-   "$.agent.list (via home",
+   "$.agent.list (via buildView",
    "host",
-   "startConsoleWork",
+   "redrawWorkers",
    "tick)",
    "$.clock.after (via answerItem",
    "deliver",
    "fill",
    "followClear",
+   "outboxHost",
    "refreshIssues",
+   "runWarm",
    "startConsoleWork)",
    "$.clock.every",
-   "$.command.register (via openConsole)",
+   "$.clock.now (via warmEnv)",
+   "$.command.register (via openConsole",
+   "startWarm)",
    "$.env.get (via host)",
    "$.fs.exists (via host",
    "io)",
@@ -641,12 +690,12 @@
    "$.fs.stat (via io",
    "repo)",
    "$.fs.write (via io)",
+   "$.model.fork (via readCache)",
    "$.process.run (via auditMerge",
    "detectTz",
    "host",
    "io",
    "openIssue",
-   "readDefaultBranch",
    "readOrigin",
    "readWorktrees",
    "refreshIssues",
@@ -657,20 +706,16 @@
    "$.session.id (via followClear",
    "io)",
    "$.session.root (via io)",
+   "$.session.send (via sendTo)",
    "$.session.surfaces (via hasPane)",
+   "$.session.usage (via readCache",
+   "warmEnv)",
    "$.store.delete (via io)",
    "$.store.get (via io)",
    "$.store.keys (via io)",
    "$.store.set (via io)",
    "$.tool.register (via registerTools)",
-   "$.ui.ask (via ask)",
-   "$.ui.close (via press)",
-   "$.ui.copy (via copyLink)",
-   "$.ui.invalidate",
-   "$.ui.log",
-   "$.ui.open (via openPane)",
-   "$.ui.resolve",
-   "$.ui.toast"
+   "$.turn.abort (via send… [+249 chars]"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -698,7 +743,9 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./ather.mjs hooks: session.start, session.end, prompt.submit, tool.call{tool=mcp__ather-automata__status}, tool.call{tool=mcp__ather-automata__away}, tool.call{tool=mcp__ather-automata__profile}, prompt.compose, tool.call{tool=Bash}, tool.call{tool=PowerShell}, tool.call{tool=Agent}, tool.call{tool=AskUserQuestion}, agent.spawn, classic.PermissionRequest, tool.call, session.start{isInteractive=true}, session.start{isInteractive=false}, turn.complete, command.run{command=ather}, tool.call{tool=mcp__ather-automata__repos}, command.run{command=away}, tool.call{tool=AskUserQuestion}, ui.render{component=AbovePrompt}, ui.render{component=Pane}, ui.close",
+      "./ather.mjs hooks: session.start, session.end, prompt.submit, session.attach, turn.complete{isAborted=false}, turn.complete{isAborted=true}, command.run{command=warm}, tool.call{tool=mcp__ather-automata__status}, tool.call{tool=mcp__ather-automata__away}, tool.call{tool=mcp__ather-automata__profile}, prompt.compose, tool.call{tool=Bash}, tool.call{tool=PowerShell}, tool.call{tool=Agent}, tool.call{tool=AskUserQuestion}, agent.spawn, classic.PermissionRequest, tool.call, session.start{isInteractive=true}, session.start{isInteractive=false}, turn.start, turn.complete, command.run{command=ather}, command.run{command=away}, tool.call{tool=AskUserQuestion}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=ather}, ui.close",
+      "./ather.mjs hooks on prompt.compose, classic.PermissionRequest do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./ather.mjs answers its own command: command.run{command=warm}",
       "./ather.mjs gating hook without .catch: prompt.submit",
       "./ather.mjs gating hook without .catch: tool.call{tool=mcp__ather-automata__status}",
       "./ather.mjs gating hook without .catch: tool.call{tool=mcp__ather-automata__away}",
@@ -711,11 +758,10 @@
       "./ather.mjs gating hook without .catch: classic.PermissionRequest",
       "./ather.mjs gating hook without .catch: tool.call",
       "./ather.mjs gating hook without .catch: command.run{command=ather}",
-      "./ather.mjs gating hook without .catch: tool.call{tool=mcp__ather-automata__repos}",
       "./ather.mjs gating hook without .catch: command.run{command=away}",
       "./ather.mjs gating hook without .catch: tool.call{tool=AskUserQuestion}",
       "./ather.mjs gating hook without .catch: ui.close",
-      "./ather.mjs calls: $.agent.list (via home, host, startConsoleWork, tick), $.clock.after (via answerItem, deliver, fill, followClear, refreshIssues, startConsoleWork), $.clock.every, $.command.register (via openConsole), $.env.get (via host), $.fs.exists (via host, io), $.fs.list (via host, io, readIntent, readTrackedIntent, repo), $.fs.read (via host, io, repo), $.fs.stat (via io, repo), $.fs.write (via io), $.process.run (via auditMerge, detectTz, host, io, openIssue, readDefaultBranch, readOrigin, readWorktrees, refreshIssues, refreshPrs, repo), $.prompt.fill (via fill), $.prompt.submit (via deliver), $.session.id (via followClear, io), $.session.root (via io), $.session.surfaces (via hasPane), $.store.delete (via io), $.store.get (via io), $.store.keys (via io), $.store.set (via io), $.tool.register (via registerTools), $.ui.ask (via ask), $.ui.close (via press), $.ui.copy (via copyLink), $.ui.invalidate, $.ui.log, $.ui.open (via openPane), $.ui.resolve, $.ui.toast",
+      "./ather.mjs calls: $.agent.list (via buildView, host, redrawWorkers, tick), $.clock.after (via answerItem, deliver, fill, followClear, outboxHost, refreshIssues, runWarm, startConsoleWork), $.clock.every, $.clock.now (via warmEnv), $.command.register (via openConsole, startWarm), $.env.get (via host), $.fs.exists (via host, io), $.fs.list (via host, io, readIntent, readTrackedIntent, repo), $.fs.read (via host, io, repo), $.fs.stat (via io, repo), $.fs.write (via io), $.model.fork (via readCache), $.process.run (via auditMerge, detectTz, host, io, openIssue, readOrigin, readWorktrees, refreshIssues, refreshPrs, repo), $.prompt.fill (via fill), $.prompt.submit (via deliver), $.session.id (via followClear, io), $.session.root (via io), $.session.send (via sendTo), $.session.surfaces (via hasPane), $.session.usage (via readCache, warmEnv), $.store.delete (via io), $.store.get (via io), $.store.keys (via io), $.store.set (via io), $.tool.register (via registerTools), $.turn.abort (via send… [+249 chars]",
       "./ather.mjs env writes: nothing",
       "./ather.mjs env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
      ],
@@ -794,12 +840,6 @@
       },
       {
        "module": "./ather.mjs",
-       "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__ather-automata__repos}",
-       "hasCatch": false
-      },
-      {
-       "module": "./ather.mjs",
        "pattern": "command.run",
        "hook": "command.run{command=away}",
        "hasCatch": false
@@ -822,5 +862,5 @@
    "advice": []
   }
  },
- "sourceHash": "b7d7e52f5c3d5548"
+ "sourceHash": "3065ddd068a1e9ba"
 }

@@ -1,0 +1,9 @@
+{
+ "slug": "nemokoala-claude-mods-pretty-replies",
+ "files": {
+  "hooks/register.tsx": "import { atom, read, update } from 'claude-code'\nimport type { Register } from 'claude-code'\n\nconst enabled = atom({ plugin: 'pretty-replies', key: 'enabled' } as const, true)\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({\n      name: 'pretty',\n      description: 'Toggle the pretty reply style (on | off)',\n      argumentHint: '[on|off]',\n    })\n    const saved = await $.store.get('enabled')\n    if (typeof saved === 'boolean') await update($, enabled, () => saved)\n\n    return next(e)\n  })\n\n  on('command.run', { command: 'pretty' }, async ($, e) => {\n    const arg = e.args.trim().toLowerCase()\n    const isOn = await update($, enabled, now =>\n      arg === 'on' ? true : arg === 'off' ? false : !now,\n    )\n    await $.store.set('enabled', isOn)\n\n    return { text: `Pretty replies ${isOn ? 'on' : 'off'}.` }\n  })\n\n  on('ui.render', { component: 'AssistantMessage' }, async ($, e, next) => {\n    if (e.props.isSummary || !(await read($, enabled))) return next(e)\n    const { Box, Markdown } = $.ui.resolve(e)\n\n    return (\n      <Box\n        borderStyle=\"quote\"\n        borderColor={e.props.isFirstOfReply ? 'claude' : 'subtle'}\n        paddingLeft={1}\n      >\n        <Markdown text={e.props.text} />\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"pretty-replies\",\n  \"version\": \"0.1.0\",\n  \"description\": \"답변 왼쪽에 테마색 세로 테두리와 여백을 그림 (/pretty)\",\n  \"types\": \"./types/index.d.ts\",\n  \"author\": {\n    \"name\": \"nemokoala\"\n  }\n}",
+  "types/index.d.ts": "export type PrettyRepliesState = { enabled: boolean }\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'pretty-replies': { enabled: boolean }\n  }\n}\n"
+ }
+}

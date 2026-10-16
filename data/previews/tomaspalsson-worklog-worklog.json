@@ -1,6 +1,6 @@
 {
  "slug": "tomaspalsson-worklog-worklog",
- "generatedAt": "2026-10-07T15:24:02.762Z",
+ "generatedAt": "2026-10-16T14:21:55.422Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -25,6 +25,19 @@
     "event": "session.start",
     "matcher": {
      "surface": "terminal"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "wl"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "worklog-ticket"
     }
    },
    {
@@ -80,9 +93,9 @@
   "commands": [
    {
     "name": "wl",
-    "description": "Show logged hours, or review today in a pane",
-    "argumentHint": "today|week|review|ask",
-    "output": "usage: /wl today|week|review|ask <question>"
+    "description": "Show logged hours, review today in a pane, or install origin/main",
+    "argumentHint": "today|week|review|install|ticket|ask",
+    "output": "usage: /wl today|week|review|install|ticket|ask <question>"
    }
   ],
   "tools": [],
@@ -98,10 +111,10 @@
    "$.clock.every": 1,
    "$.clock.after": 3,
    "$.http.fetch": 3,
-   "$.state.get": 7,
+   "$.state.get": 8,
    "$.state.set": 3,
    "$.command.register": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -126,6 +139,43 @@
     "ok": "engine"
    },
    "Pane": {
+    "worklog-ticket": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "borderStyle": "round",
+       "borderDimColor": true,
+       "paddingX": 1
+      },
+      "children": [
+       {
+        "type": "Input",
+        "props": {
+         "key": "filter",
+         "autoFocus": true,
+         "placeholder": "type to filter, Enter picks the first",
+         "value": "",
+         "submitLabel": "pick",
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Select",
+        "props": {
+         "key": "ticket",
+         "options": [],
+         "onSelect": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "worklog-ticket"
+    },
     "worklog-review": {
      "ok": true,
      "tree": {
@@ -173,7 +223,7 @@
    "$.process.run(git branch --show-current) → exit 0",
    "$.process.run(git remote get-url origin) → exit 0",
    "turn.complete",
-   "/wl → usage: /wl today|week|review|ask <question>"
+   "/wl → usage: /wl today|week|review|install|ticket|ask <question>"
   ],
   "console": [],
   "warnings": []
@@ -192,6 +242,8 @@
    "prompt.submit{origin has {kind=composer}}",
    "ui.render{component=PromptHint}",
    "session.start{surface=terminal}",
+   "command.run{command=wl}",
+   "ui.render{component=Pane, requestId=?}",
    "session.end",
    "prompt.submit",
    "prompt.context",
@@ -210,29 +262,38 @@
    "$.command.register",
    "$.env.get (via makeIo)",
    "$.http.fetch (via makeIo)",
-   "$.process.run (via askTicket",
+   "$.process.run (via install",
    "makeIo",
+   "recordKey",
+   "skipSession",
    "verdictPick)",
+   "$.session.append (via choose)",
    "$.session.id",
    "$.state.get",
    "$.state.set",
    "$.store.get",
    "$.store.set",
    "$.ui.ask (via askTicket)",
-   "$.ui.log (via askTicket)",
+   "$.ui.close (via choose)",
+   "$.ui.log (via askTicket",
+   "openPicker",
+   "recordKey",
+   "skipSession)",
    "$.ui.open",
-   "$.ui.resolve (via reviewPane)",
+   "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
    "worklog.hours",
    "worklog.nudge",
+   "worklog.picker",
    "worklog.recap",
    "worklog.review"
   ],
   "stateWrites": [
    "worklog.hours",
    "worklog.nudge",
+   "worklog.picker",
    "worklog.recap",
    "worklog.review"
   ],
@@ -256,7 +317,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: worklog.review, worklog.hours"
+     "types ./types/index.d.ts declares state: worklog.review, worklog.hours, worklog.picker"
     ],
     "gatingHooks": []
    },
@@ -278,22 +339,30 @@
      ],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit{origin has {kind=composer}}, ui.render{component=PromptHint}, session.start{surface=terminal}, session.end, prompt.submit, prompt.context, attribution.text{kind=commit|pr}, tool.call{tool=Bash}, turn.complete, session.start{isInteractive=true}, command.run{command=wl}, ui.render{component=Pane, requestId=?}",
-      "./register.tsx answers its own command: command.run{command=wl}",
+      "./register.tsx hooks: session.start, prompt.submit{origin has {kind=composer}}, ui.render{component=PromptHint}, session.start{surface=terminal}, command.run{command=wl}, ui.render{component=Pane, requestId=?}, session.end, prompt.submit, prompt.context, attribution.text{kind=commit|pr}, tool.call{tool=Bash}, turn.complete, session.start{isInteractive=true}, command.run{command=wl}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx hooks on prompt.context, attribution.text do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook without .catch: prompt.submit{origin has {kind=composer}}",
+      "./register.tsx gating hook without .catch: command.run{command=wl}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.after (via makeIo, verdictPick), $.clock.every, $.clock.now (via makeIo), $.command.register, $.env.get (via makeIo), $.http.fetch (via makeIo), $.process.run (via askTicket, makeIo, verdictPick), $.session.id, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.ask (via askTicket), $.ui.log (via askTicket), $.ui.open, $.ui.resolve (via reviewPane), $.ui.toast",
+      "./register.tsx gating hook without .catch: command.run{command=wl}",
+      "./register.tsx calls: $.clock.after (via makeIo, verdictPick), $.clock.every, $.clock.now (via makeIo), $.command.register, $.env.get (via makeIo), $.http.fetch (via makeIo), $.process.run (via install, makeIo, recordKey, skipSession, verdictPick), $.session.append (via choose), $.session.id, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.ask (via askTicket), $.ui.close (via choose), $.ui.log (via askTicket, openPicker, recordKey, skipSession), $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: worklog.hours, worklog.nudge, worklog.recap, worklog.review",
-      "./register.tsx state reads: worklog.hours, worklog.nudge, worklog.recap, worklog.review"
+      "./register.tsx state writes: worklog.hours, worklog.nudge, worklog.picker, worklog.recap, worklog.review",
+      "./register.tsx state reads: worklog.hours, worklog.nudge, worklog.picker, worklog.recap, worklog.review"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit{origin has {kind=composer}}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=wl}",
        "hasCatch": false
       },
       {
@@ -307,11 +376,18 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=wl}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "58eacd0fafccb829"
+ "sourceHash": "cc0752be1f2de71d"
 }

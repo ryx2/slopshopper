@@ -1,9 +1,22 @@
 {
  "slug": "assert-not-singularity-english-coach",
- "generatedAt": "2026-10-10T14:44:58.664Z",
+ "generatedAt": "2026-10-16T14:18:45.363Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "english-coach-overview"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "english-coach-overview"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -17,7 +30,12 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "english-coach-overview",
+    "description": "English coach overview: written, spoken or both"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -25,13 +43,43 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.process.run": 1,
-   "$.state.get": 1
+   "$.command.register": 1,
+   "$.clock.after": 1,
+   "$.clock.every": 1,
+   "$.session.messages": 1,
+   "$.process.run": 4,
+   "$.clock.now": 1,
+   "$.state.get": 5,
+   "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 86400000
+   }
+  ],
   "sites": {
    "UserMessage": {
     "ok": "engine"
+   },
+   "Pane": {
+    "english-coach-overview": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "Loading…"
+      ]
+     },
+     "title": "english-coach-overview"
+    }
    }
   },
   "script": [
@@ -46,7 +94,12 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.process.run(python3 -I /plugins/english-coach/scripts/english-coach.py overview both) → exit 0",
+   "$.process.run(python3 -I /plugins/english-coach/scripts/english-coach.py overview written) → exit 0",
+   "$.process.run(python3 -I /plugins/english-coach/scripts/english-coach.py overview dictated) → exit 0",
+   "command.run: hook threw JSON Parse error: Unexpected identifier \"dev\"",
+   "/english-coach-overview → "
   ],
   "console": [],
   "warnings": []
@@ -56,24 +109,44 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "command.run{command=english-coach-overview}",
+   "ui.render{component=Pane, requestId=english-coach-overview}",
    "session.start",
    "prompt.submit",
    "ui.render{component=UserMessage}"
   ],
   "calls": [
    "$.clock.after",
-   "$.model.complete (via review)",
-   "$.process.run (via script)",
+   "$.clock.every",
+   "$.clock.now (via load)",
+   "$.command.register",
+   "$.model.complete (via audit",
+   "refreshSummaries",
+   "review",
+   "summarize)",
+   "$.process.run (via backend",
+   "script)",
+   "$.session.messages (via recentAssistantText)",
    "$.state.get",
    "$.state.set",
+   "$.ui.open",
    "$.ui.resolve",
-   "$.ui.toast (via review)"
+   "$.ui.toast (via review",
+   "summarize)"
   ],
   "stateReads": [
-   "english-coach.reviews"
+   "english-coach.expanded",
+   "english-coach.overview",
+   "english-coach.reviews",
+   "english-coach.summarizing",
+   "english-coach.tab"
   ],
   "stateWrites": [
-   "english-coach.reviews"
+   "english-coach.expanded",
+   "english-coach.overview",
+   "english-coach.reviews",
+   "english-coach.summarizing",
+   "english-coach.tab"
   ],
   "envReads": [],
   "raw": {
@@ -87,7 +160,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: english-coach.reviews"
+     "types ./types/index.d.ts declares state: english-coach.reviews, english-coach.tab, english-coach.overview, english-coach.expanded, english-coach.summarizing"
     ],
     "gatingHooks": []
    },
@@ -98,13 +171,20 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, ui.render{component=UserMessage}",
+      "./register.tsx hooks: command.run{command=english-coach-overview}, ui.render{component=Pane, requestId=english-coach-overview}, session.start, prompt.submit, ui.render{component=UserMessage}",
+      "./register.tsx gating hook without .catch: command.run{command=english-coach-overview}",
       "./register.tsx gating hook with .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after, $.model.complete (via review), $.process.run (via script), $.state.get, $.state.set, $.ui.resolve, $.ui.toast (via review)",
-      "./register.tsx state writes: english-coach.reviews",
-      "./register.tsx state reads: english-coach.reviews"
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now (via load), $.command.register, $.model.complete (via audit, refreshSummaries, review, summarize), $.process.run (via backend, script), $.session.messages (via recentAssistantText), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast (via review, summarize)",
+      "./register.tsx state writes: english-coach.expanded, english-coach.overview, english-coach.reviews, english-coach.summarizing, english-coach.tab",
+      "./register.tsx state reads: english-coach.expanded, english-coach.overview, english-coach.reviews, english-coach.summarizing, english-coach.tab"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=english-coach-overview}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -117,5 +197,5 @@
    "advice": []
   }
  },
- "sourceHash": "6a0f3e20618fdf7b"
+ "sourceHash": "26c08078f4f54a88"
 }

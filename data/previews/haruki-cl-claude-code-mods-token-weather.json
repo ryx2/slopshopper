@@ -1,6 +1,6 @@
 {
  "slug": "haruki-cl-claude-code-mods-token-weather",
- "generatedAt": "2026-10-09T15:33:28.662Z",
+ "generatedAt": "2026-10-16T14:19:45.180Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -18,6 +18,9 @@
    },
    {
     "event": "session.measure"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "tool.call"
@@ -57,14 +60,19 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.session.id": 3,
+   "$.store.get": 3,
+   "$.store.keys": 1,
+   "$.state.get": 52,
+   "$.state.set": 41,
    "$.session.usage": 12,
-   "$.state.get": 31,
-   "$.state.set": 24,
    "$.clock.after": 2,
+   "$.clock.every": 2,
    "$.ui.open": 2,
+   "$.clock.now": 3,
+   "$.store.set": 2,
    "$.ui.panes": 1,
-   "$.ui.resolve": 1,
-   "$.clock.now": 1
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -74,6 +82,14 @@
    {
     "kind": "after",
     "ms": 10000
+   },
+   {
+    "kind": "every",
+    "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 120
    }
   ],
   "sites": {
@@ -169,6 +185,71 @@
              " / ",
              "200k",
              " tokens"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "⏱ ",
+           "30m",
+           " since start"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Last turn ",
+           "42s",
+           " · avg ",
+           "42s"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "      ",
+             " "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "      ",
+             "▇"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "Turns ",
+             "█"
             ]
            }
           ]
@@ -347,6 +428,7 @@
    "turn.start",
    "command.run{command=weather}",
    "session.measure",
+   "turn.complete",
    "tool.call",
    "prompt.attachment",
    "session.end",
@@ -355,16 +437,24 @@
   "calls": [
    "$.agent.list (via isEngineLoop)",
    "$.clock.after",
+   "$.clock.every",
    "$.clock.now",
    "$.command.register",
    "$.env.get (via absorb",
    "noteInjected)",
    "$.fs.read (via describeIndex)",
+   "$.session.id (via restoreSeries",
+   "saveSeries)",
    "$.session.root (via absorb",
    "noteInjected)",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.store.delete",
+   "$.store.get (via restoreSeries",
+   "saveSeries)",
+   "$.store.keys (via restoreSeries)",
+   "$.store.set (via saveSeries)",
    "$.ui.close (via toggle)",
    "$.ui.open",
    "$.ui.panes (via toggle)",
@@ -374,18 +464,26 @@
    "token-weather.autoCompactAt",
    "token-weather.breakdown",
    "token-weather.history",
+   "token-weather.hop",
    "token-weather.limits",
    "token-weather.memory",
+   "token-weather.minute",
    "token-weather.open",
+   "token-weather.startedAt",
+   "token-weather.turns",
    "token-weather.usage"
   ],
   "stateWrites": [
    "token-weather.autoCompactAt",
    "token-weather.breakdown",
    "token-weather.history",
+   "token-weather.hop",
    "token-weather.limits",
    "token-weather.memory",
+   "token-weather.minute",
    "token-weather.open",
+   "token-weather.startedAt",
+   "token-weather.turns",
    "token-weather.usage"
   ],
   "envReads": [
@@ -402,7 +500,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: token-weather.usage, token-weather.history, token-weather.limits, token-weather.autoCompactAt, token-weather.memory, token-weather.breakdown, token-weather.open"
+     "types ./types/index.d.ts declares state: token-weather.usage, token-weather.history, token-weather.limits, token-weather.autoCompactAt, token-weather.memory, token-weather.breakdown, token-weather.open, token-weather.startedAt, token-weather.minute, token-weather.turns, token-weather.hop"
     ],
     "gatingHooks": []
    },
@@ -413,14 +511,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, command.run{command=weather}, session.measure, tool.call, prompt.attachment, session.end, ui.render{component=Pane, requestId=token-weather}",
+      "./register.tsx hooks: session.start, turn.start, command.run{command=weather}, session.measure, turn.complete, tool.call, prompt.attachment, session.end, ui.render{component=Pane, requestId=token-weather}",
+      "./register.tsx hooks on prompt.attachment do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook without .catch: command.run{command=weather}",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via isEngineLoop), $.clock.after, $.clock.now, $.command.register, $.env.get (via absorb, noteInjected), $.fs.read (via describeIndex), $.session.root (via absorb, noteInjected), $.session.usage, $.state.get, $.state.set, $.ui.close (via toggle), $.ui.open, $.ui.panes (via toggle), $.ui.resolve",
+      "./register.tsx calls: $.agent.list (via isEngineLoop), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via absorb, noteInjected), $.fs.read (via describeIndex), $.session.id (via restoreSeries, saveSeries), $.session.root (via absorb, noteInjected), $.session.usage, $.state.get, $.state.set, $.store.delete, $.store.get (via restoreSeries, saveSeries), $.store.keys (via restoreSeries), $.store.set (via saveSeries), $.ui.close (via toggle), $.ui.open, $.ui.panes (via toggle), $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: token-weather.autoCompactAt, token-weather.breakdown, token-weather.history, token-weather.limits, token-weather.memory, token-weather.open, token-weather.usage",
-      "./register.tsx state reads: token-weather.autoCompactAt, token-weather.breakdown, token-weather.history, token-weather.limits, token-weather.memory, token-weather.open, token-weather.usage"
+      "./register.tsx state writes: token-weather.autoCompactAt, token-weather.breakdown, token-weather.history, token-weather.hop, token-weather.limits, token-weather.memory, token-weather.minute, token-weather.open, token-weather.startedAt, token-weather.turns, token-weather.usage",
+      "./register.tsx state reads: token-weather.autoCompactAt, token-weather.breakdown, token-weather.history, token-weather.hop, token-weather.limits, token-weather.memory, token-weather.minute, token-weather.open, token-weather.startedAt, token-weather.turns, token-weather.usage"
      ],
      "gatingHooks": [
       {
@@ -441,5 +540,5 @@
    "advice": []
   }
  },
- "sourceHash": "f35890ced92b3c4b"
+ "sourceHash": "eb026b68fe72be2f"
 }

@@ -1,0 +1,9 @@
+{
+ "slug": "astromelon-takgon-mods-state-probe",
+ "files": {
+  "hooks/register.ts": "import { atom, read, update } from 'claude-code'\nimport type { Register } from 'claude-code'\n\nconst v = atom({ plugin: 'state-probe', key: 'v' } as const, 'unset')\nconst ends = atom({ plugin: 'state-probe', key: 'ends' } as const, [])\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'probe', description: 'probe' })\n    return next(e)\n  })\n  on('session.end', { reason: 'clear' }, async ($, e, next) => {\n    await update($, ends, list => [...list, `clear:${e.sessionId.slice(0, 6)}`])\n    return next(e)\n  })\n  on('command.run', { command: 'probe' }, async ($, e) => {\n    if (e.args.startsWith('set ')) {\n      await update($, v, () => e.args.slice(4))\n    }\n    const id = await $.session.id()\n    return { text: `PROBE v=${await read($, v)} ends=${(await read($, ends)).join(',')} sid=${id.slice(0, 6)}` }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"state-probe\",\n  \"version\": \"0.0.1\",\n  \"description\": \"probe\",\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "/** /clear 전후 state 유지 여부를 보는 실험용 값. */\nexport type ProbeValue = string\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    'state-probe': { v: ProbeValue; ends: string[] }\n  }\n}\n"
+ }
+}

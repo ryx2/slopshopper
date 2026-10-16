@@ -1,0 +1,706 @@
+{
+ "slug": "afinzel-vise-tools-vise-skills",
+ "generatedAt": "2026-10-16T14:18:32.533Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "review-sidebar"
+    }
+   },
+   {
+    "event": "skill.prompt"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__review_threads"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__review_triage"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__review_mark"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "review-comments"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__shutdown_sessions"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__shutdown_send"
+    }
+   },
+   {
+    "event": "session.receive"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "shutdown"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__restore_sessions"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__restore_reopen"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "restore-sessions"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__findings_start"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__findings_record"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__findings_post"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__vise-skills__findings_mark"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ReportFindings"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "ext-review"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "self-review"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "review-sidebar",
+    "description": "Reopen the review sidebar",
+    "immediate": true,
+    "output": "Review sidebar opened. Run /review-comments to load a PR."
+   }
+  ],
+  "tools": [
+   {
+    "name": "review_threads",
+    "description": "The unresolved review threads of the PR in the review sidebar, numbered as the sidebar shows them, with each thread's comments verbatim. Loads the PR when none is loaded, or when `pr` names another; `refresh` re-reads GitHub."
+   },
+   {
+    "name": "review_triage",
+    "description": "Record your triage of review threads so the sidebar groups them and shows your suggestion. One item per thread, by its number."
+   },
+   {
+    "name": "review_mark",
+    "description": "Record what happened to a review thread. `fixed-locally` once the change is made but not yet pushed; `fixed` only after the push, the reply and the resolve; `pushed-back` after the reply is posted. On `fixed` and `pushed-back` the sidebar re-reads GitHub."
+   },
+   {
+    "name": "shutdown_sessions",
+    "description": "Lists this session and the other Claude sessions on this machine for /shutdown, and opens the shutdown pane where the user ticks which ones write a handoff. Says whether the pane is shown; when it is, the user sends from there and replies are tallied there."
+   },
+   {
+    "name": "shutdown_send",
+    "description": "Sends the handoff request to the named sessions, as shutdown_sessions listed them; \"this session\" runs the handoff here too. Use only when the shutdown pane is not shown and the user picked in chat."
+   },
+   {
+    "name": "restore_sessions",
+    "description": "Finds the Claude sessions active in a recent window from their transcripts, has Haiku judge which were mid-work, and opens the restore pane where the user ticks which to reopen. Says whether the pane is shown; when it is, the user reopens from there."
+   },
+   {
+    "name": "restore_reopen",
+    "description": "Reopens the given sessions, by the ids restore_sessions returned, each in a new Windows Terminal tab with `claude --resume`. Use only when the restore pane is not shown and the user picked in chat."
+   },
+   {
+    "name": "findings_start",
+    "description": "Starts an /ext-review or /self-review: loads the PR and its diff, clears the last round, and opens the findings pane. Claude's /code-review findings then reach the pane by themselves; record the other reviewers' with findings_record."
+   },
+   {
+    "name": "findings_record",
+    "description": "Adds one reviewer's findings to the findings pane. Call once per reviewer when it finishes, with an empty list when it found nothing, so the pane stops waiting on it."
+   },
+   {
+    "name": "findings_post",
+    "description": "Posts findings to the PR as one GitHub review under the user's name: inline where the diff shows the line, in the review body otherwise. A `note` leads the comment, e.g. what a fix changed. Post only what the user chose."
+   },
+   {
+    "name": "findings_mark",
+    "description": "Records what happened to findings: `fixed` once the change is made; `dismissed` only when the user rejects it, which counts against its Clean Code rule; `withdrawn` when you find it does not hold up, which does not."
+   }
+  ],
+  "panes": [
+   {
+    "id": "review-comments",
+    "title": "Review comments"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 11,
+   "$.state.get": 15,
+   "$.ui.open": 1,
+   "$.ui.resolve": 5,
+   "$.store.get": 2
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "review-comments": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No PR for this branch. Waiting for Claude to load one, or run /review-comments <PR number or URL>."
+        ]
+       }
+      ]
+     },
+     "title": "Review comments"
+    },
+    "shutdown": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Ticked sessions write a handoff at their next clean point, then reply here."
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "select-all",
+             "hotkey": "a",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "All"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "select-none",
+             "hotkey": "n",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "None"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "refresh",
+             "hotkey": "r",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "Refresh"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "shutdown"
+    },
+    "restore-sessions": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "Run /restore-sessions to look for sessions."
+      ]
+     },
+     "title": "restore-sessions"
+    },
+    "ext-review": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "this branch (no PR: posting is off)"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "0",
+           " findings",
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "select-all",
+           "hotkey": "a",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Tick all"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "ext-review"
+    },
+    "self-review": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "this branch (no PR: posting is off)"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "0",
+           " findings",
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "select-all",
+           "hotkey": "a",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Tick all"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "self-review"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(review-comments)",
+   "/review-sidebar → Review sidebar opened. Run /review-comments to load a PR."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=review-sidebar}",
+   "skill.prompt",
+   "tool.call{tool=mcp__vise-skills__review_threads}",
+   "tool.call{tool=mcp__vise-skills__review_triage}",
+   "tool.call{tool=mcp__vise-skills__review_mark}",
+   "ui.close",
+   "ui.render{component=Pane, requestId=review-comments}",
+   "ui.render{component=AbovePrompt}",
+   "tool.call{tool=mcp__vise-skills__shutdown_sessions}",
+   "tool.call{tool=mcp__vise-skills__shutdown_send}",
+   "session.receive",
+   "turn.complete",
+   "ui.render{component=Pane, requestId=shutdown}",
+   "ui.render{component=AbovePrompt}",
+   "tool.call{tool=mcp__vise-skills__restore_sessions}",
+   "tool.call{tool=mcp__vise-skills__restore_reopen}",
+   "ui.render{component=Pane, requestId=restore-sessions}",
+   "tool.call{tool=mcp__vise-skills__findings_start}",
+   "tool.call{tool=mcp__vise-skills__findings_record}",
+   "tool.call{tool=mcp__vise-skills__findings_post}",
+   "tool.call{tool=mcp__vise-skills__findings_mark}",
+   "tool.call{tool=ReportFindings}",
+   "ui.render{component=Pane, requestId=ext-review}",
+   "ui.render{compon… [+32 chars]"
+  ],
+  "calls": [
+   "$.clock.after (via startFreshWalk)",
+   "$.command.register (via registerReviewSidebarCommandAndTools)",
+   "$.fs.exists (via reopen)",
+   "$.fs.read (via readReviewedFile)",
+   "$.model.complete (via haikuSuggestion",
+   "judge)",
+   "$.process.run (via findSessions",
+   "loadCommentableLines",
+   "loadOnSkillStart",
+   "postReview",
+   "reopen",
+   "runOrThrow",
+   "startReview",
+   "stdoutOf",
+   "workingTreeOfBranch)",
+   "$.prompt.fill (via startDiscussion)",
+   "$.prompt.submit (via decide",
+   "explain",
+   "sendToSelected",
+   "submitFix",
+   "submitPush",
+   "submitQuickFixes)",
+   "$.session.id (via findSessions)",
+   "$.session.messages (via recordOwnHandoffIfWritten)",
+   "$.session.send (via sendToSelected)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via ruleTallies)",
+   "$.store.set (via markFindings",
+   "recordFindings)",
+   "$.tool.call (via loadRoster)",
+   "$.tool.register (via registerFindingsTools",
+   "registerRestoreTools",
+   "registerReviewSidebarCommandAndTools",
+   "registerShutdownTools)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "vise-skills.activeFindingsReview",
+   "vise-skills.behaviourOverrides",
+   "vise-skills.expandedThreadId",
+   "vise-skills.extReview",
+   "vise-skills.isDoneSectionOpen",
+   "vise-skills.outcomes",
+   "vise-skills.restore",
+   "vise-skills.review",
+   "vise-skills.selfReview",
+   "vise-skills.shutdown",
+   "vise-skills.triage"
+  ],
+  "stateWrites": [
+   "vise-skills.activeFindingsReview",
+   "vise-skills.behaviourOverrides",
+   "vise-skills.expandedThreadId",
+   "vise-skills.extReview",
+   "vise-skills.isDoneSectionOpen",
+   "vise-skills.outcomes",
+   "vise-skills.restore",
+   "vise-skills.review",
+   "vise-skills.selfReview",
+   "vise-skills.shutdown",
+   "vise-skills.triage"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/afinzel-vise-tools-vise-skills/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/afinzel-vise-tools-vise-skills/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: vise-skills.review, vise-skills.triage, vise-skills.outcomes, vise-skills.behaviourOverrides, vise-skills.expandedThreadId, vise-skills.isDoneSectionOpen, vise-skills.shutdown, vise-skills.restore, vise-skills.extReview, vise-skills.selfReview, vise-skills.activeFindingsReview"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/afinzel-vise-tools-vise-skills/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=review-sidebar}, skill.prompt, tool.call{tool=mcp__vise-skills__review_threads}, tool.call{tool=mcp__vise-skills__review_triage}, tool.call{tool=mcp__vise-skills__review_mark}, ui.close, ui.render{component=Pane, requestId=review-comments}, ui.render{component=AbovePrompt}, tool.call{tool=mcp__vise-skills__shutdown_sessions}, tool.call{tool=mcp__vise-skills__shutdown_send}, session.receive, turn.complete, ui.render{component=Pane, requestId=shutdown}, ui.render{component=AbovePrompt}, tool.call{tool=mcp__vise-skills__restore_sessions}, tool.call{tool=mcp__vise-skills__restore_reopen}, ui.render{component=Pane, requestId=restore-sessions}, tool.call{tool=mcp__vise-skills__findings_start}, tool.call{tool=mcp__vise-skills__findings_record}, tool.call{tool=mcp__vise-skills__findings_post}, tool.call{tool=mcp__vise-skills__findings_mark}, tool.call{tool=ReportFindings}, ui.render{component=Pane, requestId=ext-review}, ui.render{compon… [+32 chars]",
+      "./register.tsx hooks on skill.prompt do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=review-sidebar}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__review_threads}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__review_triage}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__review_mark}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__shutdown_sessions}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__shutdown_send}",
+      "./register.tsx gating hook without .catch: session.receive",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__restore_sessions}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__restore_reopen}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__findings_start}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__findings_record}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__findings_post}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__vise-skills__findings_mark}",
+      "./register.tsx gating hook without .catch: tool.call{tool=ReportFindings}",
+      "./register.tsx calls: $.clock.after (via startFreshWalk), $.command.register (via registerReviewSidebarCommandAndTools), $.fs.exists (via reopen), $.fs.read (via readReviewedFile), $.model.complete (via haikuSuggestion, judge), $.process.run (via findSessions, loadCommentableLines, loadOnSkillStart, postReview, reopen, runOrThrow, startReview, stdoutOf, workingTreeOfBranch), $.prompt.fill (via startDiscussion), $.prompt.submit (via decide, explain, sendToSelected, submitFix, submitPush, submitQuickFixes), $.session.id (via findSessions), $.session.messages (via recordOwnHandoffIfWritten), $.session.send (via sendToSelected), $.state.get, $.state.set, $.store.get (via ruleTallies), $.store.set (via markFindings, recordFindings), $.tool.call (via loadRoster), $.tool.register (via registerFindingsTools, registerRestoreTools, registerReviewSidebarCommandAndTools, registerShutdownTools), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: vise-skills.activeFindingsReview, vise-skills.behaviourOverrides, vise-skills.expandedThreadId, vise-skills.extReview, vise-skills.isDoneSectionOpen, vise-skills.outcomes, vise-skills.restore, vise-skills.review, vise-skills.selfReview, vise-skills.shutdown, vise-skills.triage",
+      "./register.tsx state reads: vise-skills.activeFindingsReview, vise-skills.behaviourOverrides, vise-skills.expandedThreadId, vise-skills.extReview, vise-skills.isDoneSectionOpen, vise-skills.outcomes, vise-skills.restore, vise-skills.review, vise-skills.selfReview, vise-skills.shutdown, vise-skills.triage"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__review_threads}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__review_triage}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__review_mark}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__shutdown_sessions}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__shutdown_send}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.receive",
+       "hook": "session.receive",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__restore_sessions}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__restore_reopen}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__findings_start}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__findings_record}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__findings_post}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__vise-skills__findings_mark}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=ReportFindings}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "ff16a151887fb435"
+}

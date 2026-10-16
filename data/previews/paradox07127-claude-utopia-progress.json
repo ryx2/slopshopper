@@ -1,6 +1,6 @@
 {
  "slug": "paradox07127-claude-utopia-progress",
- "generatedAt": "2026-10-06T05:30:04.410Z",
+ "generatedAt": "2026-10-16T14:21:11.954Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,12 @@
       true,
       false
      ]
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
     }
    },
    {
@@ -31,20 +37,82 @@
     }
    },
    {
+    "event": "classic.PostToolUse",
+    "matcher": {
+     "tool_name": [
+      "Bash"
+     ]
+    }
+   },
+   {
+    "event": "classic.PostToolUse",
+    "matcher": {
+     "tool_name": [
+      "mcp__ccd_turn__update_plan"
+     ]
+    }
+   },
+   {
     "event": "turn.complete",
     "matcher": {
      "turnId": "/^/"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "progress-close"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "progress-line"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__(?:dashboard|progress)__progress_plan$/"
+    }
    }
   ],
-  "commands": [],
-  "tools": [],
+  "commands": [
+   {
+    "name": "progress-close",
+    "description": "Close a node or a request of the progress board: done or dropped",
+    "argumentHint": "<node or request id> done|dropped",
+    "output": "Usage: /progress-close <node or request id> done|dropped"
+   },
+   {
+    "name": "progress-line",
+    "description": "Put a request of the progress board in a line, or in a new line by name",
+    "argumentHint": "<request id> <line id> | <request id> new <name>",
+    "output": "Usage: /progress-line <request id> <line id>, or /progress-line <request id> new <name>"
+   }
+  ],
+  "tools": [
+   {
+    "name": "progress_plan",
+    "description": "Records the plan for the person's request on the progress board: a title, 1 to 3 checkable acceptance items and 1 to 6 steps. Call it once the plan is settled and before making changes. Call it again with request when the plan changes: the new steps join that request, and drop names its steps the new plan no longer needs. Not for questions or chat. It records the plan on the progress board and costs nothing else."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
-  "apiCalls": {},
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.env.get": 2,
+   "$.session.repo": 2,
+   "$.fs.read": 3,
+   "$.tool.register": 1,
+   "$.session.root": 1,
+   "$.clock.now": 1,
+   "$.session.id": 8,
+   "$.store.get": 8
+  },
   "timers": [],
   "sites": {},
   "script": [
@@ -58,7 +126,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/progress-close → Usage: /progress-close <node or request id> done|dropped",
+   "/progress-line → Usage: /progress-line <request id> <line id>, or /progress-line <request id> new…"
   ],
   "console": [],
   "warnings": []
@@ -69,28 +139,59 @@
   "warnings": [],
   "hooks": [
    "prompt.submit{wait=true|false}",
+   "session.start{cwd=/\"^\"/}",
    "turn.start{text=/\"^\"/}",
    "classic.PostToolUse{tool_name=Edit|Write|MultiEdit|NotebookEdit}",
-   "turn.complete{turnId=/\"^\"/}"
+   "classic.PostToolUse{tool_name=Bash}",
+   "classic.PostToolUse{tool_name=mcp__ccd_turn__update_plan}",
+   "turn.complete{turnId=/\"^\"/}",
+   "command.run{command=progress-close}",
+   "command.run{command=progress-line}",
+   "tool.call{tool=/\"^mcp__(?:dashboard|progress)__progress_plan$\"/}"
   ],
   "calls": [
-   "$.clock.now (via record)",
-   "$.env.get (via askStorage",
-   "boardPlace)",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get",
    "$.fs.list (via readEvents)",
-   "$.fs.read (via askStorage",
-   "boardPlace",
-   "readEvents",
-   "syncCanvas)",
+   "$.fs.read",
    "$.fs.write (via askStorage",
+   "close",
+   "complete",
+   "consolidate",
+   "plan",
    "record",
-   "syncCanvas)",
-   "$.model.complete (via record)",
-   "$.process.run (via gitOut)",
-   "$.session.id (via record)",
+   "relink",
+   "syncCanvas",
+   "syncPlan)",
+   "$.model.complete (via complete)",
+   "$.process.run (via gitOut",
+   "onMain)",
+   "$.session.id (via close",
+   "complete",
+   "consolidate",
+   "lineKey",
+   "plan",
+   "record",
+   "relink",
+   "requestKey",
+   "syncPlan",
+   "turnKey)",
    "$.session.repo (via ledgerRoot)",
    "$.session.root",
+   "$.store.delete",
+   "$.store.get (via boardHint",
+   "record",
+   "relink",
+   "storedLine",
+   "storedTurn",
+   "syncPlan)",
+   "$.store.set (via plan",
+   "record",
+   "relink",
+   "storeTurn)",
    "$.tool.call (via syncCanvas)",
+   "$.tool.register",
    "$.ui.ask (via askStorage)",
    "$.ui.log"
   ],
@@ -102,29 +203,86 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/paradox07127-claude-utopia-progress/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/paradox07127-claude-utopia-progress/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/paradox07127-claude-utopia-progress/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/paradox07127-claude-utopia-progress/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: dashboard.agents, dashboard.gpu, dashboard.runs, dashboard.page, dashboard.seen, dashboard.noAutoOpen, dashboard.detail, dashboard.reports, dashboard.conversation, dashboard.expandedTask, dashboard.expandedTests, dashboard.gates, dashboard.trees, dashboard.guards, dashboard.peers, dashboard.toasted, dashboard.presence, dashboard.cache, dashboard.usage, dashboard.timeline, dashboard.timelineTurn, dashboard.timelineView, dashboard.timelinePage, dashboard.tick, dashboard.paneWake, dashboard.peek, dashboard.agentsFoldOpen, dashboard.runsFoldOpen, dashboard.agentsSeenBefore, dashboard.ledger, dashboard.usageRead, dashboard.progress, mm.watches"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/paradox07127-claude-utopia-progress/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/paradox07127-claude-utopia-progress/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./progress-hooks.ts hooks: prompt.submit{wait=true|false}, turn.start{text=/\"^\"/}, classic.PostToolUse{tool_name=Edit|Write|MultiEdit|NotebookEdit}, turn.complete{turnId=/\"^\"/}",
-      "./progress-hooks.ts calls: $.clock.now (via record), $.env.get (via askStorage, boardPlace), $.fs.list (via readEvents), $.fs.read (via askStorage, boardPlace, readEvents, syncCanvas), $.fs.write (via askStorage, record, syncCanvas), $.model.complete (via record), $.process.run (via gitOut), $.session.id (via record), $.session.repo (via ledgerRoot), $.session.root, $.tool.call (via syncCanvas), $.ui.ask (via askStorage), $.ui.log",
+      "./progress-hooks.ts hooks: prompt.submit{wait=true|false}, session.start{cwd=/\"^\"/}, turn.start{text=/\"^\"/}, classic.PostToolUse{tool_name=Edit|Write|MultiEdit|NotebookEdit}, classic.PostToolUse{tool_name=Bash}, classic.PostToolUse{tool_name=mcp__ccd_turn__update_plan}, turn.complete{turnId=/\"^\"/}, command.run{command=progress-close}, command.run{command=progress-line}, tool.call{tool=/\"^mcp__(?:dashboard|progress)__progress_plan$\"/}",
+      "./progress-hooks.ts hooks on classic.PostToolUse do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./progress-hooks.ts gating hook with .catch: prompt.submit{wait=true|false}",
+      "./progress-hooks.ts gating hook with .catch: classic.PostToolUse{tool_name=Edit|Write|MultiEdit|NotebookEdit}",
+      "./progress-hooks.ts gating hook with .catch: classic.PostToolUse{tool_name=Bash}",
+      "./progress-hooks.ts gating hook with .catch: classic.PostToolUse{tool_name=mcp__ccd_turn__update_plan}",
+      "./progress-hooks.ts gating hook with .catch: command.run{command=progress-close}",
+      "./progress-hooks.ts gating hook with .catch: command.run{command=progress-line}",
+      "./progress-hooks.ts gating hook with .catch: tool.call{tool=/\"^mcp__(?:dashboard|progress)__progress_plan$\"/}",
+      "./progress-hooks.ts calls: $.clock.now, $.command.register, $.env.get, $.fs.list (via readEvents), $.fs.read, $.fs.write (via askStorage, close, complete, consolidate, plan, record, relink, syncCanvas, syncPlan), $.model.complete (via complete), $.process.run (via gitOut, onMain), $.session.id (via close, complete, consolidate, lineKey, plan, record, relink, requestKey, syncPlan, turnKey), $.session.repo (via ledgerRoot), $.session.root, $.store.delete, $.store.get (via boardHint, record, relink, storedLine, storedTurn, syncPlan), $.store.set (via plan, record, relink, storeTurn), $.tool.call (via syncCanvas), $.tool.register, $.ui.ask (via askStorage), $.ui.log",
       "./progress-hooks.ts env writes: nothing",
       "./progress-hooks.ts env reads: HOME"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./progress-hooks.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{wait=true|false}",
+       "hasCatch": true
+      },
+      {
+       "module": "./progress-hooks.ts",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse{tool_name=Edit|Write|MultiEdit|NotebookEdit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./progress-hooks.ts",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse{tool_name=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./progress-hooks.ts",
+       "pattern": "classic.PostToolUse",
+       "hook": "classic.PostToolUse{tool_name=mcp__ccd_turn__update_plan}",
+       "hasCatch": true
+      },
+      {
+       "module": "./progress-hooks.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=progress-close}",
+       "hasCatch": true
+      },
+      {
+       "module": "./progress-hooks.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=progress-line}",
+       "hasCatch": true
+      },
+      {
+       "module": "./progress-hooks.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__(?:dashboard|progress)__progress_plan$\"/}",
+       "hasCatch": true
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "c89aac2d732c8828"
+ "sourceHash": "dcc75ddeeb69735c"
 }

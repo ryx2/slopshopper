@@ -1,6 +1,6 @@
 {
  "slug": "sushant-kum-ccstatus-ccstatus",
- "generatedAt": "2026-10-09T15:34:30.099Z",
+ "generatedAt": "2026-10-16T14:21:49.758Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,7 +11,10 @@
     "event": "turn.complete"
    },
    {
-    "event": "tool.call"
+    "event": "turn.step"
+   },
+   {
+    "event": "prompt.compose"
    },
    {
     "event": "command.run",
@@ -39,8 +42,9 @@
   "commands": [
    {
     "name": "ccstatus",
-    "description": "Toggle the ccstatus band above the prompt",
-    "output": "ccstatus band hidden."
+    "description": "Show the ccstatus command menu",
+    "argumentHint": "[toggle | pane | theme <name> | reload | edit | help]",
+    "output": "ccstatus commands:\n  /ccstatus              show this help\n  /ccstatus toggle       toggle the band above the prompt\n  /ccstatus pane         toggle the ccstatus pane\n  /ccstatus theme <name> switch the palette theme\n  /ccstatus reload       reload config from disk\n  /ccstatus edit         how to open the interactive editor\n  /ccstatus help         show this help"
    }
   ],
   "tools": [],
@@ -53,17 +57,19 @@
    "$.command.register": 1,
    "$.env.get": 8,
    "$.fs.stat": 1,
-   "$.state.get": 16,
+   "$.state.get": 21,
    "$.fs.read": 1,
    "$.state.set": 5,
    "$.session.version": 2,
    "$.session.model": 2,
    "$.session.cwd": 2,
+   "$.session.id": 2,
    "$.session.usage": 2,
    "$.process.run": 2,
    "$.clock.now": 2,
    "$.fs.write": 2,
-   "$.clock.every": 1
+   "$.clock.every": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -73,7 +79,8 @@
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": false,
+    "reason": "hook returned "
    },
    "Pane": {
     "ccstatus": {
@@ -98,7 +105,7 @@
    "$.process.run(sh -c r=$(git rev-parse --show-toplevel 2>/dev/null)||{ printf NO;exit 0;};b=$(g…) → exit 0",
    "$.fs.write(/Users/dev/.config/ccstatus/snapshot.json)",
    "turn.complete",
-   "/ccstatus → ccstatus band hidden."
+   "/ccstatus → ccstatus commands:\n  /ccstatus              show this help\n  /ccstatus toggle   …"
   ],
   "console": [],
   "warnings": [
@@ -112,7 +119,8 @@
   "hooks": [
    "session.start",
    "turn.complete",
-   "tool.call",
+   "turn.step",
+   "prompt.compose",
    "command.run{command=ccstatus}",
    "ui.close",
    "ui.render{component=Pane, requestId=ccstatus}",
@@ -132,6 +140,7 @@
    "$.process.run (via probeGit",
    "setTheme)",
    "$.session.cwd (via measure)",
+   "$.session.id (via measure)",
    "$.session.model (via measure)",
    "$.session.usage (via measure)",
    "$.session.version (via measure)",
@@ -147,8 +156,10 @@
    "ccstatus.config",
    "ccstatus.configMtime",
    "ccstatus.effort",
+   "ccstatus.outputStyle",
    "ccstatus.paneOpen",
    "ccstatus.snapshot",
+   "ccstatus.termWidth",
    "ccstatus.toastFired",
    "ccstatus.visible"
   ],
@@ -156,8 +167,10 @@
    "ccstatus.config",
    "ccstatus.configMtime",
    "ccstatus.effort",
+   "ccstatus.outputStyle",
    "ccstatus.paneOpen",
    "ccstatus.snapshot",
+   "ccstatus.termWidth",
    "ccstatus.toastFired",
    "ccstatus.visible"
   ],
@@ -176,7 +189,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ccstatus.visible, ccstatus.snapshot, ccstatus.config, ccstatus.effort, ccstatus.paneOpen, ccstatus.configMtime, ccstatus.toastFired"
+     "types ./types/index.d.ts declares state: ccstatus.visible, ccstatus.snapshot, ccstatus.config, ccstatus.effort, ccstatus.paneOpen, ccstatus.configMtime, ccstatus.toastFired, ccstatus.outputStyle, ccstatus.termWidth"
     ],
     "gatingHooks": []
    },
@@ -187,23 +200,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.complete, tool.call, command.run{command=ccstatus}, ui.close, ui.render{component=Pane, requestId=ccstatus}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, turn.complete, turn.step, prompt.compose, command.run{command=ccstatus}, ui.close, ui.render{component=Pane, requestId=ccstatus}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=ccstatus}",
-      "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: ui.close",
-      "./register.tsx calls: $.clock.every, $.clock.now (via measure), $.command.register, $.env.get (via refresh, resolveConfigPath), $.fs.read (via loadConfigFromDisk, setTheme), $.fs.stat (via reloadConfig), $.fs.write (via refresh, setTheme), $.process.run (via probeGit, setTheme), $.session.cwd (via measure), $.session.model (via measure), $.session.usage (via measure), $.session.version (via measure), $.state.get, $.state.set, $.ui.close (via togglePane), $.ui.open (via togglePane), $.ui.resolve, $.ui.toast (via fireToasts, reloadConfig)",
+      "./register.tsx calls: $.clock.every, $.clock.now (via measure), $.command.register, $.env.get (via refresh, resolveConfigPath), $.fs.read (via loadConfigFromDisk, setTheme), $.fs.stat (via reloadConfig), $.fs.write (via refresh, setTheme), $.process.run (via probeGit, setTheme), $.session.cwd (via measure), $.session.id (via measure), $.session.model (via measure), $.session.usage (via measure), $.session.version (via measure), $.state.get, $.state.set, $.ui.close (via togglePane), $.ui.open (via togglePane), $.ui.resolve, $.ui.toast (via fireToasts, reloadConfig)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, XDG_CONFIG_HOME",
-      "./register.tsx state writes: ccstatus.config, ccstatus.configMtime, ccstatus.effort, ccstatus.paneOpen, ccstatus.snapshot, ccstatus.toastFired, ccstatus.visible",
-      "./register.tsx state reads: ccstatus.config, ccstatus.configMtime, ccstatus.effort, ccstatus.paneOpen, ccstatus.snapshot, ccstatus.toastFired, ccstatus.visible"
+      "./register.tsx state writes: ccstatus.config, ccstatus.configMtime, ccstatus.effort, ccstatus.outputStyle, ccstatus.paneOpen, ccstatus.snapshot, ccstatus.termWidth, ccstatus.toastFired, ccstatus.visible",
+      "./register.tsx state reads: ccstatus.config, ccstatus.configMtime, ccstatus.effort, ccstatus.outputStyle, ccstatus.paneOpen, ccstatus.snapshot, ccstatus.termWidth, ccstatus.toastFired, ccstatus.visible"
      ],
      "gatingHooks": [
-      {
-       "module": "./register.tsx",
-       "pattern": "tool.call",
-       "hook": "tool.call",
-       "hasCatch": false
-      },
       {
        "module": "./register.tsx",
        "pattern": "ui.close",
@@ -216,5 +223,5 @@
    "advice": []
   }
  },
- "sourceHash": "29d673494f68da23"
+ "sourceHash": "fc911fe2ed4803fe"
 }

@@ -1,0 +1,661 @@
+{
+ "slug": "parab-aditya-cache-keeper",
+ "generatedAt": "2026-10-16T14:21:11.233Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "classic.PermissionRequest"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "classic.PostModelSwitch"
+   },
+   {
+    "event": "config.set"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cache"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "cache-keeper"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "cache",
+    "description": "Keep the prompt cache warm: status, on/off, settings, stats",
+    "argumentHint": "status | on | off | keep <2h|4h|8h|12h|forever> [--save] | lead <min> [--save] | refresh-now | stats | settings | sessions | stop <n|all> | debug",
+    "immediate": true,
+    "output": "**○ Auto-refresh off**\n- TTL: 5m (no subscription seen)\n- No request yet in this conversation.\n- Settings: keep off, lead 5m, min 30k, weekly guard 90%\n- Limits: 5h 31%"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.env.get": 8,
+   "$.store.get": 4,
+   "$.settings.read": 1,
+   "$.session.authorize": 1,
+   "$.clock.now": 22,
+   "$.state.get": 353,
+   "$.state.set": 12,
+   "$.session.usage": 1,
+   "$.session.id": 4,
+   "$.fs.write": 1,
+   "$.config.list": 1,
+   "$.fs.read": 1,
+   "$.process.run": 1,
+   "$.clock.every": 1,
+   "$.clock.after": 3,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   },
+   {
+    "kind": "after",
+    "ms": 0
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "flexDirection": "row",
+        "gap": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "color": "inactive"
+         },
+         "children": [
+          "○"
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexGrow": 1,
+          "flexShrink": 1,
+          "minWidth": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "truncate"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "Auto-refresh off"
+             ]
+            },
+            ""
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "ck-toggle",
+          "label": "off",
+          "hotkey": "o",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "ck-settings",
+          "label": "settings",
+          "hotkey": "s",
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "cache-keeper": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "key": "ck-savings",
+         "dimColor": true,
+         "wrap": "wrap"
+        },
+        "children": [
+         "No savings yet — they show when you return to a warm cache."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Select",
+          "props": {
+           "key": "ck-keepFor",
+           "label": "Keep warm for",
+           "options": [
+            {
+             "value": "off",
+             "label": "Off"
+            },
+            {
+             "value": "2h",
+             "label": "2h"
+            },
+            {
+             "value": "4h",
+             "label": "4h"
+            },
+            {
+             "value": "8h",
+             "label": "8h"
+            },
+            {
+             "value": "12h",
+             "label": "12h"
+            },
+            {
+             "value": "forever",
+             "label": "No end"
+            }
+           ],
+           "value": "off",
+           "onSelect": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Select",
+          "props": {
+           "key": "ck-lead",
+           "label": "Refresh before it expires",
+           "options": [
+            {
+             "value": "2",
+             "label": "2 min"
+            },
+            {
+             "value": "3",
+             "label": "3 min"
+            },
+            {
+             "value": "5",
+             "label": "5 min"
+            },
+            {
+             "value": "10",
+             "label": "10 min"
+            },
+            {
+             "value": "15",
+             "label": "15 min"
+            }
+           ],
+           "value": "5",
+           "onSelect": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Select",
+          "props": {
+           "key": "ck-minTokens",
+           "label": "Skip chats smaller than",
+           "options": [
+            {
+             "value": "10000",
+             "label": "10k"
+            },
+            {
+             "value": "30000",
+             "label": "30k"
+            },
+            {
+             "value": "50000",
+             "label": "50k"
+            },
+            {
+             "value": "100000",
+             "label": "100k"
+            }
+           ],
+           "value": "30000",
+           "onSelect": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Select",
+          "props": {
+           "key": "ck-weeklyGuard",
+           "label": "Stop at weekly usage",
+           "options": [
+            {
+             "value": "50",
+             "label": "50%"
+            },
+            {
+             "value": "75",
+             "label": "75%"
+            },
+            {
+             "value": "80",
+             "label": "80%"
+            },
+            {
+             "value": "90",
+             "label": "90%"
+            },
+            {
+             "value": "95",
+             "label": "95%"
+            },
+            {
+             "value": "100",
+             "label": "100%"
+            }
+           ],
+           "value": "90",
+           "onSelect": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Select",
+          "props": {
+           "key": "ck-upgradeTo1h",
+           "label": "1-hour cache for API keys",
+           "options": [
+            {
+             "value": "off",
+             "label": "off"
+            },
+            {
+             "value": "on",
+             "label": "1-hour cache"
+            }
+           ],
+           "value": "off",
+           "onSelect": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "ck-save",
+           "variant": "primary",
+           "label": "Save as default",
+           "hotkey": "s",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "ck-close",
+           "label": "Close",
+           "hotkey": "c",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "cache-keeper"
+    }
+   }
+  },
+  "script": [
+   "$.fs.write(/Users/dev/.claude/cache-keeper/live/preview-session.json)",
+   "$.process.run(defaults read -g AppleInterfaceStyle) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/cache → **○ Auto-refresh off**\n- TTL: 5m (no subscription seen)\n- No request yet in this…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "classic.SessionStart",
+   "turn.start",
+   "turn.step",
+   "turn.complete",
+   "tool.call",
+   "classic.PermissionRequest",
+   "prompt.submit",
+   "classic.Stop",
+   "classic.SubagentStop",
+   "session.measure",
+   "session.compact",
+   "session.end",
+   "classic.PostModelSwitch",
+   "config.set",
+   "command.run{command=cache}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=cache-keeper}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now (via ioOf)",
+   "$.command.register",
+   "$.config.list (via ioOf)",
+   "$.config.set (via ioOf)",
+   "$.env.get",
+   "$.env.set (via ioOf)",
+   "$.fs.exists (via ioOf)",
+   "$.fs.list (via ioOf)",
+   "$.fs.read (via ioOf)",
+   "$.fs.write (via ioOf)",
+   "$.model.fork (via ioOf)",
+   "$.process.run (via ioOf)",
+   "$.session.append (via ioOf)",
+   "$.session.authorize (via ioOf)",
+   "$.session.id (via ioOf)",
+   "$.session.usage (via ioOf)",
+   "$.settings.read (via ioOf)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via ioOf)",
+   "$.store.set (via ioOf)",
+   "$.ui.close (via ioOf)",
+   "$.ui.invalidate",
+   "$.ui.log (via ioOf)",
+   "$.ui.open (via ioOf)",
+   "$.ui.resolve",
+   "$.ui.toast (via ioOf)"
+  ],
+  "stateReads": [
+   "cache-keeper.anchor",
+   "cache-keeper.chain",
+   "cache-keeper.contextTokens",
+   "cache-keeper.costUsd",
+   "cache-keeper.dialog",
+   "cache-keeper.elsewhere",
+   "cache-keeper.last",
+   "cache-keeper.light",
+   "cache-keeper.limits",
+   "cache-keeper.onAt",
+   "cache-keeper.refreshing",
+   "cache-keeper.resumed",
+   "cache-keeper.session",
+   "cache-keeper.settings",
+   "cache-keeper.sheetOpen",
+   "cache-keeper.status",
+   "cache-keeper.surface",
+   "cache-keeper.tasks",
+   "cache-keeper.ttlSet",
+   "cache-keeper.turn"
+  ],
+  "stateWrites": [
+   "cache-keeper.anchor",
+   "cache-keeper.chain",
+   "cache-keeper.contextTokens",
+   "cache-keeper.costUsd",
+   "cache-keeper.dialog",
+   "cache-keeper.elsewhere",
+   "cache-keeper.last",
+   "cache-keeper.light",
+   "cache-keeper.limits",
+   "cache-keeper.onAt",
+   "cache-keeper.refreshing",
+   "cache-keeper.resumed",
+   "cache-keeper.session",
+   "cache-keeper.settings",
+   "cache-keeper.sheetOpen",
+   "cache-keeper.status",
+   "cache-keeper.surface",
+   "cache-keeper.tasks",
+   "cache-keeper.ttlSet",
+   "cache-keeper.turn"
+  ],
+  "envReads": [
+   "CLAUDE_CODE_PROMPT_CACHE_TTL",
+   "ENABLE_PROMPT_CACHING_1H",
+   "FORCE_PROMPT_CACHING_5M",
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/parab-aditya-cache-keeper/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/parab-aditya-cache-keeper/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: cache-keeper.anchor, cache-keeper.chain, cache-keeper.status, cache-keeper.settings, cache-keeper.turn, cache-keeper.dialog, cache-keeper.tasks, cache-keeper.limits, cache-keeper.contextTokens, cache-keeper.costUsd, cache-keeper.refreshing, cache-keeper.last, cache-keeper.session, cache-keeper.resumed, cache-keeper.surface, cache-keeper.light, cache-keeper.sheetOpen, cache-keeper.ttlSet, cache-keeper.elsewhere, cache-keeper.onAt"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/parab-aditya-cache-keeper/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, classic.SessionStart, turn.start, turn.step, turn.complete, tool.call, classic.PermissionRequest, prompt.submit, classic.Stop, classic.SubagentStop, session.measure, session.compact, session.end, classic.PostModelSwitch, config.set, command.run{command=cache}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=cache-keeper}",
+      "./register.tsx hooks on classic.SessionStart, classic.PermissionRequest, classic.Stop, classic.SubagentStop, session.compact, classic.PostModelSwitch do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=cache}",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: classic.PermissionRequest",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: classic.SubagentStop",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: classic.PostModelSwitch",
+      "./register.tsx gating hook without .catch: config.set",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now (via ioOf), $.command.register, $.config.list (via ioOf), $.config.set (via ioOf), $.env.get, $.env.set (via ioOf), $.fs.exists (via ioOf), $.fs.list (via ioOf), $.fs.read (via ioOf), $.fs.write (via ioOf), $.model.fork (via ioOf), $.process.run (via ioOf), $.session.append (via ioOf), $.session.authorize (via ioOf), $.session.id (via ioOf), $.session.usage (via ioOf), $.settings.read (via ioOf), $.state.get, $.state.set, $.store.get (via ioOf), $.store.set (via ioOf), $.ui.close (via ioOf), $.ui.invalidate, $.ui.log (via ioOf), $.ui.open (via ioOf), $.ui.resolve, $.ui.toast (via ioOf)",
+      "./register.tsx env writes: CLAUDE_CODE_PROMPT_CACHE_TTL",
+      "./register.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HOME",
+      "./register.tsx state writes: cache-keeper.anchor, cache-keeper.chain, cache-keeper.contextTokens, cache-keeper.costUsd, cache-keeper.dialog, cache-keeper.elsewhere, cache-keeper.last, cache-keeper.light, cache-keeper.limits, cache-keeper.onAt, cache-keeper.refreshing, cache-keeper.resumed, cache-keeper.session, cache-keeper.settings, cache-keeper.sheetOpen, cache-keeper.status, cache-keeper.surface, cache-keeper.tasks, cache-keeper.ttlSet, cache-keeper.turn",
+      "./register.tsx state reads: cache-keeper.anchor, cache-keeper.chain, cache-keeper.contextTokens, cache-keeper.costUsd, cache-keeper.dialog, cache-keeper.elsewhere, cache-keeper.last, cache-keeper.light, cache-keeper.limits, cache-keeper.onAt, cache-keeper.refreshing, cache-keeper.resumed, cache-keeper.session, cache-keeper.settings, cache-keeper.sheetOpen, cache-keeper.status, cache-keeper.surface, cache-keeper.tasks, cache-keeper.ttlSet, cache-keeper.turn"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PermissionRequest",
+       "hook": "classic.PermissionRequest",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostModelSwitch",
+       "hook": "classic.PostModelSwitch",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "config.set",
+       "hook": "config.set",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "2ff3b292986f1fba"
+}

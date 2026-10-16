@@ -1,6 +1,6 @@
 {
  "slug": "pthexton-claude-sidebar-mod-sidebar",
- "generatedAt": "2026-10-10T14:44:34.954Z",
+ "generatedAt": "2026-10-16T14:17:04.926Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,6 +14,12 @@
     "event": "command.run",
     "matcher": {
      "command": "sidebar"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "gbp"
     }
    },
    {
@@ -91,6 +97,11 @@
     "output": "Sidebar closed. /sidebar opens it again."
    },
    {
+    "name": "gbp",
+    "description": "Show or hide £ beside $ costs in the sidebar",
+    "output": "£ on. £ rate not fetched yet. /gbp turns it off."
+   },
+   {
     "name": "ci-refresh",
     "description": "Refresh the sidebar CI status now (ctrl+x r)"
    },
@@ -115,29 +126,42 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 3,
+   "$.clock.after": 3,
+   "$.clock.every": 4,
+   "$.command.register": 4,
    "$.session.usage": 1,
-   "$.state.get": 28,
-   "$.state.set": 7,
-   "$.clock.now": 1,
+   "$.state.get": 34,
+   "$.state.set": 8,
+   "$.clock.now": 2,
    "$.session.model": 3,
    "$.session.cwd": 2,
    "$.session.id": 2,
    "$.session.root": 2,
    "$.session.repo": 2,
-   "$.env.get": 2,
+   "$.env.get": 4,
    "$.process.run": 6,
    "$.fs.read": 3,
    "$.settings.read": 2,
-   "$.clock.every": 3,
-   "$.clock.after": 2,
    "$.ui.open": 1,
    "$.ui.panes": 1,
    "$.ui.close": 1,
+   "$.config.list": 1,
+   "$.config.set": 1,
+   "$.store.get": 2,
+   "$.store.set": 1,
+   "$.http.fetch": 1,
    "$.ui.toast": 3,
    "$.ui.resolve": 1
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   },
+   {
+    "kind": "every",
+    "ms": 3600000
+   },
    {
     "kind": "every",
     "ms": 1000
@@ -481,31 +505,49 @@
           ]
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "wrap": "truncate-end"
+           "flexDirection": "column"
           },
-          "children": [
-           "* ",
-           "9%",
-           " discount off list prices"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {},
           "children": [
            {
             "type": "Text",
             "props": {
-             "dimColor": true
+             "wrap": "truncate-end"
             },
             "children": [
-             "list  "
+             "* ",
+             "9%",
+             " discount off list prices"
             ]
            },
-           "$",
-           "0.42"
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "list  "
+              ]
+             },
+             "$",
+             "0.42"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "Change it in /config: Billing discount (%)"
+            ]
+           }
           ]
          },
          {
@@ -515,7 +557,7 @@
            "wrap": "wrap"
           },
           "children": [
-           "Change it in /config: Billing discount (%)"
+           "£ rate not fetched yet"
           ]
          }
         ]
@@ -546,6 +588,8 @@
    "$.process.run(git -C /work/app rev-parse --path-format=absolute --git-dir --git-common-dir) → exit 0",
    "turn.complete",
    "/sidebar → Sidebar closed. /sidebar opens it again.",
+   "$.http.fetch(https://api.frankfurter.dev/v1/latest?from=USD&to=GBP) → blocked in preview",
+   "/gbp → £ on. £ rate not fetched yet. /gbp turns it off.",
    "/ci-refresh → ",
    "/open-pr → "
   ],
@@ -562,6 +606,7 @@
    "config.set",
    "session.start",
    "command.run{command=sidebar}",
+   "command.run{command=gbp}",
    "command.run{command=ci-refresh}",
    "command.run{command=fast}",
    "command.run{command=model}",
@@ -581,9 +626,13 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
+   "$.config.list",
+   "$.config.set",
    "$.env.get (via refreshWorkspace)",
    "$.fs.read (via refreshFeed",
    "refreshPricing)",
+   "$.fs.stat (via refreshFeed)",
+   "$.http.fetch (via refreshGbpRate)",
    "$.process.run (via gh",
    "git",
    "openPrAction)",
@@ -597,6 +646,8 @@
    "$.settings.read (via refreshFastMode)",
    "$.state.get",
    "$.state.set",
+   "$.store.get (via refreshGbpRate)",
+   "$.store.set (via refreshGbpRate)",
    "$.ui.close",
    "$.ui.copy",
    "$.ui.open",
@@ -613,6 +664,8 @@
    "sidebar.claudeTasks",
    "sidebar.discountChange",
    "sidebar.feed",
+   "sidebar.gbpChange",
+   "sidebar.gbpRate",
    "sidebar.isCiFetching",
    "sidebar.isFastMode",
    "sidebar.lastStep",
@@ -627,6 +680,8 @@
    "sidebar.claudeTasks",
    "sidebar.discountChange",
    "sidebar.feed",
+   "sidebar.gbpChange",
+   "sidebar.gbpRate",
    "sidebar.isCiFetching",
    "sidebar.isFastMode",
    "sidebar.lastStep",
@@ -636,7 +691,8 @@
    "sidebar.workspace"
   ],
   "envReads": [
-   "HOME"
+   "HOME",
+   "USERPROFILE"
   ],
   "raw": {
    "success": true,
@@ -655,7 +711,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: sidebar.usage, sidebar.lastStep, sidebar.apiMs, sidebar.workspace, sidebar.pricing, sidebar.claudeTasks, sidebar.ci, sidebar.isCiFetching, sidebar.isFastMode, sidebar.feed, sidebar.discountChange, sidebar.now"
+     "types ./types/index.d.ts declares state: sidebar.usage, sidebar.lastStep, sidebar.apiMs, sidebar.workspace, sidebar.pricing, sidebar.claudeTasks, sidebar.ci, sidebar.isCiFetching, sidebar.isFastMode, sidebar.feed, sidebar.discountChange, sidebar.gbpRate, sidebar.gbpChange, sidebar.now"
     ],
     "gatingHooks": []
    },
@@ -666,9 +722,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: config.set, session.start, command.run{command=sidebar}, command.run{command=ci-refresh}, command.run{command=fast}, command.run{command=model}, command.run{command=open-pr}, ui.close, session.measure, turn.step, turn.complete, tool.call{tool=Bash}, tool.call{tool=TodoWrite}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, ui.render{component=Pane, requestId=sidebar}",
+      "./register.tsx hooks: config.set, session.start, command.run{command=sidebar}, command.run{command=gbp}, command.run{command=ci-refresh}, command.run{command=fast}, command.run{command=model}, command.run{command=open-pr}, ui.close, session.measure, turn.step, turn.complete, tool.call{tool=Bash}, tool.call{tool=TodoWrite}, tool.call{tool=TaskCreate}, tool.call{tool=TaskUpdate}, ui.render{component=Pane, requestId=sidebar}",
       "./register.tsx answers its own command: command.run{command=sidebar}",
       "./register.tsx gating hook without .catch: config.set",
+      "./register.tsx gating hook without .catch: command.run{command=gbp}",
       "./register.tsx gating hook without .catch: command.run{command=ci-refresh}",
       "./register.tsx gating hook without .catch: command.run{command=fast}",
       "./register.tsx gating hook without .catch: command.run{command=model}",
@@ -678,17 +735,23 @@
       "./register.tsx gating hook without .catch: tool.call{tool=TodoWrite}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskCreate}",
       "./register.tsx gating hook without .catch: tool.call{tool=TaskUpdate}",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via refreshWorkspace), $.fs.read (via refreshFeed, refreshPricing), $.process.run (via gh, git, openPrAction), $.session.cwd (via refreshWorkspace), $.session.id (via refreshWorkspace), $.session.model (via refreshModel, refreshWorkspace), $.session.repo (via refreshWorkspace), $.session.root (via refreshWorkspace), $.session.usage, $.settings.read (via refreshFastMode), $.state.get, $.state.set, $.ui.close, $.ui.copy, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via ciRefreshAction, openPrAction, refreshCi, setFastMode)",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.config.list, $.config.set, $.env.get (via refreshWorkspace), $.fs.read (via refreshFeed, refreshPricing), $.fs.stat (via refreshFeed), $.http.fetch (via refreshGbpRate), $.process.run (via gh, git, openPrAction), $.session.cwd (via refreshWorkspace), $.session.id (via refreshWorkspace), $.session.model (via refreshModel, refreshWorkspace), $.session.repo (via refreshWorkspace), $.session.root (via refreshWorkspace), $.session.usage, $.settings.read (via refreshFastMode), $.state.get, $.state.set, $.store.get (via refreshGbpRate), $.store.set (via refreshGbpRate), $.ui.close, $.ui.copy, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via ciRefreshAction, openPrAction, refreshCi, setFastMode)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME",
-      "./register.tsx state writes: sidebar.apiMs, sidebar.ci, sidebar.claudeTasks, sidebar.discountChange, sidebar.feed, sidebar.isCiFetching, sidebar.isFastMode, sidebar.lastStep, sidebar.now, sidebar.pricing, sidebar.usage, sidebar.workspace",
-      "./register.tsx state reads: sidebar.apiMs, sidebar.ci, sidebar.claudeTasks, sidebar.discountChange, sidebar.feed, sidebar.isCiFetching, sidebar.isFastMode, sidebar.lastStep, sidebar.now, sidebar.pricing, sidebar.usage, sidebar.workspace"
+      "./register.tsx env reads: HOME, USERPROFILE",
+      "./register.tsx state writes: sidebar.apiMs, sidebar.ci, sidebar.claudeTasks, sidebar.discountChange, sidebar.feed, sidebar.gbpChange, sidebar.gbpRate, sidebar.isCiFetching, sidebar.isFastMode, sidebar.lastStep, sidebar.now, sidebar.pricing, sidebar.usage, sidebar.workspace",
+      "./register.tsx state reads: sidebar.apiMs, sidebar.ci, sidebar.claudeTasks, sidebar.discountChange, sidebar.feed, sidebar.gbpChange, sidebar.gbpRate, sidebar.isCiFetching, sidebar.isFastMode, sidebar.lastStep, sidebar.now, sidebar.pricing, sidebar.usage, sidebar.workspace"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "config.set",
        "hook": "config.set",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=gbp}",
        "hasCatch": false
       },
       {
@@ -751,5 +814,5 @@
    "advice": []
   }
  },
- "sourceHash": "7b81eacd9182988f"
+ "sourceHash": "d4bebca1164ad76e"
 }

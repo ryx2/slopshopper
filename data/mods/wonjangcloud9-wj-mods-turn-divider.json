@@ -1,0 +1,8 @@
+{
+ "slug": "wonjangcloud9-wj-mods-turn-divider",
+ "files": {
+  "hooks/register.tsx": "import type { PromptOrigin, Register } from 'claude-code'\n\n// 사람이 직접 보낸 프롬프트와 mod 가 사람 대신 보낸 답장만 나눈다.\n// 작업 알림이나 다른 세션의 메시지에는 긋지 않는다.\nconst OWN_PROMPT = new Set(['composer', 'bridge'])\n\nfunction isOwnPrompt(origin: PromptOrigin): boolean {\n  return OWN_PROMPT.has(origin.kind) || (origin.kind === 'plugin' && origin.asUser === true)\n}\n\nconst FALLBACK_COLUMNS = 80\n// 선이 화면 폭과 같으면 터미널이 다음 줄로 넘길 수 있어 조금 짧게 긋는다.\nconst EDGE_CELLS = 2\n// 테마 이름으로 칠해 테마를 바꾸면 같이 따라간다.\nconst ACCENT = 'claude'\n// 터미널의 엔진 질문 줄은 위에 빈 줄 하나를 품고 있어, 막대를 그만큼 내려야 글자 줄에 붙는다.\nconst ENGINE_ROW_TOP_GAP = 1\n\nexport const register: Register = on => {\n  on('ui.render', { component: 'UserMessage' }, async ($, e, next) => {\n    const row = await next(e)\n    if (!isOwnPrompt(e.props.origin)) return row\n\n    const { Box, Text } = $.ui.resolve(e)\n    const width = Math.max(1, (e.viewport?.columns ?? FALLBACK_COLUMNS) - EDGE_CELLS)\n\n    return (\n      <Box flexDirection=\"column\" marginTop={1}>\n        <Text dimColor wrap=\"truncate-end\">{'─'.repeat(width)}</Text>\n        <Box flexDirection=\"row\">\n          <Box key=\"bar\" marginTop={e.surface === 'terminal' ? ENGINE_ROW_TOP_GAP : 0}>\n            <Text color={ACCENT} bold>{'▌ '}</Text>\n          </Box>\n          <Box flexGrow={1}>{row}</Box>\n        </Box>\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"turn-divider\",\n  \"version\": \"0.1.0\",\n  \"description\": \"내가 보낸 질문 위에 흐린 구분선을 긋고 왼쪽에 색 막대를 세워 질문과 답의 경계를 보이게 한다\",\n  \"author\": {\n    \"name\": \"wonjangcloud9\"\n  }\n}"
+ }
+}

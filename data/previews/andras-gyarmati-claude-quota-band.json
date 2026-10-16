@@ -1,6 +1,6 @@
 {
  "slug": "andras-gyarmati-claude-quota-band",
- "generatedAt": "2026-10-10T14:44:56.596Z",
+ "generatedAt": "2026-10-16T14:18:39.768Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,7 +11,22 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "keep-warm"
+    }
+   },
+   {
     "event": "session.start"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "session.measure"
@@ -31,6 +46,13 @@
     "name": "quota-weights",
     "description": "How much of the 5h and 7d quota cache reads and output use, measured against cache writes",
     "output": "5h: 0 intervals, no fit yet\n7d: 0 intervals, no fit yet\noutput stays at 2.5 cache writes per token\ncost × uses API price ratios until 5h has 20 intervals and a cache read range within ±25%"
+   },
+   {
+    "name": "keep-warm",
+    "description": "Ping this thread before its prompt cache goes cold",
+    "argumentHint": "[on|off]",
+    "immediate": true,
+    "output": "keep-warm on for this thread"
    }
   ],
   "tools": [],
@@ -40,18 +62,19 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.session.id": 2,
-   "$.store.get": 1,
-   "$.clock.now": 6,
+   "$.command.register": 2,
+   "$.session.id": 4,
+   "$.store.get": 3,
+   "$.clock.now": 7,
    "$.store.keys": 2,
    "$.session.usage": 1,
-   "$.state.get": 7,
-   "$.state.set": 3,
+   "$.state.get": 16,
+   "$.state.set": 7,
+   "$.env.get": 5,
    "$.clock.every": 2,
-   "$.env.get": 1,
    "$.settings.read": 1,
    "$.fs.exists": 1,
+   "$.store.set": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -79,7 +102,7 @@
         "dimColor": true
        },
        "children": [
-        "5h 31% · 09:53   ctx 49% · 97k   cache 60m"
+        "5h 31% · 09:53   ctx 49% · 97k   cache 60m   keep-warm 09:50"
        ]
       },
       {
@@ -121,6 +144,7 @@
   },
   "script": [
    "session.start",
+   "turn.start: hook threw undefined is not an object (evaluating 'e.text.includes')",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -131,7 +155,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/quota-weights → 5h: 0 intervals, no fit yet\n7d: 0 intervals, no fit yet\noutput stays at 2.5 cach…"
+   "/quota-weights → 5h: 0 intervals, no fit yet\n7d: 0 intervals, no fit yet\noutput stays at 2.5 cach…",
+   "/keep-warm → keep-warm on for this thread"
   ],
   "console": [],
   "warnings": []
@@ -142,7 +167,11 @@
   "warnings": [],
   "hooks": [
    "command.run{command=quota-weights}",
+   "command.run{command=keep-warm}",
    "session.start",
+   "turn.start",
+   "turn.complete",
+   "prompt.submit",
    "session.measure",
    "classic.Stop",
    "ui.render{component=AbovePrompt}"
@@ -151,38 +180,52 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via handOff)",
-   "$.fs.exists (via handOff)",
+   "$.env.get (via accountName",
+   "handOff",
+   "readGift)",
+   "$.fs.exists (via handOff",
+   "readGift)",
+   "$.fs.read (via readGift)",
    "$.fs.write (via handOff)",
    "$.process.run (via notify",
    "sendIMessage",
    "transcriptEnd)",
+   "$.prompt.read",
+   "$.prompt.submit",
    "$.session.cwd",
-   "$.session.id (via ownLog)",
+   "$.session.id",
    "$.session.usage",
    "$.settings.read (via cacheTtl)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via calibrationLogs",
-   "saveLog)",
-   "$.store.get (via calibrationLogs",
-   "ownLog)",
+   "saveLog",
+   "setKeepWarm)",
+   "$.store.get",
    "$.store.keys (via calibrationLogs)",
-   "$.store.set (via saveLog)",
+   "$.store.set (via saveLog",
+   "setKeepWarm",
+   "trackWeek)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
+   "quota-band.gift",
    "quota-band.limits",
    "quota-band.multiplier",
    "quota-band.tick",
-   "quota-band.turn"
+   "quota-band.turn",
+   "quota-band.warm",
+   "quota-band.weekClaim"
   ],
   "stateWrites": [
+   "quota-band.gift",
    "quota-band.limits",
    "quota-band.multiplier",
    "quota-band.tick",
-   "quota-band.turn"
+   "quota-band.turn",
+   "quota-band.warm",
+   "quota-band.weekClaim"
   ],
   "envReads": [
    "CLAUDE_CODE_ACCOUNT_UUID",
@@ -201,7 +244,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: quota-band.limits, quota-band.turn, quota-band.multiplier, quota-band.tick"
+     "types ./types/index.d.ts declares state: quota-band.limits, quota-band.turn, quota-band.multiplier, quota-band.tick, quota-band.weekClaim, quota-band.gift, quota-band.warm"
     ],
     "gatingHooks": []
    },
@@ -212,16 +255,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: command.run{command=quota-weights}, session.start, session.measure, classic.Stop, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: command.run{command=quota-weights}, command.run{command=keep-warm}, session.start, turn.start, turn.complete, prompt.submit, session.measure, classic.Stop, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=quota-weights}",
+      "./register.tsx answers its own command: command.run{command=keep-warm}",
+      "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: classic.Stop",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via handOff), $.fs.exists (via handOff), $.fs.write (via handOff), $.process.run (via notify, sendIMessage, transcriptEnd), $.session.cwd, $.session.id (via ownLog), $.session.usage, $.settings.read (via cacheTtl), $.state.get, $.state.set, $.store.delete (via calibrationLogs, saveLog), $.store.get (via calibrationLogs, ownLog), $.store.keys (via calibrationLogs), $.store.set (via saveLog), $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via accountName, handOff, readGift), $.fs.exists (via handOff, readGift), $.fs.read (via readGift), $.fs.write (via handOff), $.process.run (via notify, sendIMessage, transcriptEnd), $.prompt.read, $.prompt.submit, $.session.cwd, $.session.id, $.session.usage, $.settings.read (via cacheTtl), $.state.get, $.state.set, $.store.delete (via calibrationLogs, saveLog, setKeepWarm), $.store.get, $.store.keys (via calibrationLogs), $.store.set (via saveLog, setKeepWarm, trackWeek), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_ACCOUNT_UUID, CLAUDE_CODE_USER_EMAIL, CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: quota-band.limits, quota-band.multiplier, quota-band.tick, quota-band.turn",
-      "./register.tsx state reads: quota-band.limits, quota-band.multiplier, quota-band.tick, quota-band.turn"
+      "./register.tsx state writes: quota-band.gift, quota-band.limits, quota-band.multiplier, quota-band.tick, quota-band.turn, quota-band.warm, quota-band.weekClaim",
+      "./register.tsx state reads: quota-band.gift, quota-band.limits, quota-band.multiplier, quota-band.tick, quota-band.turn, quota-band.warm, quota-band.weekClaim"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "classic.Stop",
@@ -234,5 +286,5 @@
    "advice": []
   }
  },
- "sourceHash": "7e02c6da739b8c61"
+ "sourceHash": "caddd89cd0ab8d42"
 }

@@ -1,0 +1,9 @@
+{
+ "slug": "wonjangcloud9-wj-mods-compact-tool-rows",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nimport { shortCommand } from './shorten'\n\nexport const register: Register = on => {\n  on('ui.render', { component: 'ToolUse' }, ($, e, next) => {\n    if (e.props.tool !== 'Bash' || typeof e.props.input !== 'object' || e.props.input === null) return next(e)\n\n    const input = e.props.input as Record<string, unknown>\n    if (typeof input.command !== 'string') return next(e)\n\n    const command = shortCommand(input.command)\n    if (command === input.command) return next(e)\n\n    // 화면에 그리는 줄만 바뀌고 실제 실행된 명령과 기록은 그대로다.\n    return next({ ...e, props: { ...e.props, input: { ...input, command } } })\n  })\n}\n",
+  "hooks/shorten.ts": "const MAX_CHARS = 60\n\n// 사용자는 명령 본문을 읽지 않으므로 첫 줄 앞부분만 남기고 잘린 표시를 붙인다.\nexport function shortCommand(command: string): string {\n  const trimmed = command.trim()\n  const first = trimmed.split('\\n')[0] ?? ''\n  const head = first.length > MAX_CHARS ? first.slice(0, MAX_CHARS) : first\n  return head === trimmed ? trimmed : `${head.trimEnd()} …`\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"compact-tool-rows\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Bash 실행 줄의 긴 명령을 첫 줄 앞부분만 보이게 줄인다\",\n  \"author\": {\n    \"name\": \"wonjangcloud9\"\n  }\n}"
+ }
+}

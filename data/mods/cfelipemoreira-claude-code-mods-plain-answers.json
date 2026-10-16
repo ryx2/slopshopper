@@ -1,0 +1,8 @@
+{
+ "slug": "cfelipemoreira-claude-code-mods-plain-answers",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\nconst RULES = `Responda sempre em linguagem simples e fácil de entender, como se explicasse a alguém sem formação técnica.\n- Evite jargão; se um termo técnico for inevitável, explique-o em poucas palavras.\n- Frases curtas, voz ativa, palavras do dia a dia.\n- Vá direto ao ponto: primeiro a resposta, depois o necessário.\n- Use exemplos ou comparações simples quando ajudar.\n- Mantenha o idioma do usuário. Isto vale para o texto ao usuário, não para código ou comandos.`\n\nexport const register: Register = on => {\n  let isOn = true\n\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'simples', description: 'Liga/desliga respostas em linguagem simples' })\n    $.ui.status('Respostas simples: ligado')\n\n    return next(e)\n  })\n\n  on('command.run', { command: 'simples' }, $ => {\n    isOn = !isOn\n    $.ui.status(isOn ? 'Respostas simples: ligado' : undefined)\n\n    return { text: isOn ? 'Respostas simples LIGADO.' : 'Respostas simples DESLIGADO.' }\n  })\n\n  on('prompt.compose', async ($, e, next) => {\n    const r = await next(e)\n\n    return isOn ? { sections: [...r.sections, { id: 'plain-answers', text: RULES, scope: 'session' as const }] } : r\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"plain-answers\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Faz o Claude responder em linguagem simples, sem jargão. Liga/desliga com /simples.\"\n}"
+ }
+}

@@ -1,11 +1,17 @@
 {
  "slug": "ulttla-claude-mod-repo-context-handoff",
- "generatedAt": "2026-10-09T15:34:34.612Z",
+ "generatedAt": "2026-10-16T14:21:58.662Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "skill.prompt"
    },
    {
     "event": "turn.start"
@@ -25,48 +31,33 @@
    {
     "event": "command.run",
     "matcher": {
-     "command": "handoff-now"
-    }
-   },
-   {
-    "event": "command.run",
-    "matcher": {
      "command": "handoff-status"
     }
    }
   ],
   "commands": [
    {
-    "name": "handoff-now",
-    "description": "Record a hand-off now, reset the context, and continue from the notes",
-    "output": "A hand-off is already in progress (closing)"
-   },
-   {
     "name": "handoff-status",
     "description": "Show where the automatic hand-off stands and what it did last",
-    "output": "Phase: closing. Context: 49% (threshold 40%). Automatic hand-off: on. Reset: compact. Last: hand-off started: context at 49%, past 40%."
+    "output": "Phase: armed. Context: 49% (threshold 40%). Automatic hand-off: on. Reset: session. Last: context at 49%: your next message goes to a new session, after the hand-off."
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [
-   "context-handoff: context at 49%, past 40%, recording the hand-off"
+   "context-handoff: context at 49%, your next message hands off to a new session"
   ],
   "logs": [
-   "context-handoff: hand-off started: context at 49%, past 40%"
+   "context-handoff: context at 49%: your next message goes to a new session, after the hand-off"
   ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
+   "$.command.register": 1,
    "$.store.get": 1,
    "$.session.usage": 2,
-   "$.command.list": 1,
-   "$.session.root": 1,
-   "$.fs.exists": 1,
    "$.ui.log": 1,
-   "$.ui.toast": 1,
-   "$.prompt.submit": 1
+   "$.ui.toast": 1
   },
   "timers": [],
   "sites": {},
@@ -82,8 +73,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/handoff-now → A hand-off is already in progress (closing)",
-   "/handoff-status → Phase: closing. Context: 49% (threshold 40%). Automatic hand-off: on. Reset: com…"
+   "/handoff-status → Phase: armed. Context: 49% (threshold 40%). Automatic hand-off: on. Reset: sessi…"
   ],
   "console": [],
   "warnings": []
@@ -94,12 +84,13 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "prompt.submit",
+   "skill.prompt",
    "turn.start",
    "turn.complete",
    "session.compact",
    "session.end",
    "classic.SessionStart",
-   "command.run{command=handoff-now}",
    "command.run{command=handoff-status}"
   ],
   "calls": [
@@ -110,7 +101,8 @@
    "$.command.run (via compactByCommand)",
    "$.fs.exists (via hasCommand)",
    "$.mcp.call (via appSessionId",
-   "callApp)",
+   "callApp",
+   "linkedSessions)",
    "$.prompt.submit (via begin",
    "submitResume)",
    "$.session.compact (via startCompaction)",
@@ -123,11 +115,7 @@
    "$.store.get (via resumeIfPending)",
    "$.store.set (via requestClear)",
    "$.ui.log (via note)",
-   "$.ui.toast (via abandon",
-   "awaitClear",
-   "begin",
-   "startCompaction",
-   "submitResume)"
+   "$.ui.toast"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -151,14 +139,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, turn.start, turn.complete, session.compact, session.end, classic.SessionStart, command.run{command=handoff-now}, command.run{command=handoff-status}",
-      "./register.js answers its own command: command.run{command=handoff-now}",
+      "./register.js hooks: session.start, prompt.submit, skill.prompt, turn.start, turn.complete, session.compact, session.end, classic.SessionStart, command.run{command=handoff-status}",
+      "./register.js hooks on skill.prompt, session.compact, classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.js answers its own command: command.run{command=handoff-status}",
+      "./register.js gating hook with .catch: prompt.submit",
       "./register.js gating hook without .catch: session.compact",
       "./register.js gating hook with .catch: classic.SessionStart",
-      "./register.js calls: $.clock.after, $.clock.now (via requestClear), $.command.list (via hasCommand), $.command.register, $.command.run (via compactByCommand), $.fs.exists (via hasCommand), $.mcp.call (via appSessionId, callApp), $.prompt.submit (via begin, submitResume), $.session.compact (via startCompaction), $.session.cwd (via requestClear, resumeIfPending), $.session.root (via hasCommand), $.session.turns (via resumeIfPending), $.session.usage (via readPercent), $.store.delete (via forgetPendingResume), $.store.get (via resumeIfPending), $.store.set (via requestClear), $.ui.log (via note), $.ui.toast (via abandon, awaitClear, begin, startCompaction, submitResume)"
+      "./register.js calls: $.clock.after, $.clock.now (via requestClear), $.command.list (via hasCommand), $.command.register, $.command.run (via compactByCommand), $.fs.exists (via hasCommand), $.mcp.call (via appSessionId, callApp, linkedSessions), $.prompt.submit (via begin, submitResume), $.session.compact (via startCompaction), $.session.cwd (via requestClear, resumeIfPending), $.session.root (via hasCommand), $.session.turns (via resumeIfPending), $.session.usage (via readPercent), $.store.delete (via forgetPendingResume), $.store.get (via resumeIfPending), $.store.set (via requestClear), $.ui.log (via note), $.ui.toast"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.js",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
       {
        "module": "./register.js",
        "pattern": "session.compact",
@@ -177,5 +172,5 @@
    "advice": []
   }
  },
- "sourceHash": "562b9e50c56b56f6"
+ "sourceHash": "a63c9ee777212276"
 }

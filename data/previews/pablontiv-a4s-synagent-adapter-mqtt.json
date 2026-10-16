@@ -1,9 +1,15 @@
 {
  "slug": "pablontiv-a4s-synagent-adapter-mqtt",
- "generatedAt": "2026-10-08T15:54:34.919Z",
+ "generatedAt": "2026-10-16T14:21:10.585Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
    {
     "event": "session.start"
    },
@@ -20,6 +26,12 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "synagent-offer"
+    }
+   },
+   {
     "event": "prompt.compose"
    }
   ],
@@ -31,20 +43,32 @@
     "output": "mq-send: /mq-send <to>: texto  (<to> = \"<proyecto>/<instancia>\", \"<proyecto>/all\" o \"all\")"
    },
    {
+    "name": "synagent-offer",
+    "description": "Ofrece una tarea al proyecto",
+    "argumentHint": "<descripción>",
+    "output": "synagent-offer: /synagent-offer <descripción>"
+   },
+   {
     "name": "mq-send",
     "description": "Publica un mensaje al bus synagent (debug)",
     "argumentHint": "<to>: texto",
     "output": "mq-send: /mq-send <to>: texto  (<to> = \"<proyecto>/<instancia>\", \"<proyecto>/all\" o \"all\")"
+   },
+   {
+    "name": "synagent-offer",
+    "description": "Ofrece una tarea al proyecto",
+    "argumentHint": "<descripción>",
+    "output": "synagent-offer: /synagent-offer <descripción>"
    }
   ],
   "tools": [
    {
     "name": "synagent_send",
-    "description": "Envía un mensaje a otro agente por el bus synagent (v1). Úsalo solo cuando el usuario pida notificar/avisar/mandar algo a otro agente o proyecto. No para conversación con el usuario actual. El \"body\" debe ser un hecho autoexplicativo."
+    "description": "Envía un comando de tarea o una nota publicada por el bus synagent (v2). Úsalo solo cuando el usuario pida mensajear a otro agente o proyecto. El body debe ser autoexplicativo."
    },
    {
     "name": "synagent_send",
-    "description": "Envía un mensaje a otro agente por el bus synagent (v1). Úsalo solo cuando el usuario pida notificar/avisar/mandar algo a otro agente o proyecto. No para conversación con el usuario actual. El \"body\" debe ser un hecho autoexplicativo."
+    "description": "Envía un comando de tarea o una nota publicada por el bus synagent (v2). Úsalo solo cuando el usuario pida mensajear a otro agente o proyecto. El body debe ser autoexplicativo."
    }
   ],
   "panes": [],
@@ -56,10 +80,11 @@
    "$.process.run": 1,
    "$.session.id": 4,
    "$.session.repo": 2,
+   "$.store.get": 2,
    "$.process.spawn": 2,
    "$.tool.register": 2,
    "$.ui.status": 4,
-   "$.command.register": 2
+   "$.command.register": 4
   },
   "timers": [],
   "sites": {},
@@ -79,10 +104,12 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/mq-send → mq-send: /mq-send <to>: texto  (<to> = \"<proyecto>/<instancia>\", \"<proyecto>/all…",
-   "/mq-send → mq-send: /mq-send <to>: texto  (<to> = \"<proyecto>/<instancia>\", \"<proyecto>/all…"
+   "/synagent-offer → synagent-offer: /synagent-offer <descripción>",
+   "/mq-send → mq-send: /mq-send <to>: texto  (<to> = \"<proyecto>/<instancia>\", \"<proyecto>/all…",
+   "/synagent-offer → synagent-offer: /synagent-offer <descripción>"
   ],
   "console": [],
-  "status": "synagent: app/preview-session (JALAR activo, tool synagent_send + /mq-send)",
+  "status": "synagent: app/preview-session (source=origin; accept-offers=false; JALAR activo, tool synagent_send + /mq-send)",
   "warnings": []
  },
  "validate": {
@@ -90,26 +117,36 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "turn.start",
+   "turn.complete",
    "session.start",
    "prompt.submit",
    "tool.call",
    "command.run{command=mq-send}",
+   "command.run{command=synagent-offer}",
    "prompt.compose"
   ],
   "calls": [
-   "$.clock.now (via publishV1)",
+   "$.clock.now (via publishCanonical)",
    "$.command.register (via ensureStarted)",
-   "$.process.run (via publishV1",
+   "$.process.run (via publishCanonical",
+   "recordDeliveryResult",
    "retireLegacySession)",
    "$.process.spawn (via runJalar)",
    "$.prompt.submit (via runJalar)",
    "$.session.id (via ensureStarted",
+   "recordDeliveryResult",
    "resolveIdentity)",
    "$.session.repo (via resolveIdentity)",
-   "$.store.get (via reserve)",
-   "$.store.set (via reserve)",
+   "$.store.get (via reserve",
+   "restoreOffers)",
+   "$.store.set (via persistOffers",
+   "reserve)",
    "$.tool.register (via ensureStarted)",
    "$.ui.status (via ensureStarted",
+   "handleOfferProtocol",
+   "publishTaskEvent",
+   "recordDeliveryResult",
    "retireLegacySession",
    "runJalar)"
   ],
@@ -135,11 +172,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.submit, tool.call, command.run{command=mq-send}, prompt.compose",
+      "./register.ts hooks: turn.start, turn.complete, session.start, prompt.submit, tool.call, command.run{command=mq-send}, command.run{command=synagent-offer}, prompt.compose",
+      "./register.ts hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=mq-send}",
+      "./register.ts answers its own command: command.run{command=synagent-offer}",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: tool.call",
-      "./register.ts calls: $.clock.now (via publishV1), $.command.register (via ensureStarted), $.process.run (via publishV1, retireLegacySession), $.process.spawn (via runJalar), $.prompt.submit (via runJalar), $.session.id (via ensureStarted, resolveIdentity), $.session.repo (via resolveIdentity), $.store.get (via reserve), $.store.set (via reserve), $.tool.register (via ensureStarted), $.ui.status (via ensureStarted, retireLegacySession, runJalar)"
+      "./register.ts calls: $.clock.now (via publishCanonical), $.command.register (via ensureStarted), $.process.run (via publishCanonical, recordDeliveryResult, retireLegacySession), $.process.spawn (via runJalar), $.prompt.submit (via runJalar), $.session.id (via ensureStarted, recordDeliveryResult, resolveIdentity), $.session.repo (via resolveIdentity), $.store.get (via reserve, restoreOffers), $.store.set (via persistOffers, reserve), $.tool.register (via ensureStarted), $.ui.status (via ensureStarted, handleOfferProtocol, publishTaskEvent, recordDeliveryResult, retireLegacySession, runJalar)"
      ],
      "gatingHooks": [
       {
@@ -156,8 +195,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "a412ccf42b41e705"
+ "sourceHash": "fb594ed5eb061afd"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "cure-consulting-group-productengineeringskills-cure-lane-board",
- "generatedAt": "2026-10-08T15:53:09.795Z",
+ "generatedAt": "2026-10-16T14:16:20.221Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,8 +17,8 @@
   "commands": [
    {
     "name": "lanes",
-    "description": "Show status of active tri-lane worktrees, branches, live commits, and defect windows",
-    "output": "cure-lane-board: No active tri-lane branches or worktrees detected."
+    "description": "Show status of active tri-lane worktrees, branches, live commits, defect windows, and pull requests",
+    "output": "cure-lane-board: 0 lane(s) (0 merged) · 0 open PR(s)\nNo active tri-lane branches or worktrees detected.\n\nPull requests (open): 0"
    }
   ],
   "tools": [],
@@ -29,7 +29,7 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.process.run": 2
+   "$.process.run": 6
   },
   "timers": [],
   "sites": {},
@@ -45,9 +45,13 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.process.run(git branch --merged origin/HEAD --list lane/*) → exit 0",
    "$.process.run(git worktree list --porcelain) → exit 0",
    "$.process.run(git branch --list lane/*) → exit 0",
-   "/lanes → cure-lane-board: No active tri-lane branches or worktrees detected."
+   "$.process.run(gh pr list --state open --limit 30 --json number,headRefName,title,mergeStateSta…) → exit 0",
+   "$.process.run(git remote get-url origin) → exit 0",
+   "$.process.run(gh api graphql -f query={repository(owner:\"acme\",name:\"app\"){mergeQueue{entries(…) → exit 0",
+   "/lanes → cure-lane-board: 0 lane(s) (0 merged) · 0 open PR(s)\nNo active tri-lane branches…"
   ],
   "console": [],
   "warnings": []
@@ -62,7 +66,7 @@
   ],
   "calls": [
    "$.command.register",
-   "$.process.run"
+   "$.process.run (via run)"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -88,12 +92,13 @@
      "notes": [
       "./register.ts hooks: session.start, command.run{command=lanes}",
       "./register.ts answers its own command: command.run{command=lanes}",
-      "./register.ts calls: $.command.register, $.process.run"
+      "./register.ts calls: $.command.register, $.process.run (via run)"
      ],
      "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "36b3d8608f154595"
+ "sourceHash": "cb2b4abbbc2502dd"
 }

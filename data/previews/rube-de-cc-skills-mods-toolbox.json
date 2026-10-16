@@ -1,6 +1,6 @@
 {
  "slug": "rube-de-cc-skills-mods-toolbox",
- "generatedAt": "2026-10-10T14:44:14.024Z",
+ "generatedAt": "2026-10-16T14:15:57.102Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,6 +20,32 @@
     "event": "ui.render",
     "matcher": {
      "component": "SessionMode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/\\//"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "status-dock"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "plugin": "mods-toolbox",
+     "component": "AbovePrompt",
+     "element": "toolbox-status-line"
     }
    },
    {
@@ -221,9 +247,15 @@
   "commands": [
    {
     "name": "toolbox",
-    "description": "Open or close the Toolbox: Claude's model and effort, Clean View, Team Size, helper model and the Agent Dock",
+    "description": "Open or close the Toolbox: Claude's model and effort, Clean View, Team Size, helper model, the Agent Dock and the Status Line Dock",
     "immediate": true,
     "output": "Toolbox open above the prompt."
+   },
+   {
+    "name": "status-dock",
+    "description": "Open or close the Status Line Dock: build the status line from blocks, with a preview",
+    "immediate": true,
+    "output": "Status Line Dock open above the prompt."
    },
    {
     "name": "dock",
@@ -263,19 +295,26 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 3,
-   "$.state.get": 101,
-   "$.state.set": 34,
+   "$.command.register": 4,
+   "$.env.get": 10,
+   "$.session.root": 3,
+   "$.settings.read": 4,
+   "$.fs.exists": 16,
+   "$.state.get": 104,
+   "$.state.set": 38,
    "$.config.list": 1,
    "$.session.model": 1,
-   "$.settings.read": 1,
    "$.store.get": 3,
-   "$.env.get": 4,
-   "$.fs.exists": 1,
-   "$.clock.now": 9,
+   "$.clock.now": 10,
    "$.tool.register": 2,
    "$.ui.status": 1,
    "$.agent.list": 1,
+   "$.clock.every": 1,
+   "$.session.id": 1,
+   "$.session.cwd": 1,
+   "$.session.version": 1,
+   "$.session.usage": 1,
+   "$.process.run": 1,
    "$.ui.panes": 1,
    "$.ui.open": 1,
    "$.ui.invalidate": 1,
@@ -283,7 +322,12 @@
    "$.store.set": 1,
    "$.ui.toast": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 2000
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": true,
@@ -296,700 +340,101 @@
       {
        "type": "Box",
        "props": {
-        "flexDirection": "row",
-        "justifyContent": "flex-end"
+        "width": 100,
+        "flexDirection": "column",
+        "borderStyle": "round",
+        "borderColor": "#3A3F4B",
+        "paddingX": 1
        },
        "children": [
         {
          "type": "Box",
          "props": {
-          "width": 66,
-          "flexDirection": "column",
-          "borderStyle": "round",
-          "borderColor": "#3A3F4B",
-          "paddingX": 1
+          "flexDirection": "row",
+          "justifyContent": "space-between"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "#FF7A66",
+            "bold": true
+           },
+           "children": [
+            "◆  S T A T U S   L I N E   D O C K"
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "gap": 2
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "#8B90A0"
+             },
+             "children": [
+              "Global · not installed · 2 lines · 9 blocks"
+             ]
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-close",
+              "plain": true,
+              "role": "dismiss",
+              "label": "✕",
+              "onPress": "[fn]"
+             },
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": 3
          },
          "children": [
           {
            "type": "Box",
            "props": {
-            "flexDirection": "row",
-            "justifyContent": "space-between"
+            "flexDirection": "row"
            },
            "children": [
             {
+             "type": "Box",
+             "props": {
+              "width": 9
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "bold": true
+               },
+               "children": [
+                "Mode"
+               ]
+              }
+             ]
+            },
+            {
              "type": "Text",
              "props": {
-              "color": "#FF7A66",
+              "backgroundColor": "#FF7A66",
+              "color": "#16181D",
               "bold": true
              },
              "children": [
-              "◆  T O O L B O X"
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "gap": 2
-             },
-             "children": [
-              {
-               "type": "Text",
-               "props": {
-                "color": "#8B90A0"
-               },
-               "children": [
-                "Opus 5.5"
-               ]
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "toolbox-close",
-                "plain": true,
-                "role": "dismiss",
-                "label": "✕",
-                "onPress": "[fn]"
-               },
-               "children": []
-              }
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "color": "#3A3F4B"
-             },
-             "children": [
-              "── "
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "color": "#8B90A0"
-             },
-             "children": [
-              "M O D E L   C O N F I G"
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "color": "#3A3F4B"
-             },
-             "children": [
-              " ───────────────────────────────────"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Box",
-           "props": {
-            "flexDirection": "row",
-            "justifyContent": "space-between"
-           },
-           "children": [
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row"
-             },
-             "children": [
-              {
-               "type": "Box",
-               "props": {
-                "width": 2
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "color": "#8B90A0"
-                 },
-                 "children": [
-                  "◇"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Box",
-               "props": {
-                "width": 14
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "bold": true
-                 },
-                 "children": [
-                  "Effort"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "color": "#8B90A0"
-               },
-               "children": [
-                "thinking depth"
-               ]
-              }
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "flexWrap": "wrap"
-             },
-             "children": [
-              {
-               "type": "Button",
-               "props": {
-                "key": "chat-effort-low",
-                "plain": true,
-                "label": " Low ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "chat-effort-medium",
-                "plain": true,
-                "label": " Medium ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "chat-effort-high",
-                "plain": true,
-                "label": " High ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "chat-effort-xhigh",
-                "plain": true,
-                "label": " XHigh ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "chat-effort-max",
-                "plain": true,
-                "label": " Max ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              }
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Box",
-           "props": {
-            "flexDirection": "row",
-            "justifyContent": "space-between"
-           },
-           "children": [
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row"
-             },
-             "children": [
-              {
-               "type": "Box",
-               "props": {
-                "width": 2
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "color": "#8B90A0"
-                 },
-                 "children": [
-                  "○"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Box",
-               "props": {
-                "width": 14
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "bold": true
-                 },
-                 "children": [
-                  "Ultracode"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "color": "#8B90A0"
-               },
-               "children": [
-                "workflows on every task"
-               ]
-              }
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "flexWrap": "wrap"
-             },
-             "children": [
-              {
-               "type": "Button",
-               "props": {
-                "key": "chat-ultracode-on",
-                "plain": true,
-                "label": " ○ On ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Text",
-               "props": {
-                "backgroundColor": "#3A3F4B",
-                "bold": true
-               },
-               "children": [
-                " ● Off "
-               ]
-              }
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "color": "#3A3F4B"
-             },
-             "children": [
-              "── "
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "color": "#8B90A0"
-             },
-             "children": [
-              "S E T T I N G S"
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "color": "#3A3F4B"
-             },
-             "children": [
-              " ───────────────────────────────────────────"
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Box",
-           "props": {
-            "flexDirection": "row",
-            "justifyContent": "space-between"
-           },
-           "children": [
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row"
-             },
-             "children": [
-              {
-               "type": "Box",
-               "props": {
-                "width": 2
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "color": "#8B90A0"
-                 },
-                 "children": [
-                  "○"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Box",
-               "props": {
-                "width": 14
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "bold": true
-                 },
-                 "children": [
-                  "Clean View"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "color": "#8B90A0"
-               },
-               "children": [
-                "simple checklist"
-               ]
-              }
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "flexWrap": "wrap"
-             },
-             "children": [
-              {
-               "type": "Button",
-               "props": {
-                "key": "cv-on",
-                "plain": true,
-                "label": " ○ On ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Text",
-               "props": {
-                "backgroundColor": "#3A3F4B",
-                "bold": true
-               },
-               "children": [
-                " ● Off "
-               ]
-              }
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Box",
-           "props": {
-            "flexDirection": "row",
-            "justifyContent": "space-between"
-           },
-           "children": [
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row"
-             },
-             "children": [
-              {
-               "type": "Box",
-               "props": {
-                "width": 2
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "color": "#8B90A0"
-                 },
-                 "children": [
-                  "◇"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Box",
-               "props": {
-                "width": 14
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "bold": true
-                 },
-                 "children": [
-                  "Team size"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "color": "#8B90A0"
-               },
-               "children": [
-                "per request"
-               ]
-              }
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "flexWrap": "wrap"
-             },
-             "children": [
-              {
-               "type": "Text",
-               "props": {
-                "backgroundColor": "#FF7A66",
-                "color": "#16181D",
-                "bold": true
-               },
-               "children": [
-                " 1 "
-               ]
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "size-3",
-                "plain": true,
-                "label": " 3 ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "size-5",
-                "plain": true,
-                "label": " 5 ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "size-10",
-                "plain": true,
-                "label": " 10 ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "size-20",
-                "plain": true,
-                "label": " 20 ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "size-50",
-                "plain": true,
-                "label": " 50 ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "size-100",
-                "plain": true,
-                "label": " 100 ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "size-custom",
-                "plain": true,
-                "label": " Custom ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              }
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Box",
-           "props": {
-            "flexDirection": "row",
-            "justifyContent": "space-between"
-           },
-           "children": [
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row"
-             },
-             "children": [
-              {
-               "type": "Box",
-               "props": {
-                "width": 2
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "color": "#8B90A0"
-                 },
-                 "children": [
-                  "◇"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Box",
-               "props": {
-                "width": 14
-               },
-               "children": [
-                {
-                 "type": "Text",
-                 "props": {
-                  "bold": true
-                 },
-                 "children": [
-                  "Helpers"
-                 ]
-                }
-               ]
-              },
-              {
-               "type": "Text",
-               "props": {
-                "color": "#8B90A0"
-               },
-               "children": [
-                "model they use"
-               ]
-              }
-             ]
-            },
-            {
-             "type": "Box",
-             "props": {
-              "flexDirection": "row",
-              "flexWrap": "wrap"
-             },
-             "children": [
-              {
-               "type": "Text",
-               "props": {
-                "backgroundColor": "#FF7A66",
-                "color": "#16181D",
-                "bold": true
-               },
-               "children": [
-                " Fast & Cheap "
-               ]
-              },
-              {
-               "type": "Button",
-               "props": {
-                "key": "model-same",
-                "plain": true,
-                "label": " Same as me ",
-                "onPress": "[fn]"
-               },
-               "children": []
-              }
-             ]
-            }
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {},
-           "children": [
-            {
-             "type": "Text",
-             "props": {
-              "color": "#3A3F4B"
-             },
-             "children": [
-              "── "
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "color": "#8B90A0"
-             },
-             "children": [
-              "L A U N C H"
-             ]
-            },
-            {
-             "type": "Text",
-             "props": {
-              "color": "#3A3F4B"
-             },
-             "children": [
-              " ───────────────────────────────────────────────"
+              " Replace "
              ]
             }
            ]
@@ -1001,34 +446,492 @@
            },
            "children": [
             {
-             "type": "Button",
+             "type": "Text",
              "props": {
-              "key": "toolbox-dock",
-              "plain": true,
-              "onPress": "[fn]"
+              "bold": true
              },
              "children": [
-              {
-               "type": "Text",
-               "props": {
-                "color": "#FF7A66"
-               },
-               "children": [
-                "◆"
-               ]
-              },
-              " Agent Dock  ",
-              {
-               "type": "Text",
-               "props": {
-                "color": "#8B90A0"
-               },
-               "children": [
-                "team of 1"
-               ]
-              }
+              "Scope  "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "#FF7A66",
+              "color": "#16181D",
+              "bold": true
+             },
+             "children": [
+              " Global "
+             ]
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-scope-project",
+              "plain": true,
+              "label": " This project ",
+              "onPress": "[fn]"
+             },
+             "children": []
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "Icons  "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "backgroundColor": "#FF7A66",
+              "color": "#16181D",
+              "bold": true
+             },
+             "children": [
+              " Glyph "
+             ]
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-icons-emoji",
+              "plain": true,
+              "label": " Emoji ",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-icons-none",
+              "plain": true,
+              "label": " None ",
+              "onPress": "[fn]"
+             },
+             "children": []
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "#3A3F4B"
+           },
+           "children": [
+            "── "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#8B90A0"
+           },
+           "children": [
+            "B L O C K S"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#3A3F4B"
+           },
+           "children": [
+            " ──────────────────────────────────────────────────────────────────────────────── "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#8B90A0"
+           },
+           "children": [
+            ""
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "flexWrap": "wrap"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "width": 9
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "Line 1"
              ]
             }
+           ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-folder",
+            "plain": true,
+            "dimColor": false,
+            "label": " Folder ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-branch",
+            "plain": true,
+            "dimColor": false,
+            "label": " Branch ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-model",
+            "plain": true,
+            "dimColor": false,
+            "label": " Model ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-effort",
+            "plain": true,
+            "dimColor": false,
+            "label": " Effort ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "flexWrap": "wrap"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "width": 9
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "Line 2"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-context",
+            "plain": true,
+            "dimColor": false,
+            "label": " Context ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-cost",
+            "plain": true,
+            "dimColor": false,
+            "label": " Cost ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-lines",
+            "plain": true,
+            "dimColor": false,
+            "label": " Lines changed ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-time",
+            "plain": true,
+            "dimColor": false,
+            "label": " Session time ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-agents",
+            "plain": true,
+            "dimColor": false,
+            "label": " Agents ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "flexWrap": "wrap"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "width": 9
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "bold": false,
+              "color": "#8B90A0"
+             },
+             "children": [
+              "Off"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-version",
+            "plain": true,
+            "dimColor": true,
+            "label": " Version ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-style",
+            "plain": true,
+            "dimColor": true,
+            "label": " Style ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-limits",
+            "plain": true,
+            "dimColor": true,
+            "label": " Rate limits ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "color": "#3A3F4B"
+           },
+           "children": [
+            "── "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#8B90A0"
+           },
+           "children": [
+            "P R E V I E W"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#3A3F4B"
+           },
+           "children": [
+            " ──────────────────────────────────────────────── "
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#8B90A0"
+           },
+           "children": [
+            "at 120 columns · nothing drops"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "#8B90A0"
+         },
+         "children": [
+          "The preview could not run."
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+          "flexWrap": "wrap"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "gap": 2
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-left",
+              "plain": true,
+              "hotkey": "h",
+              "label": "←",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-right",
+              "plain": true,
+              "hotkey": "l",
+              "label": "→",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-up",
+              "plain": true,
+              "hotkey": "k",
+              "label": "↑",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-down",
+              "plain": true,
+              "hotkey": "j",
+              "label": "↓",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-toggle",
+              "plain": true,
+              "hotkey": "o",
+              "label": "on/off",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-icons",
+              "plain": true,
+              "hotkey": "i",
+              "label": "icons",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "sl-apply",
+              "plain": true,
+              "hotkey": "a",
+              "label": "Install",
+              "onPress": "[fn]"
+             },
+             "children": []
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "color": "#8B90A0"
+           },
+           "children": [
+            "ctrl+x tab, then the keys"
            ]
           }
          ]
@@ -1088,7 +991,7 @@
           "◆"
          ]
         },
-        " Toolbox ▴"
+        " Toolbox ▾"
        ]
       }
      ]
@@ -1588,6 +1491,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/toolbox → Toolbox open above the prompt.",
+   "$.process.run(sh /plugins/mods-toolbox/renderer/statusline.sh) → exit 0",
+   "/status-dock → Status Line Dock open above the prompt.",
    "$.ui.open(agent-dock)",
    "/dock → Agent Dock toggled. Type /dock again to switch back.",
    "/simple → Clean View is off."
@@ -1605,6 +1510,10 @@
    "session.start{surface=/\"^\"/}",
    "command.run{command=toolbox}",
    "ui.render{component=SessionMode}",
+   "ui.render{component=AbovePrompt}",
+   "session.start{cwd=/\"\\\\/\"/}",
+   "command.run{command=status-dock}",
+   "ui.press{plugin=mods-toolbox, component=AbovePrompt, element=toolbox-status-line}",
    "ui.render{component=AbovePrompt}",
    "session.start{isInteractive=true}",
    "classic.Stop{cwd=/\"^\"/}",
@@ -1625,15 +1534,8 @@
    "ui.close{id=agent-dock}",
    "ui.render{component=Pane, requestId=agent-dock}",
    "ui.press{plugin=mods-toolbox, component=AbovePrompt, element=/\"^(size-|model-|big-|custom-|toolbox-dock$)\"/}",
-   "ui.input{plugin=mods-toolbox, component=AbovePrompt, element=custom-size}",
-   "session.start",
-   "command.run{command=simple}",
-   "tool.describe",
-   "prompt.compose",
-   "classic.UserPromptExpansion",
-   "turn.start",
-   "tool.call",
-   "classic.Notific… [+313 chars]"
+   "ui.input{plugin=mods-toolbox",
+   "componen… [+492 chars]"
   ],
   "calls": [
    "$.agent.list (via activeAgents",
@@ -1641,6 +1543,7 @@
    "runningHelpers)",
    "$.clock.after",
    "$.clock.every (via syncHelperWatch",
+   "syncPreviewTimer",
    "syncTicker)",
    "$.clock.now",
    "$.command.register",
@@ -1648,36 +1551,43 @@
    "switchModel",
    "switchUltracode)",
    "$.config.list (via loadPicks)",
-   "$.env.get (via readCountFolder",
+   "$.env.get (via currentPaths",
+   "readCountFolder",
    "readLimits)",
-   "$.fs.exists (via sweepCountFiles)",
-   "$.fs.write (via writeCount)",
+   "$.fs.exists (via readText",
+   "sweepCaptures",
+   "sweepCountFiles)",
+   "$.fs.read (via keepRendererCurrent",
+   "readText)",
+   "$.fs.write (via apply",
+   "install",
+   "keepRendererCurrent",
+   "retireAgentDockLine",
+   "uninstall",
+   "writeCount)",
    "$.model.complete (via askForTitle)",
-   "$.process.run (via removeFile",
+   "$.process.run (via isGitIgnored",
+   "remove",
+   "removeFile",
+   "runPreview",
+   "sweepCaptures",
    "sweepCountFiles",
    "waitForSlot)",
-   "$.session.id (via writeCount)",
+   "$.session.cwd (via runPreview)",
+   "$.session.id (via runPreview",
+   "writeCount)",
    "$.session.model (via drawPopup",
    "refreshModel",
+   "runPreview",
    "switchModel)",
+   "$.session.root (via currentPaths)",
+   "$.session.usage (via runPreview)",
+   "$.session.version (via runPreview)",
    "$.settings.read (via followModel",
-   "loadPicks)",
-   "$.state.get",
-   "$.state.set",
-   "$.store.get",
-   "$.store.set (via commitSize",
-   "pickModel",
-   "setEnabled)",
-   "$.tool.register (via registerTools)",
-   "$.ui.close (via toggleDock)",
-   "$.ui.invalidate (via setEnabled)",
-   "$.ui.open (via showDock)",
-   "$.ui.panes (via isDockOpen)",
-   "$.ui.resolve",
-   "$.ui.status (via refreshBadge)",
-   "$.ui.toast"
+   "loadPic… [+331 chars]"
   ],
   "stateReads": [
+   "mods-toolbox.bandView",
    "mods-toolbox.chatEffort",
    "mods-toolbox.chatEffortPending",
    "mods-toolbox.chatModel",
@@ -1694,10 +1604,16 @@
    "mods-toolbox.dockPendingSize",
    "mods-toolbox.dockTeamSize",
    "mods-toolbox.dockTick",
-   "mods-toolbox.tick",
-   "mods-toolbox.toolboxIsOpen"
+   "mods-toolbox.statusLineConfirm",
+   "mods-toolbox.statusLineDrafts",
+   "mods-toolbox.statusLinePreview",
+   "mods-toolbox.statusLineScope",
+   "mods-toolbox.statusLineSelected",
+   "mods-toolbox.statusLineSetup",
+   "mods-toolbox.tick"
   ],
   "stateWrites": [
+   "mods-toolbox.bandView",
    "mods-toolbox.chatEffort",
    "mods-toolbox.chatEffortPending",
    "mods-toolbox.chatModel",
@@ -1714,8 +1630,13 @@
    "mods-toolbox.dockPendingSize",
    "mods-toolbox.dockTeamSize",
    "mods-toolbox.dockTick",
-   "mods-toolbox.tick",
-   "mods-toolbox.toolboxIsOpen"
+   "mods-toolbox.statusLineConfirm",
+   "mods-toolbox.statusLineDrafts",
+   "mods-toolbox.statusLinePreview",
+   "mods-toolbox.statusLineScope",
+   "mods-toolbox.statusLineSelected",
+   "mods-toolbox.statusLineSetup",
+   "mods-toolbox.tick"
   ],
   "envReads": [
    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS",
@@ -1740,7 +1661,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: mods-toolbox.cleanViewEnabled, mods-toolbox.checklist, mods-toolbox.tick, mods-toolbox.dockTeamSize, mods-toolbox.dockHelperModel, mods-toolbox.dockPendingSize, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockTick, mods-toolbox.toolboxIsOpen, mods-toolbox.chatModelOptions, mods-toolbox.chatModel, mods-toolbox.chatEffort, mods-toolbox.chatModelPending, mods-toolbox.chatEffortPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending"
+     "types ./types/index.d.ts declares state: mods-toolbox.cleanViewEnabled, mods-toolbox.checklist, mods-toolbox.tick, mods-toolbox.dockTeamSize, mods-toolbox.dockHelperModel, mods-toolbox.dockPendingSize, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockTick, mods-toolbox.bandView, mods-toolbox.statusLineSetup, mods-toolbox.statusLineScope, mods-toolbox.statusLineDrafts, mods-toolbox.statusLineSelected, mods-toolbox.statusLineConfirm, mods-toolbox.statusLinePreview, mods-toolbox.chatModelOptions, mods-toolbox.chatModel, mods-toolbox.chatEffort, mods-toolbox.chatModelPending, mods-toolbox.chatEffortPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending"
     ],
     "gatingHooks": []
    },
@@ -1751,8 +1672,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start{surface=/\"^\"/}, command.run{command=toolbox}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, classic.Stop{cwd=/\"^\"/}, command.run{command=model}, config.set{key=model}, command.run{command=effort}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=?}, session.start{cwd=/\"^\"/}, command.run{command=dock}, prompt.submit, session.append{door=response}, tool.call{tool=Agent}, tool.call{tool=/\"__(report_progress|plan_steps)$\"/}, agent.spawn, turn.complete{turnId=/\"^\"/}, classic.Stop, session.end, ui.close{id=agent-dock}, ui.render{component=Pane, requestId=agent-dock}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=/\"^(size-|model-|big-|custom-|toolbox-dock$)\"/}, ui.input{plugin=mods-toolbox, component=AbovePrompt, element=custom-size}, session.start, command.run{command=simple}, tool.describe, prompt.compose, classic.UserPromptExpansion, turn.start, tool.call, classic.Notific… [+313 chars]",
+      "./register.tsx hooks: session.start{surface=/\"^\"/}, command.run{command=toolbox}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, session.start{cwd=/\"\\\\/\"/}, command.run{command=status-dock}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=toolbox-status-line}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, classic.Stop{cwd=/\"^\"/}, command.run{command=model}, config.set{key=model}, command.run{command=effort}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=?}, session.start{cwd=/\"^\"/}, command.run{command=dock}, prompt.submit, session.append{door=response}, tool.call{tool=Agent}, tool.call{tool=/\"__(report_progress|plan_steps)$\"/}, agent.spawn, turn.complete{turnId=/\"^\"/}, classic.Stop, session.end, ui.close{id=agent-dock}, ui.render{component=Pane, requestId=agent-dock}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=/\"^(size-|model-|big-|custom-|toolbox-dock$)\"/}, ui.input{plugin=mods-toolbox, componen… [+492 chars]",
+      "./register.tsx hooks on classic.Stop, prompt.compose, classic.UserPromptExpansion, classic.Notification, classic.PermissionRequest, classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=toolbox}",
+      "./register.tsx answers its own command: command.run{command=status-dock}",
       "./register.tsx answers its own command: command.run{command=dock}",
       "./register.tsx answers its own command: command.run{command=simple}",
       "./register.tsx gating hook without .catch: classic.Stop{cwd=/\"^\"/}",
@@ -1771,11 +1694,11 @@
       "./register.tsx gating hook without .catch: classic.Notification",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
       "./register.tsx gating hook without .catch: classic.StopFailure",
-      "./register.tsx calls: $.agent.list (via activeAgents, agentStatuses, runningHelpers), $.clock.after, $.clock.every (via syncHelperWatch, syncTicker), $.clock.now, $.command.register, $.command.run (via switchEffort, switchModel, switchUltracode), $.config.list (via loadPicks), $.env.get (via readCountFolder, readLimits), $.fs.exists (via sweepCountFiles), $.fs.write (via writeCount), $.model.complete (via askForTitle), $.process.run (via removeFile, sweepCountFiles, waitForSlot), $.session.id (via writeCount), $.session.model (via drawPopup, refreshModel, switchModel), $.settings.read (via followModel, loadPicks), $.state.get, $.state.set, $.store.get, $.store.set (via commitSize, pickModel, setEnabled), $.tool.register (via registerTools), $.ui.close (via toggleDock), $.ui.invalidate (via setEnabled), $.ui.open (via showDock), $.ui.panes (via isDockOpen), $.ui.resolve, $.ui.status (via refreshBadge), $.ui.toast",
+      "./register.tsx calls: $.agent.list (via activeAgents, agentStatuses, runningHelpers), $.clock.after, $.clock.every (via syncHelperWatch, syncPreviewTimer, syncTicker), $.clock.now, $.command.register, $.command.run (via switchEffort, switchModel, switchUltracode), $.config.list (via loadPicks), $.env.get (via currentPaths, readCountFolder, readLimits), $.fs.exists (via readText, sweepCaptures, sweepCountFiles), $.fs.read (via keepRendererCurrent, readText), $.fs.write (via apply, install, keepRendererCurrent, retireAgentDockLine, uninstall, writeCount), $.model.complete (via askForTitle), $.process.run (via isGitIgnored, remove, removeFile, runPreview, sweepCaptures, sweepCountFiles, waitForSlot), $.session.cwd (via runPreview), $.session.id (via runPreview, writeCount), $.session.model (via drawPopup, refreshModel, runPreview, switchModel), $.session.root (via currentPaths), $.session.usage (via runPreview), $.session.version (via runPreview), $.settings.read (via followModel, loadPic… [+331 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY, CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.tick, mods-toolbox.toolboxIsOpen",
-      "./register.tsx state reads: mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.tick, mods-toolbox.toolboxIsOpen"
+      "./register.tsx state writes: mods-toolbox.bandView, mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.statusLineConfirm, mods-toolbox.statusLineDrafts, mods-toolbox.statusLinePreview, mods-toolbox.statusLineScope, mods-toolbox.statusLineSelected, mods-toolbox.statusLineSetup, mods-toolbox.tick",
+      "./register.tsx state reads: mods-toolbox.bandView, mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.statusLineConfirm, mods-toolbox.statusLineDrafts, mods-toolbox.statusLinePreview, mods-toolbox.statusLineScope, mods-toolbox.statusLineSelected, mods-toolbox.statusLineSetup, mods-toolbox.tick"
      ],
      "gatingHooks": [
       {
@@ -1880,5 +1803,5 @@
    "advice": []
   }
  },
- "sourceHash": "33185744de08306a"
+ "sourceHash": "63b963103938d31a"
 }

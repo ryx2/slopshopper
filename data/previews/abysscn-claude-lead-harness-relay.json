@@ -1,0 +1,337 @@
+{
+ "slug": "abysscn-claude-lead-harness-relay",
+ "generatedAt": "2026-10-16T14:18:28.138Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "classic.SubagentStart"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "command.describe",
+    "matcher": {
+     "command": "goal"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "goal"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "relay"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "relay-goal"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "ops"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "ops",
+    "description": "列出待拍板事项、worktree、在跑的 omd-lite run 和磁盘余量",
+    "output": "磁盘剩余(/work/app):读不到 GB · 上下文 97k / 交接阈值 500k(idle)\n\n待拍板(0):\n\n在跑的 omd-lite run(0):无\nworktree(0):无"
+   },
+   {
+    "name": "relay",
+    "description": "relay:GOAL 续跑 status | stop | resume | open",
+    "argumentHint": "status|stop|resume|open",
+    "output": "relay:idle,没有激活的 GOAL。/goal <一句话> 开一个。"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 2,
+   "$.session.cwd": 5,
+   "$.clock.every": 1,
+   "$.store.get": 1,
+   "$.env.get": 6,
+   "$.state.get": 18,
+   "$.process.run": 2,
+   "$.state.set": 6,
+   "$.session.usage": 2,
+   "$.fs.list": 3,
+   "$.fs.read": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 300000
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "relay-goal": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end",
+         "dimColor": true
+        },
+        "children": [
+         "没有激活的 GOAL"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end",
+         "dimColor": true
+        },
+        "children": [
+         "/goal <一句话> 写 GOAL.md 并立刻开跑"
+        ]
+       }
+      ]
+     },
+     "title": "relay-goal"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "$.process.run(df -BG --output=avail /work/app) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(df -BG --output=avail /work/app) → exit 0",
+   "/ops → 磁盘剩余(/work/app):读不到 GB · 上下文 97k / 交接阈值 500k(idle)\n\n待拍板(0):\n\n在跑的 omd-lite run(0)…",
+   "/relay → relay:idle,没有激活的 GOAL。/goal <一句话> 开一个。"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "classic.SubagentStart",
+   "classic.SubagentStop",
+   "turn.start",
+   "prompt.submit",
+   "turn.complete",
+   "turn.step",
+   "command.describe{command=goal}",
+   "command.run{command=goal}",
+   "command.run{command=relay}",
+   "ui.render{component=Pane, requestId=relay-goal}",
+   "command.run{command=ops}"
+  ],
+  "calls": [
+   "$.clock.after (via clearWhenQuiet",
+   "handoffTurn",
+   "relayTurn)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.command.run (via clearWhenQuiet)",
+   "$.delegate.runs (via delegateRuns)",
+   "$.env.get (via home)",
+   "$.fs.exists (via findCheckpoint",
+   "flushCheckpoint",
+   "freePath",
+   "restore",
+   "resumeRelay)",
+   "$.fs.list (via findCheckpoint",
+   "flushCheckpoint",
+   "goalFiles",
+   "newestGoal",
+   "runningRuns",
+   "sessionRuns",
+   "worktrees)",
+   "$.fs.read (via readText)",
+   "$.fs.stat (via handoffTurn",
+   "newestGoal)",
+   "$.fs.write (via relayTurn",
+   "startGoal)",
+   "$.model.complete (via writeGoalText)",
+   "$.model.fork (via writeGoalText)",
+   "$.process.run (via diskFree",
+   "flushCheckpoint",
+   "gitHead",
+   "runAcceptance)",
+   "$.prompt.submit (via clearWhenQuiet",
+   "submit)",
+   "$.session.cwd (via flushCheckpoint",
+   "gitHead",
+   "repoRoot",
+   "runAcceptance",
+   "startGoal",
+   "storeKey)",
+   "$.session.id (via clearWhenQuiet",
+   "flushCheckpoint",
+   "handoffPath",
+   "restore",
+   "resumeRelay",
+   "sessionRuns",
+   "startGoal)",
+   "$.session.model (via writeGoalText)",
+   "$.session.usage (via contextTokens)",
+   "$.state.get",
+   "… [+157 chars]"
+  ],
+  "stateReads": [
+   "relay.agentTypes",
+   "relay.agents",
+   "relay.diskWarned",
+   "relay.goal",
+   "relay.handoff",
+   "relay.lastEffort",
+   "relay.mode",
+   "relay.ops",
+   "relay.origin",
+   "relay.selfClear",
+   "relay.turnRunning",
+   "relay.view"
+  ],
+  "stateWrites": [
+   "relay.agentTypes",
+   "relay.agents",
+   "relay.diskWarned",
+   "relay.goal",
+   "relay.handoff",
+   "relay.lastEffort",
+   "relay.mode",
+   "relay.ops",
+   "relay.origin",
+   "relay.selfClear",
+   "relay.turnRunning",
+   "relay.view"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/abysscn-claude-lead-harness-relay/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/abysscn-claude-lead-harness-relay/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: relay.ops, relay.handoff, relay.diskWarned, relay.agents, relay.agentTypes, relay.turnRunning, relay.mode, relay.goal, relay.view, relay.origin, relay.lastEffort, relay.selfClear"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/abysscn-claude-lead-harness-relay/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, session.end, classic.SubagentStart, classic.SubagentStop, turn.start, prompt.submit, turn.complete, turn.step, command.describe{command=goal}, command.run{command=goal}, command.run{command=relay}, ui.render{component=Pane, requestId=relay-goal}, command.run{command=ops}",
+      "./register.ts hooks on classic.SubagentStart, classic.SubagentStop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts answers its own command: command.run{command=relay}",
+      "./register.ts answers its own command: command.run{command=ops}",
+      "./register.ts gating hook without .catch: classic.SubagentStart",
+      "./register.ts gating hook without .catch: classic.SubagentStop",
+      "./register.ts gating hook with .catch: prompt.submit",
+      "./register.ts gating hook with .catch: command.run{command=goal}",
+      "./register.ts calls: $.clock.after (via clearWhenQuiet, handoffTurn, relayTurn), $.clock.every, $.clock.now, $.command.register, $.command.run (via clearWhenQuiet), $.delegate.runs (via delegateRuns), $.env.get (via home), $.fs.exists (via findCheckpoint, flushCheckpoint, freePath, restore, resumeRelay), $.fs.list (via findCheckpoint, flushCheckpoint, goalFiles, newestGoal, runningRuns, sessionRuns, worktrees), $.fs.read (via readText), $.fs.stat (via handoffTurn, newestGoal), $.fs.write (via relayTurn, startGoal), $.model.complete (via writeGoalText), $.model.fork (via writeGoalText), $.process.run (via diskFree, flushCheckpoint, gitHead, runAcceptance), $.prompt.submit (via clearWhenQuiet, submit), $.session.cwd (via flushCheckpoint, gitHead, repoRoot, runAcceptance, startGoal, storeKey), $.session.id (via clearWhenQuiet, flushCheckpoint, handoffPath, restore, resumeRelay, sessionRuns, startGoal), $.session.model (via writeGoalText), $.session.usage (via contextTokens), $.state.get, … [+157 chars]",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: HOME",
+      "./register.ts state writes: relay.agentTypes, relay.agents, relay.diskWarned, relay.goal, relay.handoff, relay.lastEffort, relay.mode, relay.ops, relay.origin, relay.selfClear, relay.turnRunning, relay.view",
+      "./register.ts state reads: relay.agentTypes, relay.agents, relay.diskWarned, relay.goal, relay.handoff, relay.lastEffort, relay.mode, relay.ops, relay.origin, relay.selfClear, relay.turnRunning, relay.view"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SubagentStart",
+       "hook": "classic.SubagentStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=goal}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "c7b962e48927dee8"
+}

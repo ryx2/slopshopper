@@ -1,6 +1,6 @@
 {
  "slug": "kyh-kyh-io-mod-dev",
- "generatedAt": "2026-10-06T14:50:42.056Z",
+ "generatedAt": "2026-10-16T14:16:00.009Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,25 +8,55 @@
     "event": "session.start"
    },
    {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
     "event": "turn.complete"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.PreToolUse"
    },
    {
     "event": "command.run",
     "matcher": {
      "command": "score"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "mod-dev"
+    }
    }
   ],
   "commands": [
    {
     "name": "score",
-    "description": "Score this session's work: confidence, idiomatic, simplicity, scope and risk",
+    "description": "Review this session's change: what is proven, and confidence, idiomatic, simplicity, scope and risk",
     "argumentHint": "[base ref]",
     "output": "Nothing to score: no changes against . To compare with another commit: /score <ref>"
    }
   ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "mod-dev",
+    "title": "mod-dev"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
@@ -34,8 +64,13 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.clock.after": 2,
-   "$.session.messages": 1,
-   "$.process.run": 2
+   "$.state.get": 7,
+   "$.state.set": 2,
+   "$.session.messages": 2,
+   "$.process.run": 3,
+   "$.ui.open": 1,
+   "$.fs.read": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -47,7 +82,53 @@
     "ms": 1
    }
   ],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "mod-dev": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 2
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Not reviewed yet."
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "again",
+           "label": "Review again",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "mod-dev"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -59,7 +140,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "turn.complete",
+   "$.ui.open(mod-dev)",
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "$.process.run(sh -c \nref=\"${1:-}\"\ntop=\"$(git rev-parse --show-toplevel 2>/dev/null)\" || exit 3…) → exit 0",
    "/score → Nothing to score: no changes against . To compare with another commit: /score <r…"
@@ -73,23 +156,46 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "classic.SessionStart",
+   "prompt.submit",
    "turn.complete",
-   "command.run{command=score}"
+   "classic.Stop",
+   "classic.PreToolUse",
+   "command.run{command=score}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=mod-dev}"
   ],
   "calls": [
    "$.clock.after",
    "$.command.register",
    "$.fs.ancestors (via instructionsOf)",
-   "$.model.complete (via score)",
+   "$.fs.list (via runLook)",
+   "$.fs.read (via readText",
+   "runLook)",
+   "$.model.complete (via portsOf)",
    "$.process.run (via rootOf",
-   "runDiff)",
+   "runDiff",
+   "runLook)",
    "$.session.messages (via readSession)",
    "$.session.root (via rootOf)",
-   "$.ui.status (via score",
-   "showStatus)"
+   "$.state.get",
+   "$.state.set",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via prove",
+   "showStatus)",
+   "$.ui.toast (via blockOf)"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "mod-dev.blocks",
+   "mod-dev.checks",
+   "mod-dev.review"
+  ],
+  "stateWrites": [
+   "mod-dev.blocks",
+   "mod-dev.checks",
+   "mod-dev.review"
+  ],
   "envReads": [],
   "raw": {
    "success": true,
@@ -100,7 +206,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: mod-dev.checks, mod-dev.review, mod-dev.blocks"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -110,13 +219,47 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.complete, command.run{command=score}",
-      "./register.ts calls: $.clock.after, $.command.register, $.fs.ancestors (via instructionsOf), $.model.complete (via score), $.process.run (via rootOf, runDiff), $.session.messages (via readSession), $.session.root (via rootOf), $.ui.status (via score, showStatus)"
+      "./register.tsx hooks: session.start, classic.SessionStart, prompt.submit, turn.complete, classic.Stop, classic.PreToolUse, command.run{command=score}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=mod-dev}",
+      "./register.tsx hooks on classic.SessionStart, classic.Stop, classic.PreToolUse do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=score}",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: classic.PreToolUse",
+      "./register.tsx calls: $.clock.after, $.command.register, $.fs.ancestors (via instructionsOf), $.fs.list (via runLook), $.fs.read (via readText, runLook), $.model.complete (via portsOf), $.process.run (via rootOf, runDiff, runLook), $.session.messages (via readSession), $.session.root (via rootOf), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status (via prove, showStatus), $.ui.toast (via blockOf)",
+      "./register.tsx state writes: mod-dev.blocks, mod-dev.checks, mod-dev.review",
+      "./register.tsx state reads: mod-dev.blocks, mod-dev.checks, mod-dev.review"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse",
+       "hasCatch": false
+      }
+     ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "708175491a088a47"
+ "sourceHash": "f34f2059e0bdf02c"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "agentlayer1-agent-kevin-agent-kevin",
- "generatedAt": "2026-10-08T15:53:14.894Z",
+ "generatedAt": "2026-10-16T14:16:40.690Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -68,9 +68,63 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/__report_write$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Write",
+      "Edit"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
     "event": "session.start",
     "matcher": {
      "isInteractive": true
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "reports"
+    }
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": [
+      "clear",
+      "resume"
+     ]
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": true
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Skill"
     }
    },
    {
@@ -87,6 +141,9 @@
     "matcher": {
      "tool": "/__sync_stats$/"
     }
+   },
+   {
+    "event": "agent.spawn"
    },
    {
     "event": "turn.complete"
@@ -122,18 +179,39 @@
     }
    },
    {
+    "event": "prompt.autocomplete"
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "today"
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "session"
+    }
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": [
+      "clear",
+      "resume"
+     ]
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
-     "component": "CommandOutput",
-     "props": {
-      "command": "today"
-     }
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
     }
    },
    {
@@ -164,6 +242,56 @@
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": true
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "queue"
+    }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": [
+      "answer",
+      "aborted",
+      "refusal",
+      "error"
+     ]
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": true
+    }
+   },
+   {
+    "event": "skill.prompt",
+    "matcher": {
+     "skill": "/(^|:)init$/"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    }
   ],
   "commands": [
@@ -171,6 +299,12 @@
     "name": "manuals",
     "description": "Repo instructions attached to this conversation (no Claude turn)",
     "output": "No repo instructions attached yet."
+   },
+   {
+    "name": "reports",
+    "description": "Reports this conversation wrote or attached (no Claude turn)",
+    "argumentHint": "[attach <path>…]",
+    "output": "No reports in this conversation yet."
    },
    {
     "name": "capture",
@@ -197,6 +331,17 @@
     "name": "today",
     "description": "Overdue work, what's due today and the last sync (no Claude turn)",
     "output": "Couldn't read today's state: JSON Parse error: Unexpected identifier \"dev\""
+   },
+   {
+    "name": "session",
+    "description": "This conversation's session id, with a Copy button (no Claude turn)"
+   },
+   {
+    "name": "queue",
+    "description": "Send a prompt after the current task ends, one per turn",
+    "argumentHint": "<prompt> | clear",
+    "immediate": true,
+    "output": "Usage: /queue <prompt>, or /queue clear"
    }
   ],
   "tools": [
@@ -211,18 +356,25 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 5,
+   "$.command.register": 8,
    "$.tool.register": 1,
-   "$.clock.after": 1,
+   "$.clock.after": 2,
    "$.clock.every": 1,
-   "$.state.get": 21,
+   "$.state.get": 30,
+   "$.state.set": 5,
    "$.settings.read": 1,
    "$.env.get": 1,
-   "$.session.root": 4,
-   "$.state.set": 1,
-   "$.process.run": 1
+   "$.session.root": 5,
+   "$.session.id": 2,
+   "$.store.get": 1,
+   "$.process.run": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   },
    {
     "kind": "after",
     "ms": 0
@@ -234,10 +386,82 @@
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
-   },
-   "CommandOutput": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "gap": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "bold": true
+         },
+         "children": [
+          "Session"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {},
+         "children": [
+          "preview-session"
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "marginLeft": 2,
+          "gap": 2
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "session:copy",
+            "label": "Copy",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "session:dismiss",
+            "dimColor": true,
+            "label": "Dismiss",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    }
    }
   },
   "script": [
@@ -253,11 +477,14 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/manuals → No repo instructions attached yet.",
+   "/reports → No reports in this conversation yet.",
    "/capture → Usage: /capture <text>",
    "/lesson → Usage: /lesson <text>",
    "/done → Usage: /done <task-id>",
    "$.process.run(bun /plugins/agent-kevin/bin/kevin ping) → exit 0",
-   "/today → Couldn't read today's state: JSON Parse error: Unexpected identifier \"dev\""
+   "/today → Couldn't read today's state: JSON Parse error: Unexpected identifier \"dev\"",
+   "/session → ",
+   "/queue → Usage: /queue <prompt>, or /queue clear"
   ],
   "console": [],
   "warnings": []
@@ -271,14 +498,23 @@
    "tool.call{tool=Bash}",
    "session.compact{trigger=manual|auto|plugin}",
    "session.end{reason=clear|resume}",
-   "turn.complete{reason=answer|aborted|refusal|error}",
+   "turn.complete{reason=?}",
    "session.start{isInteractive=true}",
    "command.run{command=manuals}",
    "ui.render{component=AbovePrompt}",
+   "tool.call{tool=/\"__report_write$\"/}",
+   "tool.call{tool=Write|Edit}",
+   "tool.call{tool=Bash}",
    "session.start{isInteractive=true}",
-   "skill.prompt{skill=/\"(^|:)sync$\"/}",
+   "command.run{command=reports}",
+   "session.end{reason=clear|resume}",
+   "ui.render{component=AbovePrompt}",
+   "session.start{isInteractive=true}",
+   "tool.call{tool=Skill}",
+   "skill.prompt{skill=?}",
    "tool.call",
    "tool.call{tool=/\"__sync_stats$\"/}",
+   "agent.spawn",
    "turn.complete",
    "prompt.submit",
    "ui.render{component=AbovePrompt}",
@@ -286,63 +522,84 @@
    "command.run{command=capture}",
    "command.run{command=lesson}",
    "command.run{command=done}",
+   "prompt.autocomplete",
    "command.run{command=today}",
-   "ui.render{component=CommandOutput",
-   "props has {command=today}}",
-   "session.start{isInteractive=true}",
-   "skill.prompt{skill=/\".\"/}",
-   "turn.complete{reason=answer|aborted|refusal|error}",
-   "ui.render{component=AbovePrompt}"
+   "command.run{command=session}",
+   "session.end{reason=clear|resume}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=AbovePrompt}",
+   "session.start{isInte… [+338 chars]"
   ],
   "calls": [
+   "$.agent.list (via isHelperWorking)",
    "$.clock.after",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.command.run (via act)",
-   "$.env.get (via grants",
-   "withManuals)",
+   "$.command.run (via act",
+   "runInit)",
+   "$.env.get",
    "$.fs.read (via expand",
    "todayView)",
-   "$.fs.stat (via exists",
-   "foldersFor)",
+   "$.fs.stat",
    "$.process.run (via dataDirName",
+   "home",
    "runCli",
    "runQuiet)",
-   "$.prompt.submit (via act)",
-   "$.prompt.suggest (via announce)",
-   "$.session.root (via dataDirName",
+   "$.prompt.submit (via act",
+   "drain",
+   "runInit)",
+   "$.prompt.suggest (via announce",
+   "check)",
+   "$.session.id",
+   "$.session.root (via attach",
+   "dataDirName",
    "foldersFor",
+   "home",
+   "isFresh",
+   "rowsFor",
    "runCli",
    "runQuiet)",
    "$.settings.read (via grants)",
    "$.state.get",
    "$.state.set",
+   "$.store.delete (via record)",
    "$.store.get (via history",
-   "load)",
+   "load",
+   "storedReports)",
+   "$.store.keys (via record)",
    "$.store.set",
    "$.tool.list",
    "$.tool.register",
+   "$.ui.copy",
    "$.ui.resolve",
-   "$.ui.toast (via announce)"
+   "$.ui.toast"
   ],
   "stateReads": [
    "agent-kevin.delivered",
    "agent-kevin.manualsThisTurn",
+   "agent-kevin.needsSetup",
    "agent-kevin.noticeActing",
    "agent-kevin.notices",
+   "agent-kevin.queue",
+   "agent-kevin.reportsBand",
+   "agent-kevin.sessionBand",
    "agent-kevin.syncRun",
    "agent-kevin.syncTick",
-   "agent-kevin.todayViews"
+   "agent-kevin.todayBand"
   ],
   "stateWrites": [
    "agent-kevin.delivered",
    "agent-kevin.manualsThisTurn",
+   "agent-kevin.needsSetup",
    "agent-kevin.noticeActing",
    "agent-kevin.notices",
+   "agent-kevin.queue",
+   "agent-kevin.reportsBand",
+   "agent-kevin.sessionBand",
    "agent-kevin.syncRun",
    "agent-kevin.syncTick",
-   "agent-kevin.todayViews"
+   "agent-kevin.todayBand"
   ],
   "envReads": [
    "HOME"
@@ -358,7 +615,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: agent-kevin.syncRun, agent-kevin.delivered, agent-kevin.manualsThisTurn, agent-kevin.todayViews, agent-kevin.syncTick, agent-kevin.notices, agent-kevin.noticeActing"
+     "types ./types/index.d.ts declares state: agent-kevin.syncRun, agent-kevin.delivered, agent-kevin.manualsThisTurn, agent-kevin.todayBand, agent-kevin.sessionBand, agent-kevin.reportsBand, agent-kevin.syncTick, agent-kevin.notices, agent-kevin.noticeActing, agent-kevin.queue, agent-kevin.needsSetup"
     ],
     "gatingHooks": []
    },
@@ -369,23 +626,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: tool.call{tool=Read|Write}, tool.call{tool=Bash}, session.compact{trigger=manual|auto|plugin}, session.end{reason=clear|resume}, turn.complete{reason=answer|aborted|refusal|error}, session.start{isInteractive=true}, command.run{command=manuals}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, skill.prompt{skill=/\"(^|:)sync$\"/}, tool.call, tool.call{tool=/\"__sync_stats$\"/}, turn.complete, prompt.submit, ui.render{component=AbovePrompt}, session.start, command.run{command=capture}, command.run{command=lesson}, command.run{command=done}, command.run{command=today}, ui.render{component=CommandOutput, props has {command=today}}, session.start{isInteractive=true}, skill.prompt{skill=/\".\"/}, turn.complete{reason=answer|aborted|refusal|error}, ui.render{component=AbovePrompt}",
+      "./register.ts hooks: tool.call{tool=Read|Write}, tool.call{tool=Bash}, session.compact{trigger=manual|auto|plugin}, session.end{reason=clear|resume}, turn.complete{reason=?}, session.start{isInteractive=true}, command.run{command=manuals}, ui.render{component=AbovePrompt}, tool.call{tool=/\"__report_write$\"/}, tool.call{tool=Write|Edit}, tool.call{tool=Bash}, session.start{isInteractive=true}, command.run{command=reports}, session.end{reason=clear|resume}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, tool.call{tool=Skill}, skill.prompt{skill=?}, tool.call, tool.call{tool=/\"__sync_stats$\"/}, agent.spawn, turn.complete, prompt.submit, ui.render{component=AbovePrompt}, session.start, command.run{command=capture}, command.run{command=lesson}, command.run{command=done}, prompt.autocomplete, command.run{command=today}, command.run{command=session}, session.end{reason=clear|resume}, ui.render{component=AbovePrompt}, ui.render{component=AbovePrompt}, session.start{isInte… [+338 chars]",
+      "./register.ts hooks on session.compact, skill.prompt do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts gating hook without .catch: tool.call{tool=Read|Write}",
       "./register.ts gating hook without .catch: tool.call{tool=Bash}",
       "./register.ts gating hook without .catch: session.compact{trigger=manual|auto|plugin}",
       "./register.ts gating hook without .catch: command.run{command=manuals}",
+      "./register.ts gating hook without .catch: tool.call{tool=/\"__report_write$\"/}",
+      "./register.ts gating hook without .catch: tool.call{tool=Write|Edit}",
+      "./register.ts gating hook without .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook without .catch: command.run{command=reports}",
+      "./register.ts gating hook without .catch: tool.call{tool=Skill}",
       "./register.ts gating hook without .catch: tool.call",
       "./register.ts gating hook without .catch: tool.call{tool=/\"__sync_stats$\"/}",
+      "./register.ts gating hook without .catch: agent.spawn",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: command.run{command=capture}",
       "./register.ts gating hook without .catch: command.run{command=lesson}",
       "./register.ts gating hook without .catch: command.run{command=done}",
       "./register.ts gating hook without .catch: command.run{command=today}",
-      "./register.ts calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via act), $.env.get (via grants, withManuals), $.fs.read (via expand, todayView), $.fs.stat (via exists, foldersFor), $.process.run (via dataDirName, runCli, runQuiet), $.prompt.submit (via act), $.prompt.suggest (via announce), $.session.root (via dataDirName, foldersFor, runCli, runQuiet), $.settings.read (via grants), $.state.get, $.state.set, $.store.get (via history, load), $.store.set, $.tool.list, $.tool.register, $.ui.resolve, $.ui.toast (via announce)",
+      "./register.ts gating hook without .catch: command.run{command=session}",
+      "./register.ts gating hook without .catch: command.run{command=queue}",
+      "./register.ts calls: $.agent.list (via isHelperWorking), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via act, runInit), $.env.get, $.fs.read (via expand, todayView), $.fs.stat, $.process.run (via dataDirName, home, runCli, runQuiet), $.prompt.submit (via act, drain, runInit), $.prompt.suggest (via announce, check), $.session.id, $.session.root (via attach, dataDirName, foldersFor, home, isFresh, rowsFor, runCli, runQuiet), $.settings.read (via grants), $.state.get, $.state.set, $.store.delete (via record), $.store.get (via history, load, storedReports), $.store.keys (via record), $.store.set, $.tool.list, $.tool.register, $.ui.copy, $.ui.resolve, $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: HOME",
-      "./register.ts state writes: agent-kevin.delivered, agent-kevin.manualsThisTurn, agent-kevin.noticeActing, agent-kevin.notices, agent-kevin.syncRun, agent-kevin.syncTick, agent-kevin.todayViews",
-      "./register.ts state reads: agent-kevin.delivered, agent-kevin.manualsThisTurn, agent-kevin.noticeActing, agent-kevin.notices, agent-kevin.syncRun, agent-kevin.syncTick, agent-kevin.todayViews"
+      "./register.ts state writes: agent-kevin.delivered, agent-kevin.manualsThisTurn, agent-kevin.needsSetup, agent-kevin.noticeActing, agent-kevin.notices, agent-kevin.queue, agent-kevin.reportsBand, agent-kevin.sessionBand, agent-kevin.syncRun, agent-kevin.syncTick, agent-kevin.todayBand",
+      "./register.ts state reads: agent-kevin.delivered, agent-kevin.manualsThisTurn, agent-kevin.needsSetup, agent-kevin.noticeActing, agent-kevin.notices, agent-kevin.queue, agent-kevin.reportsBand, agent-kevin.sessionBand, agent-kevin.syncRun, agent-kevin.syncTick, agent-kevin.todayBand"
      ],
      "gatingHooks": [
       {
@@ -415,6 +681,36 @@
       {
        "module": "./register.ts",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"__report_write$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write|Edit}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=reports}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Skill}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": false
       },
@@ -422,6 +718,12 @@
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=/\"__sync_stats$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
        "hasCatch": false
       },
       {
@@ -453,11 +755,24 @@
        "pattern": "command.run",
        "hook": "command.run{command=today}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=session}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=queue}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "1b9e8484632745d9"
+ "sourceHash": "c5864f658aa70536"
 }

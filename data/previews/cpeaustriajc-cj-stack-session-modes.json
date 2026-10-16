@@ -1,6 +1,6 @@
 {
  "slug": "cpeaustriajc-cj-stack-session-modes",
- "generatedAt": "2026-10-10T14:45:06.533Z",
+ "generatedAt": "2026-10-16T14:19:07.952Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,15 +8,15 @@
     "event": "session.start"
    },
    {
-    "event": "session.attach"
-   },
-   {
-    "event": "session.detach"
-   },
-   {
     "event": "command.run",
     "matcher": {
      "command": "mode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
     }
    },
    {
@@ -26,33 +26,52 @@
     "event": "prompt.compose"
    },
    {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
     "event": "prompt.autocomplete"
    }
   ],
   "commands": [
    {
     "name": "mode",
-    "description": "Set the session mode: audit, no-pr, chat or off",
-    "argumentHint": "audit | no-pr | chat | off",
-    "output": "Current mode: off. Modes: audit, no-pr, chat, off."
+    "description": "Set the session mode: readonly, research, prototype, build or off",
+    "argumentHint": "readonly | research | prototype | build | off",
+    "output": "Current mode: off. Modes: readonly, research, prototype, build, off. Also: clear, agents on, agents off."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "agent_mode",
+    "description": "Set a working mode for yourself (scope \"self\") or for your subagents (scope \"subagents\"); it applies at once, also to subagents already running, and subagents you start later get it in their task text. Modes: readonly (read and report only), research (notes, plans and tracker items; no code), prototype (a Claude Design artifact or files in .claude/work/; no app code), build (edit and commit; no push or PR). \"off\" clears the mode you set in that scope. You can only add limits: a mode the user set with /mode stays in force, and the stricter rule always wins. Pick your own mode at the start of each user message, read with the conversation: readonly for a question, a review, an explanation or \"do not change anything\"; research for a plan, a spec, notes or tickets; prototype for a UI idea, a layout choice or a design to see before the build; build for a code or config change; off only when the message asks you to push, or to open or merge a pull request. A short reply such as \"yes\" or \"go ahead\" takes the mode of the work it approves."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
-  "rewrites": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"Session mode check: pick your own mode for this message, as agent_mode describes. Now: off. If your pick differs, call agent_mode with tha…"
+   }
+  ],
   "apiCalls": {
+   "$.tool.register": 1,
    "$.command.register": 1,
-   "$.state.get": 11,
-   "$.session.surfaces": 1,
-   "$.ui.status": 1,
+   "$.state.get": 38,
    "$.env.get": 2,
    "$.fs.exists": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -65,7 +84,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/mode → Current mode: off. Modes: audit, no-pr, chat, off."
+   "/mode → Current mode: off. Modes: readonly, research, prototype, build, off. Also: clear…"
   ],
   "console": [],
   "warnings": []
@@ -76,11 +95,12 @@
   "warnings": [],
   "hooks": [
    "session.start",
-   "session.attach",
-   "session.detach",
    "command.run{command=mode}",
+   "ui.render{component=AbovePrompt}",
    "tool.call",
    "prompt.compose",
+   "prompt.submit",
+   "agent.spawn",
    "prompt.autocomplete"
   ],
   "calls": [
@@ -92,16 +112,29 @@
    "$.fs.write (via publishState)",
    "$.process.run (via remove)",
    "$.session.id (via publishState)",
-   "$.session.surfaces (via drawStatus)",
    "$.state.get",
    "$.state.set",
-   "$.ui.status (via drawStatus)"
+   "$.tool.register",
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
-   "session-modes.mode"
+   "session-modes.agentModes",
+   "session-modes.agentsAllowed",
+   "session-modes.ended",
+   "session-modes.mode",
+   "session-modes.parents",
+   "session-modes.pending",
+   "session-modes.told"
   ],
   "stateWrites": [
-   "session-modes.mode"
+   "session-modes.agentModes",
+   "session-modes.agentsAllowed",
+   "session-modes.ended",
+   "session-modes.mode",
+   "session-modes.parents",
+   "session-modes.pending",
+   "session-modes.told"
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
@@ -119,7 +152,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-modes.mode"
+     "types ./types/index.d.ts declares state: session-modes.mode, session-modes.ended, session-modes.told, session-modes.agentModes, session-modes.parents, session-modes.pending, session-modes.agentsAllowed"
     ],
     "gatingHooks": []
    },
@@ -130,21 +163,36 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.attach, session.detach, command.run{command=mode}, tool.call, prompt.compose, prompt.autocomplete",
-      "./register.ts answers its own command: command.run{command=mode}",
-      "./register.ts gating hook without .catch: tool.call",
-      "./register.ts calls: $.clock.now (via pruneState), $.command.register, $.env.get (via stateDir), $.fs.exists (via pruneState), $.fs.list (via pruneState), $.fs.write (via publishState), $.process.run (via remove), $.session.id (via publishState), $.session.surfaces (via drawStatus), $.state.get, $.state.set, $.ui.status (via drawStatus)",
-      "./register.ts env writes: nothing",
-      "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./register.ts state writes: session-modes.mode",
-      "./register.ts state reads: session-modes.mode"
+      "./register.tsx hooks: session.start, command.run{command=mode}, ui.render{component=AbovePrompt}, tool.call, prompt.compose, prompt.submit, agent.spawn, prompt.autocomplete",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=mode}",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx calls: $.clock.now (via pruneState), $.command.register, $.env.get (via stateDir), $.fs.exists (via pruneState), $.fs.list (via pruneState), $.fs.write (via publishState), $.process.run (via remove), $.session.id (via publishState), $.state.get, $.state.set, $.tool.register, $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
+      "./register.tsx state writes: session-modes.agentModes, session-modes.agentsAllowed, session-modes.ended, session-modes.mode, session-modes.parents, session-modes.pending, session-modes.told",
+      "./register.tsx state reads: session-modes.agentModes, session-modes.agentsAllowed, session-modes.ended, session-modes.mode, session-modes.parents, session-modes.pending, session-modes.told"
      ],
      "gatingHooks": [
       {
-       "module": "./register.ts",
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
       }
      ]
     }
@@ -152,5 +200,5 @@
    "advice": []
   }
  },
- "sourceHash": "e9ee6ce1d5848875"
+ "sourceHash": "c061a446164d8185"
 }

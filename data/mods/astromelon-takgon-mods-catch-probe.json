@@ -1,0 +1,8 @@
+{
+ "slug": "astromelon-takgon-mods-catch-probe",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'probe2', description: 'catch probe' })\n    return next(e)\n  })\n\n  // 바깥 훅: args가 boom이면 next 전에 예외. .catch가 next(e)로 대신 답한다.\n  on('command.run', async ($, e, next) => {\n    $.ui.log(`OUTER ran args=${e.args}`)\n    if (e.args === 'boom') {\n      throw new Error('outer boom')\n    }\n    return next(e)\n  }).catch(($, e, next) => {\n    $.ui.log(`CATCH ran called=${String(next.called)}`)\n    return next(e)\n  })\n\n  // 안쪽 훅: 같은 플러그인의 명령 처리.\n  on('command.run', { command: 'probe2' }, async ($, e) => {\n    $.ui.log(`INNER ran args=${e.args}`)\n    return { text: `PROBE2 OK args=${e.args}` }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"catch-probe\",\n  \"version\": \"0.0.1\",\n  \"description\": \"catch probe\",\n  \"author\": {\n    \"name\": \"tglee\"\n  }\n}"
+ }
+}

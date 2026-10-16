@@ -1,0 +1,9 @@
+{
+ "slug": "djavrell-dotfile-diagnostics",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nimport { capDiagnostics } from './cap'\n\n// the engine keeps a hook's answer per attachment for the process: each list is cut once, history included\nexport const register: Register = on => {\n  on('prompt.attachment', { type: 'diagnostics' }, async (_, event, next) => next({ ...event, text: capDiagnostics(event.text) }))\n}\n",
+  "hooks/cap.ts": "// a TypeScript error on a typera/zod route spells out the whole inferred type: one message reached 2.8M chars (six-942)\nexport const MAX_LINE_CHARS = 400\nexport const MAX_TOTAL_CHARS = 20_000\n\n// keeps every line's head (file, line, code, the start of the message) and drops the spelled-out types\nexport const capDiagnostics = (text: string) => {\n  const lines = text\n    .split('\\n')\n    .map(line => (line.length > MAX_LINE_CHARS ? `${line.slice(0, MAX_LINE_CHARS)}… [+${line.length - MAX_LINE_CHARS} chars]` : line))\n  const capped = lines.join('\\n')\n  return capped.length > MAX_TOTAL_CHARS\n    ? `${capped.slice(0, MAX_TOTAL_CHARS)}\\n… [diagnostics cut: +${capped.length - MAX_TOTAL_CHARS} chars]`\n    : capped\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"diagnostics\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Caps the language server's new-diagnostics attachment before the model reads it\"\n}"
+ }
+}

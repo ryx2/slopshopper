@@ -1,6 +1,6 @@
 {
  "slug": "kawaz-claude-ccmsg",
- "generatedAt": "2026-10-09T15:33:41.629Z",
+ "generatedAt": "2026-10-16T14:20:15.221Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,43 +11,95 @@
     "event": "session.end"
    },
    {
-    "event": "classic.SessionStart"
+    "event": "command.run"
    },
    {
-    "event": "classic.UserPromptSubmit"
+    "event": "session.compact"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__ccmsg-v1__send"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__ccmsg-v1__say"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__ccmsg-v1__peers"
+    }
    }
   ],
   "commands": [],
-  "tools": [],
+  "tools": [
+   {
+    "name": "send",
+    "description": "Send a message to other Claude Code sessions (see the ccmsg skill)."
+   },
+   {
+    "name": "say",
+    "description": "Tell the person something by voice (see the ccmsg skill)."
+   },
+   {
+    "name": "peers",
+    "description": "List the sessions send can reach (see the ccmsg skill)."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.id": 2,
-   "$.process.spawn": 2,
-   "$.clock.now": 4,
-   "$.clock.after": 2
+   "$.session.id": 7,
+   "$.clock.now": 14,
+   "$.tool.register": 3,
+   "$.session.root": 1,
+   "$.agent.list": 1,
+   "$.store.keys": 1,
+   "$.process.run": 5,
+   "$.env.get": 2,
+   "$.session.model": 1,
+   "$.session.usage": 1,
+   "$.process.spawn": 1,
+   "$.clock.after": 1,
+   "$.store.get": 1,
+   "$.session.append": 1,
+   "$.store.set": 1
   },
   "timers": [
    {
     "kind": "after",
     "ms": 500
-   },
-   {
-    "kind": "after",
-    "ms": 1000
    }
   ],
   "sites": {},
   "script": [
-   "$.process.spawn(/plugins/ccmsg-v1/bin/ccmsg sidecar --sid preview-session)",
+   "$.process.run(/plugins/ccmsg-v1/bin/ccmsg sidecar begin --sid preview-session --cwd /work/app) → exit 0",
+   "$.process.spawn(/plugins/ccmsg-v1/bin/ccmsg sidecar --sid preview-session --run mgj6k3ekqy1o77vr…)",
    "session.start",
-   "$.process.spawn(/plugins/ccmsg-v1/bin/ccmsg sidecar --sid preview-session)",
+   "$.process.run(/plugins/ccmsg-v1/bin/ccmsg sidecar facts --sid preview-session) → exit 0",
+   "$.process.run(/plugins/ccmsg-v1/bin/ccmsg sidecar facts --sid preview-session) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -57,6 +109,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(/plugins/ccmsg-v1/bin/ccmsg sidecar facts --sid preview-session) → exit 0",
+   "$.process.run(/plugins/ccmsg-v1/bin/ccmsg sidecar facts --sid preview-session) → exit 0",
    "turn.complete"
   ],
   "console": [],
@@ -69,18 +123,33 @@
   "hooks": [
    "session.start",
    "session.end",
-   "classic.SessionStart",
-   "classic.UserPromptSubmit",
-   "prompt.submit"
+   "command.run",
+   "session.compact",
+   "session.measure",
+   "turn.step",
+   "turn.start",
+   "turn.complete",
+   "prompt.submit",
+   "tool.call{tool=mcp__ccmsg-v1__send}",
+   "tool.call{tool=mcp__ccmsg-v1__say}",
+   "tool.call{tool=mcp__ccmsg-v1__peers}"
   ],
   "calls": [
+   "$.agent.list (via readSubagents",
+   "subagentStarted)",
    "$.clock.after (via handlePromptSend",
    "runSidecar)",
-   "$.clock.now (via runSidecar)",
-   "$.env.get (via handlePromptSend)",
+   "$.clock.now",
+   "$.env.get (via handlePromptSend",
+   "sidecarArgv)",
    "$.process.run (via describe",
    "handlePromptSend",
-   "sendReply)",
+   "peersTool",
+   "sayTool",
+   "sendFacts",
+   "sendReply",
+   "sendTool",
+   "sessionBegin)",
    "$.process.spawn (via runSidecar)",
    "$.prompt.fill (via handlePromptSend",
    "putBackDraft",
@@ -88,14 +157,33 @@
    "$.prompt.read (via handlePromptSend",
    "putBackDraft",
    "putBackUnsent)",
-   "$.session.id (via replaceSidecar",
-   "stillCurrent)",
+   "$.session.append (via appendToAgent",
+   "guide)",
+   "$.session.id (via guide",
+   "peersTool",
+   "replaceSidecar",
+   "sayTool",
+   "sendFacts",
+   "sendTool",
+   "sessionBegin",
+   "stillCurrent",
+   "unguide)",
+   "$.session.model (via readModelAndWindow)",
+   "$.session.root (via sessionBegin)",
    "$.session.surfaces (via replaceSidecar)",
+   "$.session.usage (via readModelAndWindow)",
+   "$.store.delete (via sweepGuided)",
+   "$.store.get (via guidedRecord)",
+   "$.store.keys (via sweepGuided)",
+   "$.store.set (via guide",
+   "unguide)",
+   "$.tool.register (via registerTools)",
    "$.ui.log"
   ],
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "CLAUDE_CONFIG_DIR",
    "HYOUI_SESSION_ID"
   ],
   "raw": {
@@ -117,31 +205,53 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./composer-fill.bundle.js hooks: session.start, session.end, classic.SessionStart, classic.UserPromptSubmit, prompt.submit",
-      "./composer-fill.bundle.js gating hook with .catch: classic.SessionStart",
-      "./composer-fill.bundle.js gating hook with .catch: classic.UserPromptSubmit",
+      "./composer-fill.bundle.js hooks: session.start, session.end, command.run, session.compact, session.measure, turn.step, turn.start, turn.complete, prompt.submit, tool.call{tool=mcp__ccmsg-v1__send}, tool.call{tool=mcp__ccmsg-v1__say}, tool.call{tool=mcp__ccmsg-v1__peers}",
+      "./composer-fill.bundle.js hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./composer-fill.bundle.js gating hook with .catch: command.run",
+      "./composer-fill.bundle.js gating hook with .catch: session.compact",
       "./composer-fill.bundle.js gating hook with .catch: prompt.submit",
-      "./composer-fill.bundle.js calls: $.clock.after (via handlePromptSend, runSidecar), $.clock.now (via runSidecar), $.env.get (via handlePromptSend), $.process.run (via describe, handlePromptSend, sendReply), $.process.spawn (via runSidecar), $.prompt.fill (via handlePromptSend, putBackDraft, putBackUnsent), $.prompt.read (via handlePromptSend, putBackDraft, putBackUnsent), $.session.id (via replaceSidecar, stillCurrent), $.session.surfaces (via replaceSidecar), $.ui.log",
+      "./composer-fill.bundle.js gating hook with .catch: tool.call{tool=mcp__ccmsg-v1__send}",
+      "./composer-fill.bundle.js gating hook with .catch: tool.call{tool=mcp__ccmsg-v1__say}",
+      "./composer-fill.bundle.js gating hook with .catch: tool.call{tool=mcp__ccmsg-v1__peers}",
+      "./composer-fill.bundle.js calls: $.agent.list (via readSubagents, subagentStarted), $.clock.after (via handlePromptSend, runSidecar), $.clock.now, $.env.get (via handlePromptSend, sidecarArgv), $.process.run (via describe, handlePromptSend, peersTool, sayTool, sendFacts, sendReply, sendTool, sessionBegin), $.process.spawn (via runSidecar), $.prompt.fill (via handlePromptSend, putBackDraft, putBackUnsent), $.prompt.read (via handlePromptSend, putBackDraft, putBackUnsent), $.session.append (via appendToAgent, guide), $.session.id (via guide, peersTool, replaceSidecar, sayTool, sendFacts, sendTool, sessionBegin, stillCurrent, unguide), $.session.model (via readModelAndWindow), $.session.root (via sessionBegin), $.session.surfaces (via replaceSidecar), $.session.usage (via readModelAndWindow), $.store.delete (via sweepGuided), $.store.get (via guidedRecord), $.store.keys (via sweepGuided), $.store.set (via guide, unguide), $.tool.register (via registerTools), $.ui.log",
       "./composer-fill.bundle.js env writes: nothing",
-      "./composer-fill.bundle.js env reads: HYOUI_SESSION_ID"
+      "./composer-fill.bundle.js env reads: CLAUDE_CONFIG_DIR, HYOUI_SESSION_ID"
      ],
      "gatingHooks": [
       {
        "module": "./composer-fill.bundle.js",
-       "pattern": "classic.SessionStart",
-       "hook": "classic.SessionStart",
+       "pattern": "command.run",
+       "hook": "command.run",
        "hasCatch": true
       },
       {
        "module": "./composer-fill.bundle.js",
-       "pattern": "classic.UserPromptSubmit",
-       "hook": "classic.UserPromptSubmit",
+       "pattern": "session.compact",
+       "hook": "session.compact",
        "hasCatch": true
       },
       {
        "module": "./composer-fill.bundle.js",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./composer-fill.bundle.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ccmsg-v1__send}",
+       "hasCatch": true
+      },
+      {
+       "module": "./composer-fill.bundle.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ccmsg-v1__say}",
+       "hasCatch": true
+      },
+      {
+       "module": "./composer-fill.bundle.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ccmsg-v1__peers}",
        "hasCatch": true
       }
      ]
@@ -150,5 +260,5 @@
    "advice": []
   }
  },
- "sourceHash": "8118de2830523018"
+ "sourceHash": "43c0243cd923dd1b"
 }

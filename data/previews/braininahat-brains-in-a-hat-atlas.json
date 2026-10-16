@@ -1,0 +1,473 @@
+{
+ "slug": "braininahat-brains-in-a-hat-atlas",
+ "generatedAt": "2026-10-16T14:16:13.091Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "atlas:keeper"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__atlas__atlas_update"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Read"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__iris__show"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "WebSearch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "WebFetch"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "atlas"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "atlas"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "atlas",
+    "description": "Open the atlas map. /atlas init builds one for a project with history; /atlas reset clears it; /atlas recap runs a deep recap; /atlas project <path> switches project.",
+    "argumentHint": "[init | reset | recap | project <path>]",
+    "output": "atlas pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "atlas_update",
+    "description": "Update the atlas map the user follows: goal, plan tree (sub-steps, detours, done with outcomes), facts, glossary, pipeline stages with iris figures, parked tangents, recap, and a trail of results, decisions and dead ends. Call it with no arguments to read the whole map."
+   }
+  ],
+  "panes": [
+   {
+    "id": "atlas",
+    "title": "atlas"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"atlas: no map yet for this project. When the work has a goal and steps, start one with atlas_update.\"]"
+   }
+  ],
+  "apiCalls": {
+   "$.session.root": 1,
+   "$.session.id": 1,
+   "$.env.get": 2,
+   "$.process.run": 1,
+   "$.fs.exists": 1,
+   "$.store.get": 1,
+   "$.state.get": 18,
+   "$.state.set": 7,
+   "$.tool.register": 1,
+   "$.agent.register": 2,
+   "$.clock.every": 1,
+   "$.command.register": 1,
+   "$.fs.stat": 1,
+   "$.clock.now": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 3000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row",
+      "columnGap": 1
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "atlas: no map for this project yet."
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "atlas-init",
+        "label": "Build map",
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "atlas-later",
+        "plain": true,
+        "dimColor": true,
+        "label": "Not now",
+        "onPress": "[fn]"
+       },
+       "children": []
+      }
+     ]
+    }
+   },
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "atlas": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-map",
+           "hotkey": "m",
+           "label": "Map",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-pipeline",
+           "hotkey": "p",
+           "label": "Pipeline",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-glossary",
+           "hotkey": "g",
+           "label": "Glossary",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-trail",
+           "hotkey": "t",
+           "label": "Trail",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No map for this project yet. Claude starts one with atlas_update once the work has a goal and steps."
+        ]
+       }
+      ]
+     },
+     "title": "atlas"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(sh -c grep -oE '\"(customTitle|agentName)\":\"[^\"]*\"' \"$1\" 2>/dev/null | tail -1 | …) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(atlas)",
+   "/atlas → atlas pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "session.start",
+   "agent.offer{agent=atlas:keeper}",
+   "prompt.compose",
+   "prompt.submit",
+   "tool.call{tool=mcp__atlas__atlas_update}",
+   "tool.call",
+   "tool.call{tool=Read}",
+   "tool.call{tool=mcp__iris__show}",
+   "tool.call{tool=WebSearch}",
+   "tool.call{tool=WebFetch}",
+   "turn.complete",
+   "command.run{command=atlas}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=Pane, requestId=atlas}"
+  ],
+  "calls": [
+   "$.agent.register",
+   "$.agent.spawn (via startKeeper)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.clock.sleep (via load",
+   "probeImages)",
+   "$.command.register",
+   "$.env.get",
+   "$.fs.exists",
+   "$.fs.read (via latest",
+   "load",
+   "sourceOf",
+   "startInit)",
+   "$.fs.stat (via latest",
+   "load",
+   "save)",
+   "$.fs.write (via routePng",
+   "save",
+   "writeWhole)",
+   "$.model.complete (via watch)",
+   "$.process.run (via copySamples",
+   "load",
+   "maplock",
+   "pngDims",
+   "readSessionName",
+   "routePng",
+   "startInit)",
+   "$.prompt.submit",
+   "$.session.id",
+   "$.session.root",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via load)",
+   "$.tool.register",
+   "$.ui.blit (via probeImages)",
+   "$.ui.invalidate (via probeImages)",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "atlas.changes",
+   "atlas.images",
+   "atlas.isInitDismissed",
+   "atlas.isKeeping",
+   "atlas.isStale",
+   "atlas.isWatching",
+   "atlas.map",
+   "atlas.seen",
+   "atlas.tab",
+   "iris.figures",
+   "iris.images",
+   "iris.sel"
+  ],
+  "stateWrites": [
+   "atlas.changes",
+   "atlas.images",
+   "atlas.isInitDismissed",
+   "atlas.isKeeping",
+   "atlas.isStale",
+   "atlas.isWatching",
+   "atlas.map",
+   "atlas.seen",
+   "atlas.tab"
+  ],
+  "envReads": [
+   "HOME",
+   "TMPDIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/braininahat-brains-in-a-hat-atlas/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/braininahat-brains-in-a-hat-atlas/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: atlas.map, atlas.changes, atlas.isStale, atlas.tab, atlas.seen, atlas.isWatching, atlas.isInitDismissed, atlas.isKeeping, atlas.images"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/braininahat-brains-in-a-hat-atlas/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, agent.offer{agent=atlas:keeper}, prompt.compose, prompt.submit, tool.call{tool=mcp__atlas__atlas_update}, tool.call, tool.call{tool=Read}, tool.call{tool=mcp__iris__show}, tool.call{tool=WebSearch}, tool.call{tool=WebFetch}, turn.complete, command.run{command=atlas}, ui.render{component=AbovePrompt}, ui.render{component=ToolUse}, ui.render{component=Pane, requestId=atlas}",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=atlas}",
+      "./register.tsx gating hook without .catch: agent.offer{agent=atlas:keeper}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__atlas__atlas_update}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=Read}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__iris__show}",
+      "./register.tsx gating hook without .catch: tool.call{tool=WebSearch}",
+      "./register.tsx gating hook without .catch: tool.call{tool=WebFetch}",
+      "./register.tsx calls: $.agent.register, $.agent.spawn (via startKeeper), $.clock.every, $.clock.now, $.clock.sleep (via load, probeImages), $.command.register, $.env.get, $.fs.exists, $.fs.read (via latest, load, sourceOf, startInit), $.fs.stat (via latest, load, save), $.fs.write (via routePng, save, writeWhole), $.model.complete (via watch), $.process.run (via copySamples, load, maplock, pngDims, readSessionName, routePng, startInit), $.prompt.submit, $.session.id, $.session.root, $.state.get, $.state.set, $.store.get (via load), $.tool.register, $.ui.blit (via probeImages), $.ui.invalidate (via probeImages), $.ui.open (via openPane), $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, TMPDIR",
+      "./register.tsx state writes: atlas.changes, atlas.images, atlas.isInitDismissed, atlas.isKeeping, atlas.isStale, atlas.isWatching, atlas.map, atlas.seen, atlas.tab",
+      "./register.tsx state reads: atlas.changes, atlas.images, atlas.isInitDismissed, atlas.isKeeping, atlas.isStale, atlas.isWatching, atlas.map, atlas.seen, atlas.tab, iris.figures, iris.images, iris.sel",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): iris.figures, iris.images, iris.sel"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=atlas:keeper}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__atlas__atlas_update}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Read}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__iris__show}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=WebSearch}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=WebFetch}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "8a77429f248d2b00"
+}

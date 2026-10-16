@@ -1,6 +1,6 @@
 {
  "slug": "bence-boer-agent-resources-idle-compact",
- "generatedAt": "2026-10-10T14:45:01.026Z",
+ "generatedAt": "2026-10-16T14:18:52.030Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "classic.PostToolBatch"
    },
    {
     "event": "turn.complete"
@@ -22,10 +28,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.clock.every": 1,
    "$.clock.now": 2,
-   "$.state.get": 3,
-   "$.state.set": 3,
-   "$.clock.every": 1
+   "$.state.get": 2,
+   "$.state.set": 2,
+   "$.session.usage": 1,
+   "$.settings.read": 1
   },
   "timers": [
    {
@@ -57,16 +65,21 @@
   "hooks": [
    "session.start",
    "turn.start",
+   "turn.step",
+   "classic.PostToolBatch",
    "turn.complete"
   ],
   "calls": [
-   "$.agent.list (via observe)",
    "$.clock.every",
    "$.clock.now",
-   "$.command.run (via compactWhenIdle)",
+   "$.command.run (via perform)",
+   "$.model.fork (via perform)",
+   "$.prompt.submit (via perform)",
    "$.session.usage (via observe)",
+   "$.settings.read (via observe)",
    "$.state.get",
    "$.state.set",
+   "$.turn.abort (via perform)",
    "$.ui.log"
   ],
   "stateReads": [
@@ -98,16 +111,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.start, turn.complete",
-      "./register.ts calls: $.agent.list (via observe), $.clock.every, $.clock.now, $.command.run (via compactWhenIdle), $.session.usage (via observe), $.state.get, $.state.set, $.ui.log",
+      "./register.ts hooks: session.start, turn.start, turn.step, classic.PostToolBatch, turn.complete",
+      "./register.ts hooks on classic.PostToolBatch do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook with .catch: classic.PostToolBatch",
+      "./register.ts calls: $.clock.every, $.clock.now, $.command.run (via perform), $.model.fork (via perform), $.prompt.submit (via perform), $.session.usage (via observe), $.settings.read (via observe), $.state.get, $.state.set, $.turn.abort (via perform), $.ui.log",
       "./register.ts state writes: idle-compact.activity",
       "./register.ts state reads: idle-compact.activity"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "classic.PostToolBatch",
+       "hook": "classic.PostToolBatch",
+       "hasCatch": true
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "4e1d939400a513e7"
+ "sourceHash": "f42c316b839433aa"
 }

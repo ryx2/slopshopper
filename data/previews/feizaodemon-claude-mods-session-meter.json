@@ -1,6 +1,6 @@
 {
  "slug": "feizaodemon-claude-mods-session-meter",
- "generatedAt": "2026-10-07T15:23:10.183Z",
+ "generatedAt": "2026-10-16T14:19:36.096Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,9 @@
    },
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.attach"
    },
    {
     "event": "turn.step"
@@ -36,7 +39,7 @@
    {
     "name": "meter",
     "description": "查看缓存、上下文、额度和费用明细",
-    "output": "☁ 多云 上下文 49% 97k/200k │ ❄ 缓存 – │ 5小时 ▰▰▱▱▱ 31% 09:53重置 │ $0.42\n\n提示缓存：主线程还没有响应\n上下文：97k / 200k（49%），160k 时提醒\n额度 5小时：已用 31%，09:53 重置\n本会话费用：$0.42\n久坐：已坐 0m，每 60 分钟提醒一次"
+    "output": "☁ 多云 上下文 49% 97k/200k │ ❄ 缓存 – │ 5小时 ▰▰▱▱▱ 31% 09:53重置 │ $0.42\n\n提示缓存：主线程还没有响应\n上下文：97k / 200k（49%）\n压缩窗口：读不到，按 200k 算；模型窗口 200k\n额度 5小时：已用 31%，09:53 重置\n本会话费用：$0.42\n久坐：已坐 0m，每 60 分钟提醒一次"
    }
   ],
   "tools": [],
@@ -48,10 +51,11 @@
   "apiCalls": {
    "$.ui.status": 1,
    "$.command.register": 1,
+   "$.session.surfaces": 1,
    "$.clock.every": 1,
+   "$.session.usage": 5,
    "$.clock.now": 4,
    "$.state.get": 8,
-   "$.session.usage": 4,
    "$.store.get": 1,
    "$.state.set": 2,
    "$.store.set": 1,
@@ -224,6 +228,7 @@
   "hooks": [
    "prompt.submit",
    "session.start",
+   "session.attach",
    "turn.step",
    "turn.complete",
    "session.end",
@@ -231,9 +236,10 @@
    "command.run{command=meter}"
   ],
   "calls": [
-   "$.clock.every",
+   "$.clock.every (via startTicking)",
    "$.clock.now",
    "$.command.register",
+   "$.session.surfaces (via isShown)",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
@@ -278,10 +284,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: prompt.submit, session.start, turn.step, turn.complete, session.end, ui.render{component=AbovePrompt}, command.run{command=meter}",
+      "./register.tsx hooks: prompt.submit, session.start, session.attach, turn.step, turn.complete, session.end, ui.render{component=AbovePrompt}, command.run{command=meter}",
       "./register.tsx answers its own command: command.run{command=meter}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.session.usage, $.state.get, $.state.set, $.store.get (via loadStandup, tick), $.store.set (via saveStandup, tick), $.ui.resolve, $.ui.status, $.ui.toast (via tick)",
+      "./register.tsx calls: $.clock.every (via startTicking), $.clock.now, $.command.register, $.session.surfaces (via isShown), $.session.usage, $.state.get, $.state.set, $.store.get (via loadStandup, tick), $.store.set (via saveStandup, tick), $.ui.resolve, $.ui.status, $.ui.toast (via tick)",
       "./register.tsx state writes: session-meter.last, session-meter.readings, session-meter.view",
       "./register.tsx state reads: session-meter.last, session-meter.readings, session-meter.view"
      ],
@@ -294,8 +300,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "e15abe4b2edbed4d"
+ "sourceHash": "49b5c54dacdc2b7d"
 }

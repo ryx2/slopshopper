@@ -1,6 +1,6 @@
 {
  "slug": "centminmod-claude-plugins-desktop-statusline",
- "generatedAt": "2026-10-08T15:52:57.460Z",
+ "generatedAt": "2026-10-16T14:15:51.348Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -18,6 +18,12 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "agent.spawn"
    },
    {
     "event": "tool.call",
@@ -85,6 +91,8 @@
    "session.attach{surface=desktop}",
    "session.measure",
    "turn.complete",
+   "turn.step",
+   "agent.spawn",
    "tool.call{tool=Agent}",
    "session.compact",
    "ui.render{component=AbovePrompt}"
@@ -101,18 +109,21 @@
    "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.ui.notify (via warn)",
    "$.ui.resolve",
    "$.ui.toast (via warn)"
   ],
   "stateReads": [
    "desktop-statusline.compactions",
    "desktop-statusline.lastTurn",
+   "desktop-statusline.runTally",
    "desktop-statusline.snap",
    "desktop-statusline.warned"
   ],
   "stateWrites": [
    "desktop-statusline.compactions",
    "desktop-statusline.lastTurn",
+   "desktop-statusline.runTally",
    "desktop-statusline.snap",
    "desktop-statusline.warned"
   ],
@@ -128,7 +139,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: desktop-statusline.snap, desktop-statusline.warned, desktop-statusline.lastTurn, desktop-statusline.compactions"
+     "types ./types/index.d.ts declares state: desktop-statusline.snap, desktop-statusline.warned, desktop-statusline.lastTurn, desktop-statusline.compactions, desktop-statusline.runTally"
     ],
     "gatingHooks": []
    },
@@ -139,14 +150,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.attach{surface=desktop}, session.measure, turn.complete, tool.call{tool=Agent}, session.compact, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, session.attach{surface=desktop}, session.measure, turn.complete, turn.step, agent.spawn, tool.call{tool=Agent}, session.compact, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook with .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.agent.list (via refresh), $.clock.after, $.clock.every, $.clock.now, $.process.run (via refresh), $.session.cwd (via refresh), $.session.surfaces (via isOnDesktop), $.session.turns (via refresh), $.session.usage, $.state.get, $.state.set, $.ui.resolve, $.ui.toast (via warn)",
-      "./register.tsx state writes: desktop-statusline.compactions, desktop-statusline.lastTurn, desktop-statusline.snap, desktop-statusline.warned",
-      "./register.tsx state reads: desktop-statusline.compactions, desktop-statusline.lastTurn, desktop-statusline.snap, desktop-statusline.warned"
+      "./register.tsx calls: $.agent.list (via refresh), $.clock.after, $.clock.every, $.clock.now, $.process.run (via refresh), $.session.cwd (via refresh), $.session.surfaces (via isOnDesktop), $.session.turns (via refresh), $.session.usage, $.state.get, $.state.set, $.ui.notify (via warn), $.ui.resolve, $.ui.toast (via warn)",
+      "./register.tsx state writes: desktop-statusline.compactions, desktop-statusline.lastTurn, desktop-statusline.runTally, desktop-statusline.snap, desktop-statusline.warned",
+      "./register.tsx state reads: desktop-statusline.compactions, desktop-statusline.lastTurn, desktop-statusline.runTally, desktop-statusline.snap, desktop-statusline.warned"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -161,8 +180,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "13d2234e41e0c74a"
+ "sourceHash": "a5f8c984c7a10422"
 }

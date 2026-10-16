@@ -1,11 +1,23 @@
 {
  "slug": "arturogarrido-claudinho-claudinho",
- "generatedAt": "2026-10-10T14:44:08.323Z",
+ "generatedAt": "2026-10-16T14:15:43.205Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.attach"
+   },
+   {
+    "event": "session.detach"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "ui.render",
@@ -14,10 +26,35 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "claudinho"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "match"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "match"
+    }
+   },
+   {
     "event": "prompt.submit"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "claudinho",
+    "description": "The live score or the next fixture of the competition you follow, now",
+    "output": "The CLI gave no answer."
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -25,9 +62,16 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.clock.after": 1,
+   "$.command.register": 1,
+   "$.session.surfaces": 1,
+   "$.clock.after": 2,
    "$.clock.every": 1,
-   "$.state.get": 2
+   "$.state.get": 4,
+   "$.env.get": 3,
+   "$.fs.list": 1,
+   "$.clock.sleep": 1,
+   "$.process.run": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -37,11 +81,21 @@
    {
     "kind": "every",
     "ms": 15000
+   },
+   {
+    "kind": "after",
+    "ms": 0
    }
   ],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
+   },
+   "Pane": {
+    "match": {
+     "ok": "engine",
+     "title": "match"
+    }
    }
   },
   "script": [
@@ -55,7 +109,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.process.run(claudinho ambient --json) → exit 0",
+   "/claudinho → The CLI gave no answer."
   ],
   "console": [],
   "warnings": []
@@ -66,32 +122,59 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.attach",
+   "session.detach",
+   "turn.start",
+   "turn.complete",
    "ui.render{component=AbovePrompt}",
+   "command.run{command=claudinho}",
+   "ui.close{id=match}",
+   "ui.render{component=Pane, requestId=match}",
    "prompt.submit"
   ],
   "calls": [
    "$.clock.after",
-   "$.clock.every",
+   "$.clock.every (via armPane",
+   "ensurePace",
+   "startTicker)",
    "$.clock.now",
-   "$.process.run (via run)",
+   "$.clock.sleep (via nvmBins)",
+   "$.command.register",
+   "$.env.get (via computeRunEnv)",
+   "$.fs.exists (via nvmLookup)",
+   "$.fs.list (via nvmLookup)",
+   "$.process.run",
+   "$.session.surfaces (via drawable)",
    "$.state.get",
    "$.state.set",
+   "$.ui.invalidate (via startTicker)",
+   "$.ui.open (via openPane)",
    "$.ui.resolve",
    "$.ui.toast (via run)"
   ],
   "stateReads": [
    "claudinho.band",
    "claudinho.baseline",
+   "claudinho.celebration",
    "claudinho.context",
-   "claudinho.pace"
+   "claudinho.pace",
+   "claudinho.pane",
+   "claudinho.paneGen"
   ],
   "stateWrites": [
    "claudinho.band",
    "claudinho.baseline",
+   "claudinho.celebration",
    "claudinho.context",
-   "claudinho.pace"
+   "claudinho.pace",
+   "claudinho.pane",
+   "claudinho.paneGen"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME",
+   "OS",
+   "PATH"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -103,7 +186,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: claudinho.band, claudinho.pace, claudinho.baseline, claudinho.context"
+     "types ./types/index.d.ts declares state: claudinho.band, claudinho.pace, claudinho.baseline, claudinho.context, claudinho.celebration, claudinho.paneGen, claudinho.pane"
     ],
     "gatingHooks": []
    },
@@ -114,13 +197,23 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, ui.render{component=AbovePrompt}, prompt.submit",
+      "./register.tsx hooks: session.start, session.attach, session.detach, turn.start, turn.complete, ui.render{component=AbovePrompt}, command.run{command=claudinho}, ui.close{id=match}, ui.render{component=Pane, requestId=match}, prompt.submit",
+      "./register.tsx answers its own command: command.run{command=claudinho}",
+      "./register.tsx gating hook without .catch: ui.close{id=match}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.process.run (via run), $.state.get, $.state.set, $.ui.resolve, $.ui.toast (via run)",
-      "./register.tsx state writes: claudinho.band, claudinho.baseline, claudinho.context, claudinho.pace",
-      "./register.tsx state reads: claudinho.band, claudinho.baseline, claudinho.context, claudinho.pace"
+      "./register.tsx calls: $.clock.after, $.clock.every (via armPane, ensurePace, startTicker), $.clock.now, $.clock.sleep (via nvmBins), $.command.register, $.env.get (via computeRunEnv), $.fs.exists (via nvmLookup), $.fs.list (via nvmLookup), $.process.run, $.session.surfaces (via drawable), $.state.get, $.state.set, $.ui.invalidate (via startTicker), $.ui.open (via openPane), $.ui.resolve, $.ui.toast (via run)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, OS, PATH",
+      "./register.tsx state writes: claudinho.band, claudinho.baseline, claudinho.celebration, claudinho.context, claudinho.pace, claudinho.pane, claudinho.paneGen",
+      "./register.tsx state reads: claudinho.band, claudinho.baseline, claudinho.celebration, claudinho.context, claudinho.pace, claudinho.pane, claudinho.paneGen"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=match}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -133,5 +226,5 @@
    "advice": []
   }
  },
- "sourceHash": "b64dcc95c0ae61d9"
+ "sourceHash": "12f257332ecd4fc4"
 }

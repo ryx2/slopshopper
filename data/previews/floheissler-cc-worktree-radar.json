@@ -1,0 +1,346 @@
+{
+ "slug": "floheissler-cc-worktree-radar",
+ "generatedAt": "2026-10-16T14:19:37.427Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart",
+    "matcher": {
+     "source": [
+      "clear",
+      "resume",
+      "fork"
+     ]
+    }
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "radar"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__worktree-radar__radar$/"
+    }
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": "theme"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "radar",
+    "description": "Live view of your branches and worktrees above the prompt: what lands cleanly, what conflicts, who is still working",
+    "argumentHint": "[base] | help | hold <branch> [reason] | unhold <branch> | off",
+    "immediate": true
+   }
+  ],
+  "tools": [
+   {
+    "name": "radar",
+    "description": "Worktree Radar: a live, read-only view of every local branch and worktree of the repository, drawn above the prompt, sorted into lanes on their way into the base branch. Lanes: READY (clean worktree, no busy session, merges cleanly; ranked, land #1 first), NEEDS_REBASE (conflicts with the base; isRebaseDue when nothing ahead of it in waitsFor still conflicts with it), STACKED (holds another open branch; land that first), IN_PROGRESS (uncommitted changes, a rebase under way, or a busy Claude session or a running subagent there; worktree.sessions lists both, kind session or agent), HOLD, CLEANUP (nothing beyond the base and no session). It never merges, rebases, tags, pushes or moves a ref. Actions: open (starts the radar for the session folder and returns the snapshot; `wake` lists events that wake this session with a one-line report, which asks for nothing: ready, conflict, rebase-due, stacked, cleanup, base-moved, session-idle), snapshot (reads now and returns the facts as JSON), close, hold/unhold (park a branch, with a reason), comment (a short comment shown on the branch row until its tip moves; with `keep`, until it lands or is gone; empty text clears), status (one line under the queue; empty clears)."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.state.get": 13,
+   "$.session.id": 1,
+   "$.store.get": 1,
+   "$.session.cwd": 1,
+   "$.state.set": 3,
+   "$.clock.now": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column",
+      "width": 100
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "frame",
+        "flexDirection": "column",
+        "width": 100,
+        "borderStyle": "round",
+        "borderColor": "promptBorder",
+        "paddingX": 1
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "key": "header",
+          "flexDirection": "row",
+          "width": 96
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "flexGrow": 1,
+            "flexShrink": 1
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "wrap": "truncate-end"
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "key": "0",
+                "bold": true
+               },
+               "children": [
+                "Worktree Radar"
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "key": "1",
+                "dimColor": true
+               },
+               "children": [
+                " · "
+               ]
+              },
+              {
+               "type": "Text",
+               "props": {
+                "key": "2",
+                "dimColor": true
+               },
+               "children": [
+                "reading app…"
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "flexDirection": "row",
+            "flexShrink": 0,
+            "columnGap": 1,
+            "marginLeft": 1
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "help",
+              "label": "help",
+              "hotkey": "h",
+              "plain": true,
+              "dimColor": true,
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "compact",
+              "label": "compact",
+              "hotkey": "c",
+              "plain": true,
+              "dimColor": true,
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Button",
+             "props": {
+              "key": "exit",
+              "label": "exit",
+              "hotkey": "x",
+              "plain": true,
+              "dimColor": true,
+              "role": "dismiss",
+              "onPress": "[fn]"
+             },
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/radar → "
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "classic.SessionStart{source=clear|resume|fork}",
+   "session.end",
+   "command.run{command=radar}",
+   "tool.call{tool=/\"^mcp__worktree-radar__radar$\"/}",
+   "config.set{key=theme}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.agent.list (via hostOf)",
+   "$.clock.after (via hostOf)",
+   "$.clock.now (via hostOf)",
+   "$.command.register",
+   "$.config.list (via hostOf)",
+   "$.fs.read (via hostOf)",
+   "$.process.run (via hostOf)",
+   "$.prompt.submit (via hostOf)",
+   "$.session.cwd (via hostOf)",
+   "$.session.id (via hostOf)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via hostOf)",
+   "$.store.get (via hostOf)",
+   "$.store.keys (via hostOf)",
+   "$.store.set (via hostOf)",
+   "$.tool.register",
+   "$.ui.invalidate (via hostOf)",
+   "$.ui.log",
+   "$.ui.notify (via hostOf)",
+   "$.ui.resolve",
+   "$.ui.toast (via hostOf)"
+  ],
+  "stateReads": [
+   "worktree-radar.comments",
+   "worktree-radar.compact",
+   "worktree-radar.dueMarks",
+   "worktree-radar.helpShown",
+   "worktree-radar.problem",
+   "worktree-radar.radar",
+   "worktree-radar.snapshot",
+   "worktree-radar.status",
+   "worktree-radar.themeSetting"
+  ],
+  "stateWrites": [
+   "worktree-radar.comments",
+   "worktree-radar.compact",
+   "worktree-radar.dueMarks",
+   "worktree-radar.helpShown",
+   "worktree-radar.problem",
+   "worktree-radar.radar",
+   "worktree-radar.snapshot",
+   "worktree-radar.status",
+   "worktree-radar.themeSetting"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/floheissler-cc-worktree-radar/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/floheissler-cc-worktree-radar/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: worktree-radar.radar, worktree-radar.snapshot, worktree-radar.problem, worktree-radar.comments, worktree-radar.status, worktree-radar.helpShown, worktree-radar.compact, worktree-radar.themeSetting, worktree-radar.dueMarks"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/floheissler-cc-worktree-radar/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, session.end, command.run{command=radar}, tool.call{tool=/\"^mcp__worktree-radar__radar$\"/}, config.set{key=theme}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=radar}",
+      "./register.tsx gating hook with .catch: classic.SessionStart{source=clear|resume|fork}",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^mcp__worktree-radar__radar$\"/}",
+      "./register.tsx gating hook without .catch: config.set{key=theme}",
+      "./register.tsx calls: $.agent.list (via hostOf), $.clock.after (via hostOf), $.clock.now (via hostOf), $.command.register, $.config.list (via hostOf), $.fs.read (via hostOf), $.process.run (via hostOf), $.prompt.submit (via hostOf), $.session.cwd (via hostOf), $.session.id (via hostOf), $.state.get, $.state.set, $.store.delete (via hostOf), $.store.get (via hostOf), $.store.keys (via hostOf), $.store.set (via hostOf), $.tool.register, $.ui.invalidate (via hostOf), $.ui.log, $.ui.notify (via hostOf), $.ui.resolve, $.ui.toast (via hostOf)",
+      "./register.tsx state writes: worktree-radar.comments, worktree-radar.compact, worktree-radar.dueMarks, worktree-radar.helpShown, worktree-radar.problem, worktree-radar.radar, worktree-radar.snapshot, worktree-radar.status, worktree-radar.themeSetting",
+      "./register.tsx state reads: worktree-radar.comments, worktree-radar.compact, worktree-radar.dueMarks, worktree-radar.helpShown, worktree-radar.problem, worktree-radar.radar, worktree-radar.snapshot, worktree-radar.status, worktree-radar.themeSetting"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=clear|resume|fork}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^mcp__worktree-radar__radar$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "config.set",
+       "hook": "config.set{key=theme}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "5b4e3963f6c169bf"
+}

@@ -1,6 +1,6 @@
 {
  "slug": "iiyazu-cross-muse-xmuse",
- "generatedAt": "2026-10-08T15:53:28.466Z",
+ "generatedAt": "2026-10-16T14:17:31.926Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -16,7 +16,7 @@
    {
     "event": "tool.call",
     "matcher": {
-     "tool": "mcp__xmuse__status"
+     "tool": "mcp__xmuse__say"
     }
    },
    {
@@ -25,112 +25,51 @@
      "component": "Pane",
      "requestId": "xmuse"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    }
   ],
   "commands": [
    {
     "name": "xmuse",
-    "description": "xmuse: coordinate agents from this window (new, say, attach, detach, status, pane)",
-    "argumentHint": "[new <title>|say <message>|attach|detach|status|pane]",
-    "output": "xmuse 看板已打开"
+    "description": "xmuse room: room new | invite | join | join-local | rooms | add | group | wake-host | status | open | leave | rebind | hub",
+    "argumentHint": "room new <name> | invite <provider> <role> <description> | join <code> | join-local <room> | status | open | leave",
+    "output": "xmuse：这个会话没有在房间里。\n/xmuse room new <名字>        开房间（本会话成为主控）\n/xmuse invite <provider> <角色> <职责描述>   生成邀请码（码显示在侧栏里）\n/xmuse join <邀请码>          把本会话绑定为房间成员\n/xmuse rooms                  列出本机房间（一键加入不用邀请码）\n/xmuse join-local <房间名或 room_id>   一键加入本机房间\n/xmuse add <厂商> <模型|-> <角色> <描述>   添加成员（hub 起回合）\n/xmuse group new #id [成员 …]  新建私有群\n/xmuse wake-host               现在叫醒主控\n/xmuse status | open | leave | rebind\n/xmuse hub <url>             指定 hub 地址（hub clear 清除）"
    }
   ],
-  "tools": [
-   {
-    "name": "status",
-    "description": "Read-only xmuse board status: module counts, state codes and operator attention. No inputs."
-   }
-  ],
-  "panes": [
-   {
-    "id": "xmuse",
-    "title": "xmuse 看板"
-   }
-  ],
+  "tools": [],
+  "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 1,
-   "$.state.get": 4,
-   "$.state.set": 2,
    "$.command.register": 1,
-   "$.tool.register": 1,
-   "$.ui.status": 1,
+   "$.session.cwd": 2,
+   "$.store.get": 2,
    "$.clock.every": 1,
-   "$.ui.open": 1,
+   "$.state.get": 6,
    "$.ui.resolve": 1,
    "$.clock.now": 1
   },
   "timers": [
    {
     "kind": "every",
-    "ms": 5000
+    "ms": 1000
    }
   ],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "Pane": {
     "xmuse": {
-     "ok": true,
-     "tree": {
-      "type": "Box",
-      "props": {
-       "flexDirection": "column"
-      },
-      "children": [
-       {
-        "type": "Text",
-        "props": {
-         "key": "t0"
-        },
-        "children": [
-         "xmuse 未绑定房间"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "t1",
-         "dimColor": true
-        },
-        "children": [
-         "xmuse 未绑定房间"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "t2"
-        },
-        "children": [
-         "授权"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "t3"
-        },
-        "children": [
-         "在终端运行 xmuse-workroom pair 生成配对码，然后输入这里。"
-        ]
-       },
-       {
-        "type": "Input",
-        "props": {
-         "key": "xmuse-pairing",
-         "label": "配对码",
-         "placeholder": "ABCD-EFGH",
-         "submitLabel": "配对",
-         "value": "",
-         "onSubmit": "[fn]"
-        },
-        "children": []
-       }
-      ]
-     },
-     "title": "xmuse 看板"
+     "ok": "engine",
+     "title": "xmuse"
     }
    }
   },
@@ -146,11 +85,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.ui.open(xmuse)",
-   "/xmuse → xmuse 看板已打开"
+   "/xmuse → xmuse：这个会话没有在房间里。\n/xmuse room new <名字>        开房间（本会话成为主控）\n/xmuse invite <provid…",
+   "ui.render: hook threw Text is not defined"
   ],
   "console": [],
-  "status": "xmuse 未绑定房间",
   "warnings": []
  },
  "validate": {
@@ -160,36 +98,58 @@
   "hooks": [
    "session.start",
    "command.run{command=xmuse}",
-   "tool.call{tool=mcp__xmuse__status}",
-   "ui.render{component=Pane, requestId=xmuse}"
+   "tool.call{tool=mcp__xmuse__say}",
+   "ui.render{component=Pane, requestId=?}",
+   "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.clock.every",
-   "$.clock.now",
+   "$.clock.now (via cachedRooms",
+   "pollInner",
+   "setConn)",
    "$.command.register",
-   "$.http.fetch (via httpGet",
-   "pluginHttp)",
+   "$.fs.read (via fsRead",
+   "readPort)",
+   "$.http.fetch (via hubCall)",
+   "$.prompt.submit (via maybeWake)",
+   "$.session.cwd (via bindingKey",
+   "createRoom",
+   "resolveHub)",
+   "$.session.id (via createRoom",
+   "joinLocalRoom",
+   "joinRoom",
+   "pollInner",
+   "rebindSession)",
+   "$.session.version (via joinLocalRoom",
+   "joinRoom)",
    "$.state.get",
    "$.state.set",
-   "$.store.delete",
-   "$.store.get",
-   "$.store.set",
-   "$.tool.register",
-   "$.ui.open",
-   "$.ui.resolve",
-   "$.ui.status",
-   "$.ui.toast (via loadMaterial",
-   "submitConfirm",
-   "submitControl",
-   "submitPairing",
-   "submitReviewConfirm",
-   "tick)"
+   "$.store.delete (via clearBinding",
+   "runCommand)",
+   "$.store.get (via loadBinding",
+   "maybeWake",
+   "resolveHub)",
+   "$.store.set (via maybeWake",
+   "runCommand",
+   "saveBinding)",
+   "$.tool.register (via registerTools)",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve (via renderBand",
+   "renderPane)",
+   "$.ui.toast (via makeInvite",
+   "runCommand)"
   ],
   "stateReads": [
-   "xmuse.cache"
+   "xmuse.conn",
+   "xmuse.more",
+   "xmuse.ui",
+   "xmuse.view"
   ],
   "stateWrites": [
-   "xmuse.cache"
+   "xmuse.conn",
+   "xmuse.more",
+   "xmuse.ui",
+   "xmuse.view"
   ],
   "envReads": [],
   "raw": {
@@ -203,7 +163,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: xmuse.cache"
+     "types ./types/index.d.ts declares state: xmuse.ui, xmuse.view, xmuse.conn, xmuse.more"
     ],
     "gatingHooks": []
    },
@@ -214,24 +174,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=xmuse}, tool.call{tool=mcp__xmuse__status}, ui.render{component=Pane, requestId=xmuse}",
+      "./register.tsx hooks: session.start, command.run{command=xmuse}, tool.call{tool=mcp__xmuse__say}, ui.render{component=Pane, requestId=?}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=xmuse}",
-      "./register.tsx gating hook without .catch: tool.call{tool=mcp__xmuse__status}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.http.fetch (via httpGet, pluginHttp), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via loadMaterial, submitConfirm, submitControl, submitPairing, submitReviewConfirm, tick)",
-      "./register.tsx state writes: xmuse.cache",
-      "./register.tsx state reads: xmuse.cache"
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__xmuse__say}",
+      "./register.tsx calls: $.clock.every, $.clock.now (via cachedRooms, pollInner, setConn), $.command.register, $.fs.read (via fsRead, readPort), $.http.fetch (via hubCall), $.prompt.submit (via maybeWake), $.session.cwd (via bindingKey, createRoom, resolveHub), $.session.id (via createRoom, joinLocalRoom, joinRoom, pollInner, rebindSession), $.session.version (via joinLocalRoom, joinRoom), $.state.get, $.state.set, $.store.delete (via clearBinding, runCommand), $.store.get (via loadBinding, maybeWake, resolveHub), $.store.set (via maybeWake, runCommand, saveBinding), $.tool.register (via registerTools), $.ui.open (via openPane), $.ui.resolve (via renderBand, renderPane), $.ui.toast (via makeInvite, runCommand)",
+      "./register.tsx state writes: xmuse.conn, xmuse.more, xmuse.ui, xmuse.view",
+      "./register.tsx state reads: xmuse.conn, xmuse.more, xmuse.ui, xmuse.view"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__xmuse__status}",
-       "hasCatch": false
+       "hook": "tool.call{tool=mcp__xmuse__say}",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "2c91cda691d9500a"
+ "sourceHash": "61b4453e14555015"
 }

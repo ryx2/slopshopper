@@ -1,0 +1,381 @@
+{
+ "slug": "kodflow-claude-marketplace-kodflow-hooks",
+ "generatedAt": "2026-10-16T14:20:18.501Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Skill"
+    }
+   },
+   {
+    "event": "classic.PreModelSwitch"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "lint-setup"
+    }
+   },
+   {
+    "event": "attribution.text"
+   },
+   {
+    "event": "plugin.register"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "kodflow-mods"
+    }
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "NotebookEdit"
+     ]
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "lint-setup",
+    "description": "Check ktn-linter for this Go project: binary, hooks, daemon, configuration. Proposes each fix.",
+    "argumentHint": "[path in a Go module]",
+    "output": "No go.mod at or above /work/app inside /work/app: not a Go project, so the hooks do not run\nktn-linter here, and there is nothing to set up.\nName a file or a directory of a Go module to check it: /lint-setup <path>."
+   },
+   {
+    "name": "kodflow-mods",
+    "description": "kodflow: the mods judged at load and the ones modwall refused",
+    "output": "Mods judged at this load (a module loaded before kodflow-hooks is not seen):\n  none\n\nRefusals on record (last 100 decisions, UTC):\n  none"
+   }
+  ],
+  "tools": [
+   {
+    "name": "task_create",
+    "description": "Add a task. Every message of the user gets one, a question included: file it before acting, and set it completed as soon as it is answered or done. epic is REQUIRED, there is no default: the id of the epic the task belongs to (task_list, or the Epics line given with each prompt, lists them), or 0 for a task outside any epic; open a new subject with task_epic first. task_focus the epic when you start its work. A change to an already completed task is a new task \"Rework #N: ...\" in that task's epic. subject: at most 18 characters, the title column of the task tree, imperative, no final punctuation (\"Add effort gauge\"); detail goes in description, which the tree shows under the selected task. New tasks start pending. Optional, for the user's task tree: parent=<id> files it as a subtask (three levels at most, in its parent's epic), blocked_by=[<id>, ...] names the tasks it waits on (no cycle), ref names a short handle of 5 characters at most (T0, C6). A pending task whose blockers are all completed shows as ready, one with a blocker left as blocked; the longest blocked_by chain is the epic's critical path. Work is grouped in epics, one per subject; several can be open at once, one is active (the one being worked on) and every task names its epic explicitly. The user's status line shows every open epic live, so the list must say what is true at every moment: in_progress while you work on a task, waiting while it is blocked on the user, completed as soon as it is done and verified."
+   },
+   {
+    "name": "task_update",
+    "description": "Update one of your tasks: set in_progress before starting it, completed as soon as its work is done and verified, waiting when it is blocked on the user (a decision, an approval, an answer), deleted when it no longer applies. Never end a turn with tasks left to do but none in_progress or waiting: either one is under way, or they wait on the user and say so. One task in_progress per worker: you may have one, plus one per running subagent (each subagent works on exactly one task); switching to another task means setting the current one back to pending first, and a task handed to a subagent goes in_progress once that subagent has started, with worker=<its type or id> so the task is tied to it. With worker, the start is refused if that subagent is stopped or already holds another task; without it, a start beyond the worker count is refused. The link is dropped when the task leaves in_progress. A refusal lists the running subagents and who holds each task in progress. subject: at most 18 characters, the detail goes in description. parent, blocked_by and ref change the task's place in the tree (parent=\"\" or blocked_by=[] or ref=\"\" clears one); a deleted task's subtasks move up a level and the tasks waiting on it stop waiting."
+   },
+   {
+    "name": "task_epic",
+    "description": "Open a new epic and make it active: a separate subject with its own task list and its own pill on the user's status line. Use it when the user brings a new subject, rather than appending its tasks to an unrelated epic; other open epics stay open. If an open epic already has this exact title it is focused instead. title: at most 20 characters, a short noun phrase (\"SDK status-line\"). Work is grouped in epics, one per subject; several can be open at once, one is active (the one being worked on) and every task names its epic explicitly. The user's status line shows every open epic live, so the list must say what is true at every moment: in_progress while you work on a task, waiting while it is blocked on the user, completed as soon as it is done and verified."
+   },
+   {
+    "name": "task_focus",
+    "description": "Make an open epic the active one, by id or exact title, when the work turns back to it: the status line expands it. Completed epics cannot be focused; open a new one with task_epic. Work is grouped in epics, one per subject; several can be open at once, one is active (the one being worked on) and every task names its epic explicitly. The user's status line shows every open epic live, so the list must say what is true at every moment: in_progress while you work on a task, waiting while it is blocked on the user, completed as soon as it is done and verified."
+   },
+   {
+    "name": "task_list",
+    "description": "List the active epic's tasks with ids and statuses, one line per other open epic (id, title, done/total), and tasks with no epic."
+   },
+   {
+    "name": "task_assign_human",
+    "description": "Assign the user a task only they can do: a go or an approval, a Touch ID or a password typed on their machine, a gesture on hardware you cannot reach. The task is filed waiting, marked as the user's, in the epic it unblocks (epic is required), and shows on their status line. Say in your reply what you need from them. Once they have answered, close it with task_update(status=completed); it never goes in_progress. At most 5 open at once. Main agent only: a subagent says what it needs in its answer."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "═══════════════════════════════════════════════\n  ❌ BLOCKED — code production in a repository is delegated\n═══════════════════════════════════════════════\n  git push from the main thread produces into a repository.\n  Dispatch the epic's subagent (task_focus the epic first), or SendMessage it if it i"
+   }
+  ],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 105,
+   "$.tool.register": 6,
+   "$.command.register": 2,
+   "$.env.set": 2,
+   "$.fs.write": 15,
+   "$.session.id": 16,
+   "$.session.cwd": 9,
+   "$.fs.list": 3,
+   "$.fs.read": 11,
+   "$.session.version": 1,
+   "$.process.run": 2,
+   "$.session.root": 1,
+   "$.fs.stat": 1,
+   "$.fs.exists": 1,
+   "$.store.get": 1
+  },
+  "timers": [],
+  "sites": {},
+  "script": [
+   "session.start",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/composer-at)",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "tool.call Read",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "tool.call Grep",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/edits.tsv)",
+   "tool.call Edit",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/edits.tsv)",
+   "tool.call Write",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/edits.tsv)",
+   "tool.call Write",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "tool.call Bash bun test",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "tool.call Bash git status --porcelain",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "$.process.run(bash /plugins/kodflow-hooks/hooks/scripts/on-mod.sh) → exit 0",
+   "tool.call Bash denied: ═══════════════════════════════════════════════\n  ❌ BLOCKED — code production in a repository is del…",
+   "$.fs.write(/Users/dev/.claude/kodflow/sessions/preview-session/mod-beat)",
+   "$.process.run(bash /plugins/kodflow-hooks/hooks/scripts/on-mod.sh) → exit 0",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/lint-setup → No go.mod at or above /work/app inside /work/app: not a Go project, so the hooks…",
+   "/kodflow-mods → Mods judged at this load (a module loaded before kodflow-hooks is not seen):\n  n…"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No version specified. Consider adding a version following semver (e.g., \"1.0.0\")"
+  ],
+  "hooks": [
+   "session.start",
+   "classic.SessionStart",
+   "prompt.submit",
+   "agent.spawn",
+   "tool.call{tool=Skill}",
+   "classic.PreModelSwitch",
+   "tool.call",
+   "tool.call{tool=Bash}",
+   "command.run{command=lint-setup}",
+   "attribution.text",
+   "plugin.register",
+   "command.run{command=kodflow-mods}",
+   "session.end",
+   "tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}"
+  ],
+  "calls": [
+   "$.agent.list (via serve)",
+   "$.clock.sleep (via lintPort",
+   "port)",
+   "$.command.register",
+   "$.env.get",
+   "$.env.set (via guardPort)",
+   "$.fs.exists (via lintPort)",
+   "$.fs.list (via guardPort)",
+   "$.fs.read",
+   "$.fs.stat (via lintPort",
+   "port)",
+   "$.fs.write",
+   "$.process.run (via cleanupAfter",
+   "guardCtx",
+   "journal",
+   "lintPort",
+   "mergePort",
+   "origin",
+   "port",
+   "serve)",
+   "$.session.cwd (via guardPort",
+   "journal",
+   "projectDir)",
+   "$.session.id",
+   "$.session.root (via lintPort",
+   "serve)",
+   "$.session.version",
+   "$.store.get",
+   "$.store.set (via grantSession",
+   "guardPort)",
+   "$.tool.register (via ensureTools)",
+   "$.ui.ask",
+   "$.ui.log (via guardPort)",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [
+   "ANTHROPIC_API_KEY",
+   "ANTHROPIC_AUTH_TOKEN",
+   "AWS_SECRET_ACCESS_KEY",
+   "AWS_SESSION_TOKEN",
+   "CF_API_TOKEN",
+   "CI_JOB_TOKEN",
+   "CLAUDE_CODE_OAUTH_TOKEN",
+   "CLAUDE_CODE_SUBAGENT_MODEL",
+   "CLAUDE_CODE_SUBAGENT_MODEL_FORCE",
+   "CLAUDE_CONFIG_DIR",
+   "CLAUDE_PROJECT_DIR",
+   "CLOUDFLARE_API_TOKEN",
+   "CONSUL_HTTP_TOKEN",
+   "DATABASE_URL",
+   "DOCKER_PASSWORD",
+   "GH_ENTERPRISE_TOKEN",
+   "GH_REPO",
+   "GH_TOKEN",
+   "GITHUB_TOKEN",
+   "GITLAB_TOKEN",
+   "GL_TOKEN",
+   "GOOGLE_API_KEY",
+   "HF_TOKEN",
+   "HOME",
+   "KODFLOW_CLEANUP",
+   "KODFLOW_FABLE",
+   "KODFLOW_MERGE_CONSENT",
+   "KODFLOW_MOD",
+   "KODFLOW_ROOT",
+   "KODFLOW_USER_ZDOTDIR",
+   "KTN_USER_DAEMON",
+   "NODE_AUTH_TOKEN",
+   "NOMAD_TOKEN",
+   "NPM_TOKEN",
+   "OPENAI_API_KEY",
+   "OP_CONNECT_TOKEN",
+   "OP_SERVICE_ACCOUNT_TOKEN",
+   "SENTRY_AUTH_TOKEN",
+   "SLACK_BOT_TOKEN",
+   "SLACK_TOKEN",
+   "VAULT_TOKEN",
+   "ZDOTDIR"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/kodflow-claude-marketplace-kodflow-hooks/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kodflow-claude-marketplace-kodflow-hooks/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "version",
+      "message": "No version specified. Consider adding a version following semver (e.g., \"1.0.0\")",
+      "code": null
+     }
+    ],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/kodflow-claude-marketplace-kodflow-hooks/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./mod/register.ts hooks: session.start, classic.SessionStart, prompt.submit, agent.spawn, tool.call{tool=Skill}, classic.PreModelSwitch, tool.call, tool.call{tool=Bash}, command.run{command=lint-setup}, attribution.text, plugin.register, command.run{command=kodflow-mods}, session.end, tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}",
+      "./mod/register.ts hooks on classic.SessionStart, classic.PreModelSwitch, attribution.text do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./mod/register.ts answers its own command: command.run{command=lint-setup}",
+      "./mod/register.ts answers its own command: command.run{command=kodflow-mods}",
+      "./mod/register.ts gating hook with .catch: classic.SessionStart",
+      "./mod/register.ts gating hook with .catch: prompt.submit",
+      "./mod/register.ts gating hook with .catch: agent.spawn",
+      "./mod/register.ts gating hook with .catch: tool.call{tool=Skill}",
+      "./mod/register.ts gating hook with .catch: classic.PreModelSwitch",
+      "./mod/register.ts gating hook with .catch: tool.call",
+      "./mod/register.ts gating hook with .catch: tool.call{tool=Bash}",
+      "./mod/register.ts gating hook with .catch: plugin.register",
+      "./mod/register.ts gating hook with .catch: tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}",
+      "./mod/register.ts calls: $.agent.list (via serve), $.clock.sleep (via lintPort, port), $.command.register, $.env.get, $.env.set (via guardPort), $.fs.exists (via lintPort), $.fs.list (via guardPort), $.fs.read, $.fs.stat (via lintPort, port), $.fs.write, $.process.run (via cleanupAfter, guardCtx, journal, lintPort, mergePort, origin, port, serve), $.session.cwd (via guardPort, journal, projectDir), $.session.id, $.session.root (via lintPort, serve), $.session.version, $.store.get, $.store.set (via grantSession, guardPort), $.tool.register (via ensureTools), $.ui.ask, $.ui.log (via guardPort), $.ui.toast",
+      "./mod/register.ts env writes: KODFLOW_USER_ZDOTDIR, ZDOTDIR",
+      "./mod/register.ts env reads: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, CF_API_TOKEN, CI_JOB_TOKEN, CLAUDE_CODE_OAUTH_TOKEN, CLAUDE_CODE_SUBAGENT_MODEL, CLAUDE_CODE_SUBAGENT_MODEL_FORCE, CLAUDE_CONFIG_DIR, CLAUDE_PROJECT_DIR, CLOUDFLARE_API_TOKEN, CONSUL_HTTP_TOKEN, DATABASE_URL, DOCKER_PASSWORD, GH_ENTERPRISE_TOKEN, GH_REPO, GH_TOKEN, GITHUB_TOKEN, GITLAB_TOKEN, GL_TOKEN, GOOGLE_API_KEY, HF_TOKEN, HOME, KODFLOW_CLEANUP, KODFLOW_FABLE, KODFLOW_MERGE_CONSENT, KODFLOW_MOD, KODFLOW_ROOT, KODFLOW_USER_ZDOTDIR, KTN_USER_DAEMON, NODE_AUTH_TOKEN, NOMAD_TOKEN, NPM_TOKEN, OPENAI_API_KEY, OP_CONNECT_TOKEN, OP_SERVICE_ACCOUNT_TOKEN, SENTRY_AUTH_TOKEN, SLACK_BOT_TOKEN, SLACK_TOKEN, VAULT_TOKEN, ZDOTDIR"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./mod/register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Skill}",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "classic.PreModelSwitch",
+       "hook": "classic.PreModelSwitch",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "plugin.register",
+       "hook": "plugin.register",
+       "hasCatch": true
+      },
+      {
+       "module": "./mod/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit|Write|MultiEdit|NotebookEdit}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "1925e55a5548fe2b"
+}

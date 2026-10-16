@@ -1,11 +1,29 @@
 {
  "slug": "sam-ruff-account-switcher-claude-code-mod-account-switcher",
- "generatedAt": "2026-10-09T15:34:22.553Z",
+ "generatedAt": "2026-10-16T14:21:33.260Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
+    "event": "ui.close",
+    "matcher": {
+     "id": "accounts"
+    }
+   },
+   {
+    "event": "session.end"
+   },
+   {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "classic.StopFailure"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "command.run",
@@ -60,7 +78,7 @@
    {
     "name": "account-switch",
     "description": "Switch this session between Claude subscription accounts",
-    "argumentHint": "[name|list|add|rename|hat|forget|keys]",
+    "argumentHint": "[name|list|add|rename|hat|forget|keys|auto]",
     "immediate": true
    }
   ],
@@ -78,22 +96,28 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 36,
-   "$.fs.exists": 20,
-   "$.process.run": 5,
+   "$.store.get": 3,
+   "$.env.get": 44,
+   "$.fs.exists": 25,
+   "$.process.run": 6,
    "$.session.id": 1,
-   "$.store.get": 2,
-   "$.clock.now": 6,
-   "$.ui.invalidate": 3,
-   "$.ui.resolve": 5,
+   "$.clock.now": 10,
+   "$.ui.invalidate": 4,
+   "$.ui.resolve": 7,
    "$.store.set": 1,
    "$.ui.log": 1,
    "$.command.register": 1,
    "$.session.surfaces": 1,
    "$.ui.panes": 1,
-   "$.ui.open": 1
+   "$.ui.open": 1,
+   "$.clock.every": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 15000
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": true,
@@ -141,69 +165,67 @@
       "props": {
        "flexDirection": "column",
        "width": 56,
+       "height": 31,
        "paddingX": 2,
-       "paddingY": 1
+       "overflow": "hidden"
       },
       "children": [
        {
-        "type": "Text",
-        "props": {
-         "dimColor": true,
-         "bold": true
-        },
-        "children": [
-         "ACTIVE"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true,
-         "wrap": "wrap"
-        },
-        "children": [
-         "This session is not signed in with a saved account."
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         " "
-        ]
-       },
-       {
         "type": "Box",
         "props": {
-         "flexDirection": "row"
+         "height": 2,
+         "flexShrink": 0,
+         "justifyContent": "space-between"
         },
         "children": [
          {
           "type": "Text",
           "props": {
-           "color": "subtle"
+           "bold": true
           },
           "children": [
-           "  "
+           "Accounts"
           ]
          },
          {
-          "type": "Button",
+          "type": "Text",
           "props": {
-           "key": "add",
-           "plain": true,
-           "hotkey": "a",
-           "onPress": "[fn]"
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           ""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "account-list",
+         "height": 20,
+         "flexShrink": 0,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "position": "absolute",
+           "top": 0,
+           "left": 0,
+           "right": 0,
+           "flexDirection": "column"
           },
           "children": [
            {
             "type": "Text",
             "props": {
-             "color": "suggestion",
-             "bold": false
+             "dimColor": true,
+             "wrap": "truncate-end"
             },
             "children": [
-             "+ Add an account"
+             "No saved accounts."
             ]
            }
           ]
@@ -211,30 +233,117 @@
         ]
        },
        {
-        "type": "Text",
-        "props": {},
-        "children": [
-         " "
-        ]
-       },
-       {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "dimColor": true,
-         "wrap": "truncate-end"
+         "key": "account-footer",
+         "height": 8,
+         "flexShrink": 0,
+         "flexDirection": "column",
+         "overflow": "hidden"
         },
         "children": [
-         " "
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true,
-         "wrap": "wrap"
-        },
-        "children": [
-         "↑↓ move  ⏎ switch  a add  esc close"
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "────────────────────────────────────────────────────"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "auto-switch",
+           "plain": true,
+           "hotkey": "s",
+           "label": "Auto-switch: off",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "columnGap": 2
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "add",
+             "plain": true,
+             "hotkey": "a",
+             "label": "+ Add account",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "refresh-usage",
+             "plain": true,
+             "hotkey": "r",
+             "label": "Refresh usage",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "15s refresh · local reset times"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "←→ change account hat"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "Auto-switch tries each signed-in account."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "↑↓ / tab move · enter select"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "esc close"
+          ]
+         }
         ]
        }
       ]
@@ -261,6 +370,7 @@
    "$.process.run(sh -c command -v security && uname -s) → exit 0",
    "$.process.run(sh -c command -v security && uname -s) → exit 0",
    "$.ui.open(accounts)",
+   "$.process.run(sh -c command -v security && uname -s) → exit 0",
    "/account-switch → "
   ],
   "console": [],
@@ -271,7 +381,12 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "ui.close{id=accounts}",
+   "session.end",
    "session.start",
+   "prompt.submit",
+   "classic.StopFailure",
+   "turn.complete",
    "command.run{command=account-switch}",
    "command.run{command=status}",
    "command.run{command=login}",
@@ -282,13 +397,16 @@
    "ui.render{component=Pane}"
   ],
   "calls": [
-   "$.clock.now (via makeIo)",
+   "$.clock.every (via switchAfterLimit",
+   "togglePane)",
+   "$.clock.now",
    "$.clock.sleep (via makeIo",
    "pointConfigAtSession)",
    "$.command.register",
    "$.env.get (via environment",
    "macKeychain",
    "refresh",
+   "refreshUsage",
    "restoreSession",
    "store)",
    "$.env.set",
@@ -298,21 +416,23 @@
    "$.fs.list (via makeIo)",
    "$.fs.read (via readText)",
    "$.fs.stat (via makeIo)",
+   "$.http.fetch (via refreshUsage)",
    "$.process.run (via macKeychain",
    "makeIo",
    "readText",
    "writeText)",
    "$.prompt.fill",
+   "$.prompt.submit (via switchAfterLimit)",
    "$.session.id (via rememberSession",
    "restoreSession)",
    "$.session.surfaces",
-   "$.store.get (via ensureKeys",
-   "rememberSession",
-   "restoreSession)",
+   "$.store.get",
    "$.store.set (via installKeys",
-   "rememberSession)",
+   "rememberSession",
+   "setAutoSwitch)",
    "$.ui.ask",
    "$.ui.close",
+   "$.ui.focus",
    "$.ui.invalidate",
    "$.ui.log",
    "$.ui.open (via togglePane)",
@@ -322,6 +442,7 @@
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "ANTHROPIC_BASE_URL",
    "APPDATA",
    "CLAUDE_CONFIG_DIR",
    "CLAUDE_SECURESTORAGE_CONFIG_DIR",
@@ -348,18 +469,40 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=account-switch}, command.run{command=status}, command.run{command=login}, command.run{command=logout}, ui.focus{requestId=accounts}, ui.scroll{requestId=accounts}, ui.render{component=AbovePrompt}, ui.render{component=Pane}",
+      "./register.ts hooks: ui.close{id=accounts}, session.end, session.start, prompt.submit, classic.StopFailure, turn.complete, command.run{command=account-switch}, command.run{command=status}, command.run{command=login}, command.run{command=logout}, ui.focus{requestId=accounts}, ui.scroll{requestId=accounts}, ui.render{component=AbovePrompt}, ui.render{component=Pane}",
+      "./register.ts hooks on classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=account-switch}",
+      "./register.ts gating hook without .catch: ui.close{id=accounts}",
+      "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: classic.StopFailure",
       "./register.ts gating hook with .catch: command.run{command=status}",
       "./register.ts gating hook with .catch: command.run{command=login}",
       "./register.ts gating hook with .catch: command.run{command=logout}",
       "./register.ts gating hook with .catch: ui.focus{requestId=accounts}",
       "./register.ts gating hook with .catch: ui.scroll{requestId=accounts}",
-      "./register.ts calls: $.clock.now (via makeIo), $.clock.sleep (via makeIo, pointConfigAtSession), $.command.register, $.env.get (via environment, macKeychain, refresh, restoreSession, store), $.env.set, $.fs.exists (via makeIo, readText, store), $.fs.list (via makeIo), $.fs.read (via readText), $.fs.stat (via makeIo), $.process.run (via macKeychain, makeIo, readText, writeText), $.prompt.fill, $.session.id (via rememberSession, restoreSession), $.session.surfaces, $.store.get (via ensureKeys, rememberSession, restoreSession), $.store.set (via installKeys, rememberSession), $.ui.ask, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open (via togglePane), $.ui.panes (via togglePane), $.ui.resolve",
+      "./register.ts calls: $.clock.every (via switchAfterLimit, togglePane), $.clock.now, $.clock.sleep (via makeIo, pointConfigAtSession), $.command.register, $.env.get (via environment, macKeychain, refresh, refreshUsage, restoreSession, store), $.env.set, $.fs.exists (via makeIo, readText, store), $.fs.list (via makeIo), $.fs.read (via readText), $.fs.stat (via makeIo), $.http.fetch (via refreshUsage), $.process.run (via macKeychain, makeIo, readText, writeText), $.prompt.fill, $.prompt.submit (via switchAfterLimit), $.session.id (via rememberSession, restoreSession), $.session.surfaces, $.store.get, $.store.set (via installKeys, rememberSession, setAutoSwitch), $.ui.ask, $.ui.close, $.ui.focus, $.ui.invalidate, $.ui.log, $.ui.open (via togglePane), $.ui.panes (via togglePane), $.ui.resolve",
       "./register.ts env writes: CLAUDE_CODE_ORGANIZATION_UUID, CLAUDE_SECURESTORAGE_CONFIG_DIR",
-      "./register.ts env reads: APPDATA, CLAUDE_CONFIG_DIR, CLAUDE_SECURESTORAGE_CONFIG_DIR, HOME, USER, USERPROFILE"
+      "./register.ts env reads: ANTHROPIC_BASE_URL, APPDATA, CLAUDE_CONFIG_DIR, CLAUDE_SECURESTORAGE_CONFIG_DIR, HOME, USER, USERPROFILE"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=accounts}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.StopFailure",
+       "hook": "classic.StopFailure",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "command.run",
@@ -396,5 +539,5 @@
    "advice": []
   }
  },
- "sourceHash": "e26b5cb8ee129269"
+ "sourceHash": "e76433d0a3862ba9"
 }

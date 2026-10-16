@@ -1,11 +1,17 @@
 {
  "slug": "nwilsson-claudepad",
- "generatedAt": "2026-10-07T15:23:40.365Z",
+ "generatedAt": "2026-10-16T14:21:06.393Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "classic.CwdChanged"
+   },
+   {
+    "event": "classic.PostToolBatch"
    },
    {
     "event": "command.run",
@@ -35,6 +41,18 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__claudepad__complete_note"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__claudepad__update_note"
+    }
+   },
+   {
     "event": "ui.message"
    },
    {
@@ -48,14 +66,14 @@
   "commands": [
    {
     "name": "notes",
-    "description": "Open or close the notepad pane; /notes find <text> searches, /notes tags lists tags, /notes export and /notes import sync NOTES.md",
-    "argumentHint": "[find <text> | tags | export | import]",
+    "description": "Open or close the notepad pane; /notes find <text> searches, /notes tags lists tags, /notes export and /notes import sync NOTES.md, /notes undo restores the last archived notes",
+    "argumentHint": "[find <text> | tags | export | import | undo]",
     "output": "Notepad opened."
    },
    {
     "name": "note",
-    "description": "Add a note for this project (-g for a global note, #words become tags)",
-    "argumentHint": "[-g] <text>",
+    "description": "Add a note for this project (-g for a global note, -b for the current git branch only, #words become tags; --last saves Claude's last reply)",
+    "argumentHint": "[-g | -b] [--last] <text>",
     "immediate": true,
     "output": "Multi-line editor opened. Or add a quick note with /note <text> (-g for global)."
    }
@@ -67,7 +85,15 @@
    },
    {
     "name": "list_notes",
-    "description": "List the notes in the user's notepad: this project's notes and the global ones, with whether each is done or pinned. With `query`, search every note (all projects) for notes containing all of its words; a #word in the query matches that tag exactly. Also lists the tags in use."
+    "description": "List the notes in the user's notepad: this project's notes and the global ones, with whether each is done or pinned, and each note's id (for complete_note and update_note). Notes of another git branch of this project are left out until it is checked out; a note marked (branch name) belongs to that branch. A note with a #due:YYYY-MM-DD date is marked (overdue) or (due today) while open, and a list with dated notes ends with today's date. With `query`, search every note (all projects) for notes containing all of its words; a #word in the query matches that tag exactly. Also lists the tags in use."
+   },
+   {
+    "name": "complete_note",
+    "description": "Mark a note in the user's notepad done, for example a TODO you have just finished, or (with `done: false`) open again. Take the id from list_notes or add_note. Only mark a note done when the work it describes is actually finished."
+   },
+   {
+    "name": "update_note",
+    "description": "Replace the text of a note in the user's notepad, for example to record progress or correct it. Take the id from list_notes or add_note. Keep the note's #tags unless they no longer apply."
    }
   ],
   "panes": [
@@ -81,18 +107,28 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.session.cwd": 1,
+   "$.session.repo": 1,
+   "$.state.get": 22,
+   "$.state.set": 6,
+   "$.process.run": 3,
    "$.store.get": 1,
-   "$.state.get": 9,
-   "$.state.set": 4,
-   "$.session.cwd": 3,
+   "$.store.keys": 2,
    "$.ui.status": 1,
+   "$.fs.stat": 1,
+   "$.clock.every": 1,
    "$.command.register": 2,
-   "$.tool.register": 2,
+   "$.tool.register": 4,
    "$.ui.panes": 1,
    "$.ui.open": 2,
    "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 3000
+   }
+  ],
   "sites": {
    "Pane": {
     "claudepad": {
@@ -190,7 +226,9 @@
    }
   },
   "script": [
+   "$.process.run(git branch --format=%(HEAD)%(refname:short)) → exit 0",
    "session.start",
+   "$.process.run(git branch --format=%(HEAD)%(refname:short)) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -201,6 +239,7 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.process.run(git branch --format=%(HEAD)%(refname:short)) → exit 0",
    "$.ui.open(claudepad)",
    "/notes → Notepad opened.",
    "$.ui.open(claudepad)",
@@ -215,52 +254,102 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "classic.CwdChanged",
+   "classic.PostToolBatch",
    "command.run{command=notes}",
    "command.run{command=note}",
    "prompt.submit",
    "tool.call{tool=mcp__claudepad__add_note}",
    "tool.call{tool=mcp__claudepad__list_notes}",
+   "tool.call{tool=mcp__claudepad__complete_note}",
+   "tool.call{tool=mcp__claudepad__update_note}",
    "ui.message",
    "ui.render{component=Pane, requestId=claudepad}"
   ],
   "calls": [
+   "$.clock.after (via archiveNotes)",
+   "$.clock.every",
    "$.command.register",
+   "$.env.get (via notesFolderOf)",
+   "$.fs.list (via fillFolder",
+   "folderStore)",
    "$.fs.read (via exportNotes",
-   "importNotes)",
-   "$.fs.write (via exportNotes)",
+   "folderStore",
+   "importNotes",
+   "pollFile)",
+   "$.fs.stat (via markSynced",
+   "pollFile)",
+   "$.fs.write (via exportNotes",
+   "folderStore)",
+   "$.process.run (via openLink",
+   "readBranches)",
    "$.prompt.fill",
-   "$.session.cwd (via projectOf)",
+   "$.session.cwd (via identify",
+   "openLink)",
+   "$.session.messages (via saveLastReply)",
+   "$.session.repo (via identify",
+   "openLink)",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
-   "$.store.set (via change)",
+   "$.store.delete (via migrateLegacy",
+   "pluginStore)",
+   "$.store.get (via adopt",
+   "migrateLegacy",
+   "pluginStore",
+   "pollFile)",
+   "$.store.keys (via migrateLegacy",
+   "pluginStore)",
+   "$.store.set (via adopt",
+   "markSynced",
+   "migrateLegacy",
+   "pluginStore",
+   "pollFile)",
    "$.tool.register",
    "$.ui.close",
    "$.ui.open (via openPane)",
    "$.ui.panes",
    "$.ui.resolve",
-   "$.ui.status",
+   "$.ui.status (via showStatus)",
    "$.ui.toast"
   ],
   "stateReads": [
+   "claudepad.branches",
    "claudepad.draft",
    "claudepad.editor",
+   "claudepad.fileSeen",
+   "claudepad.folder",
+   "claudepad.isArchiveView",
+   "claudepad.isByDue",
    "claudepad.isLineMode",
+   "claudepad.isPinnedHeavy",
+   "claudepad.lastArchive",
    "claudepad.notes",
    "claudepad.query",
    "claudepad.scope",
+   "claudepad.selected",
    "claudepad.tag"
   ],
   "stateWrites": [
+   "claudepad.branches",
    "claudepad.draft",
    "claudepad.editor",
+   "claudepad.fileSeen",
+   "claudepad.folder",
+   "claudepad.isArchiveView",
+   "claudepad.isByDue",
    "claudepad.isLineMode",
+   "claudepad.isPinnedHeavy",
+   "claudepad.lastArchive",
    "claudepad.notes",
    "claudepad.query",
    "claudepad.scope",
+   "claudepad.selected",
    "claudepad.tag"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -272,7 +361,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: claudepad.notes, claudepad.editor, claudepad.draft, claudepad.isLineMode, claudepad.scope, claudepad.query, claudepad.tag"
+     "types ./types/index.d.ts declares state: claudepad.notes, claudepad.editor, claudepad.draft, claudepad.isLineMode, claudepad.folder, claudepad.scope, claudepad.query, claudepad.tag, claudepad.lastArchive, claudepad.isArchiveView, claudepad.isByDue, claudepad.branches, claudepad.fileSeen, claudepad.isPinnedHeavy, claudepad.selected"
     ],
     "gatingHooks": []
    },
@@ -283,18 +372,37 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=notes}, command.run{command=note}, prompt.submit, tool.call{tool=mcp__claudepad__add_note}, tool.call{tool=mcp__claudepad__list_notes}, ui.message, ui.render{component=Pane, requestId=claudepad}",
+      "./register.tsx hooks: session.start, classic.CwdChanged, classic.PostToolBatch, command.run{command=notes}, command.run{command=note}, prompt.submit, tool.call{tool=mcp__claudepad__add_note}, tool.call{tool=mcp__claudepad__list_notes}, tool.call{tool=mcp__claudepad__complete_note}, tool.call{tool=mcp__claudepad__update_note}, ui.message, ui.render{component=Pane, requestId=claudepad}",
+      "./register.tsx hooks on classic.CwdChanged, classic.PostToolBatch do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=notes}",
       "./register.tsx answers its own command: command.run{command=note}",
+      "./register.tsx gating hook without .catch: classic.CwdChanged",
+      "./register.tsx gating hook without .catch: classic.PostToolBatch",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__claudepad__add_note}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__claudepad__list_notes}",
-      "./register.tsx calls: $.command.register, $.fs.read (via exportNotes, importNotes), $.fs.write (via exportNotes), $.prompt.fill, $.session.cwd (via projectOf), $.state.get, $.state.set, $.store.get, $.store.set (via change), $.tool.register, $.ui.close, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: claudepad.draft, claudepad.editor, claudepad.isLineMode, claudepad.notes, claudepad.query, claudepad.scope, claudepad.tag",
-      "./register.tsx state reads: claudepad.draft, claudepad.editor, claudepad.isLineMode, claudepad.notes, claudepad.query, claudepad.scope, claudepad.tag",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__claudepad__complete_note}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__claudepad__update_note}",
+      "./register.tsx calls: $.clock.after (via archiveNotes), $.clock.every, $.command.register, $.env.get (via notesFolderOf), $.fs.list (via fillFolder, folderStore), $.fs.read (via exportNotes, folderStore, importNotes, pollFile), $.fs.stat (via markSynced, pollFile), $.fs.write (via exportNotes, folderStore), $.process.run (via openLink, readBranches), $.prompt.fill, $.session.cwd (via identify, openLink), $.session.messages (via saveLastReply), $.session.repo (via identify, openLink), $.state.get, $.state.set, $.store.delete (via migrateLegacy, pluginStore), $.store.get (via adopt, migrateLegacy, pluginStore, pollFile), $.store.keys (via migrateLegacy, pluginStore), $.store.set (via adopt, markSynced, migrateLegacy, pluginStore, pollFile), $.tool.register, $.ui.close, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.status (via showStatus), $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, USERPROFILE",
+      "./register.tsx state writes: claudepad.branches, claudepad.draft, claudepad.editor, claudepad.fileSeen, claudepad.folder, claudepad.isArchiveView, claudepad.isByDue, claudepad.isLineMode, claudepad.isPinnedHeavy, claudepad.lastArchive, claudepad.notes, claudepad.query, claudepad.scope, claudepad.selected, claudepad.tag",
+      "./register.tsx state reads: claudepad.branches, claudepad.draft, claudepad.editor, claudepad.fileSeen, claudepad.folder, claudepad.isArchiveView, claudepad.isByDue, claudepad.isLineMode, claudepad.isPinnedHeavy, claudepad.lastArchive, claudepad.notes, claudepad.query, claudepad.scope, claudepad.selected, claudepad.tag",
       "./register.tsx surface modules: hooks/editor.tsx"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.CwdChanged",
+       "hook": "classic.CwdChanged",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PostToolBatch",
+       "hook": "classic.PostToolBatch",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -312,11 +420,24 @@
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__claudepad__list_notes}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__claudepad__complete_note}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__claudepad__update_note}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "7b9554d50dfda394"
+ "sourceHash": "e17e6e3c8ff5a87a"
 }

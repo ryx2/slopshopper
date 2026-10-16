@@ -1,6 +1,6 @@
 {
  "slug": "airmile-claude-kit",
- "generatedAt": "2026-10-08T15:53:44.158Z",
+ "generatedAt": "2026-10-16T14:18:35.762Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -24,13 +24,10 @@
     }
    },
    {
-    "event": "classic.SessionStart",
+    "event": "command.run",
     "matcher": {
-     "source": "/^(startup|resume)$/"
+     "command": "panel"
     }
-   },
-   {
-    "event": "prompt.submit"
    },
    {
     "event": "tool.check",
@@ -79,18 +76,42 @@
     "event": "turn.complete"
    },
    {
-    "event": "classic.SessionStart"
-   },
-   {
-    "event": "tool.check",
+    "event": "classic.SessionStart",
     "matcher": {
-     "tool": "mcp__kit__feedback"
+     "source": "/^(startup|clear)$/"
     }
    },
    {
-    "event": "tool.call",
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "command.run",
     "matcher": {
-     "tool": "mcp__kit__feedback"
+     "command": "mode"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "warm"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "band"
     }
    },
    {
@@ -115,7 +136,34 @@
     "event": "session.compact"
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "panel",
+    "description": "Open kit's roadmap pane (project dashboard)",
+    "immediate": true,
+    "output": "Roadmap pane opened."
+   },
+   {
+    "name": "mode",
+    "description": "Pick kit's model/effort profile: lean, balanced, quality or off",
+    "argumentHint": "[lean|balanced|quality|off]",
+    "immediate": true,
+    "output": "kit profile: Balanced. Pick one: /mode lean|balanced|quality|off"
+   },
+   {
+    "name": "warm",
+    "description": "Keep this chat's prompt cache warm while it is idle (on/off)",
+    "argumentHint": "[on|off]",
+    "immediate": true,
+    "output": "Keep warm on: after 50 idle minutes a tiny request renews the prompt cache."
+   },
+   {
+    "name": "band",
+    "description": "Show kit's band above the prompt (profile, model, effort, compact, clear, roadmap)",
+    "immediate": true,
+    "output": "kit band drawn above the prompt. Folded ([+])? ctrl+x ctrl+a unfolds it."
+   }
+  ],
   "tools": [
    {
     "name": "roadmap_view",
@@ -128,46 +176,606 @@
    {
     "name": "fresh_start",
     "description": "kit /build safe point: after this turn ends, clear the chat and run /kit:build <slug> in the fresh one. Call it only after the user chose Fresh start, then end the turn."
-   },
-   {
-    "name": "feedback",
-    "description": "kit's Skill Feedback inbox, shared by every project on this machine. add: record one friction point about a kit skill (skill = build, commit, …; text = one line). list: open points, oldest first (optional skill). done: close points by id after /improve acted on or declined them."
    }
   ],
-  "panes": [],
+  "panes": [
+   {
+    "id": "kit-roadmap",
+    "title": "Dashboard"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 4,
-   "$.session.usage": 1,
-   "$.clock.now": 3,
-   "$.ui.invalidate": 2,
-   "$.session.root": 4,
+   "$.tool.register": 3,
+   "$.command.register": 4,
+   "$.session.usage": 2,
+   "$.clock.now": 5,
+   "$.ui.invalidate": 7,
+   "$.ui.resolve": 8,
+   "$.ui.panes": 5,
+   "$.store.get": 5,
+   "$.session.model": 8,
+   "$.model.classify": 1,
+   "$.session.turns": 1,
+   "$.ui.ask": 1,
+   "$.session.id": 1,
+   "$.store.set": 1,
+   "$.session.root": 2,
    "$.fs.read": 2,
-   "$.ui.status": 1,
-   "$.fs.exists": 2,
-   "$.ui.resolve": 2,
-   "$.process.run": 5,
-   "$.store.get": 1,
-   "$.command.list": 1
+   "$.ui.open": 1,
+   "$.clock.every": 1,
+   "$.process.run": 2,
+   "$.fs.exists": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 300000
+   }
+  ],
   "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "justifyContent": "space-between",
+        "gap": 2,
+        "flexWrap": "wrap",
+        "marginBottom": 1
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "key": "kit-usage",
+          "gap": 3,
+          "flexWrap": "wrap"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "key": "kit-usage-ctx"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              "ctx "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "97k"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "key": "kit-usage-session"
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              "session "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "bold": true
+             },
+             "children": [
+              "31%"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              " · NaNm"
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "gap": 1,
+          "flexWrap": "wrap"
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-compact",
+            "label": "⇲ Compact",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-clear",
+            "label": "⌫ Clear",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "justifyContent": "space-between",
+        "gap": 1,
+        "flexWrap": "wrap"
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "key": "kit-group-model",
+          "gap": 1
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-model",
+            "label": "Sonnet 5.5",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-profile",
+            "label": "Balanced",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-effort",
+            "label": "medium",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "kit-group-project",
+          "gap": 1
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-commit",
+            "label": "✓ Commit",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-git",
+            "label": "⎇ Git",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-roadmap",
+            "label": "▤ Close dashboard",
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "kit-group-keep",
+          "gap": 1
+         },
+         "children": [
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-orchestrate",
+            "label": "⑂ Orchestrate",
+            "dimColor": true,
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "kit-warm",
+            "label": "♨ Keep cache",
+            "dimColor": false,
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
    "Pane": {
     "kit-roadmap": {
      "ok": true,
      "tree": {
-      "type": "Text",
+      "type": "Box",
       "props": {
-       "dimColor": true
+       "flexDirection": "column",
+       "gap": 1,
+       "paddingX": 1,
+       "paddingY": 1,
+       "minHeight": 30
       },
       "children": [
-       "No docs/roadmap.md here: run /product to make one."
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-roadmap",
+           "label": "▤ Roadmap",
+           "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-messages",
+           "label": "◈ Messages",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-chat",
+           "label": "◎ Session",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "flexGrow": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1,
+             "flexWrap": "wrap"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "No docs/roadmap.md here."
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "make-roadmap",
+               "label": "Make a roadmap",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "gap": 3,
+         "flexWrap": "wrap",
+         "borderStyle": "round",
+         "borderColor": "#334155",
+         "paddingX": 1,
+         "paddingY": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "pad-Plan",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Plan"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1,
+             "flexWrap": "wrap"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "setup",
+               "variant": "primary",
+               "label": "Setup",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "brainstorm",
+               "variant": "secondary",
+               "label": "Brainstorm",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "critique",
+               "variant": "secondary",
+               "label": "Critique",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "theme",
+               "variant": "secondary",
+               "label": "Theme",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pad-Make",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Make"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1,
+             "flexWrap": "wrap"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "convert",
+               "variant": "secondary",
+               "label": "Convert",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "explain",
+               "variant": "secondary",
+               "label": "Explain",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "lessons",
+               "variant": "secondary",
+               "label": "Lessons",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "pad-Client",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "Client"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1,
+             "flexWrap": "wrap"
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "intake",
+               "variant": "secondary",
+               "label": "Intake",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "seo",
+               "variant": "secondary",
+               "label": "SEO",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "audit",
+               "variant": "secondary",
+               "label": "Audit",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "scan",
+               "variant": "secondary",
+               "label": "Scan",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
       ]
      },
-     "title": "kit-roadmap"
+     "title": "Dashboard"
     },
     "kit-theme": {
      "ok": true,
@@ -186,6 +794,7 @@
   },
   "script": [
    "session.start",
+   "$.ui.ask(This task fits Sonnet 5.5. Switch model for this session?) → \"Switch to Sonnet 5.5\"",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -196,11 +805,13 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.process.run(git status --porcelain) → exit 0",
-   "$.process.run(git rev-list --count origin/HEAD..HEAD) → exit 0",
-   "$.process.run(git symbolic-ref --short HEAD) → exit 0",
+   "$.ui.open(kit-roadmap)",
+   "/panel → Roadmap pane opened.",
+   "/mode → kit profile: Balanced. Pick one: /mode lean|balanced|quality|off",
    "$.process.run(git log --all --not HEAD --source --name-only --format=%S -- docs/specs) → exit 0",
-   "$.process.run(git worktree list --porcelain) → exit 0"
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "/warm → Keep warm on: after 50 idle minutes a tiny request renews the prompt cache.",
+   "/band → kit band drawn above the prompt. Folded ([+])? ctrl+x ctrl+a unfolds it."
   ],
   "console": [],
   "warnings": []
@@ -213,8 +824,7 @@
    "ui.focus{requestId=kit-roadmap}",
    "ui.press{requestId=kit-roadmap}",
    "ui.render{component=Pane, requestId=kit-roadmap}",
-   "classic.SessionStart{source=/\"^(startup|resume)$\"/}",
-   "prompt.submit",
+   "command.run{command=panel}",
    "tool.check{tool=mcp__kit__roadmap_view}",
    "tool.call{tool=mcp__kit__roadmap_view}",
    "tool.check{tool=mcp__kit__theme_view}",
@@ -223,9 +833,14 @@
    "tool.check{tool=mcp__kit__fresh_start}",
    "tool.call{tool=mcp__kit__fresh_start}",
    "turn.complete",
-   "classic.SessionStart",
-   "tool.check{tool=mcp__kit__feedback}",
-   "tool.call{tool=mcp__kit__feedback}",
+   "classic.SessionStart{source=/\"^(startup|clear)$\"/}",
+   "prompt.submit",
+   "turn.step",
+   "agent.spawn",
+   "command.run{command=mode}",
+   "ui.render{component=AbovePrompt}",
+   "command.run{command=warm}",
+   "command.run{command=band}",
    "session.start",
    "session.end",
    "session.measure",
@@ -234,30 +849,49 @@
   ],
   "calls": [
    "$.clock.after",
+   "$.clock.every (via ensureTicker)",
    "$.clock.now",
-   "$.command.list",
+   "$.command.register",
    "$.command.run",
    "$.fs.exists",
    "$.fs.read",
    "$.fs.write",
    "$.mcp.call",
+   "$.model.classify (via kindOf)",
+   "$.model.fork (via tick)",
    "$.process.run (via activeSpec",
    "embedFonts",
-   "readAway",
-   "readGit)",
+   "readAway)",
    "$.prompt.fill",
+   "$.prompt.submit (via gitAction",
+   "remember",
+   "resend",
+   "resumeNow)",
+   "$.session.id (via restoreSwitch",
+   "switchTo)",
+   "$.session.messages (via readMessages)",
+   "$.session.model (via askFirstModel",
+   "override",
+   "running",
+   "switchTo)",
    "$.session.root",
    "$.session.surface",
-   "$.session.usage (via refresh)",
-   "$.store.delete (via answer)",
+   "$.session.turns (via askFirstModel",
+   "readChat)",
+   "$.session.usage (via escalate",
+   "readChat",
+   "refresh)",
+   "$.store.delete (via setEffortLock)",
    "$.store.get",
-   "$.store.keys (via readAll)",
    "$.store.set",
    "$.tool.register",
+   "$.ui.ask (via askFirstModel",
+   "escalate)",
+   "$.ui.close",
    "$.ui.invalidate",
    "$.ui.open",
+   "$.ui.panes",
    "$.ui.resolve",
-   "$.ui.status",
    "$.ui.toast"
   ],
   "stateReads": [],
@@ -282,22 +916,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: ui.focus{requestId=kit-roadmap}, ui.press{requestId=kit-roadmap}, ui.render{component=Pane, requestId=kit-roadmap}, classic.SessionStart{source=/\"^(startup|resume)$\"/}, prompt.submit, tool.check{tool=mcp__kit__roadmap_view}, tool.call{tool=mcp__kit__roadmap_view}, tool.check{tool=mcp__kit__theme_view}, tool.call{tool=mcp__kit__theme_view}, ui.render{component=Pane, requestId=kit-theme}, tool.check{tool=mcp__kit__fresh_start}, tool.call{tool=mcp__kit__fresh_start}, turn.complete, classic.SessionStart, tool.check{tool=mcp__kit__feedback}, tool.call{tool=mcp__kit__feedback}, session.start, session.end, session.measure, tool.call{tool=Edit|Write}, session.compact",
+      "./register.tsx hooks: ui.focus{requestId=kit-roadmap}, ui.press{requestId=kit-roadmap}, ui.render{component=Pane, requestId=kit-roadmap}, command.run{command=panel}, tool.check{tool=mcp__kit__roadmap_view}, tool.call{tool=mcp__kit__roadmap_view}, tool.check{tool=mcp__kit__theme_view}, tool.call{tool=mcp__kit__theme_view}, ui.render{component=Pane, requestId=kit-theme}, tool.check{tool=mcp__kit__fresh_start}, tool.call{tool=mcp__kit__fresh_start}, turn.complete, classic.SessionStart{source=/\"^(startup|clear)$\"/}, prompt.submit, turn.step, agent.spawn, command.run{command=mode}, ui.render{component=AbovePrompt}, command.run{command=warm}, command.run{command=band}, session.start, session.end, session.measure, tool.call{tool=Edit|Write}, session.compact",
+      "./register.tsx hooks on classic.SessionStart, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook without .catch: ui.focus{requestId=kit-roadmap}",
-      "./register.tsx gating hook without .catch: classic.SessionStart{source=/\"^(startup|resume)$\"/}",
-      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: command.run{command=panel}",
       "./register.tsx gating hook without .catch: tool.check{tool=mcp__kit__roadmap_view}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__kit__roadmap_view}",
       "./register.tsx gating hook without .catch: tool.check{tool=mcp__kit__theme_view}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__kit__theme_view}",
       "./register.tsx gating hook without .catch: tool.check{tool=mcp__kit__fresh_start}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__kit__fresh_start}",
-      "./register.tsx gating hook without .catch: classic.SessionStart",
-      "./register.tsx gating hook without .catch: tool.check{tool=mcp__kit__feedback}",
-      "./register.tsx gating hook without .catch: tool.call{tool=mcp__kit__feedback}",
+      "./register.tsx gating hook without .catch: classic.SessionStart{source=/\"^(startup|clear)$\"/}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: command.run{command=mode}",
+      "./register.tsx gating hook without .catch: command.run{command=warm}",
+      "./register.tsx gating hook without .catch: command.run{command=band}",
       "./register.tsx gating hook without .catch: tool.call{tool=Edit|Write}",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.clock.after, $.clock.now, $.command.list, $.command.run, $.fs.exists, $.fs.read, $.fs.write, $.mcp.call, $.process.run (via activeSpec, embedFonts, readAway, readGit), $.prompt.fill, $.session.root, $.session.surface, $.session.usage (via refresh), $.store.delete (via answer), $.store.get, $.store.keys (via readAll), $.store.set, $.tool.register, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast"
+      "./register.tsx calls: $.clock.after, $.clock.every (via ensureTicker), $.clock.now, $.command.register, $.command.run, $.fs.exists, $.fs.read, $.fs.write, $.mcp.call, $.model.classify (via kindOf), $.model.fork (via tick), $.process.run (via activeSpec, embedFonts, readAway), $.prompt.fill, $.prompt.submit (via gitAction, remember, resend, resumeNow), $.session.id (via restoreSwitch, switchTo), $.session.messages (via readMessages), $.session.model (via askFirstModel, override, running, switchTo), $.session.root, $.session.surface, $.session.turns (via askFirstModel, readChat), $.session.usage (via escalate, readChat, refresh), $.store.delete (via setEffortLock), $.store.get, $.store.set, $.tool.register, $.ui.ask (via askFirstModel, escalate), $.ui.close, $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast"
      ],
      "gatingHooks": [
       {
@@ -308,14 +945,8 @@
       },
       {
        "module": "./register.tsx",
-       "pattern": "classic.SessionStart",
-       "hook": "classic.SessionStart{source=/\"^(startup|resume)$\"/}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
-       "pattern": "prompt.submit",
-       "hook": "prompt.submit",
+       "pattern": "command.run",
+       "hook": "command.run{command=panel}",
        "hasCatch": false
       },
       {
@@ -357,19 +988,37 @@
       {
        "module": "./register.tsx",
        "pattern": "classic.SessionStart",
-       "hook": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=/\"^(startup|clear)$\"/}",
        "hasCatch": false
       },
       {
        "module": "./register.tsx",
-       "pattern": "tool.check",
-       "hook": "tool.check{tool=mcp__kit__feedback}",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
        "hasCatch": false
       },
       {
        "module": "./register.tsx",
-       "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__kit__feedback}",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=mode}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=warm}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=band}",
        "hasCatch": false
       },
       {
@@ -386,8 +1035,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "5878ee9140b3c013"
+ "sourceHash": "902699a2d6578c19"
 }

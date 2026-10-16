@@ -1,15 +1,9 @@
 {
  "slug": "domaine-oleksandr-kever-claude-plugins-band",
- "generatedAt": "2026-10-10T14:45:10.103Z",
+ "generatedAt": "2026-10-16T14:19:26.460Z",
  "harness": {
   "ok": true,
   "hooks": [
-   {
-    "event": "prompt.submit",
-    "matcher": {
-     "text": "/^/"
-    }
-   },
    {
     "event": "session.start",
     "matcher": {
@@ -49,6 +43,12 @@
    {
     "event": "classic.SessionStart",
     "matcher": {
+     "source": "clear"
+    }
+   },
+   {
+    "event": "classic.SessionStart",
+    "matcher": {
      "source": "/^(resume|fork)$/"
     }
    },
@@ -77,6 +77,18 @@
     "event": "command.run",
     "matcher": {
      "command": "compact"
+    }
+   },
+   {
+    "event": "session.compact",
+    "matcher": {
+     "trigger": "manual"
+    }
+   },
+   {
+    "event": "session.compact",
+    "matcher": {
+     "trigger": "plugin"
     }
    },
    {
@@ -155,12 +167,12 @@
     "name": "band-progress",
     "description": "Open the band task checklist pane",
     "immediate": true,
-    "output": "No task checklist: none of the loaded plugins publishes one (with base: /base-progress <KEY> pins one; with fnd: /fnd-progress <KEY>)."
+    "output": "No task checklist: base resolves no task or is not loaded (/base-progress <KEY> pins one)."
    },
    {
     "name": "band-debug",
     "description": "Show the raw figures behind the status band (debug)",
-    "output": "band debug\ninfo: {\"v\":1,\"version\":\"unknown\",\"disabled\":false}\nusage(): {\"startedAt\":1759998200000,\"context\":{\"tokens\":97400,\"window\":200000,\"percent\":49},\"rateLimits\":[{\"kind\":\"five_hour\",\"percentUsed\":31,\"resetsAt\":1760003600000}],\"cost\":{\"usd\":0.42}}\ncache: {\"anchorMs\":1760000000560,\"ttlMs\":3600000,\"ttlSource\":\"subscription\",\"isCold\":false}\nusage atom: {\"ctxPct\":49,\"ctxTokens\":97400,\"window\":200000,\"rates\":[{\"kind\":\"five_hour\",\"label\":\"5h\",\"pct\":31,\"resetsAt\":1760003600000}],\"costUsd\":null}\nprogress: null\npublisher: none\nroot: /work/app\nrender: {\"surface\":null}\ntick: 1760000000560\nnow: 1760000000580"
+    "output": "band debug\ninfo: {\"v\":1,\"version\":\"unknown\",\"disabled\":false}\nusage(): {\"startedAt\":1759998200000,\"context\":{\"tokens\":97400,\"window\":200000,\"percent\":49},\"rateLimits\":[{\"kind\":\"five_hour\",\"percentUsed\":31,\"resetsAt\":1760003600000}],\"cost\":{\"usd\":0.42}}\ncache: {\"anchorMs\":1760000000100,\"ttlMs\":3600000,\"ttlSource\":\"subscription\",\"isCold\":false}\nusage atom: {\"ctxPct\":49,\"ctxTokens\":97400,\"window\":200000,\"rates\":[{\"kind\":\"five_hour\",\"label\":\"5h\",\"pct\":31,\"resetsAt\":1760003600000}],\"costUsd\":null}\nendpoint: {\"at\":1760000000060,\"ok\":false,\"error\":\"api-key session\",\"windows\":[]}\nprogress: null\nroot: /work/app\nrender: {\"surface\":null}\ntick: 1760000000100\nnow: 1760000000160"
    }
   ],
   "tools": [],
@@ -177,19 +189,18 @@
   "apiCalls": {
    "$.fs.read": 1,
    "$.state.set": 12,
-   "$.session.id": 4,
+   "$.session.id": 3,
    "$.command.register": 3,
    "$.clock.every": 1,
-   "$.state.get": 47,
-   "$.store.get": 1,
-   "$.env.get": 11,
+   "$.state.get": 43,
+   "$.env.get": 9,
    "$.session.model": 2,
-   "$.clock.now": 4,
+   "$.clock.now": 8,
    "$.session.usage": 2,
+   "$.session.authorize": 1,
    "$.fs.exists": 1,
-   "$.fs.write": 2,
+   "$.fs.write": 1,
    "$.ui.panes": 3,
-   "$.clock.sleep": 1,
    "$.session.surfaces": 2,
    "$.ui.open": 1,
    "$.session.root": 1,
@@ -611,7 +622,6 @@
   "script": [
    "$.fs.write(/Users/dev/.claude/domaine/log/preview-session/band.jsonl)",
    "session.start",
-   "$.fs.write(/tmp/fnd-mod-session-preview-session)",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -624,7 +634,7 @@
    "turn.complete",
    "$.ui.open(band-log)",
    "/band-log → Log pane opened.",
-   "/band-progress → No task checklist: none of the loaded plugins publishes one (with base: /base-pr…",
+   "/band-progress → No task checklist: base resolves no task or is not loaded (/base-progress <KEY> …",
    "/band-debug → band debug\ninfo: {\"v\":1,\"version\":\"unknown\",\"disabled\":false}\nusage(): {\"started…"
   ],
   "console": [],
@@ -635,7 +645,6 @@
   "errors": [],
   "warnings": [],
   "hooks": [
-   "prompt.submit{text=/\"^\"/}",
    "session.start{cwd=/\"^\"/}",
    "prompt.submit",
    "session.start",
@@ -646,12 +655,14 @@
    "classic.PostCompact",
    "session.end",
    "classic.PostModelSwitch",
+   "classic.SessionStart{source=clear}",
    "classic.SessionStart{source=/\"^(resume|fork)$\"/}",
    "tool.call{tool=Agent}",
    "ui.focus{component=AbovePrompt}",
    "ui.press{plugin=band}",
    "turn.start",
    "command.run{command=compact}",
+   "session.compact{trigger=manual|plugin}",
    "session.end{reason=clear}",
    "ui.render{component=AbovePrompt}",
    "session.start{cwd=/\".\"/}",
@@ -667,26 +678,30 @@
    "$.clock.after",
    "$.clock.every",
    "$.clock.now",
-   "$.clock.sleep",
    "$.command.register (via registerCommands)",
-   "$.command.run",
+   "$.command.run (via pickModel",
+   "pressClear",
+   "pressCompact",
+   "saveThenCompact)",
    "$.env.get",
    "$.fs.exists (via writeFileLine)",
    "$.fs.read (via version",
    "writeFileLine)",
-   "$.fs.write (via mark",
-   "writeFileLine)",
+   "$.fs.write (via writeFileLine)",
+   "$.http.fetch (via fetchLimits)",
+   "$.session.authorize (via fetchLimits)",
    "$.session.compact (via pressCompact)",
    "$.session.id",
-   "$.session.model",
+   "$.session.model (via sessionModel)",
    "$.session.root",
    "$.session.surfaces (via drawsPanes)",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
+   "$.store.get (via seed)",
    "$.store.set (via learnTtl)",
-   "$.ui.ask (via pressClear)",
+   "$.ui.ask (via pressClear",
+   "pressCompact)",
    "$.ui.close (via toggle",
    "togglePane)",
    "$.ui.open (via toggle",
@@ -710,8 +725,6 @@
    "base.progress",
    "be.events",
    "fe.events",
-   "fnd.events",
-   "fnd.progress",
    "pm.events",
    "qa.events",
    "slim.events"
@@ -732,15 +745,13 @@
    "ANTHROPIC_API_KEY",
    "BAND_COST",
    "BAND_EVENT_LOG",
+   "BAND_USAGE_ENDPOINT",
    "BASE_AUTOSAVE",
    "CLAUDE_CODE_USE_BEDROCK",
    "CLAUDE_CODE_USE_FOUNDRY",
    "CLAUDE_CODE_USE_VERTEX",
    "DOMAINE_LOG_DIR",
-   "HOME",
-   "TEMP",
-   "TMP",
-   "TMPDIR"
+   "HOME"
   ],
   "raw": {
    "success": true,
@@ -753,7 +764,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: band.info, band.usage, band.model, band.cache, band.tick, band.rateAlarmed, band.paneShown, band.bandFocused, band.modelPicker, band.events, base.events, base.progress, fnd.events, fnd.progress, slim.events, fe.events, qa.events, be.events, pm.events"
+     "types ./types/index.d.ts declares state: band.info, band.usage, band.model, band.cache, band.tick, band.rateAlarmed, band.paneShown, band.bandFocused, band.modelPicker, band.events, base.events, base.progress, slim.events, fe.events, qa.events, be.events, pm.events"
     ],
     "gatingHooks": []
    },
@@ -764,34 +775,30 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mods/register.tsx hooks: prompt.submit{text=/\"^\"/}, session.start{cwd=/\"^\"/}, prompt.submit, session.start, command.run{command=?}, session.measure, turn.complete, session.compact, classic.PostCompact, session.end, classic.PostModelSwitch, classic.SessionStart{source=/\"^(resume|fork)$\"/}, tool.call{tool=Agent}, ui.focus{component=AbovePrompt}, ui.press{plugin=band}, turn.start, command.run{command=compact}, session.end{reason=clear}, ui.render{component=AbovePrompt}, session.start{cwd=/\".\"/}, command.run{command=?}, ui.press{plugin=band, element=progress}, ui.close{id=?}, ui.render{component=Pane, requestId=?}, command.run{command=?}, ui.press{plugin=band, element=log}, ui.render{component=Pane, requestId=?}",
-      "./mods/register.tsx gating hook without .catch: prompt.submit{text=/\"^\"/}",
+      "./mods/register.tsx hooks: session.start{cwd=/\"^\"/}, prompt.submit, session.start, command.run{command=?}, session.measure, turn.complete, session.compact, classic.PostCompact, session.end, classic.PostModelSwitch, classic.SessionStart{source=clear}, classic.SessionStart{source=/\"^(resume|fork)$\"/}, tool.call{tool=Agent}, ui.focus{component=AbovePrompt}, ui.press{plugin=band}, turn.start, command.run{command=compact}, session.compact{trigger=manual|plugin}, session.end{reason=clear}, ui.render{component=AbovePrompt}, session.start{cwd=/\".\"/}, command.run{command=?}, ui.press{plugin=band, element=progress}, ui.close{id=?}, ui.render{component=Pane, requestId=?}, command.run{command=?}, ui.press{plugin=band, element=log}, ui.render{component=Pane, requestId=?}",
+      "./mods/register.tsx hooks on session.compact, classic.PostCompact, classic.PostModelSwitch, classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./mods/register.tsx gating hook without .catch: prompt.submit",
       "./mods/register.tsx gating hook without .catch: command.run{command=?}",
       "./mods/register.tsx gating hook without .catch: session.compact",
       "./mods/register.tsx gating hook without .catch: classic.PostCompact",
       "./mods/register.tsx gating hook without .catch: classic.PostModelSwitch",
+      "./mods/register.tsx gating hook without .catch: classic.SessionStart{source=clear}",
       "./mods/register.tsx gating hook without .catch: classic.SessionStart{source=/\"^(resume|fork)$\"/}",
       "./mods/register.tsx gating hook without .catch: tool.call{tool=Agent}",
       "./mods/register.tsx gating hook without .catch: ui.focus{component=AbovePrompt}",
       "./mods/register.tsx gating hook without .catch: command.run{command=compact}",
+      "./mods/register.tsx gating hook without .catch: session.compact{trigger=manual|plugin}",
       "./mods/register.tsx gating hook without .catch: command.run{command=?}",
       "./mods/register.tsx gating hook without .catch: ui.close{id=?}",
       "./mods/register.tsx gating hook without .catch: command.run{command=?}",
-      "./mods/register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.clock.sleep, $.command.register (via registerCommands), $.command.run, $.env.get, $.fs.exists (via writeFileLine), $.fs.read (via version, writeFileLine), $.fs.write (via mark, writeFileLine), $.session.compact (via pressCompact), $.session.id, $.session.model, $.session.root, $.session.surfaces (via drawsPanes), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set (via learnTtl), $.ui.ask (via pressClear), $.ui.close (via toggle, togglePane), $.ui.open (via toggle, togglePane), $.ui.panes, $.ui.resolve, $.ui.toast",
+      "./mods/register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register (via registerCommands), $.command.run (via pickModel, pressClear, pressCompact, saveThenCompact), $.env.get, $.fs.exists (via writeFileLine), $.fs.read (via version, writeFileLine), $.fs.write (via writeFileLine), $.http.fetch (via fetchLimits), $.session.authorize (via fetchLimits), $.session.compact (via pressCompact), $.session.id, $.session.model (via sessionModel), $.session.root, $.session.surfaces (via drawsPanes), $.session.usage, $.state.get, $.state.set, $.store.get (via seed), $.store.set (via learnTtl), $.ui.ask (via pressClear, pressCompact), $.ui.close (via toggle, togglePane), $.ui.open (via toggle, togglePane), $.ui.panes, $.ui.resolve, $.ui.toast",
       "./mods/register.tsx env writes: nothing",
-      "./mods/register.tsx env reads: ANTHROPIC_API_KEY, BAND_COST, BAND_EVENT_LOG, BASE_AUTOSAVE, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, DOMAINE_LOG_DIR, HOME, TEMP, TMP, TMPDIR",
+      "./mods/register.tsx env reads: ANTHROPIC_API_KEY, BAND_COST, BAND_EVENT_LOG, BAND_USAGE_ENDPOINT, BASE_AUTOSAVE, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, DOMAINE_LOG_DIR, HOME",
       "./mods/register.tsx state writes: band.bandFocused, band.cache, band.events, band.info, band.model, band.modelPicker, band.paneShown, band.rateAlarmed, band.tick, band.usage",
-      "./mods/register.tsx state reads: band.bandFocused, band.cache, band.events, band.info, band.model, band.modelPicker, band.paneShown, band.rateAlarmed, band.tick, band.usage, base.events, base.progress, be.events, fe.events, fnd.events, fnd.progress, pm.events, qa.events, slim.events",
-      "./mods/register.tsx state of other plugins, not checked (run validate in a session with them enabled): base.events, base.progress, be.events, fe.events, fnd.events, fnd.progress, pm.events, qa.events, slim.events"
+      "./mods/register.tsx state reads: band.bandFocused, band.cache, band.events, band.info, band.model, band.modelPicker, band.paneShown, band.rateAlarmed, band.tick, band.usage, base.events, base.progress, be.events, fe.events, pm.events, qa.events, slim.events",
+      "./mods/register.tsx state of other plugins, not checked (run validate in a session with them enabled): base.events, base.progress, be.events, fe.events, pm.events, qa.events, slim.events"
      ],
      "gatingHooks": [
-      {
-       "module": "./mods/register.tsx",
-       "pattern": "prompt.submit",
-       "hook": "prompt.submit{text=/\"^\"/}",
-       "hasCatch": false
-      },
       {
        "module": "./mods/register.tsx",
        "pattern": "prompt.submit",
@@ -825,6 +832,12 @@
       {
        "module": "./mods/register.tsx",
        "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=clear}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "classic.SessionStart",
        "hook": "classic.SessionStart{source=/\"^(resume|fork)$\"/}",
        "hasCatch": false
       },
@@ -844,6 +857,12 @@
        "module": "./mods/register.tsx",
        "pattern": "command.run",
        "hook": "command.run{command=compact}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact{trigger=manual|plugin}",
        "hasCatch": false
       },
       {
@@ -870,5 +889,5 @@
    "advice": []
   }
  },
- "sourceHash": "a6e21a860507b6f1"
+ "sourceHash": "751bd579577cf24d"
 }

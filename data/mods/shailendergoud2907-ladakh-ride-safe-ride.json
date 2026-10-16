@@ -1,0 +1,8 @@
+{
+ "slug": "shailendergoud2907-ladakh-ride-safe-ride",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\nconst BLOCKED: [RegExp, string][] = [\n  [/\\brm\\s+(-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r)[a-z]*\\s+(\\/|~|\\$HOME)(\\s|\\/?$)/i, 'rm -rf on / or your home folder'],\n  [/\\bgit\\s+push\\b[^\\n;|&]*(--force\\b|\\s-f\\b)(?![^\\n;|&]*--force-with-lease)/i, 'a plain force-push (use --force-with-lease)'],\n  [/\\bgit\\s+reset\\s+--hard\\b/i, 'git reset --hard'],\n  [/\\bmkfs(\\.\\w+)?\\b|\\bdd\\s+[^\\n]*of=\\/dev\\//i, 'a disk-wiping command'],\n]\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    const hit = BLOCKED.find(([re]) => re.test(e.command))\n\n    return hit\n      ? { deny: `${$.plugin.name}: blocked ${hit[1]}. Run it yourself in a terminal if you really mean it.` }\n      : next(e)\n  }).catch(($, e, next) => (next.called ? next(e) : { deny: `${$.plugin.name}: its guard failed, so the command was held.` }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"safe-ride\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Blocks a few destructive shell commands (rm -rf on home or root, force-push, hard reset) before they run.\"\n}"
+ }
+}

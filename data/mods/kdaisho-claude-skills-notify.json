@@ -1,0 +1,8 @@
+{
+ "slug": "kdaisho-claude-skills-notify",
+ "files": {
+  "hooks/register.ts": "import type { EngineInterface, Register } from \"claude-code\";\n\nconst TITLE = \"Claude Code\";\n\n// The name the voice notification says: the /rename title, else the folder's name.\nasync function sessionName(\n  $: EngineInterface,\n  transcriptPath: string,\n  cwd: string,\n): Promise<string> {\n  const found = await $.process\n    .run([\"grep\", '\"type\":\"custom-title\"', transcriptPath])\n    .catch(() => undefined);\n  const last = found?.stdout.trim().split(\"\\n\").pop() ?? \"\";\n  try {\n    const title = (JSON.parse(last) as { customTitle?: unknown }).customTitle;\n    if (typeof title === \"string\" && title !== \"\") {\n      return title;\n    }\n  } catch {\n    // No /rename in this session.\n  }\n\n  return cwd.split(\"/\").filter(Boolean).pop() ?? \"Claude\";\n}\n\n// A banner when Claude finishes, beside the voice from ~/.claude/hooks/say-notify.sh. Claude Code raises its own banner\n// when it waits for an answer, through the same `preferredNotifChannel`.\nexport const register: Register = (on) => {\n  on(\"classic.Stop\", async ($, e, next) => {\n    const result = await next(e);\n    if (e.agent_id === undefined) {\n      const name = await sessionName($, e.transcript_path, e.cwd);\n      await $.ui.notify(`${name} is done`, { title: TITLE }).catch(() => undefined);\n    }\n\n    return result;\n  });\n};\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"notify\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Raises a desktop notification when Claude finishes a reply\"\n}"
+ }
+}

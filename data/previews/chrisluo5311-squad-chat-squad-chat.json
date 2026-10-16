@@ -1,6 +1,6 @@
 {
  "slug": "chrisluo5311-squad-chat-squad-chat",
- "generatedAt": "2026-10-10T14:44:39.789Z",
+ "generatedAt": "2026-10-16T14:16:06.656Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -64,11 +64,35 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "focus"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "habit"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tool"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "snippet"
     }
    },
    {
     "event": "ui.render",
+    "matcher": {
+     "component": "Pane"
+    }
+   },
+   {
+    "event": "ui.scroll",
     "matcher": {
      "component": "Pane"
     }
@@ -84,6 +108,9 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "session.measure"
@@ -110,8 +137,8 @@
   "commands": [
    {
     "name": "chat",
-    "description": "squad-chat: open the pane: chat, or a room such as Usage, Git, Agents or Snippets (notify, dnd, rooms: settings)",
-    "argumentHint": "[usage|git|agents|snippet|monitor|weather|news|stock|lofi | rooms <list> | set <room> <setting> <value> | store [words] | install|update|uninstall <room> | notify on|off | dnd on|off|auto]",
+    "description": "squad-chat: open the pane: chat, or a room such as Usage, Git, Agents, Focus or Snippets (notify, dnd, rooms: settings)",
+    "argumentHint": "[usage|git|agents|focus|habits|toolbox|clipboard|pet|snippet|monitor|weather|news|stock|lofi | band <room> | rooms <list> | set <room> <setting> <value> | store [words] | install|update|uninstall <room> | notify on|off | dnd on|off|auto]",
     "immediate": true
    },
    {
@@ -161,6 +188,24 @@
     "immediate": true
    },
    {
+    "name": "focus",
+    "description": "squad-chat: a Pomodoro timer in the Focus room, with a chime when focus or a break ends",
+    "argumentHint": "start | pause | skip | reset | <focus min> [break min]",
+    "immediate": true
+   },
+   {
+    "name": "habit",
+    "description": "squad-chat: daily habits in the Habits room, each with its streak",
+    "argumentHint": "add <name> [x<times a day>] | done <name> | undo <name> | remove <name> | rename <old> -> <new>",
+    "immediate": true
+   },
+   {
+    "name": "tool",
+    "description": "squad-chat: developer tools in the Toolbox room: Base64, URL, JWT, UUID, hashes, Unix times, cron, JSON …",
+    "argumentHint": "<tool> [input] | base64|url|html|jwt|uuid|ulid|hash|password|lorem|time|base|cron|json|escape|count|case",
+    "immediate": true
+   },
+   {
     "name": "snippet",
     "description": "squad-chat: save code you reuse (the selection, or Claude's last code block), then copy or share it from the Snippet room",
     "argumentHint": "add <name> | rename <old> -> <new> | delete <name> | copy <name> | share <name> [#room]",
@@ -188,25 +233,202 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 10,
-   "$.store.get": 5,
-   "$.store.set": 1,
+   "$.command.register": 13,
+   "$.store.get": 9,
+   "$.store.set": 6,
    "$.session.id": 1,
+   "$.store.keys": 1,
+   "$.clock.now": 67,
    "$.session.cwd": 3,
    "$.session.model": 1,
    "$.session.usage": 2,
-   "$.process.run": 19,
-   "$.clock.sleep": 176,
-   "$.ui.invalidate": 28,
-   "$.ui.status": 5,
-   "$.ui.open": 2,
+   "$.process.run": 21,
+   "$.clock.sleep": 266,
+   "$.ui.invalidate": 34,
+   "$.ui.status": 8,
+   "$.ui.open": 5,
    "$.ui.log": 8,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 6,
+   "$.ui.panes": 3
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row"
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "line",
+        "flexDirection": "row",
+        "gap": 1,
+        "flexGrow": 1,
+        "flexShrink": 1
+       },
+       "children": [
+        {
+         "type": "Box",
+         "props": {
+          "key": "room",
+          "flexShrink": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "key": "t",
+            "bold": true,
+            "color": "#D9A877"
+           },
+           "children": [
+            "⚒ Toolbox"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "sep",
+          "flexShrink": 0
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "key": "t",
+            "color": "subtle"
+           },
+           "children": [
+            "│"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "msg",
+          "flexDirection": "row",
+          "flexShrink": 1,
+          "flexGrow": 1,
+          "minWidth": 0,
+          "overflow": "hidden"
+         },
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "key": "p0",
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "t",
+              "color": "#D9A877",
+              "bold": true
+             },
+             "children": [
+              "16 tools"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "p1",
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "t",
+              "color": "subtle"
+             },
+             "children": [
+              " · "
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "p2",
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "key": "t",
+              "color": "subtle"
+             },
+             "children": [
+              "try UUID · Hash · Time · JWT"
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Box",
+       "props": {
+        "key": "open-box",
+        "flexDirection": "row",
+        "columnGap": 1,
+        "flexShrink": 0,
+        "marginLeft": 1
+       },
+       "children": [
+        {
+         "type": "Button",
+         "props": {
+          "key": "band-prev",
+          "plain": true,
+          "dimColor": true,
+          "label": "‹",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "band-next",
+          "plain": true,
+          "dimColor": true,
+          "label": "›",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "open",
+          "label": "Open",
+          "variant": "primary",
+          "onPress": "[fn]"
+         },
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
    },
    "Pane": {
     "squad-chat": {
@@ -273,7 +495,7 @@
           "props": {
            "key": "sys-usage",
            "plain": true,
-           "label": " ◔ Usage",
+           "label": " ◔",
            "dimColor": true,
            "onPress": "[fn]"
           },
@@ -284,7 +506,7 @@
           "props": {
            "key": "sys-git",
            "plain": true,
-           "label": " ⎇ Git",
+           "label": " ⎇",
            "dimColor": true,
            "onPress": "[fn]"
           },
@@ -295,7 +517,52 @@
           "props": {
            "key": "sys-agents",
            "plain": true,
-           "label": " ⟡ Agents",
+           "label": " ⟡",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "sys-focus",
+           "plain": true,
+           "label": " ◷",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "sys-habits",
+           "plain": true,
+           "label": " ✓",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "sys-toolbox",
+           "bold": true,
+           "color": "#1F1E1D",
+           "backgroundColor": "#D9A877"
+          },
+          "children": [
+           " ⚒ Toolbox "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "sys-pet",
+           "plain": true,
+           "label": " ✿",
            "dimColor": true,
            "onPress": "[fn]"
           },
@@ -312,28 +579,26 @@
           ]
          },
          {
-          "type": "Text",
+          "type": "Button",
           "props": {
            "key": "tab-chat",
-           "bold": true,
-           "color": "#1F1E1D",
-           "backgroundColor": "#D97757"
+           "plain": true,
+           "dimColor": true,
+           "label": " # chat",
+           "onPress": "[fn]"
           },
-          "children": [
-           " # chat "
-          ]
+          "children": []
          }
         ]
        },
        {
         "type": "Box",
         "props": {
-         "key": "setup",
+         "key": "tb-menu",
          "flexDirection": "column",
          "borderStyle": "round",
          "borderColor": "inactive",
          "paddingX": 1,
-         "marginTop": 1,
          "flexGrow": 0,
          "flexShrink": 0
         },
@@ -352,11 +617,437 @@
             "props": {
              "key": "title",
              "bold": true,
-             "color": "#E06C75",
+             "color": "#D9A877",
              "wrap": "truncate-end"
             },
             "children": [
-             "CAN'T START"
+             "TOOLS"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "key": "meta",
+             "color": "subtle",
+             "wrap": "truncate-start"
+            },
+            "children": [
+             "16"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "g-Encode",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "l",
+             "width": 9,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "t",
+               "color": "subtle"
+              },
+              "children": [
+               "ENCODE"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "chips",
+             "flexDirection": "row",
+             "flexWrap": "wrap",
+             "columnGap": 1,
+             "flexGrow": 1,
+             "flexShrink": 1,
+             "minWidth": 0
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-base64",
+               "label": "Base64",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-url",
+               "label": "URL",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-html",
+               "label": "HTML",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-jwt",
+               "label": "JWT",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "g-Generate",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "l",
+             "width": 9,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "t",
+               "color": "subtle"
+              },
+              "children": [
+               "GENERATE"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "chips",
+             "flexDirection": "row",
+             "flexWrap": "wrap",
+             "columnGap": 1,
+             "flexGrow": 1,
+             "flexShrink": 1,
+             "minWidth": 0
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-uuid",
+               "label": "UUID",
+               "variant": "primary",
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-ulid",
+               "label": "ULID",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-hash",
+               "label": "Hash",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-password",
+               "label": "Password",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-lorem",
+               "label": "Lorem",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "g-Convert",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "l",
+             "width": 9,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "t",
+               "color": "subtle"
+              },
+              "children": [
+               "CONVERT"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "chips",
+             "flexDirection": "row",
+             "flexWrap": "wrap",
+             "columnGap": 1,
+             "flexGrow": 1,
+             "flexShrink": 1,
+             "minWidth": 0
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-time",
+               "label": "Time",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-base",
+               "label": "Base",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-cron",
+               "label": "Cron",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-json",
+               "label": "JSON",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "g-Text",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "l",
+             "width": 9,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "t",
+               "color": "subtle"
+              },
+              "children": [
+               "TEXT"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "chips",
+             "flexDirection": "row",
+             "flexWrap": "wrap",
+             "columnGap": 1,
+             "flexGrow": 1,
+             "flexShrink": 1,
+             "minWidth": 0
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-escape",
+               "label": "Escape",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-count",
+               "label": "Count",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-case",
+               "label": "Case",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "gap-UUID",
+         "height": 1,
+         "flexShrink": 0
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "tb-tool",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 1,
+         "flexGrow": 0,
+         "flexShrink": 0
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "key": "head",
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "key": "title",
+             "bold": true,
+             "color": "#D9A877",
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "UUID"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "meta",
+             "flexDirection": "row",
+             "alignItems": "center",
+             "columnGap": 1,
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tool-again",
+               "plain": true,
+               "label": "↻ make",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
             ]
            }
           ]
@@ -364,11 +1055,91 @@
          {
           "type": "Text",
           "props": {
-           "key": "why",
+           "key": "hint",
+           "color": "subtle",
            "wrap": "wrap"
           },
           "children": [
-           "could not run `node --version`"
+           "5 · v7 · upper · nodash"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "spacer",
+         "flexGrow": 1
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "compose-box",
+         "flexDirection": "row",
+         "alignItems": "center",
+         "marginTop": 1,
+         "flexShrink": 0,
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "key": "prompt",
+           "color": "#D97757",
+           "bold": true
+          },
+          "children": [
+           "› "
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "field",
+           "flexGrow": 1,
+           "minWidth": 0
+          },
+          "children": [
+           {
+            "type": "Input",
+            "props": {
+             "key": "compose",
+             "placeholder": "text for the tool, a tool's name, or /tool hash hello",
+             "submitLabel": "run",
+             "value": "",
+             "autoFocus": true,
+             "onInput": "[fn]",
+             "onSubmit": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "hints",
+         "flexDirection": "row",
+         "gap": 1,
+         "flexShrink": 0
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "key": "t",
+           "color": "subtle",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "⧉ copies · kept in memory, never shared"
           ]
          }
         ]
@@ -382,9 +1153,10 @@
   "script": [
    "$.process.run(node --version) → exit 0",
    "$.process.run(git status --porcelain=v2 --branch) → exit 0",
+   "$.process.run(git log --branches --remotes --tags --date-order -n 10 --format=%H%x1f%P%x1f%D%x…) → exit 0",
+   "session.start",
    "$.process.run(gh repo view --json nameWithOwner,url) → exit 0",
    "$.process.run(gh api user --jq .login) → exit 0",
-   "session.start",
    "$.process.run(gh pr view --json number,title,state,isDraft,url,author,headRefName,reviewDecisi…) → exit 0",
    "$.process.run(gh pr list --state open --limit 8 --json number,title,state,isDraft,url,author,h…) → exit 0",
    "$.process.run(gh pr list --state open --search review-requested:@me --json number) → exit 0",
@@ -399,9 +1171,10 @@
    "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
    "$.process.run(git status --porcelain=v2 --branch) → exit 0",
+   "$.process.run(git log --branches --remotes --tags --date-order -n 10 --format=%H%x1f%P%x1f%D%x…) → exit 0",
+   "tool.call Bash rm -rf build && git push --force origin main",
    "$.process.run(gh repo view --json nameWithOwner,url) → exit 0",
    "$.process.run(gh api user --jq .login) → exit 0",
-   "tool.call Bash rm -rf build && git push --force origin main",
    "$.process.run(gh pr view --json number,title,state,isDraft,url,author,headRefName,reviewDecisi…) → exit 0",
    "$.process.run(gh pr list --state open --limit 8 --json number,title,state,isDraft,url,author,h…) → exit 0",
    "$.process.run(gh pr list --state open --search review-requested:@me --json number) → exit 0",
@@ -421,6 +1194,12 @@
    "/chat-name → ",
    "/chat-logout → ",
    "/lofi → ",
+   "$.ui.open(squad-chat)",
+   "/focus → ",
+   "$.ui.open(squad-chat)",
+   "/habit → ",
+   "$.ui.open(squad-chat)",
+   "/tool → ",
    "/snippet → "
   ],
   "console": [],
@@ -441,11 +1220,16 @@
    "command.run{command=chat-name}",
    "command.run{command=chat-logout}",
    "command.run{command=lofi}",
+   "command.run{command=focus}",
+   "command.run{command=habit}",
+   "command.run{command=tool}",
    "command.run{command=snippet}",
    "ui.render{component=Pane}",
+   "ui.scroll{component=Pane}",
    "ui.render{component=AbovePrompt}",
    "turn.start",
    "turn.complete",
+   "turn.step",
    "session.measure",
    "tool.call",
    "agent.spawn",
@@ -455,11 +1239,19 @@
   ],
   "calls": [
    "$.agent.list (via tick)",
-   "$.clock.now (via runBridge)",
+   "$.audio.play (via focusEnded)",
+   "$.clock.after (via armJoinIdle)",
+   "$.clock.now (via changeFocus",
+   "restoreRooms",
+   "roomInput",
+   "roomsTick",
+   "runBridge)",
    "$.clock.sleep",
    "$.command.register",
    "$.http.fetch (via callBridge)",
    "$.process.run (via nodeProblem",
+   "readClipOnce",
+   "readClipboard",
    "refreshGit",
    "shareSources)",
    "$.process.spawn (via runBridge)",
@@ -468,20 +1260,27 @@
    "$.session.messages (via shareSources)",
    "$.session.model",
    "$.session.usage (via refreshUsage)",
+   "$.store.delete (via restoreSessionUsage",
+   "saveFocus)",
    "$.store.get",
+   "$.store.keys (via restoreSessionUsage)",
    "$.store.set",
    "$.ui.copy (via copySnippet",
    "copyText)",
-   "$.ui.focus (via keepFocusAcrossRoomChange)",
+   "$.ui.focus (via focusAfterDraw",
+   "keepFocusAcrossRoomChange)",
    "$.ui.invalidate",
    "$.ui.log",
-   "$.ui.open (via keepFocusAcrossRoomChange",
+   "$.ui.open (via focusAfterDraw",
+   "keepFocusAcrossRoomChange",
    "openPane)",
    "$.ui.panes",
    "$.ui.resolve",
    "$.ui.selection (via shareSources)",
-   "$.ui.status (via afterChange)",
+   "$.ui.status (via afterChange",
+   "roomsTick)",
    "$.ui.toast (via afterChange",
+   "focusEnded",
    "openPane",
    "quietChanged",
    "refreshGit)"
@@ -508,7 +1307,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./squad-chat.mjs hooks: session.start, command.run{command=chat}, command.run{command=say}, command.run{command=room}, command.run{command=who}, command.run{command=chat-login}, command.run{command=chat-share}, command.run{command=chat-name}, command.run{command=chat-logout}, command.run{command=lofi}, command.run{command=snippet}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, turn.start, turn.complete, session.measure, tool.call, agent.spawn, ui.close, session.append{door=command}, session.end",
+      "./squad-chat.mjs hooks: session.start, command.run{command=chat}, command.run{command=say}, command.run{command=room}, command.run{command=who}, command.run{command=chat-login}, command.run{command=chat-share}, command.run{command=chat-name}, command.run{command=chat-logout}, command.run{command=lofi}, command.run{command=focus}, command.run{command=habit}, command.run{command=tool}, command.run{command=snippet}, ui.render{component=Pane}, ui.scroll{component=Pane}, ui.render{component=AbovePrompt}, turn.start, turn.complete, turn.step, session.measure, tool.call, agent.spawn, ui.close, session.append{door=command}, session.end",
       "./squad-chat.mjs gating hook without .catch: command.run{command=chat}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=say}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=room}",
@@ -518,12 +1317,16 @@
       "./squad-chat.mjs gating hook without .catch: command.run{command=chat-name}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=chat-logout}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=lofi}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=focus}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=habit}",
+      "./squad-chat.mjs gating hook without .catch: command.run{command=tool}",
       "./squad-chat.mjs gating hook without .catch: command.run{command=snippet}",
+      "./squad-chat.mjs gating hook without .catch: ui.scroll{component=Pane}",
       "./squad-chat.mjs gating hook with .catch: tool.call",
       "./squad-chat.mjs gating hook with .catch: agent.spawn",
       "./squad-chat.mjs gating hook without .catch: ui.close",
       "./squad-chat.mjs gating hook with .catch: session.append{door=command}",
-      "./squad-chat.mjs calls: $.agent.list (via tick), $.clock.now (via runBridge), $.clock.sleep, $.command.register, $.http.fetch (via callBridge), $.process.run (via nodeProblem, refreshGit, shareSources), $.process.spawn (via runBridge), $.session.cwd, $.session.id, $.session.messages (via shareSources), $.session.model, $.session.usage (via refreshUsage), $.store.get, $.store.set, $.ui.copy (via copySnippet, copyText), $.ui.focus (via keepFocusAcrossRoomChange), $.ui.invalidate, $.ui.log, $.ui.open (via keepFocusAcrossRoomChange, openPane), $.ui.panes, $.ui.resolve, $.ui.selection (via shareSources), $.ui.status (via afterChange), $.ui.toast (via afterChange, openPane, quietChanged, refreshGit)"
+      "./squad-chat.mjs calls: $.agent.list (via tick), $.audio.play (via focusEnded), $.clock.after (via armJoinIdle), $.clock.now (via changeFocus, restoreRooms, roomInput, roomsTick, runBridge), $.clock.sleep, $.command.register, $.http.fetch (via callBridge), $.process.run (via nodeProblem, readClipOnce, readClipboard, refreshGit, shareSources), $.process.spawn (via runBridge), $.session.cwd, $.session.id, $.session.messages (via shareSources), $.session.model, $.session.usage (via refreshUsage), $.store.delete (via restoreSessionUsage, saveFocus), $.store.get, $.store.keys (via restoreSessionUsage), $.store.set, $.ui.copy (via copySnippet, copyText), $.ui.focus (via focusAfterDraw, keepFocusAcrossRoomChange), $.ui.invalidate, $.ui.log, $.ui.open (via focusAfterDraw, keepFocusAcrossRoomChange, openPane), $.ui.panes, $.ui.resolve, $.ui.selection (via shareSources), $.ui.status (via afterChange, roomsTick), $.ui.toast (via afterChange, focusEnded, openPane, quietChanged, refreshGit)"
      ],
      "gatingHooks": [
       {
@@ -583,7 +1386,31 @@
       {
        "module": "./squad-chat.mjs",
        "pattern": "command.run",
+       "hook": "command.run{command=focus}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=habit}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
+       "hook": "command.run{command=tool}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "command.run",
        "hook": "command.run{command=snippet}",
+       "hasCatch": false
+      },
+      {
+       "module": "./squad-chat.mjs",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{component=Pane}",
        "hasCatch": false
       },
       {
@@ -616,5 +1443,5 @@
    "advice": []
   }
  },
- "sourceHash": "33a93916a9c054b0"
+ "sourceHash": "96130b6ccfe37ed"
 }

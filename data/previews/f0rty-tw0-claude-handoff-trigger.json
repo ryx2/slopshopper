@@ -1,6 +1,6 @@
 {
  "slug": "f0rty-tw0-claude-handoff-trigger",
- "generatedAt": "2026-10-08T15:54:02.637Z",
+ "generatedAt": "2026-10-16T14:19:34.903Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,9 +17,30 @@
     "event": "prompt.submit"
    },
    {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.send"
+   },
+   {
     "event": "turn.complete",
     "matcher": {
      "reason": "answer"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "wait": false
+    }
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "wait": true
     }
    }
   ],
@@ -33,7 +54,7 @@
   "apiCalls": {
    "$.clock.now": 3,
    "$.session.id": 1,
-   "$.session.usage": 2,
+   "$.session.usage": 11,
    "$.clock.after": 1
   },
   "timers": [
@@ -70,18 +91,34 @@
    "turn.start",
    "turn.complete",
    "prompt.submit",
-   "turn.complete{reason=answer}"
+   "session.compact",
+   "session.send",
+   "turn.complete{reason=answer}",
+   "tool.call",
+   "prompt.submit{wait=false|true}"
   ],
   "calls": [
+   "$.agent.list (via check",
+   "runHandoff)",
    "$.clock.after",
    "$.clock.now",
-   "$.command.run",
+   "$.command.run (via clearAndContinue",
+   "continueFresh",
+   "continueIdle",
+   "fire",
+   "runHandoff)",
    "$.env.get (via expandHome)",
    "$.fs.stat (via freshHandoff)",
-   "$.prompt.submit (via continueFresh",
+   "$.prompt.submit (via clearAndContinue",
+   "continueFresh",
+   "continueIdle",
    "fire)",
    "$.session.id",
-   "$.session.usage",
+   "$.session.send (via check)",
+   "$.session.usage (via percentOfLimit",
+   "settleTurn",
+   "veto)",
+   "$.tool.call (via stop)",
    "$.ui.toast"
   ],
   "stateReads": [],
@@ -115,9 +152,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.end, turn.start, turn.complete, prompt.submit, turn.complete{reason=answer}",
+      "./register.ts hooks: session.end, turn.start, turn.complete, prompt.submit, session.compact, session.send, turn.complete{reason=answer}, tool.call, prompt.submit{wait=false|true}",
+      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts gating hook without .catch: prompt.submit",
-      "./register.ts calls: $.clock.after, $.clock.now, $.command.run, $.env.get (via expandHome), $.fs.stat (via freshHandoff), $.prompt.submit (via continueFresh, fire), $.session.id, $.session.usage, $.ui.toast",
+      "./register.ts gating hook without .catch: session.compact",
+      "./register.ts gating hook without .catch: session.send",
+      "./register.ts gating hook without .catch: tool.call",
+      "./register.ts gating hook without .catch: prompt.submit{wait=false|true}",
+      "./register.ts calls: $.agent.list (via check, runHandoff), $.clock.after, $.clock.now, $.command.run (via clearAndContinue, continueFresh, continueIdle, fire, runHandoff), $.env.get (via expandHome), $.fs.stat (via freshHandoff), $.prompt.submit (via clearAndContinue, continueFresh, continueIdle, fire), $.session.id, $.session.send (via check), $.session.usage (via percentOfLimit, settleTurn, veto), $.tool.call (via stop), $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: HOME, USERPROFILE"
      ],
@@ -127,11 +169,36 @@
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.send",
+       "hook": "session.send",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{wait=false|true}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "76fd4f7895fa39ce"
+ "sourceHash": "dfb97df18766745b"
 }

@@ -1,0 +1,8 @@
+{
+ "slug": "robgruhl-claude-mod-learnings-e2-order",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Two hooks on tool.call with different matchers that both match a Bash call.\n// Each appends its name on the way in and on the way out, and records next.origin.\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    const r = await next({ ...e, command: `${e.command} >first` })\n    return { result: `${String((r as { result?: unknown }).result)} <first(origin=${next.origin.plugin}/${next.origin.tier})` } as never\n  })\n  on('tool.call', { tool: ['Bash', 'Read'] }, async ($, e, next) => {\n    const r = await next({ ...e, command: `${e.command} >second` })\n    return { result: `${String((r as { result?: unknown }).result)} <second` } as never\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"e2-order\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Hook order within a module and across tiers, and next.origin\",\n  \"author\": {\n    \"name\": \"Rob Gruhl\"\n  }\n}"
+ }
+}

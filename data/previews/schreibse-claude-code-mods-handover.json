@@ -1,6 +1,6 @@
 {
  "slug": "schreibse-claude-code-mods-handover",
- "generatedAt": "2026-10-10T14:44:35.353Z",
+ "generatedAt": "2026-10-16T14:16:36.613Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,6 +8,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "Write"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Edit"
     }
    },
    {
@@ -55,8 +61,8 @@
    },
    {
     "name": "handover",
-    "description": "List this repo's handovers; /handover N puts one in the prompt, /handover drop N removes it",
-    "output": "No handover for this repo."
+    "description": "List the handovers for this repo (or folder, outside a repo); /handover N puts one in the prompt, /handover drop N removes it",
+    "output": "No handover for this repo or folder."
    }
   ],
   "tools": [],
@@ -70,8 +76,9 @@
    "$.clock.now": 3,
    "$.store.keys": 4,
    "$.session.root": 2,
-   "$.state.get": 4,
-   "$.state.set": 1,
+   "$.process.run": 2,
+   "$.state.get": 7,
+   "$.state.set": 4,
    "$.env.get": 2,
    "$.session.id": 3,
    "$.store.get": 1
@@ -84,6 +91,7 @@
   },
   "script": [
    "session.start",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -95,7 +103,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/handover-copy → No handover sentence yet.",
-   "/handover → No handover for this repo."
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "/handover → No handover for this repo or folder."
   ],
   "console": [],
   "warnings": []
@@ -106,6 +115,7 @@
   "warnings": [],
   "hooks": [
    "tool.call{tool=Write}",
+   "tool.call{tool=Edit}",
    "command.run{command=clear}",
    "classic.SessionStart{source=startup}",
    "prompt.submit",
@@ -119,10 +129,11 @@
    "$.clock.now",
    "$.command.register",
    "$.env.get (via home)",
-   "$.process.run (via remove)",
+   "$.process.run (via remove",
+   "repoOf)",
    "$.prompt.suggest (via suggest)",
    "$.session.id",
-   "$.session.root",
+   "$.session.root (via place)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via remove)",
@@ -134,10 +145,12 @@
   ],
   "stateReads": [
    "handover.choices",
+   "handover.lastEdit",
    "handover.pending"
   ],
   "stateWrites": [
    "handover.choices",
+   "handover.lastEdit",
    "handover.pending"
   ],
   "envReads": [
@@ -154,7 +167,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: handover.pending, handover.choices"
+     "types ./types/index.d.ts declares state: handover.pending, handover.choices, handover.lastEdit"
     ],
     "gatingHooks": []
    },
@@ -165,24 +178,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.call{tool=Write}, command.run{command=clear}, classic.SessionStart{source=startup}, prompt.submit, session.start, command.run{command=handover-copy}, command.run{command=handover}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: tool.call{tool=Write}, tool.call{tool=Edit}, command.run{command=clear}, classic.SessionStart{source=startup}, prompt.submit, session.start, command.run{command=handover-copy}, command.run{command=handover}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook without .catch: tool.call{tool=Write}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Edit}",
       "./register.tsx gating hook without .catch: command.run{command=clear}",
       "./register.tsx gating hook without .catch: classic.SessionStart{source=startup}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: command.run{command=handover-copy}",
       "./register.tsx gating hook without .catch: command.run{command=handover}",
-      "./register.tsx calls: $.clock.every (via suggest), $.clock.now, $.command.register, $.env.get (via home), $.process.run (via remove), $.prompt.suggest (via suggest), $.session.id, $.session.root, $.state.get, $.state.set, $.store.delete (via remove), $.store.get, $.store.keys (via entries), $.store.set, $.ui.copy, $.ui.resolve",
+      "./register.tsx calls: $.clock.every (via suggest), $.clock.now, $.command.register, $.env.get (via home), $.process.run (via remove, repoOf), $.prompt.suggest (via suggest), $.session.id, $.session.root (via place), $.state.get, $.state.set, $.store.delete (via remove), $.store.get, $.store.keys (via entries), $.store.set, $.ui.copy, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: handover.choices, handover.pending",
-      "./register.tsx state reads: handover.choices, handover.pending"
+      "./register.tsx state writes: handover.choices, handover.lastEdit, handover.pending",
+      "./register.tsx state reads: handover.choices, handover.lastEdit, handover.pending"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=Write}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit}",
        "hasCatch": false
       },
       {
@@ -221,5 +242,5 @@
    "advice": []
   }
  },
- "sourceHash": "a05b3006eb2242b9"
+ "sourceHash": "118766561e6da051"
 }

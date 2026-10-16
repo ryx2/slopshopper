@@ -1,6 +1,6 @@
 {
  "slug": "wake-purdex-purdex",
- "generatedAt": "2026-10-10T14:44:53.608Z",
+ "generatedAt": "2026-10-16T14:18:19.869Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -121,6 +121,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "team"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "lead"
     }
    },
@@ -136,13 +142,19 @@
     "name": "relay",
     "description": "Purdex 自我接力：now 立刻接力（不帶參數＝now）、off 暫停、on 恢復、status 查看",
     "argumentHint": "now|off|on|status（不帶＝now）",
-    "output": "pdx relay begin 失敗：(無訊息)"
+    "output": "無法確認是使用者下的指令（daemon 沒有回應），沒有接力；請再打一次 /relay"
+   },
+   {
+    "name": "team",
+    "description": "Purdex team：不帶＝成為 lead／看 team；spawn、adopt、release、kill",
+    "argumentHint": "[名稱或說明] | spawn <任務> [--model m] [--effort e] | adopt <ref> | release <ref> | kill <ref>",
+    "output": "pdx team 的回應無法判讀，沒有申請 lead；稍後再試"
    },
    {
     "name": "lead",
-    "description": "Purdex：請這個 session 申請成為 lead",
-    "argumentHint": "[名稱／短名／上限等補充]",
-    "output": "pdx team 的回應無法判讀，沒有申請 lead；稍後再試"
+    "description": "Purdex：請這個 session 申請成為 lead（將移除，請改用 /team）",
+    "argumentHint": "[名稱／短名等補充]",
+    "output": "pdx team 的回應無法判讀，沒有申請 lead；稍後再試\n（/lead 將移除，請改用 /team）"
    }
   ],
   "tools": [],
@@ -152,14 +164,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 1,
-   "$.fs.read": 2,
-   "$.command.register": 2,
+   "$.env.get": 3,
+   "$.fs.read": 6,
+   "$.command.register": 3,
    "$.clock.after": 1,
+   "$.clock.sleep": 8,
+   "$.process.run": 4,
    "$.session.usage": 1,
-   "$.session.id": 2,
-   "$.process.run": 2,
-   "$.clock.now": 1
+   "$.session.id": 5,
+   "$.clock.now": 2
   },
   "timers": [
    {
@@ -182,15 +195,18 @@
    "tool.call Edit",
    "tool.call Write",
    "tool.call Write",
+   "$.process.run(pdx gate would-wait --auto --json -- bun test) → exit 0",
    "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.process.run(pdx relay begin --self --session preview-session --used 49 --window 200000) → exit 0",
-   "/relay → pdx relay begin 失敗：(無訊息)",
+   "$.process.run(pdx relay person --session preview-session --command relay) → exit 0",
+   "/relay → 無法確認是使用者下的指令（daemon 沒有回應），沒有接力；請再打一次 /relay",
    "$.process.run(pdx team --json) → exit 0",
-   "/lead → pdx team 的回應無法判讀，沒有申請 lead；稍後再試"
+   "/team → pdx team 的回應無法判讀，沒有申請 lead；稍後再試",
+   "$.process.run(pdx team --json) → exit 0",
+   "/lead → pdx team 的回應無法判讀，沒有申請 lead；稍後再試\n（/lead 將移除，請改用 /team）"
   ],
   "console": [],
   "warnings": []
@@ -225,17 +241,20 @@
    "tool.check{tool=Edit}",
    "prompt.submit",
    "session.compact",
+   "command.run{command=team}",
    "command.run{command=lead}",
    "command.run{command=relay}"
   ],
   "calls": [
    "$.agent.list (via beat)",
-   "$.clock.after (via helloLater",
+   "$.clock.after (via armIdle",
+   "helloLater",
    "later",
    "postWithDeadline",
    "pqStart",
    "readTeam",
    "schedule",
+   "waitLoop",
    "wbAsk",
    "wbOrphaned",
    "wbRequest",
@@ -246,7 +265,8 @@
    "$.clock.sleep (via bounded",
    "pqLoop",
    "pqRun",
-   "settle)",
+   "settle",
+   "withDeadline)",
    "$.command.register",
    "$.command.run (via startClear)",
    "$.env.get",
@@ -257,33 +277,43 @@
    "$.model.complete (via wbRun)",
    "$.model.fork (via wbRun)",
    "$.process.run (via ask",
+   "askWouldWait",
+   "askWouldWaitAll",
    "gitOne",
-   "leaseCall",
-   "releaseLease",
    "run",
    "sleepUntil)",
-   "$.prompt.submit (via pqRun",
+   "$.prompt.fill (via clearIfOurs",
+   "pqClearIf",
+   "pqFill)",
+   "$.prompt.read (via clearIfOurs",
+   "pqClearIf",
+   "pqFill",
+   "pqRead)",
+   "$.prompt.submit (via pqSubmit",
    "submit)",
    "$.session.id",
    "$.session.surfaces",
-   "$.session.usage (via claim",
+   "$.session.usage (via adoptWaitingLater",
+   "approveOpenCard",
+   "claim",
+   "halfLater",
+   "idleFire",
    "maybeAsk",
    "maybeBegin",
    "onSeedTurnDone",
+   "reaskBegin",
    "recheckMember",
    "recover",
    "relayNow)",
    "$.session.version (via startReporter)",
-   "$.turn.abort (via pqRun)",
-   "$.ui.invalidate (via forgetTeam",
-   "readTeam)",
-   "$.ui.log (via log)",
-   "$.ui.status",
-   "$.ui.toast"
+   "$.tool.check (via verdict)",
+   "$.turn.… [+112 chars]"
   ],
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "PDX_RELAY_IDLE_MINUTES",
+   "PDX_RELAY_IDLE_THRESHOLD",
    "PDX_RELAY_THRESHOLD"
   ],
   "raw": {
@@ -305,8 +335,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: tool.call{tool=AskUserQuestion}, session.start{isInteractive=true}, turn.start{turnId=/\"^\"/}, turn.complete{turnId=/\"^\"/}, classic.SessionStart{source=clear|resume}, session.compact{trigger=/\"^\"/}, tool.call, tool.check, agent.spawn, session.measure, session.end, classic.Stop, ui.render{component=ToolUse}, ui.render{component=SessionMode}, command.run{command=workbook}, tool.call{tool=Bash}, session.receive, session.start, turn.start, turn.complete, classic.SessionStart, tool.check{tool=Write}, tool.check{tool=Edit}, prompt.submit, session.compact, command.run{command=lead}, command.run{command=relay}",
+      "./register.js hooks: tool.call{tool=AskUserQuestion}, session.start{isInteractive=true}, turn.start{turnId=/\"^\"/}, turn.complete{turnId=/\"^\"/}, classic.SessionStart{source=clear|resume}, session.compact{trigger=/\"^\"/}, tool.call, tool.check, agent.spawn, session.measure, session.end, classic.Stop, ui.render{component=ToolUse}, ui.render{component=SessionMode}, command.run{command=workbook}, tool.call{tool=Bash}, session.receive, session.start, turn.start, turn.complete, classic.SessionStart, tool.check{tool=Write}, tool.check{tool=Edit}, prompt.submit, session.compact, command.run{command=team}, command.run{command=lead}, command.run{command=relay}",
+      "./register.js hooks on classic.SessionStart, session.compact, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.js answers its own command: command.run{command=workbook}",
+      "./register.js answers its own command: command.run{command=team}",
       "./register.js answers its own command: command.run{command=lead}",
       "./register.js answers its own command: command.run{command=relay}",
       "./register.js gating hook with .catch: tool.call{tool=AskUserQuestion}",
@@ -323,9 +355,9 @@
       "./register.js gating hook with .catch: tool.check{tool=Edit}",
       "./register.js gating hook with .catch: prompt.submit",
       "./register.js gating hook without .catch: session.compact",
-      "./register.js calls: $.agent.list (via beat), $.clock.after (via helloLater, later, postWithDeadline, pqStart, readTeam, schedule, wbAsk, wbOrphaned, wbRequest, wbRun), $.clock.every (via startReporter, startTeam), $.clock.now, $.clock.sleep (via bounded, pqLoop, pqRun, settle), $.command.register, $.command.run (via startClear), $.env.get, $.fs.read, $.http.fetch (via post, readTeam, wbRequest), $.model.complete (via wbRun), $.model.fork (via wbRun), $.process.run (via ask, gitOne, leaseCall, releaseLease, run, sleepUntil), $.prompt.submit (via pqRun, submit), $.session.id, $.session.surfaces, $.session.usage (via claim, maybeAsk, maybeBegin, onSeedTurnDone, recheckMember, recover, relayNow), $.session.version (via startReporter), $.turn.abort (via pqRun), $.ui.invalidate (via forgetTeam, readTeam), $.ui.log (via log), $.ui.status, $.ui.toast",
+      "./register.js calls: $.agent.list (via beat), $.clock.after (via armIdle, helloLater, later, postWithDeadline, pqStart, readTeam, schedule, waitLoop, wbAsk, wbOrphaned, wbRequest, wbRun), $.clock.every (via startReporter, startTeam), $.clock.now, $.clock.sleep (via bounded, pqLoop, pqRun, settle, withDeadline), $.command.register, $.command.run (via startClear), $.env.get, $.fs.read, $.http.fetch (via post, readTeam, wbRequest), $.model.complete (via wbRun), $.model.fork (via wbRun), $.process.run (via ask, askWouldWait, askWouldWaitAll, gitOne, run, sleepUntil), $.prompt.fill (via clearIfOurs, pqClearIf, pqFill), $.prompt.read (via clearIfOurs, pqClearIf, pqFill, pqRead), $.prompt.submit (via pqSubmit, submit), $.session.id, $.session.surfaces, $.session.usage (via adoptWaitingLater, approveOpenCard, claim, halfLater, idleFire, maybeAsk, maybeBegin, onSeedTurnDone, reaskBegin, recheckMember, recover, relayNow), $.session.version (via startReporter), $.tool.check (via verdict), $.turn.… [+112 chars]",
       "./register.js env writes: nothing",
-      "./register.js env reads: PDX_RELAY_THRESHOLD"
+      "./register.js env reads: PDX_RELAY_IDLE_MINUTES, PDX_RELAY_IDLE_THRESHOLD, PDX_RELAY_THRESHOLD"
      ],
      "gatingHooks": [
       {
@@ -418,5 +450,5 @@
    "advice": []
   }
  },
- "sourceHash": "7447dd96f6819091"
+ "sourceHash": "496c33e4eb159584"
 }

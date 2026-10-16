@@ -1,6 +1,6 @@
 {
  "slug": "jamubc-toolbox-redline",
- "generatedAt": "2026-10-06T05:27:55.399Z",
+ "generatedAt": "2026-10-16T14:16:49.434Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,24 @@
    },
    {
     "event": "session.end"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.check"
+   },
+   {
+    "event": "tool.call"
    },
    {
     "event": "command.run",
@@ -39,8 +57,9 @@
   "commands": [
    {
     "name": "redline",
-    "description": "Show your Claude sessions; /redline <0-25> previews a count, /redline live follows again",
-    "output": "Redline opened."
+    "description": "The dash: your plan windows, the limiter, and every session",
+    "argumentHint": "[shift|lift|auto]",
+    "immediate": true
    }
   ],
   "tools": [],
@@ -55,15 +74,21 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.ui.status": 1,
+   "$.clock.now": 11,
    "$.command.register": 1,
-   "$.state.get": 36,
-   "$.state.set": 7,
+   "$.session.model": 1,
+   "$.session.usage": 1,
    "$.ui.panes": 1,
-   "$.clock.every": 2,
+   "$.session.id": 3,
+   "$.session.cwd": 3,
+   "$.store.set": 3,
+   "$.clock.every": 3,
    "$.process.run": 2,
-   "$.ui.open": 1,
-   "$.ui.resolve": 2
+   "$.store.keys": 2,
+   "$.store.get": 2,
+   "$.ui.invalidate": 3,
+   "$.ui.resolve": 3,
+   "$.ui.open": 1
   },
   "timers": [
    {
@@ -72,12 +97,70 @@
    },
    {
     "kind": "every",
-    "ms": 2000
+    "ms": 30000
+   },
+   {
+    "kind": "every",
+    "ms": 5000
    }
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "wrap": "truncate"
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "key": "seg-0",
+          "dimColor": true,
+          "bold": false
+         },
+         "children": [
+          "5h 31%"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "key": "seg-1",
+          "dimColor": true,
+          "bold": false
+         },
+         "children": [
+          "  ·  ctx 49%"
+         ]
+        }
+       ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": true,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      }
+     ]
+    },
+    "transient": true
    },
    "Pane": {
     "redline": {
@@ -92,44 +175,50 @@
        {
         "type": "Box",
         "props": {
-         "flexDirection": "row"
+         "paddingX": 3
         },
         "children": [
          {
           "type": "Raster",
           "props": {
-           "key": "gauge",
-           "columns": 30,
-           "rows": 11,
-           "cells": "IAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCgAAEpKSgAAAAABZCgAAEpKSgAAAAAB0igAANDQ0AAAAAABbSgAANDQ0AAAAAAB7SgAANDQ0AAAAAABEigAANDQ0AAAAAABVigAANDQ0AAAAAABEigAANDQ0AAAAAABVigAAACv/wAAAAABqigAAACv/wAAAAABbSgAAACv/wAAAAAB1SgAAACv/wAAAAABYigAAACv/wAAAAABxCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB4CgAAEpKSgAAAAABnigAANDQ0AAAAAABdSgAANDQ0AAAAAABTigAANDQ0AAAAAABGSgAANDQ0AAAAAABRigAANDQ0AAAAAABCCgAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCCgAAACv/wAAAAABIAAAAAAAAAEAAAABXigAAACv/wAAAAABCSgAAACv/wAAAAABdigAAACv/wAAAAAB3SgAAACv/wAAAAABpigAAEpKSgAAAAABQCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABdCgAAEpKSgAAAAABcSgAANDQ0AAAAAABGygAANDQ0AAAAAABAigAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCCgAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCCgAAACv/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABGigAAACv/wAAAAABMygAAACv/wAAAAAB8SgAADA7/wAAAAABRCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABXCgAAEpKSgAAAAAB/CgAANDQ0AAAAAABSSgAANDQ0AAAAAABASgAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABMQAAANDQ0AAAAAABMAAAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABMQAAAACv/wAAAAABNQAAAACv/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCSgAADA7/wAAAAAB+SgAADA7/wAAAAAB/ygAADA7/wAAAAABRCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABoCgAAEpKSgAAAAABoygAANDQ0AAAAAABwygAANDQ0AAAAAABwSgAANDQ0AAAAAABQCgAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCgAAGxsbAAAAAABgCgAAGxsbAAAAAABQCgAAGxsbAAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABwCgAADA7/wAAAAABwSgAADA7/wAAAAAB+ygAADA7/wAAAAAB5ygAADA7/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABuCgAAEpKSgAAAAABuCgAANDQ0AAAAAABwCgAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABNQAAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABsCgAAGxsbAAAAAAB9SgAAO7u7gAAAAAB9igAAO7u7gAAAAABsSgAAGxsbAAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABMgAAADA7/wAAAAABMAAAADA7/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCgAADA7/wAAAAAB+CgAADA7/wAAAAAB/ygAADA7/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABOCgAAEpKSgAAAAABeCgAANDQ0AAAAAABZCgAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCgAAF+H/wAAAAAB8CgAAF+H/wAAAAAB/igAAF+H/wAAAAABHygAAGxsbAAAAAABESgAAGxsbAAAAAABAygAAGxsbAAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABICgAADA7/wAAAAAB/CgAADA7/wAAAAABfygAADA7/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABhygAAEpKSgAAAAABpygAANDQ0AAAAAABJCgAANDQ0AAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB4CgAAF+H/wAAAAABfigAAF+H/wAAAAABGygAAF+H/wAAAAABASgAAF+H/wAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABICgAADA7/wAAAAABpCgAADA7/wAAAAAB/ygAADA7/wAAAAABBygAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCCgAAEpKSgAAAAABrigAANDQ0AAAAAABsygAANDQ0AAAAAABQigAANDQ0AAAAAABgCgAANDQ0AAAAAABFCgAAF+H/wAAAAABCSgAAF+H/wAAAAABMAAAANDQ0AAAAAABIAAAAAAAAAEAAAAB"
+           "key": "dash",
+           "columns": 49,
+           "rows": 6,
+           "cells": "IAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABNQAAAEpKSgAAAAABSAAAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABNwAAAEpKSgAAAAABRAAAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABQwAAAEpKSgAAAAABVAAAAEpKSgAAAAABWAAAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCgAAEpKSgAAAAABwCgAAEpKSgAAAAABwCgAAEpKSgAAAAABwCgAAEpKSgAAAAABQCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCgAAEpKSgAAAAABwCgAAEpKSgAAAAABwCgAAEpKSgAAAAABwCgAAEpKSgAAAAABQCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABgCgAAEpKSgAAAAABwCgAAEpKSgAAAAABwCgAAEpKSgAAAAABwCgAAEpKSgAAAAABQCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB4CgAAEpKSgAAAAABNCgAAEpKSgAAAAABTygAAEpKSgAAAAABGSgAAEpKSgAAAAABIAAAAAAAAAEAAAABBygAAEpKSgAAAAABIAAAAAAAAAEAAAABCygAAEpKSgAAAAABuSgAAEpKSgAAAAABJigAAEpKSgAAAAABxCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB4CgAAEpKSgAAAAABNCgAAEpKSgAAAAABTygAAEpKSgAAAAABGSgAAEpKSgAAAAABIAAAAAAAAAEAAAABBygAAEpKSgAAAAABIAAAAAAAAAEAAAABCygAAEpKSgAAAAABuSgAAEpKSgAAAAABJigAAEpKSgAAAAABxCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB4CgAAEpKSgAAAAABNCgAAEpKSgAAAAABTygAAEpKSgAAAAABGSgAAEpKSgAAAAABIAAAAAAAAAEAAAABBygAAEpKSgAAAAABIAAAAAAAAAEAAAABCygAAEpKSgAAAAABuSgAAEpKSgAAAAABJigAAEpKSgAAAAABxCgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB3igAAEpKSgAAAAABGSgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCygAAEpKSgAAAAAB8ygAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB3igAAEpKSgAAAAABGSgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCygAAEpKSgAAAAAB8ygAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB3igAAEpKSgAAAAABGSgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCygAAEpKSgAAAAAB8ygAAEpKSgAAAAABIAAAAAAAAAEAAAABRgAAAEpKSgAAAAABIAAAAAAAAAEAAAABASgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCCgAAEpKSgAAAAABIAAAAAAAAAEAAAABRQAAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABRgAAAEpKSgAAAAABIAAAAAAAAAEAAAABASgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCCgAAEpKSgAAAAABIAAAAAAAAAEAAAABRQAAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABRQAAAEpKSgAAAAABIAAAAAAAAAEAAAABASgAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABCCgAAEpKSgAAAAABIAAAAAAAAAEAAAABRgAAAEpKSgAAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAABIAAAAAAAAAEAAAAB"
           },
           "children": []
-         },
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "paddingX": 1
+        },
+        "children": [
          {
-          "type": "Box",
+          "type": "Text",
           "props": {
-           "flexDirection": "column",
-           "paddingX": 1
+           "wrap": "truncate"
           },
           "children": [
            {
             "type": "Text",
             "props": {
-             "bold": true,
-             "color": "#9aa5b1"
+             "dimColor": true
             },
             "children": [
-             "Napping"
+             "5h  "
             ]
            },
            {
             "type": "Text",
             "props": {
-             "dimColor": true,
-             "wrap": "wrap"
+             "bold": false
             },
             "children": [
-             "Engine off."
+             " 31%"
             ]
            },
            {
@@ -138,7 +227,49 @@
              "dimColor": true
             },
             "children": [
-             "0 working · 0 sessions"
+             "  "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "7d   no reading yet"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "ctx "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             " 49%"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "  $0.42 this session"
             ]
            }
           ]
@@ -162,10 +293,83 @@
          {
           "type": "Text",
           "props": {
-           "dimColor": true
+           "wrap": "truncate"
           },
           "children": [
-           "No Claude sessions in terminals."
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Limiter  "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "in gear · shifts at 80% of 5h, 90% of 7d"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 2
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "shift",
+             "plain": true,
+             "hotkey": "s",
+             "label": "shift at",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Sessions  1"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "row-preview-session",
+           "wrap": "truncate",
+           "dimColor": false,
+           "bold": false
+          },
+          "children": [
+           "✓ app       done · 0m ago · ctx 49% · $0.42 · this one"
           ]
          }
         ]
@@ -177,8 +381,7 @@
    }
   },
   "script": [
-   "$.process.run(ps -x -o pid=,ppid=,tty=,args=) → exit 0",
-   "$.process.run(ps -x -o pid=,ppid=,tty=,command=) → exit 0",
+   "$.process.run(claude agents --json) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -191,7 +394,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(redline)",
-   "/redline → Redline opened."
+   "$.process.run(claude agents --json) → exit 0",
+   "/redline → "
   ],
   "console": [],
   "warnings": []
@@ -204,70 +408,101 @@
    "session.start",
    "session.measure",
    "session.end",
+   "turn.start",
+   "turn.complete",
+   "turn.step",
+   "agent.spawn",
+   "tool.check",
+   "tool.call",
    "command.run{command=redline}",
    "ui.close",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=redline}"
   ],
   "calls": [
-   "$.clock.after",
    "$.clock.every",
+   "$.clock.now (via sync)",
    "$.command.register",
+   "$.command.run",
    "$.process.run (via poll)",
+   "$.session.cwd (via beat)",
+   "$.session.id (via beat)",
+   "$.session.model",
    "$.session.usage (via readUsage)",
-   "$.state.get",
-   "$.state.set",
+   "$.store.delete",
+   "$.store.get (via readBeats)",
+   "$.store.keys (via readBeats)",
+   "$.store.set (via beat)",
    "$.ui.blit (via frame)",
    "$.ui.close",
+   "$.ui.invalidate",
    "$.ui.open",
    "$.ui.panes",
    "$.ui.resolve",
-   "$.ui.status"
+   "$.ui.toast (via checkGear)"
   ],
-  "stateReads": [
-   "redline.isPaneOpen",
-   "redline.preview",
-   "redline.seeded",
-   "redline.sessions",
-   "redline.usage"
-  ],
-  "stateWrites": [
-   "redline.isPaneOpen",
-   "redline.preview",
-   "redline.seeded",
-   "redline.sessions",
-   "redline.usage"
-  ],
+  "stateReads": [],
+  "stateWrites": [],
   "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/jamubc-toolbox-redline/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/jamubc-toolbox-redline/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/jamubc-toolbox-redline/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/jamubc-toolbox-redline/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
-     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: redline.sessions, redline.preview, redline.isPaneOpen, redline.seeded, redline.usage"
-    ]
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/jamubc-toolbox-redline/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/jamubc-toolbox-redline/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, session.end, command.run{command=redline}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=redline}",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.command.register, $.process.run (via poll), $.session.usage (via readUsage), $.state.get, $.state.set, $.ui.blit (via frame), $.ui.close, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status",
-      "./register.tsx state writes: redline.isPaneOpen, redline.preview, redline.seeded, redline.sessions, redline.usage",
-      "./register.tsx state reads: redline.isPaneOpen, redline.preview, redline.seeded, redline.sessions, redline.usage"
+      "./register.tsx hooks: session.start, session.measure, session.end, turn.start, turn.complete, turn.step, agent.spawn, tool.check, tool.call, command.run{command=redline}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=redline}",
+      "./register.tsx answers its own command: command.run{command=redline}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.check",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.clock.every, $.clock.now (via sync), $.command.register, $.command.run, $.process.run (via poll), $.session.cwd (via beat), $.session.id (via beat), $.session.model, $.session.usage (via readUsage), $.store.delete, $.store.get (via readBeats), $.store.keys (via readBeats), $.store.set (via beat), $.ui.blit (via frame), $.ui.close, $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via checkGear)"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "f03782630e4ceb75"
+ "sourceHash": "f300a0c7efed57ed"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "404mayank-cachebeat",
- "generatedAt": "2026-10-09T15:32:24.245Z",
+ "generatedAt": "2026-10-16T14:17:12.195Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,15 @@
     "matcher": {
      "reason": "clear"
     }
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": "resume"
+    }
+   },
+   {
+    "event": "classic.SessionStart"
    },
    {
     "event": "command.run",
@@ -77,6 +86,9 @@
     "event": "turn.start"
    },
    {
+    "event": "turn.step"
+   },
+   {
     "event": "turn.complete"
    },
    {
@@ -127,7 +139,7 @@
    {
     "name": "cachebeat",
     "description": "Keep the prompt cache warm while idle",
-    "argumentHint": "[on|off|<minutes>|now|global on|off|settings]",
+    "argumentHint": "[on|off|<minutes>|now|global …|local …|settings]",
     "immediate": true,
     "output": "off"
    }
@@ -135,11 +147,11 @@
   "tools": [
    {
     "name": "state",
-    "description": "cachebeat's state in this session and every setting with its value.\n\n`nextBeat` is `in 42m`, `50m after this turn ends` (as seen mid-turn), `after the next turn` (nothing cached to keep warm yet), or null when off or skipping. `intervalFrom` is `session` when this session has its own interval, `default` when it follows a settings.interval in minutes, and `auto` when it follows an auto one. `cacheTtl` is how long this session's cache lives, `1h` or `5m`, worked out on each call from Claude Code's cache settings and whether a subscription is within its usage; an auto interval beats within it (50 or 4 minutes). `skipping`, when set, says why beats skip this chat (under the skipSmallTokens minimum). `paused`, when set, says why beats wait for the user's next turn (a model switch, a compaction); only that turn ends it, not `set`. `lastBeatReadTokens` is how much the last beat read from the cache. `defaults` has the default of each setting that differs from it."
+    "description": "cachebeat's state in this session, every setting as it applies here, and this folder's own settings.\n\n`settings` are the values in effect in this session: this folder's own over those for all folders. `folder` is this session's folder (`path`) and the settings it has of its own (`own`). `allFolders`, shown while the folder has any of its own, has the settings for all folders. `nextBeat` is `in 42m` (mid-turn too: counted from the end of the turn's last request, for a turn that goes quiet), `50m after the request on its way` (a request of the turn is being answered), `after this turn` (a turn whose beats wait for its end), `after the next turn` (nothing cached to keep warm yet), or null when off or skipping. `intervalFrom` is `session` when this session has its own interval, `folder` when it follows this folder's own, `all folders` when it follows the interval for all folders in minutes, and `auto` when that is auto. `cacheTtl` is how long this session's cache lives, `1h` or `5m`, worked out on each call from Claude Code's cache settings and whether a subscription is within its usage; an auto interval beats within it (50 or 4 minutes). `skipping`, when set, says why beats skip this chat (under the skipSmallTokens minimum). `paused`, when set, says why beats wait for the user's next turn (a model switch, a compaction); only that turn ends it, not `set`. A beat re-sends the conversation as this session last sent it, with one short line tagged `[cachebeat]` asking for a one-character reply, which is thrown away. It reads the cached conversation (`lastBeatReadTokens`, the last beat's) and writes only what wasn't cached (`lastBeatWrittenTokens`), usually a few tokens; both are null before the first beat. `defaults` has the default of each setting that differs from it."
    },
    {
     "name": "set",
-    "description": "Changes cachebeat, which keeps this session's prompt cache warm while it sits idle by sending a small background request, a beat, shortly before the cache would expire. Change only what the user asks for.\n\n`session` is this session alone. `settings` is saved and used by every session, open ones included: `settings.interval` is the default interval, `settings.defaultOn` whether new sessions start on (open sessions keep theirs). The other settings (the stop rules, skipSmall and skipSmallTokens, the prompt heart, the turn line, alerts) exist only there; when you change one, say it applies to every session. `null` puts a setting back to its default.\n\nA request that names no scope (\"turn it on\", \"beat every 20 minutes\") is for this session. \"Default\", \"new sessions\", \"every session\", \"always\" or \"from now on\" mean `settings`. If you can't tell which the user means, ask.\n\nEach beat counts toward the user's usage. The first time in a conversation a change starts beating or changes how often a beating session beats, say so once.\n\nSetting `intervalMinutes` turns beating on too, unless `enabled: false` comes with it. A session with its own interval keeps it when the default changes: tell the user, and `intervalMinutes: null` makes it follow the default.\n\nNothing changes if any value is invalid, and the refusal names each one. Subagents can read `state` but not call this. Returns what changed, this session's state, and the changed settings."
+    "description": "Changes cachebeat, which keeps this session's prompt cache warm while it sits idle by sending a small background request, a beat, shortly before the cache would expire. Change only what the user asks for.\n\n`session` is this session alone. `settings` is saved for all folders and used by every session, open ones included: `settings.interval` is the default interval, `settings.defaultOn` whether new sessions start on (open sessions keep theirs). `folder` is saved for this session's folder alone (state's `folder.path`), takes any setting, and wins over `settings` there; `null` for one setting drops it, so it follows all folders again, and `folder: null` drops every one. In `settings`, `null` puts a setting back to its default. When you change a setting, say where it applies: all folders, or this folder by its path, since a subfolder or another worktree has settings of its own.\n\nA request that names no scope (\"turn it on\", \"beat every 20 minutes\") is for this session. \"In this repo\", \"in this folder\", \"here\" or \"for this project\" mean `folder`. \"Default\", \"new sessions\", \"every session\", \"everywhere\", \"always\" or \"from now on\" mean `settings`. If you can't tell which the user means, ask. A change to `settings` doesn't reach a setting this folder has its own of (`state`'s `folder.own`): tell the user.\n\nEach beat counts toward the user's usage. The first time in a conversation a change starts beating or changes how often a beating session beats, say so once.\n\nSetting `intervalMinutes` turns beating on too, unless `enabled: false` comes with it. Saving an interval in `settings` or `folder` drops this session's own, so it beats at the saved one, unless `intervalMinutes` comes with it; `intervalMinutes: null` alone makes it follow the settings.\n\nNothing changes if any value is invalid, and the refusal names each one. Subagents can read `state` but not call this. Returns what changed, this session's state, and the changed settings: for all folders, and for this folder with its `path`, which you name to the user."
    }
   ],
   "panes": [],
@@ -148,12 +160,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 2,
-   "$.state.get": 20,
-   "$.state.set": 7,
+   "$.session.root": 2,
+   "$.store.get": 4,
+   "$.state.get": 23,
+   "$.state.set": 8,
+   "$.session.messages": 2,
    "$.command.register": 1,
    "$.tool.register": 2,
-   "$.clock.now": 1,
+   "$.clock.now": 3,
    "$.session.model": 1,
    "$.env.get": 3,
    "$.settings.read": 1,
@@ -267,15 +281,6 @@
         ]
        },
        {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "This session is this session alone; every other setting applies to every session."
-        ]
-       },
-       {
         "type": "Button",
         "props": {
          "plain": true,
@@ -284,6 +289,18 @@
         },
         "children": [
          "This session          off"
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "plain": true,
+         "dimColor": true,
+         "key": "folder",
+         "onPress": "[fn]"
+        },
+        "children": [
+         "Settings for          all folders"
         ]
        },
        {
@@ -339,25 +356,6 @@
           },
           "children": [
            "After /model          wait for your next turn"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column"
-        },
-        "children": [
-         {
-          "type": "Button",
-          "props": {
-           "plain": true,
-           "key": "row:intervalScope",
-           "onPress": "[fn]"
-          },
-          "children": [
-           "/cachebeat 30 changes this session"
           ]
          }
         ]
@@ -440,6 +438,8 @@
   "hooks": [
    "session.start",
    "session.end{reason=clear}",
+   "session.end{reason=resume}",
+   "classic.SessionStart",
    "command.run{command=cachebeat}",
    "tool.call{tool=mcp__cachebeat__state}",
    "tool.call{tool=mcp__cachebeat__set}",
@@ -454,6 +454,7 @@
    "classic.PostModelSwitch",
    "session.compact",
    "turn.start",
+   "turn.step",
    "turn.complete",
    "ui.render{component=TurnDuration}",
    "ui.render{component=PromptHint}",
@@ -470,16 +471,24 @@
    "$.command.register",
    "$.env.get (via cacheTtl)",
    "$.model.fork (via beat)",
-   "$.session.model",
+   "$.session.messages",
+   "$.session.model (via beat",
+   "markWarm",
+   "resumeIfWarmed)",
+   "$.session.root (via load)",
    "$.session.usage (via beat",
    "cacheTtl",
    "chatSize)",
    "$.settings.read (via cacheTtl)",
    "$.state.get",
    "$.state.set",
-   "$.store.get",
-   "$.store.set (via keepCustoms",
-   "setSettings)",
+   "$.store.get (via keepCustoms",
+   "load",
+   "openSettings",
+   "saveOwn)",
+   "$.store.set (via changeSettings",
+   "keepCustoms",
+   "saveOwn)",
    "$.tool.register",
    "$.ui.focus (via focusOn)",
    "$.ui.log",
@@ -491,6 +500,7 @@
   ],
   "stateReads": [
    "cachebeat.focus",
+   "cachebeat.folder",
    "cachebeat.frame",
    "cachebeat.line",
    "cachebeat.lineFrame",
@@ -502,6 +512,7 @@
   ],
   "stateWrites": [
    "cachebeat.focus",
+   "cachebeat.folder",
    "cachebeat.frame",
    "cachebeat.line",
    "cachebeat.lineFrame",
@@ -527,7 +538,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: cachebeat.pulse, cachebeat.saved, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.settings, cachebeat.tick, cachebeat.page, cachebeat.focus"
+     "types ./types/index.d.ts declares state: cachebeat.pulse, cachebeat.saved, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.settings, cachebeat.folder, cachebeat.tick, cachebeat.page, cachebeat.focus"
     ],
     "gatingHooks": []
    },
@@ -538,8 +549,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end{reason=clear}, command.run{command=cachebeat}, tool.call{tool=mcp__cachebeat__state}, tool.call{tool=mcp__cachebeat__set}, ui.render{component=ToolUse, props has {tool=mcp__cachebeat__state}}, ui.render{component=ToolUse, props has {tool=mcp__cachebeat__set}}, ui.render{component=ToolResult, props has {tool=mcp__cachebeat__state}}, ui.render{component=ToolResult, props has {tool=mcp__cachebeat__set}}, classic.PostModelSwitch, session.compact, turn.start, turn.complete, ui.render{component=TurnDuration}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=?}, ui.focus{requestId=?}, ui.scroll{requestId=?}, ui.close{id=?}",
+      "./register.tsx hooks: session.start, session.end{reason=clear}, session.end{reason=resume}, classic.SessionStart, command.run{command=cachebeat}, tool.call{tool=mcp__cachebeat__state}, tool.call{tool=mcp__cachebeat__set}, ui.render{component=ToolUse, props has {tool=mcp__cachebeat__state}}, ui.render{component=ToolUse, props has {tool=mcp__cachebeat__set}}, ui.render{component=ToolResult, props has {tool=mcp__cachebeat__state}}, ui.render{component=ToolResult, props has {tool=mcp__cachebeat__set}}, classic.PostModelSwitch, session.compact, turn.start, turn.step, turn.complete, ui.render{component=TurnDuration}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=?}, ui.focus{requestId=?}, ui.scroll{requestId=?}, ui.close{id=?}",
+      "./register.tsx hooks on classic.SessionStart, classic.PostModelSwitch, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=cachebeat}",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__cachebeat__state}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__cachebeat__set}",
       "./register.tsx gating hook without .catch: classic.PostModelSwitch",
@@ -547,13 +560,19 @@
       "./register.tsx gating hook without .catch: ui.focus{requestId=?}",
       "./register.tsx gating hook without .catch: ui.scroll{requestId=?}",
       "./register.tsx gating hook without .catch: ui.close{id=?}",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via cacheTtl), $.model.fork (via beat), $.session.model, $.session.usage (via beat, cacheTtl, chatSize), $.settings.read (via cacheTtl), $.state.get, $.state.set, $.store.get, $.store.set (via keepCustoms, setSettings), $.tool.register, $.ui.focus (via focusOn), $.ui.log, $.ui.open, $.ui.resolve, $.ui.scroll (via focusOn), $.ui.toast (via announce, beat)",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via cacheTtl), $.model.fork (via beat), $.session.messages, $.session.model (via beat, markWarm, resumeIfWarmed), $.session.root (via load), $.session.usage (via beat, cacheTtl, chatSize), $.settings.read (via cacheTtl), $.state.get, $.state.set, $.store.get (via keepCustoms, load, openSettings, saveOwn), $.store.set (via changeSettings, keepCustoms, saveOwn), $.tool.register, $.ui.focus (via focusOn), $.ui.log, $.ui.open, $.ui.resolve, $.ui.scroll (via focusOn), $.ui.toast (via announce, beat)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M",
-      "./register.tsx state writes: cachebeat.focus, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.page, cachebeat.pulse, cachebeat.saved, cachebeat.settings, cachebeat.tick",
-      "./register.tsx state reads: cachebeat.focus, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.page, cachebeat.pulse, cachebeat.saved, cachebeat.settings, cachebeat.tick"
+      "./register.tsx state writes: cachebeat.focus, cachebeat.folder, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.page, cachebeat.pulse, cachebeat.saved, cachebeat.settings, cachebeat.tick",
+      "./register.tsx state reads: cachebeat.focus, cachebeat.folder, cachebeat.frame, cachebeat.line, cachebeat.lineFrame, cachebeat.page, cachebeat.pulse, cachebeat.saved, cachebeat.settings, cachebeat.tick"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -602,5 +621,5 @@
    "advice": []
   }
  },
- "sourceHash": "3e37f45e5671835f"
+ "sourceHash": "5ab79c7e167815c2"
 }

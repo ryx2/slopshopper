@@ -1,0 +1,9 @@
+{
+ "slug": "klefix-claude-code-mods-tool-calls",
+ "files": {
+  "hooks/register.ts": "import type { On } from 'claude-code'\nimport { atom, update } from 'claude-code'\n\nconst EMPTY = { tools: {}, skills: {} }\nconst counts = atom({ plugin: 'tool-calls', key: 'counts' }, EMPTY)\n\nfunction bump(map: Record<string, number>, name: string) {\n  return { ...map, [name]: (map[name] ?? 0) + 1 }\n}\n\nexport function register(on: On) {\n  // session.start does not fire after /clear\n  on('classic.SessionStart', async ($, e, next) => {\n    if (e.source === 'clear') {\n      await update($, counts, () => EMPTY)\n    }\n    return next(e)\n  }).catch((_$, e, next) => next(e))\n\n  on('tool.call', async ($, e, next) => {\n    await update($, counts, (c) => ({\n      tools: bump(c.tools, e.tool),\n      skills: e.tool === 'Skill' && e.skill ? bump(c.skills, e.skill) : c.skills,\n    }))\n    return next(e)\n  }).catch((_$, e, next) => next(e))\n}\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"tool-calls\",\n  \"version\": \"0.3.0\",\n  \"description\": \"Counts how often each tool and skill was used, in session state\",\n  \"author\": {\n    \"name\": \"Felix\"\n  },\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "declare module 'claude-code' {\n  interface PluginState {\n    'tool-calls': {\n      counts: { tools: Record<string, number>; skills: Record<string, number> }\n    }\n  }\n}\n"
+ }
+}

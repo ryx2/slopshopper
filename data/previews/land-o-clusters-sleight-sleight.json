@@ -1,6 +1,6 @@
 {
  "slug": "land-o-clusters-sleight-sleight",
- "generatedAt": "2026-10-09T15:32:19.880Z",
+ "generatedAt": "2026-10-16T14:16:21.855Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,6 +20,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__plugin_sleight_computer__js"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__plugin_sleight_computer__replay"
     }
    },
    {
@@ -48,8 +54,8 @@
   "commands": [
    {
     "name": "sleight",
-    "description": "Open the sleight pane, and send any text after it to Claude; `stop` halts its computer use",
-    "argumentHint": "[stop | prompt]",
+    "description": "Open the sleight pane; replay a JSON file, record this session, or stop computer use",
+    "argumentHint": "[replay <file> | record [file] | stop | prompt]",
     "immediate": true,
     "output": "sleight pane opened."
    }
@@ -67,7 +73,7 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 5,
+   "$.state.get": 9,
    "$.state.set": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
@@ -130,6 +136,43 @@
         ]
        },
        {
+        "type": "Input",
+        "props": {
+         "key": "replay-file",
+         "value": "",
+         "placeholder": "Replay JSON file",
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "replay",
+           "label": "Replay file",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "record",
+           "label": "Record session",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
         "type": "Text",
         "props": {
          "bold": true
@@ -181,6 +224,7 @@
    "prompt.submit",
    "turn.start",
    "tool.call{tool=mcp__plugin_sleight_computer__js}",
+   "tool.call{tool=mcp__plugin_sleight_computer__replay}",
    "tool.call{tool=mcp__plugin_sleight_computer__turn_ended}",
    "turn.complete",
    "command.run{command=sleight}",
@@ -189,9 +233,15 @@
   "calls": [
    "$.clock.after",
    "$.command.register",
-   "$.mcp.call (via call)",
+   "$.fs.exists (via recordCurrent)",
+   "$.fs.read (via replayCurrent)",
+   "$.fs.write (via recordCurrent)",
+   "$.mcp.call (via call",
+   "replayCurrent)",
    "$.mcp.connect",
+   "$.process.run (via recordCurrent)",
    "$.prompt.submit",
+   "$.session.id (via recordCurrent)",
    "$.state.get",
    "$.state.set",
    "$.ui.log (via endEngineTurn)",
@@ -204,12 +254,18 @@
   "stateReads": [
    "sleight.frame",
    "sleight.log",
+   "sleight.receipt",
+   "sleight.replayFile",
+   "sleight.replaying",
    "sleight.stopped",
    "sleight.view"
   ],
   "stateWrites": [
    "sleight.frame",
    "sleight.log",
+   "sleight.receipt",
+   "sleight.replayFile",
+   "sleight.replaying",
    "sleight.stopped",
    "sleight.view"
   ],
@@ -225,7 +281,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: sleight.log, sleight.frame, sleight.view, sleight.stopped"
+     "types ./types/index.d.ts declares state: sleight.log, sleight.frame, sleight.view, sleight.stopped, sleight.replayFile, sleight.replaying, sleight.receipt"
     ],
     "gatingHooks": []
    },
@@ -236,15 +292,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.check, session.start, prompt.submit, turn.start, tool.call{tool=mcp__plugin_sleight_computer__js}, tool.call{tool=mcp__plugin_sleight_computer__turn_ended}, turn.complete, command.run{command=sleight}, ui.render{component=Pane, requestId=sleight}",
+      "./register.tsx hooks: tool.check, session.start, prompt.submit, turn.start, tool.call{tool=mcp__plugin_sleight_computer__js}, tool.call{tool=mcp__plugin_sleight_computer__replay}, tool.call{tool=mcp__plugin_sleight_computer__turn_ended}, turn.complete, command.run{command=sleight}, ui.render{component=Pane, requestId=sleight}",
       "./register.tsx answers its own command: command.run{command=sleight}",
       "./register.tsx gating hook with .catch: tool.check",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__plugin_sleight_computer__js}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__plugin_sleight_computer__replay}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__plugin_sleight_computer__turn_ended}",
-      "./register.tsx calls: $.clock.after, $.command.register, $.mcp.call (via call), $.mcp.connect, $.prompt.submit, $.state.get, $.state.set, $.ui.log (via endEngineTurn), $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: sleight.frame, sleight.log, sleight.stopped, sleight.view",
-      "./register.tsx state reads: sleight.frame, sleight.log, sleight.stopped, sleight.view"
+      "./register.tsx calls: $.clock.after, $.command.register, $.fs.exists (via recordCurrent), $.fs.read (via replayCurrent), $.fs.write (via recordCurrent), $.mcp.call (via call, replayCurrent), $.mcp.connect, $.process.run (via recordCurrent), $.prompt.submit, $.session.id (via recordCurrent), $.state.get, $.state.set, $.ui.log (via endEngineTurn), $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: sleight.frame, sleight.log, sleight.receipt, sleight.replayFile, sleight.replaying, sleight.stopped, sleight.view",
+      "./register.tsx state reads: sleight.frame, sleight.log, sleight.receipt, sleight.replayFile, sleight.replaying, sleight.stopped, sleight.view"
      ],
      "gatingHooks": [
       {
@@ -268,6 +325,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__plugin_sleight_computer__replay}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__plugin_sleight_computer__turn_ended}",
        "hasCatch": false
       }
@@ -277,5 +340,5 @@
    "advice": []
   }
  },
- "sourceHash": "f3094050d6fe3b66"
+ "sourceHash": "3f047b3c1a27bc7f"
 }

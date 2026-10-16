@@ -1,11 +1,17 @@
 {
  "slug": "augiefra-claude-mods-token-weather-usage",
- "generatedAt": "2026-10-09T15:31:52.711Z",
+ "generatedAt": "2026-10-16T14:15:53.445Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "agent.spawn"
    },
    {
     "event": "session.end"
@@ -37,13 +43,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 7,
+   "$.env.get": 8,
+   "$.clock.now": 8,
+   "$.fs.read": 1,
    "$.session.id": 1,
-   "$.clock.now": 6,
    "$.store.keys": 1,
    "$.session.usage": 2,
    "$.agent.list": 1,
-   "$.store.get": 2,
+   "$.store.get": 3,
    "$.store.set": 2,
    "$.clock.every": 2,
    "$.ui.invalidate": 3,
@@ -355,6 +362,8 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "tool.call",
+   "agent.spawn",
    "session.end",
    "turn.step",
    "turn.complete",
@@ -367,15 +376,19 @@
    "$.clock.every",
    "$.clock.now",
    "$.env.get (via cacheEnvOf",
-   "languageOf)",
+   "languageOf",
+   "refreshIdle)",
+   "$.fs.read (via refreshIdle)",
    "$.session.id",
    "$.session.usage",
    "$.store.delete (via restoreTurns)",
    "$.store.get (via adoptShared",
+   "loadWeek",
    "restoreTurns",
    "shareLimits)",
    "$.store.keys (via restoreTurns)",
-   "$.store.set (via saveTurns",
+   "$.store.set (via recordWeek",
+   "saveTurns",
    "shareLimits)",
    "$.ui.invalidate",
    "$.ui.resolve"
@@ -383,10 +396,12 @@
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "CLAUDE_CODE_IDLE_COMPACT_MIN_TOKENS",
    "CLAUDE_CODE_PROMPT_CACHE_TTL",
    "DISABLE_PROMPT_CACHING",
    "ENABLE_PROMPT_CACHING_1H",
    "FORCE_PROMPT_CACHING_5M",
+   "HOME",
    "LANG",
    "LC_ALL",
    "LC_MESSAGES"
@@ -410,13 +425,28 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./token-weather-usage.mjs hooks: session.start, session.end, turn.step, turn.complete, session.compact, session.measure, ui.render{component=AbovePrompt}",
+      "./token-weather-usage.mjs hooks: session.start, tool.call, agent.spawn, session.end, turn.step, turn.complete, session.compact, session.measure, ui.render{component=AbovePrompt}",
+      "./token-weather-usage.mjs hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./token-weather-usage.mjs gating hook without .catch: tool.call",
+      "./token-weather-usage.mjs gating hook without .catch: agent.spawn",
       "./token-weather-usage.mjs gating hook without .catch: session.compact",
-      "./token-weather-usage.mjs calls: $.agent.list (via refreshAgents), $.clock.every, $.clock.now, $.env.get (via cacheEnvOf, languageOf), $.session.id, $.session.usage, $.store.delete (via restoreTurns), $.store.get (via adoptShared, restoreTurns, shareLimits), $.store.keys (via restoreTurns), $.store.set (via saveTurns, shareLimits), $.ui.invalidate, $.ui.resolve",
+      "./token-weather-usage.mjs calls: $.agent.list (via refreshAgents), $.clock.every, $.clock.now, $.env.get (via cacheEnvOf, languageOf, refreshIdle), $.fs.read (via refreshIdle), $.session.id, $.session.usage, $.store.delete (via restoreTurns), $.store.get (via adoptShared, loadWeek, restoreTurns, shareLimits), $.store.keys (via restoreTurns), $.store.set (via recordWeek, saveTurns, shareLimits), $.ui.invalidate, $.ui.resolve",
       "./token-weather-usage.mjs env writes: nothing",
-      "./token-weather-usage.mjs env reads: CLAUDE_CODE_PROMPT_CACHE_TTL, DISABLE_PROMPT_CACHING, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, LANG, LC_ALL, LC_MESSAGES"
+      "./token-weather-usage.mjs env reads: CLAUDE_CODE_IDLE_COMPACT_MIN_TOKENS, CLAUDE_CODE_PROMPT_CACHE_TTL, DISABLE_PROMPT_CACHING, ENABLE_PROMPT_CACHING_1H, FORCE_PROMPT_CACHING_5M, HOME, LANG, LC_ALL, LC_MESSAGES"
      ],
      "gatingHooks": [
+      {
+       "module": "./token-weather-usage.mjs",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./token-weather-usage.mjs",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
       {
        "module": "./token-weather-usage.mjs",
        "pattern": "session.compact",
@@ -429,5 +459,5 @@
    "advice": []
   }
  },
- "sourceHash": "64ccbeaff42c7094"
+ "sourceHash": "6374e160b968133a"
 }

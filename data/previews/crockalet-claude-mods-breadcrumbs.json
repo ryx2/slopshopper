@@ -1,6 +1,6 @@
 {
  "slug": "crockalet-claude-mods-breadcrumbs",
- "generatedAt": "2026-10-08T15:53:24.353Z",
+ "generatedAt": "2026-10-16T14:17:23.419Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -54,6 +54,12 @@
    },
    {
     "event": "tool.call"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "turn.complete"
@@ -115,7 +121,7 @@
   "tools": [
    {
     "name": "save_note",
-    "description": "Save an explanation, summary or walkthrough the user asked for as a markdown note in their breadcrumbs pane, so it does not get buried in the transcript. The pane reflows the note to its width, tables included."
+    "description": "Post a markdown note to the user's breadcrumbs pane: something they should see now while you keep working, or a document they will come back to (a plan, a handoff, a decision record). Explanations in your reply are filed as notes without it. The pane reflows notes to its width, tables included; only code and diagram lines are cut, so keep those short."
    },
    {
     "name": "edit_note",
@@ -123,7 +129,7 @@
    },
    {
     "name": "test_plan",
-    "description": "List manual or end-to-end tests the user has to run by hand in their tests pane, each with its steps. The user starts each test from the pane."
+    "description": "Add manual or end-to-end tests the user has to run by hand to their tests pane, each with its steps, as soon as the change they cover is ready to try. The user starts each test from the pane whenever they get to it."
    },
    {
     "name": "test_update",
@@ -157,7 +163,7 @@
    "$.session.cwd": 1,
    "$.session.repo": 1,
    "$.process.run": 5,
-   "$.state.get": 28,
+   "$.state.get": 29,
    "$.state.set": 18,
    "$.store.get": 2,
    "$.command.register": 2,
@@ -231,7 +237,7 @@
          "dimColor": true
         },
         "children": [
-         "Ask Claude for a manual test planTests and it lists the tests here."
+         "Ask Claude for a manual test plan and it lists the tests here."
         ]
        }
       ]
@@ -630,6 +636,8 @@
    "tool.call{tool=mcp__breadcrumbs__save_note}",
    "tool.call{tool=mcp__breadcrumbs__edit_note}",
    "tool.call",
+   "turn.start",
+   "turn.step",
    "turn.complete",
    "command.run{command=whereami}",
    "ui.render{component=ToolUse}",
@@ -648,7 +656,8 @@
    "$.env.get (via backfill",
    "notesRoot",
    "track)",
-   "$.fs.exists (via planClean)",
+   "$.fs.exists (via planClean",
+   "startTester)",
    "$.fs.list (via dirs",
    "writeIndex)",
    "$.fs.read",
@@ -659,22 +668,24 @@
    "mutateTests",
    "persist",
    "saveNote",
+   "startTester",
    "writeIndex)",
    "$.model.complete (via sidePass)",
    "$.process.run (via applyClean",
    "awaitUser",
-   "git)",
+   "git",
+   "startTester)",
    "$.prompt.fill (via draftAsk)",
-   "$.prompt.submit (via answerAsk",
+   "$.prompt.submit (via askMainToStart",
    "markTest",
    "routeTest",
-   "sendAnswers",
-   "startTester)",
+   "sendNow)",
    "$.session.cwd (via locate)",
    "$.session.id",
    "$.session.messages (via backfill)",
    "$.session.repo (via locate)",
-   "$.session.send (via routeTest)",
+   "$.session.send (via routeTest",
+   "stopTester)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
@@ -682,6 +693,7 @@
    "$.tool.register",
    "$.ui.ask",
    "$.ui.close",
+   "$.ui.copy (via copyText)",
    "$.ui.invalidate",
    "$.ui.log",
    "$.ui.open",
@@ -689,9 +701,10 @@
    "$.ui.resolve",
    "$.ui.status (via showWaiting)",
    "$.ui.toast (via awaitUser",
+   "copyText",
    "draftAsk",
    "pin",
-   "sendAnswers)"
+   "planTests)"
   ],
   "stateReads": [
    "breadcrumbs.crumbs",
@@ -734,7 +747,8 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.SessionStart, prompt.compose, prompt.submit, tool.call{tool=?}, tool.call{tool=mcp__breadcrumbs__save_note}, tool.call{tool=mcp__breadcrumbs__edit_note}, tool.call, turn.complete, command.run{command=whereami}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=Pane, requestId=breadcrumbs}, agent.spawn, command.run{command=tests}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx hooks: session.start, classic.SessionStart, prompt.compose, prompt.submit, tool.call{tool=?}, tool.call{tool=mcp__breadcrumbs__save_note}, tool.call{tool=mcp__breadcrumbs__edit_note}, tool.call, turn.start, turn.step, turn.complete, command.run{command=whereami}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=Pane, requestId=breadcrumbs}, agent.spawn, command.run{command=tests}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx hooks on classic.SessionStart, prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=whereami}",
       "./register.tsx answers its own command: command.run{command=tests}",
       "./register.tsx gating hook without .catch: classic.SessionStart",
@@ -744,7 +758,7 @@
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__breadcrumbs__edit_note}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: agent.spawn",
-      "./register.tsx calls: $.agent.register, $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via backfill, notesRoot, track), $.fs.exists (via planClean), $.fs.list (via dirs, writeIndex), $.fs.read, $.fs.stat (via planClean), $.fs.write (via applyClean, copyPinned, editNote, mutateTests, persist, saveNote, writeIndex), $.model.complete (via sidePass), $.process.run (via applyClean, awaitUser, git), $.prompt.fill (via draftAsk), $.prompt.submit (via answerAsk, markTest, routeTest, sendAnswers, startTester), $.session.cwd (via locate), $.session.id, $.session.messages (via backfill), $.session.repo (via locate), $.session.send (via routeTest), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.ask, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via showWaiting), $.ui.toast (via awaitUser, draftAsk, pin, sendAnswers)",
+      "./register.tsx calls: $.agent.register, $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via backfill, notesRoot, track), $.fs.exists (via planClean, startTester), $.fs.list (via dirs, writeIndex), $.fs.read, $.fs.stat (via planClean), $.fs.write (via applyClean, copyPinned, editNote, mutateTests, persist, saveNote, startTester, writeIndex), $.model.complete (via sidePass), $.process.run (via applyClean, awaitUser, git, startTester), $.prompt.fill (via draftAsk), $.prompt.submit (via askMainToStart, markTest, routeTest, sendNow), $.session.cwd (via locate), $.session.id, $.session.messages (via backfill), $.session.repo (via locate), $.session.send (via routeTest, stopTester), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.ask, $.ui.close, $.ui.copy (via copyText), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.status (via showWaiting), $.ui.toast (via awaitUser, copyText, draftAsk, pin, planTests)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
       "./register.tsx state writes: breadcrumbs.crumbs, breadcrumbs.pending, breadcrumbs.tests, breadcrumbs.testsView, breadcrumbs.view, breadcrumbs.where",
@@ -795,8 +809,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "64d0291b1a4992fe"
+ "sourceHash": "dc92fdbb6a792f96"
 }

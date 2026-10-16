@@ -1,11 +1,17 @@
 {
  "slug": "buddylim-claude-code-mod-ledger",
- "generatedAt": "2026-10-06T05:28:46.234Z",
+ "generatedAt": "2026-10-16T14:18:57.923Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "prompt.compose"
@@ -74,6 +80,9 @@
     }
    },
    {
+    "event": "ui.message"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -84,7 +93,7 @@
   "commands": [
    {
     "name": "ledger",
-    "description": "Show the run: /ledger [hide | show | clear]",
+    "description": "Show the run: /ledger [sessions | lanes <plan> | hide | show | clear]",
     "output": "Ledger: nothing is planned. The agent records a plan when it delegates one."
    }
   ],
@@ -95,7 +104,7 @@
    },
    {
     "name": "task",
-    "description": "Record the state of every task that changed, in one call: done, or gate-failed."
+    "description": "Record the state of every task that changed, in one call: done, gate-failed, or cancelled for one that will not be done."
    },
    {
     "name": "finding",
@@ -118,13 +127,13 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.tool.register": 5,
-   "$.session.id": 1,
-   "$.session.cwd": 6,
-   "$.store.get": 5,
-   "$.clock.now": 2,
+   "$.store.get": 7,
+   "$.store.keys": 1,
    "$.store.set": 1,
-   "$.state.get": 12,
-   "$.state.set": 4,
+   "$.session.id": 7,
+   "$.state.get": 19,
+   "$.clock.now": 4,
+   "$.state.set": 7,
    "$.ui.status": 2,
    "$.ui.resolve": 1
   },
@@ -137,7 +146,8 @@
       "type": "Box",
       "props": {
        "flexDirection": "column",
-       "paddingX": 2
+       "paddingX": 2,
+       "paddingTop": 1
       },
       "children": [
        {
@@ -207,16 +217,37 @@
         ]
        },
        {
-        "type": "Button",
+        "type": "Box",
         "props": {
-         "key": "all",
-         "plain": true,
-         "dimColor": true,
-         "hotkey": "a",
-         "label": "all",
-         "onPress": "[fn]"
+         "columnGap": 2,
+         "flexWrap": "wrap"
         },
-        "children": []
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "all",
+           "plain": true,
+           "dimColor": true,
+           "hotkey": "a",
+           "label": "all",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "sessions",
+           "plain": true,
+           "dimColor": true,
+           "hotkey": "s",
+           "label": "sessions",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
        }
       ]
      },
@@ -247,6 +278,8 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "session.end",
+   "prompt.submit",
    "prompt.compose",
    "tool.call{tool=mcp__ledger__plan}",
    "tool.call{tool=mcp__ledger__task}",
@@ -260,38 +293,53 @@
    "tool.call",
    "command.run{command=ledger}",
    "ui.focus{requestId=ledger}",
+   "ui.message",
    "ui.render{component=Pane, requestId=ledger}"
   ],
   "calls": [
+   "$.clock.after (via watchSpawn)",
    "$.clock.every (via spinWhile)",
    "$.clock.now",
    "$.command.register",
-   "$.fs.read (via readPlan)",
-   "$.fs.write (via tickDoc)",
-   "$.model.complete (via readPlan)",
+   "$.fs.read (via laneDoc",
+   "readPlan)",
+   "$.fs.write (via laneDoc",
+   "tickDoc)",
+   "$.model.complete (via laneDoc",
+   "readPlan)",
    "$.prompt.fill (via toPrompt)",
    "$.prompt.read (via toPrompt)",
-   "$.session.cwd (via fullPath",
-   "keyOf",
-   "oldKeyOf)",
+   "$.session.append (via tell)",
+   "$.session.cwd",
    "$.session.id",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via loadBook)",
-   "$.store.set (via changeBookNow)",
+   "$.store.delete (via changeBookNow",
+   "makeRoom",
+   "noteSession)",
+   "$.store.get",
+   "$.store.keys (via fileBySession)",
+   "$.store.set (via changeBookNow",
+   "fileBySession",
+   "makeRoom",
+   "noteSession)",
    "$.tool.register",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.status (via show)",
+   "$.ui.status",
    "$.ui.toast"
   ],
   "stateReads": [
    "ledger.confirming",
    "ledger.cursor",
+   "ledger.home",
    "ledger.isAll",
    "ledger.isDetailed",
    "ledger.isHidden",
    "ledger.jump",
+   "ledger.others",
+   "ledger.peek",
+   "ledger.picked",
    "ledger.pointed",
    "ledger.run",
    "ledger.runs",
@@ -301,10 +349,14 @@
   "stateWrites": [
    "ledger.confirming",
    "ledger.cursor",
+   "ledger.home",
    "ledger.isAll",
    "ledger.isDetailed",
    "ledger.isHidden",
    "ledger.jump",
+   "ledger.others",
+   "ledger.peek",
+   "ledger.picked",
    "ledger.pointed",
    "ledger.run",
    "ledger.runs",
@@ -315,32 +367,116 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/buddylim-claude-code-mod-ledger/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/buddylim-claude-code-mod-ledger/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/buddylim-claude-code-mod-ledger/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/buddylim-claude-code-mod-ledger/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ledger.run, ledger.runs, ledger.isHidden, ledger.shown, ledger.cursor, ledger.isAll, ledger.isDetailed, ledger.confirming, ledger.spin, ledger.pointed, ledger.jump"
-    ]
+     "types ./types/index.d.ts declares state: ledger.run, ledger.runs, ledger.isHidden, ledger.home, ledger.peek, ledger.others, ledger.shown, ledger.cursor, ledger.isAll, ledger.isDetailed, ledger.confirming, ledger.spin, ledger.pointed, ledger.picked, ledger.jump"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/buddylim-claude-code-mod-ledger/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/buddylim-claude-code-mod-ledger/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.compose, tool.call{tool=mcp__ledger__plan}, tool.call{tool=mcp__ledger__task}, tool.call{tool=mcp__ledger__finding}, tool.call{tool=mcp__ledger__fixed}, tool.call{tool=mcp__ledger__report}, agent.spawn, turn.complete, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call, command.run{command=ledger}, ui.focus{requestId=ledger}, ui.render{component=Pane, requestId=ledger}",
-      "./register.tsx calls: $.clock.every (via spinWhile), $.clock.now, $.command.register, $.fs.read (via readPlan), $.fs.write (via tickDoc), $.model.complete (via readPlan), $.prompt.fill (via toPrompt), $.prompt.read (via toPrompt), $.session.cwd (via fullPath, keyOf, oldKeyOf), $.session.id, $.state.get, $.state.set, $.store.get (via loadBook), $.store.set (via changeBookNow), $.tool.register, $.ui.open, $.ui.resolve, $.ui.status (via show), $.ui.toast",
-      "./register.tsx state writes: ledger.confirming, ledger.cursor, ledger.isAll, ledger.isDetailed, ledger.isHidden, ledger.jump, ledger.pointed, ledger.run, ledger.runs, ledger.shown, ledger.spin",
-      "./register.tsx state reads: ledger.confirming, ledger.cursor, ledger.isAll, ledger.isDetailed, ledger.isHidden, ledger.jump, ledger.pointed, ledger.run, ledger.runs, ledger.shown, ledger.spin"
+      "./register.tsx hooks: session.start, session.end, prompt.submit, prompt.compose, tool.call{tool=mcp__ledger__plan}, tool.call{tool=mcp__ledger__task}, tool.call{tool=mcp__ledger__finding}, tool.call{tool=mcp__ledger__fixed}, tool.call{tool=mcp__ledger__report}, agent.spawn, turn.complete, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call, command.run{command=ledger}, ui.focus{requestId=ledger}, ui.message, ui.render{component=Pane, requestId=ledger}",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=ledger}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__ledger__plan}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__ledger__task}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__ledger__finding}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__ledger__fixed}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__ledger__report}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call{tool=Write}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Edit}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: ui.focus{requestId=ledger}",
+      "./register.tsx calls: $.clock.after (via watchSpawn), $.clock.every (via spinWhile), $.clock.now, $.command.register, $.fs.read (via laneDoc, readPlan), $.fs.write (via laneDoc, tickDoc), $.model.complete (via laneDoc, readPlan), $.prompt.fill (via toPrompt), $.prompt.read (via toPrompt), $.session.append (via tell), $.session.cwd, $.session.id, $.state.get, $.state.set, $.store.delete (via changeBookNow, makeRoom, noteSession), $.store.get, $.store.keys (via fileBySession), $.store.set (via changeBookNow, fileBySession, makeRoom, noteSession), $.tool.register, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: ledger.confirming, ledger.cursor, ledger.home, ledger.isAll, ledger.isDetailed, ledger.isHidden, ledger.jump, ledger.others, ledger.peek, ledger.picked, ledger.pointed, ledger.run, ledger.runs, ledger.shown, ledger.spin",
+      "./register.tsx state reads: ledger.confirming, ledger.cursor, ledger.home, ledger.isAll, ledger.isDetailed, ledger.isHidden, ledger.jump, ledger.others, ledger.peek, ledger.picked, ledger.pointed, ledger.run, ledger.runs, ledger.shown, ledger.spin",
+      "./register.tsx surface modules: hooks/strip.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ledger__plan}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ledger__task}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ledger__finding}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ledger__fixed}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ledger__report}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=ledger}",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "79d7159a9baf994"
+ "sourceHash": "b71788181807026b"
 }

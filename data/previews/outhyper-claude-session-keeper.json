@@ -1,0 +1,267 @@
+{
+ "slug": "outhyper-claude-session-keeper",
+ "generatedAt": "2026-10-16T14:21:10.486Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "away"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "autoclear"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "handover"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "away",
+    "description": "Away mode: stop the 58-minute keep-warm ping. /away on, /away off, or /away to toggle",
+    "output": "Away mode ON: no keep-warm pings. The cache will lapse after an hour; a big session may hand over and clear on its own."
+   },
+   {
+    "name": "autoclear",
+    "description": "Let the session hand over and clear by itself when it gets big. /autoclear on, /autoclear off, or /autoclear to toggle",
+    "output": "Autoclear OFF: the session never clears by itself. /handover now still works, and keep-warm pings are unchanged."
+   },
+   {
+    "name": "handover",
+    "description": "Show why this session would or would not clear; /handover now writes a handover and clears",
+    "output": "claude-opus-5-5: 97k of 350k tokens, 1 of 60 turns, cache warm (0 min since the last reply). Keep going: within limits. (away mode on, autoclear off, 0 pings since the last reply)"
+   }
+  ],
+  "tools": [],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.clock.now": 10,
+   "$.clock.every": 1,
+   "$.command.register": 3,
+   "$.state.get": 8,
+   "$.session.usage": 5,
+   "$.session.model": 5,
+   "$.session.turns": 5,
+   "$.store.get": 11,
+   "$.store.set": 2,
+   "$.state.set": 3,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column"
+     },
+     "children": [
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
+      },
+      {
+       "type": "Box",
+       "props": {
+        "columnGap": 2,
+        "paddingX": 1
+       },
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "keeper"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "green"
+         },
+         "children": [
+          "cache warm 0m"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "yellow",
+          "dimColor": false
+         },
+         "children": [
+          "away: no pings"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "would clear at 350k / 60 turns (now 97k / 1)"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "yellow"
+         },
+         "children": [
+          "autoclear off"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/away → Away mode ON: no keep-warm pings. The cache will lapse after an hour; a big sess…",
+   "/autoclear → Autoclear OFF: the session never clears by itself. /handover now still works, an…",
+   "/handover → claude-opus-5-5: 97k of 350k tokens, 1 of 60 turns, cache warm (0 min since the …"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "turn.start",
+   "turn.complete",
+   "session.start",
+   "ui.render{component=AbovePrompt}",
+   "command.run{command=away}",
+   "command.run{command=autoclear}",
+   "command.run{command=handover}"
+  ],
+  "calls": [
+   "$.clock.after (via onTurnComplete)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.command.run (via finishHandover)",
+   "$.fs.exists (via finishHandover)",
+   "$.model.fork (via tick)",
+   "$.prompt.submit (via finishHandover",
+   "startHandover)",
+   "$.session.cwd (via startHandover)",
+   "$.session.model (via assess)",
+   "$.session.turns (via assess)",
+   "$.session.usage (via assess",
+   "tick)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via isAutoclear",
+   "isAway)",
+   "$.store.set",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "session-keeper.phase",
+   "session-keeper.view"
+  ],
+  "stateWrites": [
+   "session-keeper.phase",
+   "session-keeper.view"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/outhyper-claude-session-keeper/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/outhyper-claude-session-keeper/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: session-keeper.view, session-keeper.phase"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/outhyper-claude-session-keeper/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: turn.start, turn.complete, session.start, ui.render{component=AbovePrompt}, command.run{command=away}, command.run{command=autoclear}, command.run{command=handover}",
+      "./register.tsx answers its own command: command.run{command=away}",
+      "./register.tsx answers its own command: command.run{command=autoclear}",
+      "./register.tsx answers its own command: command.run{command=handover}",
+      "./register.tsx calls: $.clock.after (via onTurnComplete), $.clock.every, $.clock.now, $.command.register, $.command.run (via finishHandover), $.fs.exists (via finishHandover), $.model.fork (via tick), $.prompt.submit (via finishHandover, startHandover), $.session.cwd (via startHandover), $.session.model (via assess), $.session.turns (via assess), $.session.usage (via assess, tick), $.state.get, $.state.set, $.store.get (via isAutoclear, isAway), $.store.set, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: session-keeper.phase, session-keeper.view",
+      "./register.tsx state reads: session-keeper.phase, session-keeper.view"
+     ],
+     "gatingHooks": []
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "afc2870da743e740"
+}

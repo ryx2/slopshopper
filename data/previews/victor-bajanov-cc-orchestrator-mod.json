@@ -1,0 +1,466 @@
+{
+ "slug": "victor-bajanov-cc-orchestrator-mod",
+ "generatedAt": "2026-10-16T14:18:19.203Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "SendMessage"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Agent"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "TaskStop"
+    }
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "/./"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "orch"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.press"
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "orchestrator-tool"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "orchestrator"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "orch",
+    "description": "Orchestrator: open or close the agents pane, show the roster, or hand an agent (or main) over now",
+    "argumentHint": "[close | roster | handover [name|id]]",
+    "output": "Orchestrator pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "checkin",
+    "description": "Arm a one-shot check-in on an agent you spawned: if it has not reported to you (SendMessage) within `minutes`, the orchestrator mod messages you, which wakes you. Calling again re-arms; minutes 0 cancels."
+   }
+  ],
+  "panes": [
+   {
+    "id": "orchestrator",
+    "title": "Orchestrator"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.state.get": 26,
+   "$.session.id": 1,
+   "$.state.set": 4,
+   "$.session.root": 2,
+   "$.fs.exists": 1,
+   "$.tool.register": 1,
+   "$.clock.every": 2,
+   "$.clock.now": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 3
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   },
+   {
+    "kind": "every",
+    "ms": 15000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "orchestrator": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "0 live · 0 handed over · limits 450k / main 450k (ask)"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "handover:main",
+           "label": "Hand over main",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No model requests yet."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "                                      ",
+         "08:53",
+         "08:53"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Activity"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Nothing yet."
+        ]
+       }
+      ]
+     },
+     "title": "Orchestrator"
+    },
+    "orchestrator-tool": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No tool call selected."
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "close",
+         "role": "dismiss",
+         "label": "Close",
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "orchestrator-tool"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(orchestrator)",
+   "/orch → Orchestrator pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "agent.spawn",
+   "turn.step",
+   "tool.call",
+   "tool.check{tool=SendMessage}",
+   "tool.check{tool=Agent}",
+   "tool.check{tool=TaskStop}",
+   "classic.SubagentStop",
+   "classic.Stop",
+   "turn.start",
+   "turn.complete{reason=/\".\"/}",
+   "turn.complete",
+   "command.run{command=orch}",
+   "ui.render{component=AbovePrompt}",
+   "ui.press",
+   "ui.close",
+   "ui.render{component=Pane, requestId=orchestrator-tool}",
+   "ui.render{component=Pane, requestId=orchestrator}"
+  ],
+  "calls": [
+   "$.agent.list",
+   "$.agent.spawn (via respawn)",
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.command.run (via finishMainHandover)",
+   "$.fs.exists (via excludeFromGit",
+   "finishMainHandover",
+   "onAgentEnd",
+   "restore",
+   "writeActivity)",
+   "$.fs.read (via excludeFromGit",
+   "finishMainHandover",
+   "readExit",
+   "restore",
+   "shellTick",
+   "writeActivity)",
+   "$.fs.stat (via readExit",
+   "shellTick)",
+   "$.fs.write (via excludeFromGit",
+   "persist",
+   "respawnFailed",
+   "writeActivity)",
+   "$.process.run (via tailExit)",
+   "$.prompt.submit (via finishMainHandover",
+   "fireCheckins",
+   "nudgeIfStuck",
+   "onAgentEnd",
+   "respawnFailed",
+   "startMainHandover)",
+   "$.session.append (via tellParent)",
+   "$.session.id (via runDir)",
+   "$.session.messages (via refreshTool",
+   "refreshTranscript)",
+   "$.session.root (via excludeFromGit",
+   "runDir)",
+   "$.session.send (via sendOwn)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.call (via stopReplaced)",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.copy (via copyText)",
+   "$.ui.log",
+   "$.ui.notify (via respawnFailed",
+   "sync)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.stat… [+62 chars]"
+  ],
+  "stateReads": [
+   "orchestrator.agents",
+   "orchestrator.collapsed",
+   "orchestrator.log",
+   "orchestrator.mainPhase",
+   "orchestrator.mainQueued",
+   "orchestrator.outbox",
+   "orchestrator.pinnedLog",
+   "orchestrator.runId",
+   "orchestrator.selectedAgent",
+   "orchestrator.toolView",
+   "orchestrator.transcripts"
+  ],
+  "stateWrites": [
+   "orchestrator.agents",
+   "orchestrator.collapsed",
+   "orchestrator.log",
+   "orchestrator.mainPhase",
+   "orchestrator.mainQueued",
+   "orchestrator.outbox",
+   "orchestrator.pinnedLog",
+   "orchestrator.runId",
+   "orchestrator.selectedAgent",
+   "orchestrator.toolView",
+   "orchestrator.transcripts"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/victor-bajanov-cc-orchestrator-mod/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/victor-bajanov-cc-orchestrator-mod/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: orchestrator.agents, orchestrator.log, orchestrator.mainPhase, orchestrator.runId, orchestrator.pinnedLog, orchestrator.selectedAgent, orchestrator.transcripts, orchestrator.outbox, orchestrator.collapsed, orchestrator.toolView, orchestrator.mainQueued"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/victor-bajanov-cc-orchestrator-mod/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, agent.spawn, turn.step, tool.call, tool.check{tool=SendMessage}, tool.check{tool=Agent}, tool.check{tool=TaskStop}, classic.SubagentStop, classic.Stop, turn.start, turn.complete{reason=/\".\"/}, turn.complete, command.run{command=orch}, ui.render{component=AbovePrompt}, ui.press, ui.close, ui.render{component=Pane, requestId=orchestrator-tool}, ui.render{component=Pane, requestId=orchestrator}",
+      "./register.tsx hooks on classic.SubagentStop, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=orch}",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.check{tool=SendMessage}",
+      "./register.tsx gating hook without .catch: tool.check{tool=Agent}",
+      "./register.tsx gating hook without .catch: tool.check{tool=TaskStop}",
+      "./register.tsx gating hook with .catch: classic.SubagentStop",
+      "./register.tsx gating hook with .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.agent.list, $.agent.spawn (via respawn), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via finishMainHandover), $.fs.exists (via excludeFromGit, finishMainHandover, onAgentEnd, restore, writeActivity), $.fs.read (via excludeFromGit, finishMainHandover, readExit, restore, shellTick, writeActivity), $.fs.stat (via readExit, shellTick), $.fs.write (via excludeFromGit, persist, respawnFailed, writeActivity), $.process.run (via tailExit), $.prompt.submit (via finishMainHandover, fireCheckins, nudgeIfStuck, onAgentEnd, respawnFailed, startMainHandover), $.session.append (via tellParent), $.session.id (via runDir), $.session.messages (via refreshTool, refreshTranscript), $.session.root (via excludeFromGit, runDir), $.session.send (via sendOwn), $.state.get, $.state.set, $.tool.call (via stopReplaced), $.tool.register, $.ui.close, $.ui.copy (via copyText), $.ui.log, $.ui.notify (via respawnFailed, sync), $.ui.open, $.ui.resolve, $.ui.stat… [+62 chars]",
+      "./register.tsx state writes: orchestrator.agents, orchestrator.collapsed, orchestrator.log, orchestrator.mainPhase, orchestrator.mainQueued, orchestrator.outbox, orchestrator.pinnedLog, orchestrator.runId, orchestrator.selectedAgent, orchestrator.toolView, orchestrator.transcripts",
+      "./register.tsx state reads: orchestrator.agents, orchestrator.collapsed, orchestrator.log, orchestrator.mainPhase, orchestrator.mainQueued, orchestrator.outbox, orchestrator.pinnedLog, orchestrator.runId, orchestrator.selectedAgent, orchestrator.toolView, orchestrator.transcripts"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=SendMessage}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Agent}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=TaskStop}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "2f6c431da26fe01e"
+}

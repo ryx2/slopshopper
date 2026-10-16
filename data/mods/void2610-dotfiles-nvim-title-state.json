@@ -1,0 +1,8 @@
+{
+ "slug": "void2610-dotfiles-nvim-title-state",
+ "files": {
+  "hooks/index.ts": "import type { EngineInterface, Register } from \"claude-code\";\n\ntype State = \"working\" | \"waiting\" | \"done\" | \"none\";\n\nasync function send($: EngineInterface, state: State) {\n  // nvim の :terminal から起動された時だけ $NVIM に親のソケットが入る\n  const server = await $.env.get(\"NVIM\");\n  if (!server) return;\n  // ターンの進行を nvim の応答待ちで止めないよう await しない\n  $.process\n    .run([\n      \"nvim\",\n      \"--server\",\n      server,\n      \"--remote-expr\",\n      `luaeval('ClaudeTitleState(_A)', '${state}')`,\n    ])\n    .catch(() => {});\n}\n\nexport const register: Register = (on) => {\n  on(\"turn.start\", async ($, e, next) => {\n    await send($, \"working\");\n    return next(e);\n  });\n\n  on(\"tool.check\", async ($, e, next) => {\n    const result = await next(e);\n    // ask はモードの判定者へ回るため、auto モードでは分類器の判定中も一瞬 waiting になる\n    if (e.tool_use_id && result.decision === \"ask\") await send($, \"waiting\");\n    return result;\n  });\n\n  on(\"tool.call\", async ($, e, next) => {\n    const result = await next(e);\n    await send($, \"working\");\n    return result;\n  });\n\n  on(\"turn.complete\", async ($, e, next) => {\n    if (!e.agentId) await send($, \"done\");\n    return next(e);\n  });\n\n  on(\"session.end\", async ($, e, next) => {\n    await send($, \"none\");\n    return next(e);\n  });\n};\n",
+  "hooks/hooks.json": "{\n  \"modules\": [\"./index.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"nvim-title-state\",\n  \"author\": {\n    \"name\": \"void2610\"\n  },\n  \"description\": \"nvim の内蔵ターミナルで動く Claude の状態を親 nvim のタブタイトルへ通知する\",\n  \"version\": \"0.1.0\"\n}"
+ }
+}

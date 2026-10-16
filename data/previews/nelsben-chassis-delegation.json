@@ -1,6 +1,6 @@
 {
  "slug": "nelsben-chassis-delegation",
- "generatedAt": "2026-10-09T15:34:03.790Z",
+ "generatedAt": "2026-10-16T14:17:56.029Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -19,11 +19,26 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "Agent"
     }
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "turn.start"
@@ -70,6 +85,12 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "mcp__chassis-delegation__verdict"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "mcp__chassis-delegation__init"
     }
    },
@@ -77,6 +98,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__chassis-delegation__setup"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__chassis-delegation__merge"
     }
    },
    {
@@ -104,23 +131,27 @@
     "name": "dispatch",
     "description": "Brief, worktree and spawn a worker for a task card",
     "argumentHint": "<TASK-ID> [--dry-run] [--base <sha>] [--replay] [--scope <globs>] [--forbid <globs>] [--here] [--force-overlap] | <TASK-ID> --verify <sha>",
-    "output": "usage: /dispatch <TASK-ID> [--dry-run] [--base <origin/main|sha>] [--replay --base <sha>] [--scope <globs>] [--forbid <globs>] [--here] [--force-overlap] | /dispatch <TASK-ID> --verify <sha>"
+    "output": "usage: /dispatch <TASK-ID> [--dry-run] [--base <origin/main|sha>] [--replay --base <sha>] [--scope <globs>] [--forbid <globs>] [--here] [--repo <abs path>] [--force-overlap] | /dispatch <TASK-ID> --verify <sha>"
    },
    {
     "name": "delegation",
     "description": "Delegation state; \"setup\" checks this repo and scaffolds it; \"init\" is the bare scaffold",
-    "argumentHint": "[setup|init|dashboard]",
-    "output": "Delegation state (chassis-delegation): nothing running, queued or owed.\n\nmod: chassis-delegation 0.5.0 loaded from /plugins/chassis-delegation\nconfig: no .chassis-delegation.json in /work/app (built-in defaults + /config)\nnot set up here: run /delegation setup\ngate map: (empty: gates are reported \"not re-run\")\ntiers: economy→haiku, standard→sonnet, frontier→opus · max workers 2 · git guard on (main, master) · eval off\nbase: origin/main → main → origin/master → master · repo=here ignore: .delegation/**, agents/tasks/**"
+    "argumentHint": "[setup [path]|init [path]|update|dashboard|config [<field> [<value>]]|accept <id> [note]|merge <id> [--finish]]",
+    "output": "running: none · brain: 🟣 opus\nDelegation state (chassis-delegation): nothing running, queued or owed.\n\nbrain: opus $0.08 over 1 turns · workers $0.00 (0 attempts) · unattributed $0.34 · brain share 19%\nbrain edits: 3\nbrain calls: 2 run-or-poll · 2 read · 3 edit · average context 13K per call\nmod: chassis-delegation 0.9.12 loaded from /plugins/chassis-delegation\nconfig: no .chassis-delegation.json in /work/app (built-in defaults + the mod's options: /delegation config)\nnot set up here: run /delegation setup\ngate map: (empty: gates are reported \"not re-run\")\ntiers: economy→haiku, standard→sonnet, frontier→opus · max workers 2 · git guard on (main, master) · eval off\neffort: economy low · standard medium · frontier high\nbase: origin/main → main → origin/master → master · repo=here ignore: .delegation/**, agents/tasks/**"
    }
   ],
   "tools": [
    {
     "name": "dispatch",
-    "description": "Dispatch a chassis task card to a worker: writes the brief from the card, cuts the worktree (or, with here, shares the session's own checkout), picks the tier and spawns. Pass scope/forbid globs when the card's are prose. With verify (a sha), spawns nothing: runs the verifier on the work already in the task's worktree."
+    "description": "Prepare a chassis task card for a worker: writes the brief from the card, cuts the worktree (or, with here, shares the session's own checkout) and picks the tier, then returns the Agent call to make (a spawn block of JSON): the worker starts when you make it, and the mod records and verifies it. When every worker slot is taken it says queued, and tells you when a slot frees. Pass scope/forbid globs when the card's are prose. Pass repo, the absolute path of another local git checkout, for a task that works in that repo (a card written by the card tool with repo set to a path is found by its id alone). With verify (a sha), spawns nothing: runs the verifier on the work already in the task's worktree."
+   },
+   {
+    "name": "verdict",
+    "description": "Wait for a worker's verdict. When a background worker hands back, call this with its task id in that turn, before ending it: the verifier is still running, and this returns the verdict row (and any ready: line) as soon as it lands. If the verdict is already in it returns at once. If it is still verifying after waitSeconds it says so: call it again."
    },
    {
     "name": "card",
-    "description": "When the person describes work to delegate, look at the repo to choose scope globs, then call this with the task. It writes the card, runs the dry run and returns the brief; show the person the summary and dispatch when they say go (call dispatch, or call this with dispatch: true when they already said to go ahead). Never ask the person to edit a card file."
+    "description": "When the person describes work to delegate, look at the repo to choose scope globs, then call this with the task (research or extraction with outputs outside the repo: repo none or here, scope = the output folder). For several workers at once pass lanes: one { title, scope } per worker, each with its own output folder, and put what the lanes share but none may touch (a notes file) in forbid; name a live app only one worker may use in resources, and the queue runs the lanes that hold it one at a time. It writes the card (one per lane), runs the dry run and returns the brief; show the person the summary and dispatch when they say go (call dispatch, or call this with dispatch: true when they already said to go ahead). Never ask the person to edit a card file."
    },
    {
     "name": "init",
@@ -129,11 +160,18 @@
    {
     "name": "setup",
     "description": "Checks the repo for chassis-delegation and returns what to fix; run the fixes, then call it again. When every required check holds it scaffolds the config and returns the first card to write."
+   },
+   {
+    "name": "merge",
+    "description": "After a consistent verdict with next=accept: rebases the task worktree onto the base, commits the card as merged, runs the card gates there, and returns the push/PR block to run verbatim. With finish: true, after the PR has landed: removes the root card, pulls, removes the worktree and branch, records the merge, and returns the remote cleanup (and release) lines. Never pushes and never calls gh itself."
    }
   ],
   "panes": [],
-  "toasts": [],
+  "toasts": [
+   "chassis-delegation: could not load brief.md, review.md, debrief.md from /plugins/chassis-delegation/hooks/templates; the feature that needs each will say so when used"
+  ],
   "logs": [
+   "chassis-delegation: could not load brief.md, review.md, debrief.md from /plugins/chassis-delegation/hooks/templates: Error: ENOENT: no such file /plugins/chassis-delegation/hooks/templates/brief.md; Error: ENOENT: no such file /plugins/chassis-delegation/hooks/templates/review.md; Error: ENOENT: no such file /plugins/chassis-delegation/hooks/templates/debrief.md",
    "chassis-delegation: git guard: chassis-delegation: no push on main; branch first (git checkout -b agent/<domain>/<id>) — rm -rf build && git push --force origin main"
   ],
   "denies": [
@@ -145,23 +183,28 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 2,
-   "$.tool.register": 4,
-   "$.session.root": 6,
-   "$.fs.read": 2,
-   "$.clock.now": 8,
-   "$.agent.list": 6,
-   "$.state.get": 16,
-   "$.session.usage": 4,
-   "$.state.set": 1,
-   "$.ui.invalidate": 1,
+   "$.tool.register": 6,
+   "$.fs.read": 31,
+   "$.ui.log": 2,
+   "$.ui.toast": 1,
+   "$.session.root": 47,
+   "$.env.get": 22,
+   "$.clock.now": 29,
+   "$.agent.list": 14,
+   "$.state.get": 38,
+   "$.session.usage": 53,
+   "$.state.set": 13,
+   "$.ui.invalidate": 13,
    "$.clock.after": 2,
+   "$.store.get": 47,
    "$.store.keys": 1,
+   "$.store.set": 13,
+   "$.session.id": 16,
    "$.process.run": 1,
+   "$.session.model": 4,
    "$.session.cwd": 1,
-   "$.ui.log": 1,
-   "$.session.id": 2,
-   "$.store.get": 5,
-   "$.store.set": 1,
+   "$.fs.list": 2,
+   "$.fs.exists": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -314,7 +357,7 @@
                "dimColor": true
               },
               "children": [
-               "verified 1st try"
+               "consistent 1st try"
               ]
              },
              {
@@ -324,6 +367,35 @@
               },
               "children": [
                "0 of 0"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "key": "kpi-brain",
+             "flexDirection": "column",
+             "borderStyle": "round",
+             "paddingX": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "spend split"
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "brain $0.08 / workers $0.00"
               ]
              }
             ]
@@ -422,6 +494,42 @@
            {
             "type": "Box",
             "props": {
+             "key": "brain-row",
+             "flexDirection": "row",
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 20
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#199e70"
+                },
+                "children": [
+                 "████████████████████"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "brain · opus · $0.08 · 98.9k tok · 1 turn"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
              "flexDirection": "row",
              "gap": 1
             },
@@ -449,7 +557,7 @@
                "wrap": "truncate-end"
               },
               "children": [
-               "haiku · $0.00 · 0 tok · 0 verified"
+               "haiku · $0.00 · 0 tok · 0 consistent"
               ]
              }
             ]
@@ -484,7 +592,7 @@
                "wrap": "truncate-end"
               },
               "children": [
-               "sonnet · $0.00 · 0 tok · 0 verified"
+               "sonnet · $0.00 · 0 tok · 0 consistent"
               ]
              }
             ]
@@ -519,7 +627,7 @@
                "wrap": "truncate-end"
               },
               "children": [
-               "opus · $0.00 · 0 tok · 0 verified"
+               "opus · $0.00 · 0 tok · 0 consistent"
               ]
              }
             ]
@@ -603,7 +711,7 @@
            "wrap": "truncate-end"
           },
           "children": [
-           "  0 verified · 0 unverified · 0 refuted"
+           "  0 consistent · 0 unverified · 0 refuted"
           ]
          },
          {
@@ -765,6 +873,15 @@
           ]
          },
          {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "  brain calls: 2 run-or-poll · 2 read · 3 edit · average context 13K per call"
+          ]
+         },
+         {
           "type": "Box",
           "props": {
            "flexDirection": "row",
@@ -836,8 +953,8 @@
   },
   "script": [
    "session.start",
-   "$.process.run(git -C /work/app worktree list --porcelain) → exit 0",
    "tool.call Read",
+   "$.process.run(git -C /work/app worktree list --porcelain) → exit 0",
    "tool.call Grep",
    "tool.call Edit",
    "tool.call Write",
@@ -848,7 +965,7 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/dispatch → usage: /dispatch <TASK-ID> [--dry-run] [--base <origin/main|sha>] [--replay --ba…",
-   "/delegation → Delegation state (chassis-delegation): nothing running, queued or owed.\n\nmod: ch…"
+   "/delegation → running: none · brain: 🟣 opus\nDelegation state (chassis-delegation): nothing ru…"
   ],
   "console": [],
   "warnings": []
@@ -861,8 +978,11 @@
    "agent.spawn",
    "tool.call",
    "tool.call{tool=Bash}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=Bash}",
    "tool.call{tool=Agent}",
    "turn.complete",
+   "turn.step",
    "turn.start",
    "prompt.submit",
    "session.send",
@@ -873,8 +993,10 @@
    "tool.call{tool=mcp__chassis-delegation__dispatch}",
    "command.run{command=delegation}",
    "tool.call{tool=mcp__chassis-delegation__card}",
+   "tool.call{tool=mcp__chassis-delegation__verdict}",
    "tool.call{tool=mcp__chassis-delegation__init}",
    "tool.call{tool=mcp__chassis-delegation__setup}",
+   "tool.call{tool=mcp__chassis-delegation__merge}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=delegation-dash}",
    "session.compact",
@@ -883,64 +1005,71 @@
   "calls": [
    "$.agent.list",
    "$.agent.spawn (via spawnSelf)",
-   "$.clock.after (via armIdle",
+   "$.clock.after (via armFallback",
+   "armIdle",
    "scheduleSample)",
    "$.clock.every",
    "$.clock.now (via now)",
+   "$.clock.sleep (via takeEngineTurn)",
    "$.command.register",
-   "$.env.get (via gatherSetup",
-   "maybeDebrief)",
+   "$.config.list (via configView)",
+   "$.config.set (via runConfig)",
+   "$.env.get (via brainGuard",
+   "debriefBasis",
+   "detectGateIn",
+   "driveGuard",
+   "gatherSetup",
+   "homeDir",
+   "homeOf",
+   "reviewerGuard",
+   "runUpdate",
+   "tmpDirOf)",
    "$.fs.exists (via exists)",
-   "$.fs.list (via cardsInTree",
+   "$.fs.list (via cardNameIn",
+   "cardsInTree",
+   "detectGateIn",
    "dispatchOnce",
    "gatherSetup",
+   "listRoot",
+   "locateTask",
+   "namesIn",
    "runCard",
-   "runVerifyDispatch)",
+   "runVerifyDispatch",
+   "statArtefact)",
    "$.fs.read",
+   "$.fs.stat (via listRoot",
+   "statArtefact)",
    "$.fs.write (via appendLedger",
    "applyHandbackAmends",
-   "runCard",
-   "runInit",
-   "runSetup",
-   "runVerify",
-   "writeBrief)",
-   "$.model.classify (via decideSpawn",
-   "probe)",
-   "$.process.run (via run)",
-   "$.session.append (via appendRow",
-   "decideSpawn)",
-   "$.session.cwd (via bashCwd)",
-   "$.session.id (via sessionIdOf)",
-   "$.session.messages (via transcriptHandbacks)",
-   "$.session.root (via appendLedger",
-   "bashCwd",
-   "decideSpawn",
    "dispatchOnce",
-   "inlineBrief",
-   "liveModel",
-   "loadRepoConfig",
-   "maybeDebrief",
-   "maybeEval",
-   "onRunnerComplete",
-   "recipeDir",
+   "mergePrepare",
+   "postCore",
    "runCard",
-   "runCardless",
+   "runConfig",
+   "runDebriefApply",
    "runInit",
+   "runLesson",
    "runSetup",
+   "runUpdate",
    "runVerify",
-   "runVerifyDispatch",
-   "statusReport",
-   "workInWorktree)",
-   "$.session.send (via finalizeOnce",
-   "trackSpend)",
-   "$.session.usage (via liveMode… [+644 chars]"
+   "writeBrief",
+   "writeFindings",
+   "writeUserOption)",
+   "$.model.classify (via decideSpawn",
+   "probe",
+   "runCard)",
+   "$.process.run (via run)",
+   "$.prompt.submit (via submitWake)",
+   "$.session.append (vi… [+1684 chars]"
   ],
   "stateReads": [
+   "chassis-delegation.brain",
    "chassis-delegation.queue",
    "chassis-delegation.spend",
    "chassis-delegation.workers"
   ],
   "stateWrites": [
+   "chassis-delegation.brain",
    "chassis-delegation.lastVerdict",
    "chassis-delegation.queue",
    "chassis-delegation.spend",
@@ -949,7 +1078,8 @@
   ],
   "envReads": [
    "HOME",
-   "PATH"
+   "PATH",
+   "TMPDIR"
   ],
   "raw": {
    "success": true,
@@ -962,7 +1092,7 @@
     "warnings": [],
     "notes": [
      "types ./hooks/types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./hooks/types/index.d.ts declares state: chassis-delegation.workers, chassis-delegation.status, chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.band, chassis-delegation.dashboard, chassis-delegation.spend"
+     "types ./hooks/types/index.d.ts declares state: chassis-delegation.workers, chassis-delegation.status, chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.band, chassis-delegation.dashboard, chassis-delegation.spend, chassis-delegation.brain"
     ],
     "gatingHooks": []
    },
@@ -973,11 +1103,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: agent.spawn, tool.call, tool.call{tool=Bash}, tool.call{tool=Agent}, turn.complete, turn.start, prompt.submit, session.send, session.start, agent.offer, session.measure, command.run{command=dispatch}, tool.call{tool=mcp__chassis-delegation__dispatch}, command.run{command=delegation}, tool.call{tool=mcp__chassis-delegation__card}, tool.call{tool=mcp__chassis-delegation__init}, tool.call{tool=mcp__chassis-delegation__setup}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=delegation-dash}, session.compact, prompt.compose",
+      "./register.ts hooks: agent.spawn, tool.call, tool.call{tool=Bash}, tool.call{tool=Bash}, tool.call{tool=Bash}, tool.call{tool=Agent}, turn.complete, turn.step, turn.start, prompt.submit, session.send, session.start, agent.offer, session.measure, command.run{command=dispatch}, tool.call{tool=mcp__chassis-delegation__dispatch}, command.run{command=delegation}, tool.call{tool=mcp__chassis-delegation__card}, tool.call{tool=mcp__chassis-delegation__verdict}, tool.call{tool=mcp__chassis-delegation__init}, tool.call{tool=mcp__chassis-delegation__setup}, tool.call{tool=mcp__chassis-delegation__merge}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=delegation-dash}, session.compact, prompt.compose",
+      "./register.ts hooks on session.compact, prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=dispatch}",
       "./register.ts answers its own command: command.run{command=delegation}",
       "./register.ts gating hook without .catch: agent.spawn",
       "./register.ts gating hook without .catch: tool.call",
+      "./register.ts gating hook without .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook without .catch: tool.call{tool=Bash}",
       "./register.ts gating hook without .catch: tool.call{tool=Bash}",
       "./register.ts gating hook without .catch: tool.call{tool=Agent}",
       "./register.ts gating hook without .catch: prompt.submit",
@@ -985,14 +1118,16 @@
       "./register.ts gating hook without .catch: agent.offer",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__dispatch}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__card}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__verdict}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__init}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__setup}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__chassis-delegation__merge}",
       "./register.ts gating hook without .catch: session.compact",
-      "./register.ts calls: $.agent.list, $.agent.spawn (via spawnSelf), $.clock.after (via armIdle, scheduleSample), $.clock.every, $.clock.now (via now), $.command.register, $.env.get (via gatherSetup, maybeDebrief), $.fs.exists (via exists), $.fs.list (via cardsInTree, dispatchOnce, gatherSetup, runCard, runVerifyDispatch), $.fs.read, $.fs.write (via appendLedger, applyHandbackAmends, runCard, runInit, runSetup, runVerify, writeBrief), $.model.classify (via decideSpawn, probe), $.process.run (via run), $.session.append (via appendRow, decideSpawn), $.session.cwd (via bashCwd), $.session.id (via sessionIdOf), $.session.messages (via transcriptHandbacks), $.session.root (via appendLedger, bashCwd, decideSpawn, dispatchOnce, inlineBrief, liveModel, loadRepoConfig, maybeDebrief, maybeEval, onRunnerComplete, recipeDir, runCard, runCardless, runInit, runSetup, runVerify, runVerifyDispatch, statusReport, workInWorktree), $.session.send (via finalizeOnce, trackSpend), $.session.usage (via liveMode… [+644 chars]",
+      "./register.ts calls: $.agent.list, $.agent.spawn (via spawnSelf), $.clock.after (via armFallback, armIdle, scheduleSample), $.clock.every, $.clock.now (via now), $.clock.sleep (via takeEngineTurn), $.command.register, $.config.list (via configView), $.config.set (via runConfig), $.env.get (via brainGuard, debriefBasis, detectGateIn, driveGuard, gatherSetup, homeDir, homeOf, reviewerGuard, runUpdate, tmpDirOf), $.fs.exists (via exists), $.fs.list (via cardNameIn, cardsInTree, detectGateIn, dispatchOnce, gatherSetup, listRoot, locateTask, namesIn, runCard, runVerifyDispatch, statArtefact), $.fs.read, $.fs.stat (via listRoot, statArtefact), $.fs.write (via appendLedger, applyHandbackAmends, dispatchOnce, mergePrepare, postCore, runCard, runConfig, runDebriefApply, runInit, runLesson, runSetup, runUpdate, runVerify, writeBrief, writeFindings, writeUserOption), $.model.classify (via decideSpawn, probe, runCard), $.process.run (via run), $.prompt.submit (via submitWake), $.session.append (vi… [+1684 chars]",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME, PATH",
-      "./register.ts state writes: chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.spend, chassis-delegation.status, chassis-delegation.workers",
-      "./register.ts state reads: chassis-delegation.queue, chassis-delegation.spend, chassis-delegation.workers"
+      "./register.ts env reads: HOME, PATH, TMPDIR",
+      "./register.ts state writes: chassis-delegation.brain, chassis-delegation.lastVerdict, chassis-delegation.queue, chassis-delegation.spend, chassis-delegation.status, chassis-delegation.workers",
+      "./register.ts state reads: chassis-delegation.brain, chassis-delegation.queue, chassis-delegation.spend, chassis-delegation.workers"
      ],
      "gatingHooks": [
       {
@@ -1005,6 +1140,18 @@
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
        "hasCatch": false
       },
       {
@@ -1052,6 +1199,12 @@
       {
        "module": "./register.ts",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__chassis-delegation__verdict}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__chassis-delegation__init}",
        "hasCatch": false
       },
@@ -1059,6 +1212,12 @@
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__chassis-delegation__setup}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__chassis-delegation__merge}",
        "hasCatch": false
       },
       {
@@ -1073,5 +1232,5 @@
    "advice": []
   }
  },
- "sourceHash": "4ffb961f490c5c89"
+ "sourceHash": "6c113fca2f92d15b"
 }

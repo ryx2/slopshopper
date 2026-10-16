@@ -1,6 +1,6 @@
 {
  "slug": "arunkumar9t2-raven-raven",
- "generatedAt": "2026-10-10T14:44:37.708Z",
+ "generatedAt": "2026-10-16T14:16:19.789Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -63,6 +63,21 @@
     }
    },
    {
+    "event": "tool.describe",
+    "matcher": {
+     "tool": "/^mcp__.+__show$/"
+    }
+   },
+   {
+    "event": "prompt.context"
+   },
+   {
+    "event": "prompt.attachment",
+    "matcher": {
+     "type": "mcp_instructions_delta"
+    }
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "/^mcp__.+__show$/"
@@ -96,7 +111,7 @@
   "tools": [
    {
     "name": "show",
-    "description": "Show something to the user in the Raven preview pane beside the transcript."
+    "description": "Show something to the user in the Raven preview pane beside the transcript, where they can comment on it. Use it whenever you produce something the user should read or decide on rather than scroll past: a plan, spec, design, report or any doc you wrote (`show`), a summary or checklist you compose (`note`), one file's changes (`diff`), or a pane by name (`open`). Some docs open by themselves, and the result of the edit that wrote them says so; no such note means it was not shown, so show it. `comments` fetches pending comments on demand."
    }
   ],
   "panes": [
@@ -115,7 +130,7 @@
    "$.process.run": 14,
    "$.command.register": 1,
    "$.tool.register": 1,
-   "$.store.get": 2,
+   "$.store.get": 3,
    "$.ui.status": 1,
    "$.ui.invalidate": 10,
    "$.ui.panes": 5,
@@ -167,9 +182,7 @@
       "wrap": "truncate-end"
      },
      "children": [
-      "◆",
-      " ",
-      "Raven diff shown"
+      "◆ Raven diff shown"
      ]
     }
    },
@@ -185,17 +198,22 @@
        {
         "type": "Box",
         "props": {
-         "flexDirection": "column"
+         "key": "header:row",
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "gap": 2,
+         "overflow": "hidden",
+         "flexWrap": "nowrap"
         },
         "children": [
          {
           "type": "Box",
           "props": {
-           "key": "header:summary",
            "flexDirection": "row",
            "gap": 2,
            "overflow": "hidden",
-           "flexWrap": "nowrap"
+           "flexWrap": "nowrap",
+           "flexShrink": 1
           },
           "children": [
            {
@@ -223,26 +241,14 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "",
-             "",
-             ""
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "wrap": "truncate-end"
-            },
-            "children": [
-             "",
-             "",
              {
               "type": "Text",
               "props": {
-               "color": "inactive"
+               "key": "cell:0",
+               "color": "warning"
               },
               "children": [
-               "□□□□□"
+               "▁"
               ]
              }
             ]
@@ -286,120 +292,87 @@
          {
           "type": "Box",
           "props": {
-           "key": "header:actions",
-           "flexDirection": "row",
-           "justifyContent": "space-between",
-           "gap": 2,
-           "overflow": "hidden",
-           "flexWrap": "nowrap"
+           "flexShrink": 0
           },
           "children": [
            {
             "type": "Box",
             "props": {
+             "key": "header:row",
              "flexDirection": "row",
              "gap": 1,
              "overflow": "hidden",
-             "flexWrap": "nowrap",
-             "flexShrink": 1
+             "flexWrap": "nowrap"
             },
             "children": [
              {
-              "type": "Text",
+              "type": "Button",
               "props": {
-               "wrap": "truncate-end"
+               "key": "previous",
+               "plain": true,
+               "dimColor": true,
+               "action": "app:diffFileListUp",
+               "label": " ↑ ",
+               "onPress": "[fn]"
               },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "key": "cell:0",
-                 "color": "warning"
-                },
-                "children": [
-                 "▁"
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexShrink": 0
-            },
-            "children": [
+              "children": []
+             },
              {
-              "type": "Box",
+              "type": "Button",
               "props": {
-               "key": "header:actions",
-               "flexDirection": "row",
-               "gap": 1,
-               "overflow": "hidden",
-               "flexWrap": "nowrap"
+               "key": "next",
+               "plain": true,
+               "dimColor": true,
+               "action": "app:diffFileListDown",
+               "label": " ↓ ",
+               "onPress": "[fn]"
               },
-              "children": [
-               {
-                "type": "Button",
-                "props": {
-                 "key": "previous",
-                 "plain": true,
-                 "dimColor": true,
-                 "action": "app:diffFileListUp",
-                 "label": " ↑ ",
-                 "onPress": "[fn]"
-                },
-                "children": []
-               },
-               {
-                "type": "Button",
-                "props": {
-                 "key": "next",
-                 "plain": true,
-                 "dimColor": true,
-                 "action": "app:diffFileListDown",
-                 "label": " ↓ ",
-                 "onPress": "[fn]"
-                },
-                "children": []
-               },
-               {
-                "type": "Client",
-                "props": {
-                 "key": "header:actions:pills",
-                 "module": "../surface/strip.tsx",
-                 "width": 21,
-                 "height": 1,
-                 "props": {
-                  "rows": [
+              "children": []
+             },
+             {
+              "type": "Client",
+              "props": {
+               "key": "header:row:pills",
+               "module": "../surface/strip.tsx",
+               "width": 11,
+               "height": 1,
+               "props": {
+                "rows": [
+                 {
+                  "left": [
                    {
-                    "left": [
-                     {
-                      "t": " ↻ refresh ",
-                      "c": "text",
-                      "bg": "userMessageBackground",
-                      "id": "refresh",
-                      "hoverBg": "selectionBg"
-                     },
-                     {
-                      "t": " "
-                     },
-                     {
-                      "t": " ⌫ clear ",
-                      "c": "error",
-                      "bg": "userMessageBackground",
-                      "id": "clear",
-                      "hoverBg": "selectionBg"
-                     }
-                    ]
+                    "t": " ↻ ",
+                    "c": "text",
+                    "bg": "userMessageBackground",
+                    "id": "refresh",
+                    "hoverBg": "selectionBg"
+                   },
+                   {
+                    "t": " "
+                   },
+                   {
+                    "t": " ◫ ",
+                    "c": "text",
+                    "bg": "userMessageBackground",
+                    "id": "split",
+                    "hoverBg": "selectionBg"
+                   },
+                   {
+                    "t": " "
+                   },
+                   {
+                    "t": " ⌫ ",
+                    "c": "error",
+                    "bg": "userMessageBackground",
+                    "id": "clear",
+                    "hoverBg": "selectionBg"
                    }
                   ]
                  }
-                },
-                "children": []
+                ]
                }
-              ]
+              },
+              "children": []
              }
             ]
            }
@@ -514,19 +487,11 @@
             "type": "Box",
             "props": {
              "flexDirection": "row",
+             "gap": 2,
              "overflow": "hidden",
              "flexWrap": "nowrap"
             },
             "children": [
-             {
-              "type": "Text",
-              "props": {
-               "color": "warning"
-              },
-              "children": [
-               "╭─ "
-              ]
-             },
              {
               "type": "Box",
               "props": {
@@ -566,89 +531,43 @@
                   "children": [
                    "  M"
                   ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "diffAddedWord"
-                  },
-                  "children": [
-                   " +0"
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "diffRemovedWord"
-                  },
-                  "children": [
-                   " −0"
-                  ]
                  }
                 ]
                }
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {},
-              "children": [
-               " "
               ]
              },
              {
               "type": "Box",
               "props": {
-               "width": 0,
-               "height": 1,
-               "flexGrow": 1,
-               "flexShrink": 1,
-               "overflow": "hidden"
+               "flexShrink": 0
               },
               "children": [
                {
-                "type": "Text",
+                "type": "Client",
                 "props": {
-                 "color": "warning",
-                 "wrap": "wrap"
-                },
-                "children": [
-                 "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {},
-              "children": [
-               " "
-              ]
-             },
-             {
-              "type": "Client",
-              "props": {
-               "key": "title-row:src/auth.ts\n?? src/auth.test.ts\n:pills",
-               "module": "../surface/strip.tsx",
-               "width": 8,
-               "height": 1,
-               "props": {
-                "rows": [
-                 {
-                  "left": [
+                 "key": "title-row:src/auth.ts\n?? src/auth.test.ts\n:pills",
+                 "module": "../surface/strip.tsx",
+                 "width": 8,
+                 "height": 1,
+                 "props": {
+                  "rows": [
                    {
-                    "t": " ✎ note ",
-                    "c": "text",
-                    "bg": "userMessageBackground",
-                    "id": "comment:src/auth.ts\n?? src/auth.test.ts\n|",
-                    "hoverBg": "selectionBg"
+                    "left": [
+                     {
+                      "t": " 󰍪 note ",
+                      "c": "text",
+                      "bg": "userMessageBackground",
+                      "id": "comment:src/auth.ts\n?? src/auth.test.ts\n|",
+                      "hoverBg": "selectionBg"
+                     }
+                    ]
                    }
                   ]
                  }
-                ]
+                },
+                "children": []
                }
-              },
-              "children": []
+              ]
              }
             ]
            }
@@ -659,37 +578,14 @@
        {
         "type": "Box",
         "props": {
-         "key": "src/auth.ts\n?? src/auth.test.ts\n#status",
-         "flexDirection": "row",
-         "overflow": "hidden",
-         "flexWrap": "nowrap"
+         "key": "src/auth.ts\n?? src/auth.test.ts\n#title-gap"
         },
         "children": [
          {
           "type": "Text",
-          "props": {
-           "color": "warning"
-          },
+          "props": {},
           "children": [
-           "│ "
-          ]
-         },
-         {
-          "type": "Box",
-          "props": {
-           "flexGrow": 1,
-           "overflow": "hidden"
-          },
-          "children": [
-           {
-            "type": "Text",
-            "props": {
-             "dimColor": true
-            },
-            "children": [
-             "No textual changes"
-            ]
-           }
+           " "
           ]
          }
         ]
@@ -697,13 +593,14 @@
        {
         "type": "Box",
         "props": {
-         "key": "src/auth.ts\n?? src/auth.test.ts\n#close"
+         "key": "src/auth.ts\n?? src/auth.test.ts\n#status"
         },
         "children": [
          {
           "type": "Box",
           "props": {
            "flexDirection": "row",
+           "height": 1,
            "overflow": "hidden",
            "flexWrap": "nowrap"
           },
@@ -714,27 +611,25 @@
              "color": "warning"
             },
             "children": [
-             "╰"
+             "▌ "
             ]
            },
            {
             "type": "Box",
             "props": {
-             "width": 0,
-             "height": 1,
+             "flexDirection": "column",
              "flexGrow": 1,
-             "flexShrink": 1,
              "overflow": "hidden"
             },
             "children": [
              {
               "type": "Text",
               "props": {
-               "color": "warning",
-               "wrap": "wrap"
+               "dimColor": true,
+               "wrap": "truncate-end"
               },
               "children": [
-               "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+               "No textual changes"
               ]
              }
             ]
@@ -797,6 +692,9 @@
    "ui.scroll{requestId=?}",
    "turn.complete",
    "ui.close{id=?}",
+   "tool.describe{tool=?}",
+   "prompt.context",
+   "prompt.attachment{type=mcp_instructions_delta}",
    "tool.call{tool=?}",
    "tool.call",
    "prompt.attachment{type=plan_mode|plan_mode_exit|plan_mode_reentry}",
@@ -852,7 +750,8 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=?}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, ui.render{component=CommandOutput, props has {command=?}}, ui.message, ui.scroll{requestId=?}, turn.complete, ui.close{id=?}, tool.call{tool=?}, tool.call, prompt.attachment{type=plan_mode|plan_mode_exit|plan_mode_reentry}, prompt.submit",
+      "./register.ts hooks: session.start, command.run{command=?}, ui.render{component=Pane}, ui.render{component=AbovePrompt}, ui.render{component=CommandOutput, props has {command=?}}, ui.message, ui.scroll{requestId=?}, turn.complete, ui.close{id=?}, tool.describe{tool=?}, prompt.context, prompt.attachment{type=mcp_instructions_delta}, tool.call{tool=?}, tool.call, prompt.attachment{type=plan_mode|plan_mode_exit|plan_mode_reentry}, prompt.submit",
+      "./register.ts hooks on prompt.context, prompt.attachment do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts gating hook without .catch: command.run{command=?}",
       "./register.ts gating hook without .catch: ui.scroll{requestId=?}",
       "./register.ts gating hook without .catch: ui.close{id=?}",
@@ -907,5 +806,5 @@
    "advice": []
   }
  },
- "sourceHash": "f9ffc915441c0d00"
+ "sourceHash": "6bb52c1a86fc6f6c"
 }

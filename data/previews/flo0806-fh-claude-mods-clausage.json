@@ -1,6 +1,6 @@
 {
  "slug": "flo0806-fh-claude-mods-clausage",
- "generatedAt": "2026-10-10T14:45:13.553Z",
+ "generatedAt": "2026-10-16T14:19:37.248Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "session.measure"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "ui.render",
@@ -26,8 +32,8 @@
   "rewrites": [],
   "apiCalls": {
    "$.session.usage": 1,
-   "$.state.get": 3,
-   "$.state.set": 2,
+   "$.state.get": 5,
+   "$.state.set": 3,
    "$.ui.resolve": 1,
    "$.clock.now": 1
   },
@@ -159,9 +165,12 @@
   "hooks": [
    "session.start",
    "session.measure",
+   "session.compact",
+   "session.end",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.clock.after",
    "$.clock.now",
    "$.session.usage",
    "$.state.get",
@@ -169,9 +178,11 @@
    "$.ui.resolve"
   ],
   "stateReads": [
+   "clausage.compacting",
    "clausage.usage"
   ],
   "stateWrites": [
+   "clausage.compacting",
    "clausage.usage"
   ],
   "envReads": [],
@@ -186,7 +197,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: clausage.usage"
+     "types ./types/index.d.ts declares state: clausage.usage, clausage.compacting"
     ],
     "gatingHooks": []
    },
@@ -197,16 +208,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, ui.render{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.now, $.session.usage, $.state.get, $.state.set, $.ui.resolve",
-      "./register.tsx state writes: clausage.usage",
-      "./register.tsx state reads: clausage.usage"
+      "./register.tsx hooks: session.start, session.measure, session.compact, session.end, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx calls: $.clock.after, $.clock.now, $.session.usage, $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx state writes: clausage.compacting, clausage.usage",
+      "./register.tsx state reads: clausage.compacting, clausage.usage"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "1425fd29f16331b8"
+ "sourceHash": "8a1e2f4dbcfc2142"
 }

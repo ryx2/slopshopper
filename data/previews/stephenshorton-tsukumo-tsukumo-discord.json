@@ -1,6 +1,6 @@
 {
  "slug": "stephenshorton-tsukumo-tsukumo-discord",
- "generatedAt": "2026-10-10T14:45:52.286Z",
+ "generatedAt": "2026-10-16T14:21:47.793Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -45,6 +45,15 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__tsukumo-discord__skip_mention"
+    }
    },
    {
     "event": "tool.call",
@@ -138,7 +147,7 @@
    },
    {
     "name": "send_message",
-    "description": "Post to any Discord channel the Tsukumo bot can see, as the bot. The text is prefixed with the bold `from` name. Optionally reply to a message. Max 2000 characters."
+    "description": "Post to any Discord channel the Tsukumo bot can see, as the bot. The text is prefixed with the bold `from` name. Optionally reply to a message, and attach a GIF with `gif` (it uploads the GIF itself, so don't paste its link in the text). Max 2000 characters."
    },
    {
     "name": "claim_thread",
@@ -151,6 +160,10 @@
    {
     "name": "defer_mention",
     "description": "Say privately that this chat will answer a Discord mention later (waiting on CI, a long task, a person). Nothing is posted; the router keeps the mention with this chat until then, and only reminds you (and the user) if the time passes without a reply. Up to 12 hours."
+   },
+   {
+    "name": "skip_mention",
+    "description": "Choose not to reply to a Discord mention that needs no answer (a thanks, a 👍, a GIF, small talk between bots). Nothing is posted; the 👀 reaction and the typing indicator come off, and the mention counts as answered."
    },
    {
     "name": "start_thread",
@@ -169,10 +182,10 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.tool.register": 10,
+   "$.tool.register": 11,
    "$.ui.status": 1,
    "$.store.get": 3,
-   "$.state.get": 15,
+   "$.state.get": 16,
    "$.state.set": 3,
    "$.ui.open": 1,
    "$.ui.resolve": 1
@@ -340,6 +353,8 @@
    "tool.call{tool=mcp__tsukumo-discord__get_message}",
    "tool.call{tool=mcp__tsukumo-discord__send_message}",
    "turn.start",
+   "turn.complete",
+   "tool.call{tool=mcp__tsukumo-discord__skip_mention}",
    "tool.call{tool=Bash}",
    "tool.call{tool=mcp__tsukumo-discord__defer_mention}",
    "tool.call{tool=mcp__tsukumo-discord__claim_thread}",
@@ -435,7 +450,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, tool.call{tool=mcp__tsukumo-discord__watch}, tool.call{tool=mcp__tsukumo-discord__list_servers}, tool.call{tool=mcp__tsukumo-discord__list_channels}, tool.call{tool=mcp__tsukumo-discord__get_messages}, tool.call{tool=mcp__tsukumo-discord__get_message}, tool.call{tool=mcp__tsukumo-discord__send_message}, turn.start, tool.call{tool=Bash}, tool.call{tool=mcp__tsukumo-discord__defer_mention}, tool.call{tool=mcp__tsukumo-discord__claim_thread}, tool.call{tool=mcp__tsukumo-discord__release_thread}, tool.call{tool=mcp__tsukumo-discord__start_thread}, command.run{command=discord}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=tsukumo-discord}",
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__tsukumo-discord__watch}, tool.call{tool=mcp__tsukumo-discord__list_servers}, tool.call{tool=mcp__tsukumo-discord__list_channels}, tool.call{tool=mcp__tsukumo-discord__get_messages}, tool.call{tool=mcp__tsukumo-discord__get_message}, tool.call{tool=mcp__tsukumo-discord__send_message}, turn.start, turn.complete, tool.call{tool=mcp__tsukumo-discord__skip_mention}, tool.call{tool=Bash}, tool.call{tool=mcp__tsukumo-discord__defer_mention}, tool.call{tool=mcp__tsukumo-discord__claim_thread}, tool.call{tool=mcp__tsukumo-discord__release_thread}, tool.call{tool=mcp__tsukumo-discord__start_thread}, command.run{command=discord}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=tsukumo-discord}",
       "./register.tsx answers its own command: command.run{command=discord}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__watch}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__list_servers}",
@@ -443,6 +458,7 @@
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__get_messages}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__get_message}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__send_message}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__skip_mention}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__defer_mention}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__tsukumo-discord__claim_thread}",
@@ -495,6 +511,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__tsukumo-discord__skip_mention}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
       },
@@ -528,5 +550,5 @@
    "advice": []
   }
  },
- "sourceHash": "2b44de3140931bae"
+ "sourceHash": "fd3e1478bfcf6302"
 }

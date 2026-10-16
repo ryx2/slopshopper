@@ -1,0 +1,268 @@
+{
+ "slug": "ilyanfraimbault-truemain-truemain-pr",
+ "generatedAt": "2026-10-16T14:19:54.658Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "pr"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__truemain-pr__pr_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "pr",
+    "description": "Branch → issue → PR status: CI, Claude review vs HEAD, ship done-criteria (hide|show to toggle the band)",
+    "argumentHint": "[hide|show]",
+    "output": "Branch: feat/auth-refresh\nIssue: none (the branch name carries no issue number)\nPR: #0  — \n   →  · open · HEAD  · mergeable unknown (unknown)\n  CI: none (no check ran — expected for a docs-only PR)\n  Claude review: no verdict yet\nDone-criteria: not met\n  - no Claude review verdict yet"
+   }
+  ],
+  "tools": [
+   {
+    "name": "pr_status",
+    "description": "TrueMain: the current branch → its issue (board Status/Priority/Sprint) → its open PR with CI, the Claude review verdict checked against HEAD, mergeability and the ship skill done-criteria. Call it instead of polling gh pr checks/view in a loop; `refresh: false` answers from the last poll (at most 1–5 min old)."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.session.cwd": 2,
+   "$.clock.every": 1,
+   "$.clock.now": 4,
+   "$.process.run": 4,
+   "$.state.get": 7,
+   "$.state.set": 2,
+   "$.ui.status": 2,
+   "$.clock.after": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   },
+   {
+    "kind": "after",
+    "ms": 3000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row",
+      "gap": 1
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "bold": true
+       },
+       "children": [
+        "⎇ ",
+        "feat/auth-refresh"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {},
+       "children": [
+        "PR #",
+        "0",
+        "",
+        ""
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "color": "subtle"
+       },
+       "children": [
+        "CI ",
+        "–"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "color": "subtle"
+       },
+       "children": [
+        "review ",
+        "–"
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "refresh",
+        "plain": true,
+        "label": "↻",
+        "onPress": "[fn]"
+       },
+       "children": []
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "hide",
+        "plain": true,
+        "label": "hide",
+        "onPress": "[fn]"
+       },
+       "children": []
+      }
+     ]
+    }
+   }
+  },
+  "script": [
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(gh pr view --json number,title,url,state,isDraft,baseRefName,headRefName,headRef…) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(gh pr view --json number,title,url,state,isDraft,baseRefName,headRefName,headRef…) → exit 0",
+   "/pr → Branch: feat/auth-refresh\nIssue: none (the branch name carries no issue number)\n…"
+  ],
+  "console": [],
+  "status": "PR #0 · CI – · review –",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=pr}",
+   "tool.call{tool=mcp__truemain-pr__pr_status}",
+   "tool.call{tool=Bash}",
+   "prompt.compose",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.process.run (via refresh)",
+   "$.session.cwd (via refresh)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.resolve",
+   "$.ui.status (via refresh)",
+   "$.ui.toast (via announce)"
+  ],
+  "stateReads": [
+   "truemain-pr.isHidden",
+   "truemain-pr.status"
+  ],
+  "stateWrites": [
+   "truemain-pr.isHidden",
+   "truemain-pr.status"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ilyanfraimbault-truemain-truemain-pr/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ilyanfraimbault-truemain-truemain-pr/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: truemain-pr.status, truemain-pr.isHidden"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ilyanfraimbault-truemain-truemain-pr/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=pr}, tool.call{tool=mcp__truemain-pr__pr_status}, tool.call{tool=Bash}, prompt.compose, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook without .catch: command.run{command=pr}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__truemain-pr__pr_status}",
+      "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.process.run (via refresh), $.session.cwd (via refresh), $.state.get, $.state.set, $.tool.register, $.ui.resolve, $.ui.status (via refresh), $.ui.toast (via announce)",
+      "./register.tsx state writes: truemain-pr.isHidden, truemain-pr.status",
+      "./register.tsx state reads: truemain-pr.isHidden, truemain-pr.status"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=pr}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__truemain-pr__pr_status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "226686a3446d2fa8"
+}

@@ -1,6 +1,6 @@
 {
  "slug": "natsume-777-claude-mods-whiteboard",
- "generatedAt": "2026-10-10T14:45:33.652Z",
+ "generatedAt": "2026-10-16T14:21:00.846Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -50,10 +50,34 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__whiteboard__open_board"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__whiteboard__list_boards"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__whiteboard__rename_board"
+    }
+   },
+   {
     "event": "prompt.compose"
    },
    {
+    "event": "classic.SessionStart"
+   },
+   {
     "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "session.append",
@@ -97,7 +121,7 @@
   "tools": [
    {
     "name": "set_card",
-    "description": "ボード（人が画面の右のパネルで見る作業メモ）に、カードを追加するか上書きする。会話のログに埋もれて流れてしまう情報を残すために使う: 進行中の手順やチェックリスト、並行して動かしている処理の状況、このセッションに関わる URL、決めたこと。同じ id のカードは上書きされ（位置は変わらない）、状況が変わったら同じ id で更新する。1 カード 1 話題にして、本文は要点だけにする。本文の一部だけを変えるときは、全文を書き直さず edit_card（一部の置き換え）か append_card（末尾に足す）を使う。用が済んだカードは remove_card で消す。会話にもう書いたことを、ただ写すためには使わない。body は Markdown。```mermaid の基本的な flowchart / graph（subgraph の枠も。ただし subgraph 自体へ矢印を引くと図にならない）と、参加者と矢印だけの sequenceDiagram は図になる。それ以外の図（mermaid の別の種類、ASCII など）は、コードブロックとして読める形で表示される（描画はされない）。関係や流れは、箇条書きや表でも伝わる。pin: true は、人が常に見ていたいカード（今の手順の全体像、URL の一覧など）に使う。使いすぎない。固定したカードは一覧の上に並ぶ。style はカードの色（枠と見出し）。色に決まった意味はない。人に色を頼まれたときか、同じ話題のカードを同じ色にそろえるときだけ付ける。上限: 20 枚、title 60 文字、body 4000 文字、id は英数字と _ - の 40 文字まで。会話の圧縮などで内容を思い出せないときは list_cards で読み返す。"
+    "description": "ボード（人が画面の右のパネルで見る作業メモ）に、カードを追加するか上書きする。会話のログに埋もれて流れてしまう情報を残すために使う: 進行中の手順やチェックリスト、並行して動かしている処理の状況、このセッションに関わる URL、決めたこと。このセッションがつないでいるボードが相手。どのボードにもつないでいなければ断られるので、先に open_board でつなぐ。同じ id のカードは上書きされ（位置は変わらない）、状況が変わったら同じ id で更新する。1 カード 1 話題にして、本文は要点だけにする。本文の一部だけを変えるときは、全文を書き直さず edit_card（一部の置き換え）か append_card（末尾に足す）を使う。用が済んだカードは remove_card で消す。会話にもう書いたことを、ただ写すためには使わない。body は Markdown。```mermaid の基本的な flowchart / graph（subgraph の枠も。ただし subgraph 自体へ矢印を引くと図にならない）と、参加者と矢印だけの sequenceDiagram は図になる。それ以外の図（mermaid の別の種類、ASCII など）は、コードブロックとして読める形で表示される（描画はされない）。関係や流れは、箇条書きや表でも伝わる。pin: true は、人が常に見ていたいカード（今の手順の全体像、URL の一覧など）に使う。使いすぎない。固定したカードは一覧の上に並ぶ。style はカードの色（枠と見出し）。色に決まった意味はない。人に色を頼まれたときか、同じ話題のカードを同じ色にそろえるときだけ付ける。上限: 20 枚、title 60 文字、body 4000 文字、id は英数字と _ - の 40 文字まで。会話の圧縮などで内容を思い出せないときは list_cards で読み返す。"
    },
    {
     "name": "edit_card",
@@ -117,11 +141,23 @@
    },
    {
     "name": "list_cards",
-    "description": "ボードのカードを読む。引数なしは全カードの id・title・body を全文で返すので重い。まず titles_only: true（目次: id・title・本文の文字数）か query（検索）で探し、必要なカードだけ id で読む。利用者が「ボードの手順 3 は？」のようにボードの内容を尋ねたときも、この順で探す。会話の圧縮のあとなどに、何を書いたか思い出すためにも使う。固定したカードが先に並び、固定のカードには pinned: true が付く。色のあるカードには style が付く。id が最優先で、あれば他は無視する（そのカード 1 枚の id・title・body）。query は空白で分けた語をすべて含むカードを返す（id・title・body のどれか、大文字小文字は区別せず、日本語は部分一致）。各カードに、一致した行の番号（本文の 1 始まり。title か id だけの一致は 0）と、その行の先頭 120 文字を最大 5 件付ける。titles_only も一緒にあれば、その一致の行は付けず title だけにする。結果の 1 行目は rev: N（ボードの版。書き換えのたびに増える）。読んだ rev を覚えておき、次は since にその rev を渡すと、その後に書き換えられたカードだけと、今ある全カードの ids が返る（ids に無いカードは消された）。全部を読み直さずに済む。since は titles_only・query と組み合わせられる（変わったカードの中だけ）。会話の圧縮のあとや rev が分からないときは、titles_only から読む。others: true は、同じ場所（フルパス）のプロジェクトの前のセッションのボードを読む（読むだけで、書き換えはできない。場所を記録する前の版で書かれたボードは読めない）。利用者が「前のセッションで書いた URL はどこ？」のように尋ねたときに使う。新しい順に最大 5 件で、各ボードの見出し行（board: と ID の 8 文字、日時、フォルダ、枚数、題か最初の依頼、引き継ぎ済みならその印）の下に、カードの id・title・chars が並ぶ。query と一緒なら、それらのボードのカードを同じ規則で探す（一致したボードを新しい順に 5 件）。1 枚を全文で読むときは id と board（見出しの 8 文字）を渡す。others では since は使われない。結果は 6000 文字までで、超えると切ってその旨を書く。設定 handover がオフなら断られる。前のボードのカードをこのボードに持ってくるのは、利用者がパネルの [引き継ぐ] で行う。"
+    "description": "ボードのカードを読む。引数なしは全カードの id・title・body を全文で返すので重い。まず titles_only: true（目次: id・title・本文の文字数）か query（検索）で探し、必要なカードだけ id で読む。利用者が「ボードの手順 3 は？」のようにボードの内容を尋ねたときも、この順で探す。会話の圧縮のあとなどに、何を書いたか思い出すためにも使う。固定したカードが先に並び、固定のカードには pinned: true が付く。色のあるカードには style が付く。id が最優先で、あれば他は無視する（そのカード 1 枚の id・title・body）。query は空白で分けた語をすべて含むカードを返す（id・title・body のどれか、大文字小文字は区別せず、日本語は部分一致）。各カードに、一致した行の番号（本文の 1 始まり。title か id だけの一致は 0）と、その行の先頭 120 文字を最大 5 件付ける。titles_only も一緒にあれば、その一致の行は付けず title だけにする。結果の 1 行目は rev: N（ボードの版。書き換えのたびに増える）。読んだ rev を覚えておき、次は since にその rev を渡すと、その後に書き換えられたカードだけと、今ある全カードの ids が返る（ids に無いカードは消された）。全部を読み直さずに済む。since は titles_only・query と組み合わせられる（変わったカードの中だけ）。会話の圧縮のあとや rev が分からないときは、titles_only から読む。このセッションがつないでいるボードが相手。どのボードにもつないでいなければ断られるので、先に open_board でつなぐ。ほかのボードの中身を読むときは、list_boards で探して、open_board でそのボードにつなぎ直す。"
    },
    {
     "name": "undo_card",
     "description": "ボードのカードの最後の書き換えを 1 つ戻す。利用者に「さっきの書き換えを戻して」と頼まれたときや、自分がカードを間違えて上書き・編集したと気づいたときに使う。set_card・edit_card・append_card（固定や色の変更も）で書き換えたカードは、title・body・固定・色が 1 つ前の版に戻る（カードの位置は変わらない）。戻せるのは 1 段だけで、続けてもう一度呼ぶと、戻す前の版にやり直す。remove_card や clear で消したカードも、最近消した 5 枚まで戻せる（clear で消したときは、最後に書いたものから 5 枚）。戻したカードは末尾に並び、戻した直後にもう一度呼ぶと、また消す（やり直し）。カードが 20 枚あるときは、消したカードは戻せない。"
+   },
+   {
+    "name": "open_board",
+    "description": "ボード（人が画面の右のパネルで見る作業メモ）に、このセッションをつなぐ。ボードはセッションに属さず、名前で呼ぶ。新しいセッションはどのボードにもつながっていないので、カードを書く・読む前に一度呼ぶ。name と同じ名前のボードがあれば（このプロジェクトのものを優先、大文字小文字や全角半角は区別しない）それにつなぎ、無ければその名前で新しく作ってつなぐ。名前は作業の内容が分かる短い言葉にする（例: whiteboard 開発、CI の修正）。プロジェクト全体で 1 枚にするか、話題ごとに分けるかは、利用者の頼み方に合わせる。利用者が「◯◯のボードを使って」と言ったときや、引き継ぎの文にボードの名前が書いてあるときは、その名前を渡す。迷うときは先に list_boards で今あるボードを見る。ほかのボードにつなぎ直すこともできる（同じボードに、ほかのセッションも同時につながっていてよい）。名前は 40 文字まで。"
+   },
+   {
+    "name": "list_boards",
+    "description": "ボードの一覧を読む。このプロジェクトのボードを新しい順に、名前・最後の書き込みの日時・枚数・最後に書いたセッションの題・カードの題（固定が先、チェックリストの進み具合つき）で並べる。このセッションがつないでいるボードには印が付く。ほかのプロジェクトのボードと古いボード（前の版で別のセッションに引き継がれたもの）は件数だけで、all: true なら一覧に入る。どのボードにつなぐか決めるときや、「前に書いたボードはある？」と聞かれたときに使う。中身を読むには open_board でつないでから list_cards。"
+   },
+   {
+    "name": "rename_board",
+    "description": "このセッションがつないでいるボードの名前を変える。利用者に頼まれたときや、話題が変わって名前が合わなくなったときに使う。40 文字まで。このプロジェクトのほかのボードと同じ名前にはできない。つないでいなければ断られる。"
    }
   ],
   "panes": [
@@ -135,14 +171,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 7,
+   "$.tool.register": 10,
    "$.command.register": 1,
-   "$.session.id": 18,
-   "$.store.get": 9,
-   "$.state.get": 30,
-   "$.state.set": 6,
-   "$.session.root": 2,
-   "$.store.keys": 2,
+   "$.session.id": 21,
+   "$.state.get": 29,
+   "$.session.root": 1,
+   "$.state.set": 8,
+   "$.store.keys": 5,
+   "$.store.get": 4,
    "$.ui.open": 1,
    "$.ui.resolve": 2,
    "$.clock.now": 2
@@ -178,7 +214,7 @@
            "type": "Text",
            "props": {},
            "children": [
-            "ホワイトボード 0件"
+            "ホワイトボード · ボードを選ぶ"
            ]
           }
          ]
@@ -238,17 +274,27 @@
        {
         "type": "Box",
         "props": {
-         "key": "empty",
-         "flexDirection": "column"
+         "key": "chooser",
+         "flexDirection": "column",
+         "rowGap": 1,
+         "width": "100%"
         },
         "children": [
+         {
+          "type": "Markdown",
+          "props": {
+           "key": "chooser-heading",
+           "text": "## つなぐボードを選ぶ"
+          },
+          "children": []
+         },
          {
           "type": "Text",
           "props": {
            "wrap": "wrap"
           },
           "children": [
-           "まだ何も書かれていません"
+           "このプロジェクト（app）のボードは、まだありません"
           ]
          },
          {
@@ -258,7 +304,26 @@
            "wrap": "wrap"
           },
           "children": [
-           "Claude に「ホワイトボードに手順を書いて」のように頼むと、ここにカードとして残ります"
+           "新しいホワイトボードは、Claude に「◯◯のボードを作って」と頼むとできます"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "chooser-foot",
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "reload",
+             "label": "読み直す",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
           ]
          }
         ]
@@ -300,8 +365,13 @@
    "tool.call{tool=mcp__whiteboard__clear}",
    "tool.call{tool=mcp__whiteboard__list_cards}",
    "tool.call{tool=mcp__whiteboard__undo_card}",
+   "tool.call{tool=mcp__whiteboard__open_board}",
+   "tool.call{tool=mcp__whiteboard__list_boards}",
+   "tool.call{tool=mcp__whiteboard__rename_board}",
    "prompt.compose",
+   "classic.SessionStart",
    "classic.UserPromptSubmit",
+   "turn.complete",
    "session.append{door=compaction}",
    "command.run{command=whiteboard}",
    "ui.render{component=Pane, requestId=whiteboard}",
@@ -309,84 +379,91 @@
    "ui.press{plugin=whiteboard}"
   ],
   "calls": [
-   "$.clock.now (via handOver",
+   "$.clock.now (via attachTo",
+   "moveOldBoards",
    "nowOf",
+   "openBoard",
    "runTool",
    "saveBoard)",
    "$.clock.sleep",
    "$.command.register",
-   "$.session.id (via cardsOf",
-   "handOver",
+   "$.session.id (via attachFromPane",
+   "fixedRoot",
+   "listBoards",
    "loadBoard",
    "markChanged",
    "marksNow",
    "nextTurn",
-   "noteRequest",
+   "noteAbout",
+   "openBoard",
    "ownPart",
-   "ownSize",
    "patchOwnView",
-   "readOtherBoards",
-   "refreshOthers",
-   "runTool",
+   "refreshBoards",
+   "renameAttached",
+   "rootForDrawing",
+   "shownBoard",
+   "syncBoard",
+   "syncList",
+   "withCompactionNote)",
+   "$.session.messages (via sessionTitle)",
+   "$.session.root (via fixedRoot",
+   "rootForDrawing)",
+   "$.state.get",
+   "$.state.set (via attachTo",
+   "fixedRoot",
+   "markChanged",
+   "nextTurn",
+   "noteAbout",
+   "renameAttached",
+   "retitleBoard",
+   "saveBoard",
+   "sessionTitle",
+   "setBoards",
+   "setView",
+   "showBoard)",
+   "$.store.delete (via moveOne",
+   "saveBoard)",
+   "$.store.get (via attachTo",
+   "attachmentOf",
+   "moveOne",
+   "openBoard",
+   "renameAttached",
    "saveBoard",
    "scanStore",
-   "syncOwn",
-   "take",
-   "unseal",
-   "withCompactionNote)",
-   "$.session.root (via folderName",
-   "readOtherBoards",
+   "storedBoard",
+   "syncList)",
+   "$.store.keys (via moveOldBoards",
+   "scanStore",
+   "syncList)",
+   "$.store.set (via attachTo",
+   "moveOne",
+   "openBoard",
+   "renameAttached",
+   "retitleBoard",
    "saveBoard)",
-   "$.state.get (via cardsOf",
-   "loadBoard",
-   "markChanged",
-   "marksNow",
-   "nextTurn",
-   "readHandover",
-   "readOthers",
-   "readView",
-   "setHandover",
-   "setOthers",
-   "setView)",
-   "$.state.set (via loadBoard",
-   "markChanged",
-   "nextTurn",
-   "saveBoard",
-   "setHandover",
-   "setOthers",
-   "setView)",
-   "$.store.delete (via saveBoard",
-   "unseal)",
-   "$.store.get (via handOver",
-   "ownSize",
-   "readMine",
-   "readSealState",
-   "saveBoard",
-   "storedBoard)",
-   "$.store.keys (via readMine)",
-   "$.store.set (via handOver",
-   "saveBoard",
-   "unseal)",
    "$.tool.register",
-   "$.ui.log (via withCompactionNote)",
-   "$.ui.open (via openPane)",
-   "$.ui.resolve"
+   "$.ui.log (via noteNotMoved",
+   "with… [+77 chars]"
   ],
   "stateReads": [
+   "whiteboard.about",
+   "whiteboard.attached",
+   "whiteboard.boards",
    "whiteboard.cards",
-   "whiteboard.handover",
-   "whiteboard.others",
    "whiteboard.owner",
    "whiteboard.recent",
+   "whiteboard.root",
    "whiteboard.turn",
    "whiteboard.view"
   ],
   "stateWrites": [
+   "whiteboard.about",
+   "whiteboard.attached",
+   "whiteboard.boards",
    "whiteboard.cards",
-   "whiteboard.handover",
-   "whiteboard.others",
    "whiteboard.owner",
    "whiteboard.recent",
+   "whiteboard.root",
    "whiteboard.turn",
    "whiteboard.view"
   ],
@@ -402,7 +479,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: whiteboard.cards, whiteboard.owner, whiteboard.others, whiteboard.handover, whiteboard.view, whiteboard.turn, whiteboard.recent"
+     "types ./types/index.d.ts declares state: whiteboard.cards, whiteboard.owner, whiteboard.attached, whiteboard.boards, whiteboard.root, whiteboard.about, whiteboard.view, whiteboard.turn, whiteboard.recent"
     ],
     "gatingHooks": []
    },
@@ -413,7 +490,8 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, tool.call{tool=mcp__whiteboard__set_card}, tool.call{tool=mcp__whiteboard__edit_card}, tool.call{tool=mcp__whiteboard__append_card}, tool.call{tool=mcp__whiteboard__remove_card}, tool.call{tool=mcp__whiteboard__clear}, tool.call{tool=mcp__whiteboard__list_cards}, tool.call{tool=mcp__whiteboard__undo_card}, prompt.compose, classic.UserPromptSubmit, session.append{door=compaction}, command.run{command=whiteboard}, ui.render{component=Pane, requestId=whiteboard}, ui.render{component=AbovePrompt}, ui.press{plugin=whiteboard}",
+      "./register.js hooks: session.start, tool.call{tool=mcp__whiteboard__set_card}, tool.call{tool=mcp__whiteboard__edit_card}, tool.call{tool=mcp__whiteboard__append_card}, tool.call{tool=mcp__whiteboard__remove_card}, tool.call{tool=mcp__whiteboard__clear}, tool.call{tool=mcp__whiteboard__list_cards}, tool.call{tool=mcp__whiteboard__undo_card}, tool.call{tool=mcp__whiteboard__open_board}, tool.call{tool=mcp__whiteboard__list_boards}, tool.call{tool=mcp__whiteboard__rename_board}, prompt.compose, classic.SessionStart, classic.UserPromptSubmit, turn.complete, session.append{door=compaction}, command.run{command=whiteboard}, ui.render{component=Pane, requestId=whiteboard}, ui.render{component=AbovePrompt}, ui.press{plugin=whiteboard}",
+      "./register.js hooks on prompt.compose, classic.SessionStart, classic.UserPromptSubmit, session.append{door=compaction} do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__set_card}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__edit_card}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__append_card}",
@@ -421,12 +499,16 @@
       "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__clear}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__list_cards}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__undo_card}",
+      "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__open_board}",
+      "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__list_boards}",
+      "./register.js gating hook without .catch: tool.call{tool=mcp__whiteboard__rename_board}",
+      "./register.js gating hook without .catch: classic.SessionStart",
       "./register.js gating hook without .catch: classic.UserPromptSubmit",
       "./register.js gating hook with .catch: session.append{door=compaction}",
       "./register.js gating hook without .catch: command.run{command=whiteboard}",
-      "./register.js calls: $.clock.now (via handOver, nowOf, runTool, saveBoard), $.clock.sleep, $.command.register, $.session.id (via cardsOf, handOver, loadBoard, markChanged, marksNow, nextTurn, noteRequest, ownPart, ownSize, patchOwnView, readOtherBoards, refreshOthers, runTool, saveBoard, scanStore, syncOwn, take, unseal, withCompactionNote), $.session.root (via folderName, readOtherBoards, saveBoard), $.state.get (via cardsOf, loadBoard, markChanged, marksNow, nextTurn, readHandover, readOthers, readView, setHandover, setOthers, setView), $.state.set (via loadBoard, markChanged, nextTurn, saveBoard, setHandover, setOthers, setView), $.store.delete (via saveBoard, unseal), $.store.get (via handOver, ownSize, readMine, readSealState, saveBoard, storedBoard), $.store.keys (via readMine), $.store.set (via handOver, saveBoard, unseal), $.tool.register, $.ui.log (via withCompactionNote), $.ui.open (via openPane), $.ui.resolve",
-      "./register.js state writes: whiteboard.cards, whiteboard.handover, whiteboard.others, whiteboard.owner, whiteboard.recent, whiteboard.turn, whiteboard.view",
-      "./register.js state reads: whiteboard.cards, whiteboard.handover, whiteboard.others, whiteboard.owner, whiteboard.recent, whiteboard.turn, whiteboard.view"
+      "./register.js calls: $.clock.now (via attachTo, moveOldBoards, nowOf, openBoard, runTool, saveBoard), $.clock.sleep, $.command.register, $.session.id (via attachFromPane, fixedRoot, listBoards, loadBoard, markChanged, marksNow, nextTurn, noteAbout, openBoard, ownPart, patchOwnView, refreshBoards, renameAttached, rootForDrawing, shownBoard, syncBoard, syncList, withCompactionNote), $.session.messages (via sessionTitle), $.session.root (via fixedRoot, rootForDrawing), $.state.get, $.state.set (via attachTo, fixedRoot, markChanged, nextTurn, noteAbout, renameAttached, retitleBoard, saveBoard, sessionTitle, setBoards, setView, showBoard), $.store.delete (via moveOne, saveBoard), $.store.get (via attachTo, attachmentOf, moveOne, openBoard, renameAttached, saveBoard, scanStore, storedBoard, syncList), $.store.keys (via moveOldBoards, scanStore, syncList), $.store.set (via attachTo, moveOne, openBoard, renameAttached, retitleBoard, saveBoard), $.tool.register, $.ui.log (via noteNotMoved, with… [+77 chars]",
+      "./register.js state writes: whiteboard.about, whiteboard.attached, whiteboard.boards, whiteboard.cards, whiteboard.owner, whiteboard.recent, whiteboard.root, whiteboard.turn, whiteboard.view",
+      "./register.js state reads: whiteboard.about, whiteboard.attached, whiteboard.boards, whiteboard.cards, whiteboard.owner, whiteboard.recent, whiteboard.root, whiteboard.turn, whiteboard.view"
      ],
      "gatingHooks": [
       {
@@ -473,6 +555,30 @@
       },
       {
        "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__whiteboard__open_board}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__whiteboard__list_boards}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__whiteboard__rename_board}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.js",
        "pattern": "classic.UserPromptSubmit",
        "hook": "classic.UserPromptSubmit",
        "hasCatch": false
@@ -495,5 +601,5 @@
    "advice": []
   }
  },
- "sourceHash": "c0b01d5f51082c5d"
+ "sourceHash": "b924ea6ef82aa0ec"
 }

@@ -1,9 +1,12 @@
 {
  "slug": "michaelp17-claude-mods-concurrency-guard",
- "generatedAt": "2026-10-06T05:27:37.884Z",
+ "generatedAt": "2026-10-16T14:16:56.709Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "session.start"
+   },
    {
     "event": "prompt.submit"
    },
@@ -33,6 +36,12 @@
    },
    {
     "event": "session.end"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "SessionMode"
+    }
    }
   ],
   "commands": [],
@@ -43,13 +52,16 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 4,
-   "$.agent.list": 2,
-   "$.clock.now": 2,
-   "$.ui.status": 2
+   "$.state.get": 13,
+   "$.agent.list": 3,
+   "$.clock.now": 3
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "SessionMode": {
+    "ok": "engine"
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -71,28 +83,35 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "session.start",
    "prompt.submit",
    "tool.call{tool=Agent}",
    "agent.spawn",
    "tool.call{tool=Monitor}",
    "tool.call{tool=TaskStop}",
    "turn.complete",
-   "session.end"
+   "session.end",
+   "ui.render{component=SessionMode}"
   ],
   "calls": [
    "$.agent.list (via runningSubagents)",
    "$.clock.now",
+   "$.hub.set (via publish)",
    "$.state.get",
    "$.state.set",
    "$.ui.ask (via gate)",
-   "$.ui.status",
+   "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
+   "concurrency-guard.footer",
+   "concurrency-guard.isHubbed",
    "concurrency-guard.monitors",
    "concurrency-guard.overrides"
   ],
   "stateWrites": [
+   "concurrency-guard.footer",
+   "concurrency-guard.isHubbed",
    "concurrency-guard.monitors",
    "concurrency-guard.overrides"
   ],
@@ -100,32 +119,71 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/michaelp17-claude-mods-concurrency-guard/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/michaelp17-claude-mods-concurrency-guard/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/michaelp17-claude-mods-concurrency-guard/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/michaelp17-claude-mods-concurrency-guard/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: concurrency-guard.monitors, concurrency-guard.overrides"
-    ]
+     "types ./types/index.d.ts declares state: concurrency-guard.monitors, concurrency-guard.overrides, concurrency-guard.footer, concurrency-guard.isHubbed"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/michaelp17-claude-mods-concurrency-guard/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/michaelp17-claude-mods-concurrency-guard/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: prompt.submit, tool.call{tool=Agent}, agent.spawn, tool.call{tool=Monitor}, tool.call{tool=TaskStop}, turn.complete, session.end",
-      "./register.ts calls: $.agent.list (via runningSubagents), $.clock.now, $.state.get, $.state.set, $.ui.ask (via gate), $.ui.status, $.ui.toast",
-      "./register.ts state writes: concurrency-guard.monitors, concurrency-guard.overrides",
-      "./register.ts state reads: concurrency-guard.monitors, concurrency-guard.overrides"
+      "./register.tsx hooks: session.start, prompt.submit, tool.call{tool=Agent}, agent.spawn, tool.call{tool=Monitor}, tool.call{tool=TaskStop}, turn.complete, session.end, ui.render{component=SessionMode}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call{tool=Monitor}",
+      "./register.tsx gating hook without .catch: tool.call{tool=TaskStop}",
+      "./register.tsx calls: $.agent.list (via runningSubagents), $.clock.now, $.hub.set (via publish), $.state.get, $.state.set, $.ui.ask (via gate), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: concurrency-guard.footer, concurrency-guard.isHubbed, concurrency-guard.monitors, concurrency-guard.overrides",
+      "./register.tsx state reads: concurrency-guard.footer, concurrency-guard.isHubbed, concurrency-guard.monitors, concurrency-guard.overrides"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Monitor}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskStop}",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "1a3a290e8bd673ed"
+ "sourceHash": "95a1e9828e39e8be"
 }

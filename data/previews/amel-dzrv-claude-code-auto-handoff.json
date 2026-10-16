@@ -1,6 +1,6 @@
 {
  "slug": "amel-dzrv-claude-code-auto-handoff",
- "generatedAt": "2026-10-10T14:44:56.359Z",
+ "generatedAt": "2026-10-16T14:18:39.549Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,6 +20,15 @@
     }
    },
    {
+    "event": "session.compact"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
     "event": "turn.complete"
    },
    {
@@ -29,6 +38,12 @@
     "event": "command.run",
     "matcher": {
      "command": "handoff-now"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "keepwarm"
     }
    },
    {
@@ -54,32 +69,41 @@
     "name": "handoff-now",
     "description": "Write the handoff file now, and clear the session when auto-clear is on",
     "output": "Writing the handoff…"
+   },
+   {
+    "name": "keepwarm",
+    "description": "Keep the prompt cache warm with pings while you are away: /keepwarm 90m, status, off. Pings spend tokens",
+    "argumentHint": "<90m | 2h30m | status | off>",
+    "immediate": true,
+    "output": "keepwarm is off. /keepwarm 90m keeps the cache warm for 90 minutes. Pings spend tokens: each one re-reads the whole cached context and gets a one-word answer."
    }
   ],
   "tools": [],
   "panes": [],
   "toasts": [
    "auto-handoff is on: at 50% context it writes a handoff and clears the session. /auto-handoff clear off keeps the session; /auto-handoff off disables it.",
-   "requested with /handoff-now. Writing a handoff summary, then starting a fresh session that picks up where this one left off."
+   "requested with /handoff-now. Writing a handoff summary, then starting a fresh session that picks up where this one left off.",
+   "handoff saved to /work/app/.claude/handoffs/2025-10-09-085320-auto-handoff-preview-.md. Starting a fresh session…"
   ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
-   "$.store.get": 16,
+   "$.command.register": 3,
+   "$.session.id": 3,
+   "$.store.get": 22,
    "$.clock.every": 1,
-   "$.state.get": 16,
-   "$.ui.toast": 2,
-   "$.store.set": 2,
+   "$.state.get": 27,
+   "$.ui.toast": 3,
+   "$.store.set": 4,
    "$.state.set": 13,
    "$.session.usage": 20,
-   "$.session.id": 2,
-   "$.session.append": 1,
-   "$.clock.now": 3,
-   "$.ui.resolve": 1,
+   "$.clock.now": 9,
+   "$.session.append": 2,
    "$.session.root": 1,
-   "$.model.fork": 1
+   "$.model.fork": 1,
+   "$.ui.resolve": 1,
+   "$.fs.write": 1
   },
   "timers": [
    {
@@ -229,7 +253,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "/auto-handoff → auto-handoff is on · threshold 50% · clear automatically: yes · resume automatic…",
-   "/handoff-now → Writing the handoff…"
+   "/handoff-now → Writing the handoff…",
+   "/keepwarm → keepwarm is off. /keepwarm 90m keeps the cache warm for 90 minutes. Pings spend …",
+   "$.fs.write(/work/app/.claude/handoffs/2025-10-09-085320-auto-handoff-preview-.md)"
   ],
   "console": [],
   "warnings": []
@@ -243,14 +269,20 @@
    "turn.step",
    "tool.call",
    "session.compact{trigger=auto}",
+   "session.compact",
+   "classic.SessionStart",
+   "prompt.submit",
    "turn.complete",
    "prompt.context",
    "command.run{command=handoff-now}",
+   "command.run{command=keepwarm}",
    "command.run{command=auto-handoff}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.agent.list (via activeAgents)",
+   "$.clock.after (via armKeepwarm",
+   "pingKeepwarm)",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
@@ -261,14 +293,16 @@
    "$.fs.write (via handoff",
    "keepCopy)",
    "$.model.complete (via summarize)",
-   "$.model.fork (via summarize)",
+   "$.model.fork (via pingKeepwarm",
+   "summarize)",
    "$.prompt.submit (via handoff)",
    "$.session.append (via say)",
    "$.session.id",
    "$.session.messages (via summarize)",
    "$.session.root",
    "$.session.usage",
-   "$.state.get (via getRequests)",
+   "$.state.get (via getKeepwarm",
+   "getRequests)",
    "$.state.set",
    "$.store.delete",
    "$.store.get",
@@ -276,16 +310,20 @@
    "introduce",
    "markHandedOff",
    "saveSettings",
-   "say)",
+   "say",
+   "startKeepwarm)",
+   "$.ui.log",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
    "auto-handoff.bar",
+   "auto-handoff.keepwarm",
    "auto-handoff.requests"
   ],
   "stateWrites": [
    "auto-handoff.bar",
+   "auto-handoff.keepwarm",
    "auto-handoff.requests"
   ],
   "envReads": [
@@ -303,7 +341,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: auto-handoff.bar, auto-handoff.requests"
+     "types ./types/index.d.ts declares state: auto-handoff.bar, auto-handoff.requests, auto-handoff.keepwarm"
     ],
     "gatingHooks": []
    },
@@ -314,16 +352,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.step, tool.call, session.compact{trigger=auto}, turn.complete, prompt.context, command.run{command=handoff-now}, command.run{command=auto-handoff}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, turn.step, tool.call, session.compact{trigger=auto}, session.compact, classic.SessionStart, prompt.submit, turn.complete, prompt.context, command.run{command=handoff-now}, command.run{command=keepwarm}, command.run{command=auto-handoff}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on session.compact, classic.SessionStart, prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=handoff-now}",
+      "./register.tsx answers its own command: command.run{command=keepwarm}",
       "./register.tsx answers its own command: command.run{command=auto-handoff}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: session.compact{trigger=auto}",
-      "./register.tsx calls: $.agent.list (via activeAgents), $.clock.every, $.clock.now, $.command.register, $.command.run (via handoff), $.env.get (via keepCopy), $.fs.list (via keepCopy), $.fs.read, $.fs.write (via handoff, keepCopy), $.model.complete (via summarize), $.model.fork (via summarize), $.prompt.submit (via handoff), $.session.append (via say), $.session.id, $.session.messages (via summarize), $.session.root, $.session.usage, $.state.get (via getRequests), $.state.set, $.store.delete, $.store.get, $.store.set (via handoff, introduce, markHandedOff, saveSettings, say), $.ui.resolve, $.ui.toast",
+      "./register.tsx gating hook with .catch: session.compact",
+      "./register.tsx gating hook with .catch: classic.SessionStart",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx calls: $.agent.list (via activeAgents), $.clock.after (via armKeepwarm, pingKeepwarm), $.clock.every, $.clock.now, $.command.register, $.command.run (via handoff), $.env.get (via keepCopy), $.fs.list (via keepCopy), $.fs.read, $.fs.write (via handoff, keepCopy), $.model.complete (via summarize), $.model.fork (via pingKeepwarm, summarize), $.prompt.submit (via handoff), $.session.append (via say), $.session.id, $.session.messages (via summarize), $.session.root, $.session.usage, $.state.get (via getKeepwarm, getRequests), $.state.set, $.store.delete, $.store.get, $.store.set (via handoff, introduce, markHandedOff, saveSettings, say, startKeepwarm), $.ui.log, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, USERPROFILE",
-      "./register.tsx state writes: auto-handoff.bar, auto-handoff.requests",
-      "./register.tsx state reads: auto-handoff.bar, auto-handoff.requests"
+      "./register.tsx state writes: auto-handoff.bar, auto-handoff.keepwarm, auto-handoff.requests",
+      "./register.tsx state reads: auto-handoff.bar, auto-handoff.keepwarm, auto-handoff.requests"
      ],
      "gatingHooks": [
       {
@@ -337,6 +380,24 @@
        "pattern": "session.compact",
        "hook": "session.compact{trigger=auto}",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
       }
      ]
     }
@@ -344,5 +405,5 @@
    "advice": []
   }
  },
- "sourceHash": "25d4794db55fd994"
+ "sourceHash": "60b741a9a1d12386"
 }

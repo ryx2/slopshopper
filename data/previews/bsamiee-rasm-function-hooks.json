@@ -1,43 +1,29 @@
 {
  "slug": "bsamiee-rasm-function-hooks",
- "generatedAt": "2026-10-09T15:33:06.882Z",
+ "generatedAt": "2026-10-16T14:18:57.536Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
-    "event": "session.start"
-   },
-   {
-    "event": "tool.call"
-   },
-   {
-    "event": "turn.complete"
-   },
-   {
-    "event": "classic.Stop"
-   },
-   {
-    "event": "classic.SubagentStop"
-   },
-   {
-    "event": "prompt.submit"
-   },
-   {
-    "event": "prompt.compose"
-   },
-   {
-    "event": "session.compact"
-   },
-   {
-    "event": "ui.render",
+    "event": "tool.call",
     "matcher": {
-     "component": "AbovePrompt"
+     "tool": "EnterWorktree"
     }
    },
    {
-    "event": "ui.render",
+    "event": "tool.call",
     "matcher": {
-     "component": "ToolResult"
+     "tool": "Agent",
+     "isolation": "worktree"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Bash",
+      "Monitor"
+     ]
     }
    }
   ],
@@ -49,63 +35,44 @@
   "denies": [
    {
     "tool": "Bash: bun test",
-    "reason": "command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpected EOF"
+    "reason": "Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF"
    },
    {
     "tool": "Bash: git status --porcelain",
-    "reason": "command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpected EOF"
+    "reason": "Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF"
    },
    {
     "tool": "Bash: rm -rf build && git push --force origin main",
-    "reason": "command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpected EOF"
+    "reason": "Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF"
    },
    {
     "tool": "Bash: cat .env",
-    "reason": "command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpected EOF"
+    "reason": "Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF"
    }
   ],
   "rewrites": [],
   "apiCalls": {
-   "$.session.repo": 1,
-   "$.process.run": 10,
-   "$.state.get": 29,
-   "$.env.get": 4,
-   "$.state.set": 20,
-   "$.session.root": 5,
-   "$.process.spawn": 5
+   "$.session.root": 4,
+   "$.process.run": 5
   },
   "timers": [],
-  "sites": {
-   "AbovePrompt": {
-    "ok": "engine"
-   }
-  },
+  "sites": {},
   "script": [
-   "$.process.run(yq -o=json .bootstrap.macos.launchd.agents // {} mise.toml) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
-   "$.process.spawn(node /plugins/function-hooks/repository/diagnostics-cli.ts)",
    "tool.call Edit",
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
-   "$.process.spawn(node /plugins/function-hooks/repository/diagnostics-cli.ts)",
    "tool.call Write",
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
-   "$.process.spawn(node /plugins/function-hooks/repository/diagnostics-cli.ts)",
    "tool.call Write",
-   "$.process.run(ast-grep scan --stdin --config /dev/null --json=compact --inline-rules id: comma…) → exit 0",
-   "tool.call Bash denied: command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpect…",
-   "$.process.run(ast-grep scan --stdin --config /dev/null --json=compact --inline-rules id: comma…) → exit 0",
-   "tool.call Bash denied: command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpect…",
-   "$.process.run(ast-grep scan --stdin --config /dev/null --json=compact --inline-rules id: comma…) → exit 0",
-   "tool.call Bash denied: command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpect…",
-   "$.process.run(ast-grep scan --stdin --config /dev/null --json=compact --inline-rules id: comma…) → exit 0",
-   "tool.call Bash denied: command not parsed, ast-grep output does not decode as JSON, SyntaxError: JSON Parse error: Unexpect…",
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
-   "$.process.spawn(node /plugins/function-hooks/repository/format-cli.ts)",
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
-   "$.process.spawn(node /plugins/function-hooks/repository/diagnostics-cli.ts)",
+   "$.process.run(mise which ast-grep) → exit 0",
+   "$.process.run( scan --stdin --config /dev/null --json=compact --inline-rules id: command\nlangu…) → exit 0",
+   "tool.call Bash denied: Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF",
+   "$.process.run( scan --stdin --config /dev/null --json=compact --inline-rules id: command\nlangu…) → exit 0",
+   "tool.call Bash denied: Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF",
+   "$.process.run( scan --stdin --config /dev/null --json=compact --inline-rules id: command\nlangu…) → exit 0",
+   "tool.call Bash denied: Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF",
+   "$.process.run( scan --stdin --config /dev/null --json=compact --inline-rules id: command\nlangu…) → exit 0",
+   "tool.call Bash denied: Command not parsed, ast-grep printed no JSON, SyntaxError: JSON Parse error: Unexpected EOF",
    "turn.complete"
   ],
   "console": [],
@@ -116,65 +83,26 @@
   "errors": [],
   "warnings": [],
   "hooks": [
-   "session.start",
-   "tool.call",
-   "turn.complete",
-   "classic.Stop",
-   "classic.SubagentStop",
-   "prompt.submit",
-   "prompt.compose",
-   "session.compact",
-   "ui.render{component=AbovePrompt}",
-   "ui.render{component=ToolResult}",
-   "classic.*{hook_event_name=SessionStart|PermissionDenied|PostToolUse|PostToolUseFailure|PostToolBatch|SubagentStart|UserPromptSubmit|StopFailure|PreCompact|PostCompact|SessionEnd|WorktreeCreate|WorktreeRemove}",
-   "turn.start",
-   "turn.step"
+   "tool.call{tool=EnterWorktree}",
+   "tool.call{tool=Agent, isolation=worktree}",
+   "tool.call{tool=Bash|Monitor}"
   ],
   "calls": [
-   "$.agent.spawn (via _spawn)",
-   "$.clock.after (via _noticed)",
-   "$.clock.every (via _watched)",
-   "$.clock.now (via _noticed",
-   "_record)",
-   "$.env.get (via _host",
-   "_planned)",
+   "$.env.get (via _host)",
    "$.fs.exists (via _host)",
-   "$.fs.stat (via _captured",
+   "$.fs.read (via _catalog",
    "_host)",
-   "$.fs.write (via _opened)",
-   "$.process.run (via _run)",
-   "$.process.spawn (via _node)",
-   "$.session.id (via _record)",
-   "$.session.repo (via _host",
-   "_opened",
-   "_watched)",
-   "$.session.root (via _boundary",
-   "_toplevel)",
-   "$.session.usage (via _record)",
-   "$.state.get",
-   "$.state.set",
-   "$.ui.log (via _faulted",
-   "_spawn)",
-   "$.ui.resolve"
+   "$.fs.stat (via _catalog)",
+   "$.process.run (via _exited)",
+   "$.session.cwd (via _host)",
+   "$.session.repo (via _catalog",
+   "_host)",
+   "$.session.root (via _scanner)",
+   "$.ui.log (via _catalog)",
+   "$.ui.toast"
   ],
-  "stateReads": [
-   "function-hooks.capture",
-   "function-hooks.database",
-   "function-hooks.down",
-   "function-hooks.edits",
-   "function-hooks.notice",
-   "function-hooks.plan",
-   "function-hooks.said"
-  ],
-  "stateWrites": [
-   "function-hooks.capture",
-   "function-hooks.database",
-   "function-hooks.down",
-   "function-hooks.edits",
-   "function-hooks.notice",
-   "function-hooks.plan",
-   "function-hooks.said"
-  ],
+  "stateReads": [],
+  "stateWrites": [],
   "envReads": [
    "HOME"
   ],
@@ -187,10 +115,7 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [
-     "types ./hooks/state.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./hooks/state.d.ts declares state: function-hooks.database, function-hooks.notice, function-hooks.down, function-hooks.edits, function-hooks.capture, function-hooks.plan, function-hooks.said"
-    ],
+    "notes": [],
     "gatingHooks": []
    },
    "contents": [
@@ -200,55 +125,32 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, tool.call, turn.complete, classic.Stop, classic.SubagentStop, prompt.submit, prompt.compose, session.compact, ui.render{component=AbovePrompt}, ui.render{component=ToolResult}, classic.*{hook_event_name=SessionStart|PermissionDenied|PostToolUse|PostToolUseFailure|PostToolBatch|SubagentStart|UserPromptSubmit|StopFailure|PreCompact|PostCompact|SessionEnd|WorktreeCreate|WorktreeRemove}, turn.start, turn.step",
-      "./register.ts gating hook with .catch: tool.call",
-      "./register.ts gating hook without .catch: classic.Stop",
-      "./register.ts gating hook without .catch: classic.SubagentStop",
-      "./register.ts gating hook without .catch: prompt.submit",
-      "./register.ts gating hook without .catch: session.compact",
-      "./register.ts gating hook without .catch: classic.*{hook_event_name=SessionStart|PermissionDenied|PostToolUse|PostToolUseFailure|PostToolBatch|SubagentStart|UserPromptSubmit|StopFailure|PreCompact|PostCompact|SessionEnd|WorktreeCreate|WorktreeRemove}",
-      "./register.ts calls: $.agent.spawn (via _spawn), $.clock.after (via _noticed), $.clock.every (via _watched), $.clock.now (via _noticed, _record), $.env.get (via _host, _planned), $.fs.exists (via _host), $.fs.stat (via _captured, _host), $.fs.write (via _opened), $.process.run (via _run), $.process.spawn (via _node), $.session.id (via _record), $.session.repo (via _host, _opened, _watched), $.session.root (via _boundary, _toplevel), $.session.usage (via _record), $.state.get, $.state.set, $.ui.log (via _faulted, _spawn), $.ui.resolve",
+      "./register.ts hooks: tool.call{tool=EnterWorktree}, tool.call{tool=Agent, isolation=worktree}, tool.call{tool=Bash|Monitor}",
+      "./register.ts gating hook without .catch: tool.call{tool=EnterWorktree}",
+      "./register.ts gating hook without .catch: tool.call{tool=Agent, isolation=worktree}",
+      "./register.ts gating hook with .catch: tool.call{tool=Bash|Monitor}",
+      "./register.ts calls: $.env.get (via _host), $.fs.exists (via _host), $.fs.read (via _catalog, _host), $.fs.stat (via _catalog), $.process.run (via _exited), $.session.cwd (via _host), $.session.repo (via _catalog, _host), $.session.root (via _scanner), $.ui.log (via _catalog), $.ui.toast",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME",
-      "./register.ts state writes: function-hooks.capture, function-hooks.database, function-hooks.down, function-hooks.edits, function-hooks.notice, function-hooks.plan, function-hooks.said",
-      "./register.ts state reads: function-hooks.capture, function-hooks.database, function-hooks.down, function-hooks.edits, function-hooks.notice, function-hooks.plan, function-hooks.said"
+      "./register.ts env reads: HOME"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "tool.call",
-       "hook": "tool.call",
+       "hook": "tool.call{tool=EnterWorktree}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Agent, isolation=worktree}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash|Monitor}",
        "hasCatch": true
-      },
-      {
-       "module": "./register.ts",
-       "pattern": "classic.Stop",
-       "hook": "classic.Stop",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.ts",
-       "pattern": "classic.SubagentStop",
-       "hook": "classic.SubagentStop",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.ts",
-       "pattern": "prompt.submit",
-       "hook": "prompt.submit",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.ts",
-       "pattern": "session.compact",
-       "hook": "session.compact",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.ts",
-       "pattern": "classic.*",
-       "hook": "classic.*{hook_event_name=SessionStart|PermissionDenied|PostToolUse|PostToolUseFailure|PostToolBatch|SubagentStart|UserPromptSubmit|StopFailure|PreCompact|PostCompact|SessionEnd|WorktreeCreate|WorktreeRemove}",
-       "hasCatch": false
       }
      ]
     }
@@ -256,5 +158,5 @@
    "advice": []
   }
  },
- "sourceHash": "bb05d8c7a1646e1e"
+ "sourceHash": "742fdb9552c0bdde"
 }

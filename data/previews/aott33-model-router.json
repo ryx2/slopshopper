@@ -1,6 +1,6 @@
 {
  "slug": "aott33-model-router",
- "generatedAt": "2026-10-10T14:44:57.313Z",
+ "generatedAt": "2026-10-16T14:18:41.499Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,13 +20,34 @@
     }
    },
    {
+    "event": "tool.call"
+   },
+   {
     "event": "agent.spawn"
    },
    {
     "event": "turn.step"
    },
    {
+    "event": "turn.start"
+   },
+   {
     "event": "turn.complete"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    },
    {
     "event": "ui.render",
@@ -56,17 +77,22 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.state.get": 18,
    "$.store.get": 1,
+   "$.state.set": 5,
    "$.agent.register": 4,
    "$.command.register": 1,
    "$.ui.open": 2,
-   "$.state.get": 2,
-   "$.session.usage": 1,
+   "$.clock.now": 5,
+   "$.session.usage": 2,
    "$.ui.status": 1,
    "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
    "Pane": {
     "model-router": {
      "ok": true,
@@ -83,22 +109,7 @@
          "bold": true
         },
         "children": [
-         "$0",
-         " spent · ",
-         "$0",
-         " ",
-         "unrouted"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {},
-        "children": [
-         "No model calls yet.",
-         " · ",
-         "0",
-         " routed · classifier ",
-         "$0"
+         "Model router · on"
         ]
        },
        {
@@ -111,15 +122,51 @@
        {
         "type": "Text",
         "props": {
-         "dimColor": true,
+         "key": "field-Spent",
          "wrap": "truncate"
         },
         "children": [
-         "agent                ",
-         " T  model   ",
-         "   cost",
-         " ",
-         "unrouted"
+         "Spent       $0"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "field-Unrouted",
+         "wrap": "truncate"
+        },
+        "children": [
+         "Unrouted    $0"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "field-5h limit",
+         "wrap": "truncate"
+        },
+        "children": [
+         "5h limit    ██░░░ 31%"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "field-Last turn",
+         "wrap": "truncate"
+        },
+        "children": [
+         "Last turn   0:00 · +$0"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "field-Claude Code",
+         "wrap": "truncate"
+        },
+        "children": [
+         "Claude Code $0.42 total · this bill $0 before the classifier"
         ]
        },
        {
@@ -136,7 +183,7 @@
          "wrap": "wrap"
         },
         "children": [
-         "T: S simple→Haiku 5.5 at low effort, M standard→Sonnet at medium effort at most, H hard→Opus, L long→Fable (background only). ! risky, sent to Opus at least; ↓ one tier down for rate limits. Dim rows are not routed. API list prices; plans billed by subscription see rate-limit use, not dollars."
+         "No subagents yet. Ask Claude to use an agent and it shows up here."
         ]
        }
       ]
@@ -172,33 +219,51 @@
    "session.start",
    "command.run{command=router}",
    "tool.call{tool=Agent}",
+   "tool.call",
    "agent.spawn",
    "turn.step",
+   "turn.start",
    "turn.complete",
+   "session.measure",
+   "classic.SubagentStop",
+   "session.end",
+   "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=model-router}"
   ],
   "calls": [
+   "$.agent.list (via reconcileAgents)",
    "$.agent.register",
+   "$.clock.after (via finishAgent)",
    "$.clock.now",
    "$.clock.sleep (via timeout)",
    "$.command.register",
    "$.model.classify",
    "$.model.complete",
-   "$.session.usage (via windowPercent)",
+   "$.session.usage",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via storedMode)",
+   "$.store.get (via loadClassCache",
+   "storedMode",
+   "storedTypeModels)",
    "$.store.set",
+   "$.ui.invalidate (via finishAgent)",
    "$.ui.log",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.status"
+   "$.ui.status",
+   "$.ui.toast"
   ],
   "stateReads": [
-   "model-router.ledger"
+   "model-router.ledger",
+   "model-router.meter",
+   "model-router.mode",
+   "model-router.view"
   ],
   "stateWrites": [
-   "model-router.ledger"
+   "model-router.ledger",
+   "model-router.meter",
+   "model-router.mode",
+   "model-router.view"
   ],
   "envReads": [],
   "raw": {
@@ -212,7 +277,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: model-router.ledger"
+     "types ./types/index.d.ts declares state: model-router.ledger, model-router.mode, model-router.meter, model-router.view"
     ],
     "gatingHooks": []
    },
@@ -223,25 +288,41 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=router}, tool.call{tool=Agent}, agent.spawn, turn.step, turn.complete, ui.render{component=Pane, requestId=model-router}",
+      "./register.tsx hooks: session.start, command.run{command=router}, tool.call{tool=Agent}, tool.call, agent.spawn, turn.step, turn.start, turn.complete, session.measure, classic.SubagentStop, session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=model-router}",
+      "./register.tsx hooks on classic.SubagentStop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=router}",
-      "./register.tsx gating hook without .catch: tool.call{tool=Agent}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Agent}",
+      "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: agent.spawn",
-      "./register.tsx calls: $.agent.register, $.clock.now, $.clock.sleep (via timeout), $.command.register, $.model.classify, $.model.complete, $.session.usage (via windowPercent), $.state.get, $.state.set, $.store.get (via storedMode), $.store.set, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status",
-      "./register.tsx state writes: model-router.ledger",
-      "./register.tsx state reads: model-router.ledger"
+      "./register.tsx gating hook with .catch: classic.SubagentStop",
+      "./register.tsx calls: $.agent.list (via reconcileAgents), $.agent.register, $.clock.after (via finishAgent), $.clock.now, $.clock.sleep (via timeout), $.command.register, $.model.classify, $.model.complete, $.session.usage, $.state.get, $.state.set, $.store.get (via loadClassCache, storedMode, storedTypeModels), $.store.set, $.ui.invalidate (via finishAgent), $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: model-router.ledger, model-router.meter, model-router.mode, model-router.view",
+      "./register.tsx state reads: model-router.ledger, model-router.meter, model-router.mode, model-router.view",
+      "./register.tsx surface modules: hooks/clock.tsx"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=Agent}",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
       },
       {
        "module": "./register.tsx",
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
        "hasCatch": true
       }
      ]
@@ -250,5 +331,5 @@
    "advice": []
   }
  },
- "sourceHash": "6618ad0d2b5b0bf8"
+ "sourceHash": "e582963fb70e4efd"
 }

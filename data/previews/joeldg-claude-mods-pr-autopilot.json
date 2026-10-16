@@ -1,6 +1,6 @@
 {
  "slug": "joeldg-claude-mods-pr-autopilot",
- "generatedAt": "2026-10-08T15:54:10.927Z",
+ "generatedAt": "2026-10-16T14:17:36.292Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__pr-autopilot__prs_status"
     }
    },
    {
@@ -38,7 +44,12 @@
     "output": "No PRs are watched. A PR opened with `gh pr create` is picked up by itself; /prs watch <n> adds one."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "prs_status",
+    "description": "The pull requests pr-autopilot watches (opened with `gh pr create` in this session, adopted from this repository at start, or added with /prs watch), as last read: number, title, state, head branch, CI summary and URL. Prefer this over `gh pr view` or `gh pr checks` for a watched PR: it costs no GitHub API call, is at most one poll old, and still answers when gh's token cannot read checks (CI then reads as unknown). Pass `number` for one PR."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
@@ -46,10 +57,12 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.tool.register": 1,
    "$.clock.every": 1,
    "$.process.run": 2,
    "$.state.get": 7,
-   "$.ui.status": 1
+   "$.ui.status": 1,
+   "$.clock.now": 2
   },
   "timers": [
    {
@@ -86,21 +99,31 @@
    "turn.start",
    "turn.complete",
    "tool.call{tool=Bash}",
+   "tool.call{tool=mcp__pr-autopilot__prs_status}",
    "prompt.submit",
    "command.run{command=prs}"
   ],
   "calls": [
    "$.clock.every (via ensureTimer)",
-   "$.clock.now (via remember)",
+   "$.clock.now (via adopt",
+   "holdAuth",
+   "holdRate",
+   "pollOnce",
+   "prsStatus",
+   "remember",
+   "runPrs",
+   "tick)",
    "$.command.register",
    "$.process.run (via exec)",
    "$.prompt.suggest (via finishMerged)",
    "$.session.cwd (via cleanup)",
    "$.state.get",
    "$.state.set",
+   "$.tool.register",
    "$.ui.log (via debug)",
    "$.ui.status (via showStatus)",
    "$.ui.toast (via finishMerged",
+   "holdAuth",
    "refresh)"
   ],
   "stateReads": [
@@ -132,11 +155,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, turn.start, turn.complete, tool.call{tool=Bash}, prompt.submit, command.run{command=prs}",
+      "./register.ts hooks: session.start, turn.start, turn.complete, tool.call{tool=Bash}, tool.call{tool=mcp__pr-autopilot__prs_status}, prompt.submit, command.run{command=prs}",
       "./register.ts answers its own command: command.run{command=prs}",
       "./register.ts gating hook without .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__pr-autopilot__prs_status}",
       "./register.ts gating hook without .catch: prompt.submit",
-      "./register.ts calls: $.clock.every (via ensureTimer), $.clock.now (via remember), $.command.register, $.process.run (via exec), $.prompt.suggest (via finishMerged), $.session.cwd (via cleanup), $.state.get, $.state.set, $.ui.log (via debug), $.ui.status (via showStatus), $.ui.toast (via finishMerged, refresh)",
+      "./register.ts calls: $.clock.every (via ensureTimer), $.clock.now (via adopt, holdAuth, holdRate, pollOnce, prsStatus, remember, runPrs, tick), $.command.register, $.process.run (via exec), $.prompt.suggest (via finishMerged), $.session.cwd (via cleanup), $.state.get, $.state.set, $.tool.register, $.ui.log (via debug), $.ui.status (via showStatus), $.ui.toast (via finishMerged, holdAuth, refresh)",
       "./register.ts state writes: pr-autopilot.prs",
       "./register.ts state reads: pr-autopilot.prs"
      ],
@@ -149,14 +173,21 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__pr-autopilot__prs_status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "30fdaf1d4c043216"
+ "sourceHash": "ce2e7faea4b8dc7c"
 }

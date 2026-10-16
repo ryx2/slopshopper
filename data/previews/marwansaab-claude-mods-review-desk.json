@@ -1,0 +1,342 @@
+{
+ "slug": "marwansaab-claude-mods-review-desk",
+ "generatedAt": "2026-10-16T14:20:40.275Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "reviews"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-desk__publish_review"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-desk__list_reviews"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-desk__answer_question"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "review-desk"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "reviews",
+    "description": "Open the review desk: reviews waiting for you (questions, decisions, findings, plans, explainers, read-throughs) and the ones you submitted",
+    "output": "Review desk: nothing waiting."
+   }
+  ],
+  "tools": [
+   {
+    "name": "publish_review",
+    "description": "Put work in front of the owner for review in the review desk, a side panel in Claude Code: open questions to answer, proposed decisions to approve, findings to accept or reject, a write plan to approve row by row, an animated explainer to walk through, or a long text to read section by section.\nUse it instead of building an HTML review or explainer page and instead of asking several questions in chat. The pack is saved under Reviews/pending/<id>/ in the project; the owner answers in the panel, can ask questions there, and submits. You then receive a prompt pointing at Reviews/reviewed/<id>/outcome.md.\nWhen the work comes from files or notes, they stay the record: mirror them, cite their ids, and never put a fact here that they do not hold. Claims are optional; list every claim a card or scene cites in \"claims\", graded A (primary) to D (inferred) when the project grades its evidence.\nCard types: question (prompt, options[], recommended), decision (proposal, rationale, alternatives[]), finding (body, severity, kind drift|review, quote, suggestion, evidence), plan (rows[] of action + target + summary), explainer (steps[] of title, caption, scene), read (sections[] of title + body, flags[]).\nScenes animate in the panel: cards, flow, list, timeline (items[] of title, text, tone, claim); funnel (items[] of label, value); bars (items[] of label, value, display; max; mark); tiles (items[] of value, label); compare (columns[], rows[] of label + cells[]); matrix (x, y, quadrants[4], dots[] of label, x 0–1, y 0–1). Tones: subject, context, risk, question, decision, good.\nPublishing the same id again replaces the pack and keeps the owner's answers for cards whose ids stay the same."
+   },
+   {
+    "name": "list_reviews",
+    "description": "List the review desk's reviews (pending and submitted) with their folders and how many cards the owner has answered. Outcomes are in <folder>/reviewed/<id>/outcome.md."
+   },
+   {
+    "name": "answer_question",
+    "description": "Put your answer to a question the owner asked from a review desk card onto that card, where they asked it.\nUse it after a prompt that says \"A question from the review desk\": research first with whatever you need, then call this with the review and ask ids from that prompt.\nWrite the answer in Markdown short enough for a side panel; list what you drew on in \"sources\" with URLs. Never invent a source."
+   }
+  ],
+  "panes": [
+   {
+    "id": "review-desk",
+    "title": "Review desk"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 3,
+   "$.command.register": 1,
+   "$.state.get": 9,
+   "$.state.set": 4,
+   "$.session.root": 1,
+   "$.fs.exists": 4,
+   "$.ui.status": 2,
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "review-desk": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Review desk"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Nothing waiting",
+           " · ",
+           "0",
+           " reviewed"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "flexWrap": "wrap",
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-pending",
+           "variant": "primary",
+           "label": "Waiting · 0",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-reviewed",
+           "variant": "secondary",
+           "label": "Reviewed · 0",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "plain": true,
+           "dimColor": true,
+           "label": "↻ Refresh",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Nothing is waiting for review. Ask Claude to put something up, for example: \"put the open questions up for review\" or \"send this write plan to the review desk\"."
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "Saved in ",
+         "Reviews",
+         "/",
+         "pending",
+         "/"
+        ]
+       }
+      ]
+     },
+     "title": "Review desk"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(review-desk)",
+   "/reviews → Review desk: nothing waiting."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=reviews}",
+   "tool.call{tool=mcp__review-desk__publish_review}",
+   "tool.call{tool=mcp__review-desk__list_reviews}",
+   "tool.call{tool=mcp__review-desk__answer_question}",
+   "ui.render{component=Pane, requestId=review-desk}"
+  ],
+  "calls": [
+   "$.clock.now (via ask",
+   "nowIso",
+   "reviewedSlot)",
+   "$.command.register (via setUp)",
+   "$.fs.exists (via answerQuestion",
+   "dirsOf",
+   "moveDir",
+   "publishPack",
+   "reviewedSlot)",
+   "$.fs.list (via dirsOf)",
+   "$.fs.read (via readText)",
+   "$.fs.write (via publishPack",
+   "saveDraft",
+   "submitPack)",
+   "$.process.run (via copyText",
+   "moveDir)",
+   "$.prompt.submit (via ask",
+   "resend",
+   "submit)",
+   "$.session.root (via rootOf)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register (via setUp)",
+   "$.ui.close",
+   "$.ui.copy (via copyText)",
+   "$.ui.log (via setUp)",
+   "$.ui.open (via openPane",
+   "publish)",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.status (via refresh)",
+   "$.ui.toast (via answerQuestion",
+   "copyText",
+   "resend",
+   "submit)"
+  ],
+  "stateReads": [
+   "review-desk.open",
+   "review-desk.packs",
+   "review-desk.root",
+   "review-desk.typing",
+   "review-desk.view"
+  ],
+  "stateWrites": [
+   "review-desk.open",
+   "review-desk.packs",
+   "review-desk.root",
+   "review-desk.typing",
+   "review-desk.view"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/marwansaab-claude-mods-review-desk/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/marwansaab-claude-mods-review-desk/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: review-desk.packs, review-desk.view, review-desk.open, review-desk.typing, review-desk.root"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/marwansaab-claude-mods-review-desk/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=reviews}, tool.call{tool=mcp__review-desk__publish_review}, tool.call{tool=mcp__review-desk__list_reviews}, tool.call{tool=mcp__review-desk__answer_question}, ui.render{component=Pane, requestId=review-desk}",
+      "./register.tsx gating hook with .catch: command.run{command=reviews}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__review-desk__publish_review}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__review-desk__list_reviews}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__review-desk__answer_question}",
+      "./register.tsx calls: $.clock.now (via ask, nowIso, reviewedSlot), $.command.register (via setUp), $.fs.exists (via answerQuestion, dirsOf, moveDir, publishPack, reviewedSlot), $.fs.list (via dirsOf), $.fs.read (via readText), $.fs.write (via publishPack, saveDraft, submitPack), $.process.run (via copyText, moveDir), $.prompt.submit (via ask, resend, submit), $.session.root (via rootOf), $.state.get, $.state.set, $.tool.register (via setUp), $.ui.close, $.ui.copy (via copyText), $.ui.log (via setUp), $.ui.open (via openPane, publish), $.ui.panes, $.ui.resolve, $.ui.status (via refresh), $.ui.toast (via answerQuestion, copyText, resend, submit)",
+      "./register.tsx state writes: review-desk.open, review-desk.packs, review-desk.root, review-desk.typing, review-desk.view",
+      "./register.tsx state reads: review-desk.open, review-desk.packs, review-desk.root, review-desk.typing, review-desk.view"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=reviews}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__review-desk__publish_review}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__review-desk__list_reviews}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__review-desk__answer_question}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "3eadef9697e1c31e"
+}

@@ -1,6 +1,6 @@
 {
  "slug": "joeldg-claude-mods-dev-servers",
- "generatedAt": "2026-10-08T15:54:10.290Z",
+ "generatedAt": "2026-10-16T14:17:35.631Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,18 @@
     "event": "command.run",
     "matcher": {
      "command": "servers"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__dev-servers__dev_servers"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__dev-servers__dev_servers"
     }
    },
    {
@@ -32,10 +44,15 @@
     "name": "servers",
     "description": "Open the Servers pane: this project's dev servers, with Start, Stop, Restart and Log",
     "immediate": true,
-    "output": "No dev servers are listening in /work/app.\n0 other listeners on this Mac."
+    "output": "No dev servers are listening in /work/app.\n0 other listeners on this machine."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "dev_servers",
+    "description": "Lists this project's dev servers: which are running (name, port, pid, uptime, and the log file when it was started from the Servers pane) and which known start commands (package.json scripts, .claude/launch.json, Procfile) are not running. With all: true it also lists every other TCP listener on this machine, with its port and process. Use it instead of running lsof, netstat, ss or ps in Bash to learn what is listening on which port, whether a dev server is up, or who holds a port: it answers from a scan every open session shares, where lsof alone can take 10s or more on a loaded machine. Read-only: it never starts, stops or restarts anything; the person does that with the Start, Stop and Restart buttons of the Servers pane (/servers)."
+   }
+  ],
   "panes": [
    {
     "id": "dev-servers",
@@ -43,19 +60,28 @@
    }
   ],
   "toasts": [],
-  "logs": [],
+  "logs": [
+   "dev-servers: netstat does not list ports here; trying ss",
+   "dev-servers: ss does not list ports here; trying lsof"
+  ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.tool.register": 1,
    "$.clock.every": 1,
-   "$.session.cwd": 2,
-   "$.process.run": 3,
-   "$.fs.list": 2,
-   "$.fs.read": 2,
-   "$.clock.now": 2,
-   "$.state.get": 5,
-   "$.state.set": 2,
+   "$.clock.after": 1,
+   "$.session.cwd": 1,
+   "$.process.run": 4,
+   "$.fs.list": 1,
+   "$.fs.read": 3,
+   "$.env.get": 2,
+   "$.session.id": 1,
+   "$.clock.now": 5,
+   "$.fs.write": 2,
+   "$.ui.log": 2,
+   "$.state.get": 4,
+   "$.state.set": 1,
    "$.ui.status": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
@@ -64,6 +90,10 @@
    {
     "kind": "every",
     "ms": 15000
+   },
+   {
+    "kind": "after",
+    "ms": 0
    }
   ],
   "sites": {
@@ -102,7 +132,7 @@
          "dimColor": true
         },
         "children": [
-         "0 other listeners on this Mac"
+         "0 other listeners on this machine"
         ]
        }
       ]
@@ -112,9 +142,7 @@
    }
   },
   "script": [
-   "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "session.start",
-   "$.process.run(lsof -nP -iTCP -sTCP:LISTEN -Fpcn) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -125,9 +153,14 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.fs.write(/Users/dev/.claude/dev-servers/scan-lock.json)",
+   "$.process.run(netstat -anv -p tcp) → exit 0",
+   "$.process.run(ss -ltnp) → exit 0",
    "$.process.run(lsof -nP -iTCP -sTCP:LISTEN -Fpcn) → exit 0",
+   "$.fs.write(/Users/dev/.claude/dev-servers/scan-cache.json)",
    "$.ui.open(dev-servers)",
-   "/servers → No dev servers are listening in /work/app.\n0 other listeners on this Mac."
+   "/servers → No dev servers are listening in /work/app.\n0 other listeners on this machine."
   ],
   "console": [],
   "warnings": []
@@ -139,31 +172,51 @@
   "hooks": [
    "session.start",
    "command.run{command=servers}",
+   "tool.check{tool=mcp__dev-servers__dev_servers}",
+   "tool.call{tool=mcp__dev-servers__dev_servers}",
    "tool.call{tool=Bash}",
    "ui.render{component=Pane, requestId=dev-servers}"
   ],
   "calls": [
-   "$.clock.after (via arm)",
-   "$.clock.every (via ensureTimer)",
+   "$.clock.after",
+   "$.clock.every (via ensureTimer",
+   "pace)",
    "$.clock.now (via arm",
    "collect",
+   "holderOf",
+   "listForModel",
+   "lookupDetail",
    "pressStop",
    "pruneArmed",
+   "scanListeners",
+   "scanNow",
+   "sharedListeners",
    "waitFor)",
    "$.clock.sleep (via waitFor)",
    "$.command.register",
-   "$.env.get (via logFile)",
+   "$.env.get (via resolvedDir)",
    "$.fs.list (via readEntries)",
    "$.fs.read (via readText)",
-   "$.process.run (via run)",
+   "$.fs.stat (via paneLogs)",
+   "$.fs.write (via writeShared)",
+   "$.process.run (via attempt",
+   "run)",
    "$.session.cwd (via projectRoot)",
+   "$.session.id (via whoAmI)",
    "$.state.get",
    "$.state.set",
+   "$.tool.register",
    "$.ui.log",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.status (via showStatus)",
-   "$.ui.toast"
+   "$.ui.toast (via conflictNote",
+   "forceStop",
+   "mayStop",
+   "restartServer",
+   "showLog",
+   "startEntry",
+   "stopServer)"
   ],
   "stateReads": [
    "dev-servers.armed",
@@ -200,10 +253,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=servers}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=dev-servers}",
+      "./register.tsx hooks: session.start, command.run{command=servers}, tool.check{tool=mcp__dev-servers__dev_servers}, tool.call{tool=mcp__dev-servers__dev_servers}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=dev-servers}",
       "./register.tsx answers its own command: command.run{command=servers}",
+      "./register.tsx gating hook without .catch: tool.check{tool=mcp__dev-servers__dev_servers}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__dev-servers__dev_servers}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.after (via arm), $.clock.every (via ensureTimer), $.clock.now (via arm, collect, pressStop, pruneArmed, waitFor), $.clock.sleep (via waitFor), $.command.register, $.env.get (via logFile), $.fs.list (via readEntries), $.fs.read (via readText), $.process.run (via run), $.session.cwd (via projectRoot), $.state.get, $.state.set, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status (via showStatus), $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.clock.every (via ensureTimer, pace), $.clock.now (via arm, collect, holderOf, listForModel, lookupDetail, pressStop, pruneArmed, scanListeners, scanNow, sharedListeners, waitFor), $.clock.sleep (via waitFor), $.command.register, $.env.get (via resolvedDir), $.fs.list (via readEntries), $.fs.read (via readText), $.fs.stat (via paneLogs), $.fs.write (via writeShared), $.process.run (via attempt, run), $.session.cwd (via projectRoot), $.session.id (via whoAmI), $.state.get, $.state.set, $.tool.register, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status (via showStatus), $.ui.toast (via conflictNote, forceStop, mayStop, restartServer, showLog, startEntry, stopServer)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
       "./register.tsx state writes: dev-servers.armed, dev-servers.busy, dev-servers.snapshot",
@@ -212,14 +267,27 @@
      "gatingHooks": [
       {
        "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__dev-servers__dev_servers}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__dev-servers__dev_servers}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "497114aaab24f21c"
+ "sourceHash": "fa4407db74906d9a"
 }

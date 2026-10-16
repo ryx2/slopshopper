@@ -1,9 +1,38 @@
 {
  "slug": "othrayte-claude-multitask-multitask",
- "generatedAt": "2026-10-10T14:45:39.005Z",
+ "generatedAt": "2026-10-16T14:17:59.520Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": "/^(composer|sdk|bridge)$/"
+     }
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "cwd": "/^/"
+    }
+   },
+   {
+    "event": "ui.press",
+    "matcher": {
+     "element": "claude-multitask-welcome-dismiss"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt",
+     "props": {
+      "hasSurvey": false
+     }
+    }
+   },
    {
     "event": "session.start"
    },
@@ -18,6 +47,12 @@
    },
    {
     "event": "command.run",
+    "matcher": {
+     "command": "multitask"
+    }
+   },
+   {
+    "event": "command.describe",
     "matcher": {
      "command": "multitask"
     }
@@ -110,6 +145,9 @@
     }
    },
    {
+    "event": "ui.message"
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -127,8 +165,9 @@
   "commands": [
    {
     "name": "multitask",
-    "description": "Turn Multitask on or off",
-    "output": "Multitask is on: this session is now the voice and hands all work to thoughts."
+    "description": "Turn Multitask on or off in this chat, or by default in new chats",
+    "argumentHint": "[on|off|toggle|status|mode|default [on|off]]",
+    "output": "Multitask is on in this chat, in Multitask mode: this chat is now the voice and hands all work to thoughts. Pick Focus above the prompt, or use `/multitask mode`, to work with the agent as usual."
    },
    {
     "name": "thoughts",
@@ -169,63 +208,29 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 37,
-   "$.state.set": 4,
+   "$.state.get": 89,
+   "$.state.set": 6,
    "$.agent.register": 1,
-   "$.session.id": 4,
-   "$.store.get": 3,
-   "$.session.messages": 2,
+   "$.store.get": 6,
+   "$.session.id": 5,
+   "$.session.messages": 3,
    "$.store.keys": 2,
-   "$.clock.now": 4,
-   "$.store.set": 2,
+   "$.clock.now": 8,
+   "$.store.set": 3,
    "$.command.register": 2,
+   "$.ui.invalidate": 3,
+   "$.ui.resolve": 8,
+   "$.env.get": 4,
+   "$.fs.stat": 1,
+   "$.session.surfaces": 1,
+   "$.ui.ask": 1,
    "$.tool.register": 5,
-   "$.ui.open": 1,
-   "$.ui.resolve": 4
+   "$.ui.open": 1
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
-    "ok": true,
-    "tree": {
-     "type": "Box",
-     "props": {
-      "flexDirection": "row",
-      "alignItems": "center",
-      "columnGap": 1,
-      "flexShrink": 0
-     },
-     "children": [
-      {
-       "type": "Select",
-       "props": {
-        "key": "multitask",
-        "options": [
-         {
-          "value": "multitask",
-          "label": "Multitask"
-         },
-         {
-          "value": "focus",
-          "label": "Focus"
-         }
-        ],
-        "value": "multitask",
-        "onSelect": "[fn]"
-       },
-       "children": []
-      },
-      {
-       "type": "Button",
-       "props": {
-        "key": "open-thoughts",
-        "label": "thoughts",
-        "onPress": "[fn]"
-       },
-       "children": []
-      }
-     ]
-    }
+    "ok": "engine"
    },
    "UserMessage": {
     "ok": "engine"
@@ -254,8 +259,7 @@
            "dimColor": true
           },
           "children": [
-           "Multitask is ",
-           "on",
+           "Multitask mode",
            " · ",
            "No thoughts yet."
           ]
@@ -270,6 +274,7 @@
   },
   "script": [
    "session.start",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -280,9 +285,13 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/multitask → Multitask is on: this session is now the voice and hands all work to thoughts.",
+   "$.ui.ask(Multitask in this chat?) → \"On\"",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
+   "/multitask → Multitask is on in this chat, in Multitask mode: this chat is now the voice and …",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)",
    "$.ui.open(multitask-thoughts)",
-   "/thoughts → Thoughts pane opened."
+   "/thoughts → Thoughts pane opened.",
+   "ui.render: hook threw undefined is not an object (evaluating 'next.trace.map') (after next)"
   ],
   "console": [],
   "warnings": []
@@ -294,10 +303,16 @@
    "No author information provided. Consider adding author details for plugin attribution"
   ],
   "hooks": [
+   "prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
+   "session.start{cwd=/\"^\"/}",
+   "ui.press{element=claude-multitask-welcome-dismiss}",
+   "ui.render{component=AbovePrompt",
+   "props has {hasSurvey=false}}",
    "session.start",
    "session.end",
    "agent.offer{agent=multitask:thought}",
    "command.run{command=multitask}",
+   "command.describe{command=multitask}",
    "command.run{command=thoughts}",
    "tool.call",
    "tool.call{tool=mcp__multitask__think}",
@@ -316,6 +331,7 @@
    "ui.render{component=AssistantMessage}",
    "ui.render{component=UserMessage}",
    "ui.render{component=AbovePrompt}",
+   "ui.message",
    "ui.render{component=Pane, requestId=multitask-thoughts}",
    "ui.input{component=Pane, requestId=multitask-thoughts}"
   ],
@@ -330,6 +346,10 @@
    "timeNow)",
    "$.clock.sleep (via settledFor)",
    "$.command.register",
+   "$.env.get (via configPath",
+   "switchNote)",
+   "$.fs.read (via isSavedOff)",
+   "$.fs.stat (via isSavedOff)",
    "$.prompt.submit (via flushInbox)",
    "$.session.append (via appendHidden)",
    "$.session.id (via dropOldThoughts",
@@ -339,31 +359,34 @@
    "takeUpThoughts)",
    "$.session.messages",
    "$.session.send (via deliver)",
+   "$.session.surfaces (via sessionOf",
+   "switchNote)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via dropOldThoughts)",
-   "$.store.get (via dropOldThoughts",
-   "keepSwitch",
-   "keptSession",
-   "keptSwitch",
-   "takeUpThoughts)",
+   "$.store.get",
    "$.store.keys (via dropOldThoughts",
    "keptSession)",
-   "$.store.set (via keepSwitch",
-   "keepThoughts)",
+   "$.store.set",
    "$.tool.call (via stopThought)",
    "$.tool.register (via offerVoiceTools)",
    "$.turn.abort (via interrupt)",
+   "$.ui.ask (via sessionOf)",
+   "$.ui.close (via closeIfOff)",
+   "$.ui.invalidate (via redescribe)",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.toast (via tellFromPane)"
+   "$.ui.toast (via switchNote",
+   "tellFromPane)"
   ],
   "stateReads": [
    "multitask.bandTick",
+   "multitask.choice",
    "multitask.colorTurn",
    "multitask.expanded",
    "multitask.heard",
    "multitask.inbox",
+   "multitask.isEnabledByDefault",
    "multitask.isMainBusy",
    "multitask.isOn",
    "multitask.openReports",
@@ -371,14 +394,19 @@
    "multitask.showsAllEnded",
    "multitask.tellingTo",
    "multitask.thoughts",
-   "multitask.toldVoice"
+   "multitask.toldVoice",
+   "multitask.welcome",
+   "react.welcome",
+   "thread-chat.welcome"
   ],
   "stateWrites": [
    "multitask.bandTick",
+   "multitask.choice",
    "multitask.colorTurn",
    "multitask.expanded",
    "multitask.heard",
    "multitask.inbox",
+   "multitask.isEnabledByDefault",
    "multitask.isMainBusy",
    "multitask.isOn",
    "multitask.openReports",
@@ -386,9 +414,15 @@
    "multitask.showsAllEnded",
    "multitask.tellingTo",
    "multitask.thoughts",
-   "multitask.toldVoice"
+   "multitask.toldVoice",
+   "multitask.welcome"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "DISABLE_GROWTHBOOK",
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -406,7 +440,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: multitask.isOn, multitask.thoughts, multitask.inbox, multitask.isMainBusy, multitask.heard, multitask.toldVoice, multitask.expanded, multitask.openReports, multitask.paneTick, multitask.bandTick, multitask.tellingTo, multitask.showsAllEnded, multitask.colorTurn"
+     "types ./types/index.d.ts declares state: multitask.isOn, multitask.choice, multitask.isEnabledByDefault, multitask.thoughts, multitask.inbox, multitask.isMainBusy, multitask.heard, multitask.toldVoice, multitask.expanded, multitask.openReports, multitask.paneTick, multitask.bandTick, multitask.tellingTo, multitask.showsAllEnded, multitask.colorTurn, multitask.welcome"
     ],
     "gatingHooks": []
    },
@@ -417,9 +451,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, agent.offer{agent=multitask:thought}, command.run{command=multitask}, command.run{command=thoughts}, tool.call, tool.call{tool=mcp__multitask__think}, tool.call{tool=mcp__multitask__tell}, tool.call{tool=mcp__multitask__unqueue}, tool.call{tool=mcp__multitask__stop}, tool.call{tool=mcp__multitask__thoughts}, prompt.submit, session.compact, tool.check{tool=Agent}, tool.check{tool=SendMessage}, turn.start, turn.step, turn.complete, session.append, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=multitask-thoughts}, ui.input{component=Pane, requestId=multitask-thoughts}",
+      "./register.tsx hooks: prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}, session.start{cwd=/\"^\"/}, ui.press{element=claude-multitask-welcome-dismiss}, ui.render{component=AbovePrompt, props has {hasSurvey=false}}, session.start, session.end, agent.offer{agent=multitask:thought}, command.run{command=multitask}, command.describe{command=multitask}, command.run{command=thoughts}, tool.call, tool.call{tool=mcp__multitask__think}, tool.call{tool=mcp__multitask__tell}, tool.call{tool=mcp__multitask__unqueue}, tool.call{tool=mcp__multitask__stop}, tool.call{tool=mcp__multitask__thoughts}, prompt.submit, session.compact, tool.check{tool=Agent}, tool.check{tool=SendMessage}, turn.start, turn.step, turn.complete, session.append, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}, ui.render{component=AbovePrompt}, ui.message, ui.render{component=Pane, requestId=multitask-thoughts}, ui.input{component=Pane, requestId=multitask-thoughts}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=multitask}",
       "./register.tsx answers its own command: command.run{command=thoughts}",
+      "./register.tsx gating hook without .catch: prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
       "./register.tsx gating hook without .catch: agent.offer{agent=multitask:thought}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__multitask__think}",
@@ -432,11 +468,21 @@
       "./register.tsx gating hook without .catch: tool.check{tool=Agent}",
       "./register.tsx gating hook without .catch: tool.check{tool=SendMessage}",
       "./register.tsx gating hook without .catch: session.append",
-      "./register.tsx calls: $.agent.list, $.agent.register, $.agent.spawn, $.clock.after, $.clock.now (via fellDue, handOverDue, keepSwitch, timeNow), $.clock.sleep (via settledFor), $.command.register, $.prompt.submit (via flushInbox), $.session.append (via appendHidden), $.session.id (via dropOldThoughts, keepSwitch, keepThoughts, keptSession, takeUpThoughts), $.session.messages, $.session.send (via deliver), $.state.get, $.state.set, $.store.delete (via dropOldThoughts), $.store.get (via dropOldThoughts, keepSwitch, keptSession, keptSwitch, takeUpThoughts), $.store.keys (via dropOldThoughts, keptSession), $.store.set (via keepSwitch, keepThoughts), $.tool.call (via stopThought), $.tool.register (via offerVoiceTools), $.turn.abort (via interrupt), $.ui.open, $.ui.resolve, $.ui.toast (via tellFromPane)",
-      "./register.tsx state writes: multitask.bandTick, multitask.colorTurn, multitask.expanded, multitask.heard, multitask.inbox, multitask.isMainBusy, multitask.isOn, multitask.openReports, multitask.paneTick, multitask.showsAllEnded, multitask.tellingTo, multitask.thoughts, multitask.toldVoice",
-      "./register.tsx state reads: multitask.bandTick, multitask.colorTurn, multitask.expanded, multitask.heard, multitask.inbox, multitask.isMainBusy, multitask.isOn, multitask.openReports, multitask.paneTick, multitask.showsAllEnded, multitask.tellingTo, multitask.thoughts, multitask.toldVoice"
+      "./register.tsx calls: $.agent.list, $.agent.register, $.agent.spawn, $.clock.after, $.clock.now (via fellDue, handOverDue, keepSwitch, timeNow), $.clock.sleep (via settledFor), $.command.register, $.env.get (via configPath, switchNote), $.fs.read (via isSavedOff), $.fs.stat (via isSavedOff), $.prompt.submit (via flushInbox), $.session.append (via appendHidden), $.session.id (via dropOldThoughts, keepSwitch, keepThoughts, keptSession, takeUpThoughts), $.session.messages, $.session.send (via deliver), $.session.surfaces (via sessionOf, switchNote), $.state.get, $.state.set, $.store.delete (via dropOldThoughts), $.store.get, $.store.keys (via dropOldThoughts, keptSession), $.store.set, $.tool.call (via stopThought), $.tool.register (via offerVoiceTools), $.turn.abort (via interrupt), $.ui.ask (via sessionOf), $.ui.close (via closeIfOff), $.ui.invalidate (via redescribe), $.ui.open, $.ui.resolve, $.ui.toast (via switchNote, tellFromPane)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, DISABLE_GROWTHBOOK, HOME, USERPROFILE",
+      "./register.tsx state writes: multitask.bandTick, multitask.choice, multitask.colorTurn, multitask.expanded, multitask.heard, multitask.inbox, multitask.isEnabledByDefault, multitask.isMainBusy, multitask.isOn, multitask.openReports, multitask.paneTick, multitask.showsAllEnded, multitask.tellingTo, multitask.thoughts, multitask.toldVoice, multitask.welcome",
+      "./register.tsx state reads: multitask.bandTick, multitask.choice, multitask.colorTurn, multitask.expanded, multitask.heard, multitask.inbox, multitask.isEnabledByDefault, multitask.isMainBusy, multitask.isOn, multitask.openReports, multitask.paneTick, multitask.showsAllEnded, multitask.tellingTo, multitask.thoughts, multitask.toldVoice, multitask.welcome, react.welcome, thread-chat.welcome",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): react.welcome, thread-chat.welcome",
+      "./register.tsx surface modules: hooks/press.tsx"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=/\"^(composer|sdk|bridge)$\"/}}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "agent.offer",
@@ -515,5 +561,5 @@
    "advice": []
   }
  },
- "sourceHash": "cedd8325efba25c5"
+ "sourceHash": "6e15aba640951876"
 }

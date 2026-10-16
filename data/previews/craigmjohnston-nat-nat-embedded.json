@@ -1,6 +1,6 @@
 {
  "slug": "craigmjohnston-nat-nat-embedded",
- "generatedAt": "2026-10-10T14:45:06.940Z",
+ "generatedAt": "2026-10-16T14:19:08.201Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -50,6 +50,12 @@
     "event": "turn.start"
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
     "event": "prompt.submit"
    },
    {
@@ -88,9 +94,10 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.env.get": 5,
-   "$.state.get": 11,
-   "$.state.set": 11,
+   "$.env.get": 6,
+   "$.state.get": 14,
+   "$.state.set": 13,
+   "$.process.run": 1,
    "$.ui.resolve": 2
   },
   "timers": [],
@@ -140,6 +147,7 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(nat agent waiting) → exit 0",
    "turn.complete"
   ],
   "console": [],
@@ -160,6 +168,7 @@
    "props has {kind=background_hint}}",
    "ui.render{component=Spinner}",
    "turn.start",
+   "tool.call{tool=Bash}",
    "prompt.submit",
    "tool.call{tool=AskUserQuestion}",
    "tool.call",
@@ -177,7 +186,8 @@
    "$.env.get",
    "$.fs.exists (via pollInbox)",
    "$.fs.list (via pollInbox)",
-   "$.fs.read",
+   "$.fs.read (via pollInbox",
+   "readBrief)",
    "$.fs.write (via record",
    "writeUsage)",
    "$.process.run (via mark",
@@ -187,15 +197,26 @@
    "writeUsage)",
    "$.prompt.submit (via pollInbox)",
    "$.session.id (via record)",
+   "$.session.turns (via turns)",
    "$.state.get",
    "$.state.set",
-   "$.ui.log",
+   "$.ui.log (via handedInThisTurn",
+   "mark",
+   "noteHandIn",
+   "pollInbox",
+   "readBrief",
+   "record",
+   "resume",
+   "turns",
+   "writeUsage)",
    "$.ui.resolve"
   ],
   "stateReads": [
+   "nat-embedded.handedIn",
    "nat-embedded.wait"
   ],
   "stateWrites": [
+   "nat-embedded.handedIn",
    "nat-embedded.wait"
   ],
   "envReads": [
@@ -217,7 +238,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: nat-embedded.wait"
+     "types ./types/index.d.ts declares state: nat-embedded.wait, nat-embedded.handedIn"
     ],
     "gatingHooks": []
    },
@@ -228,7 +249,9 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, prompt.context, session.measure, ui.render{component=PromptHint}, ui.render{component=TurnDuration}, ui.render{component=InfoNotice}, ui.render{component=ToolProgress, props has {kind=background_hint}}, ui.render{component=Spinner}, turn.start, prompt.submit, tool.call{tool=AskUserQuestion}, tool.call, turn.step, classic.PermissionRequest, classic.Notification, classic.Elicitation, classic.ElicitationResult, turn.complete",
+      "./register.ts hooks: session.start, prompt.context, session.measure, ui.render{component=PromptHint}, ui.render{component=TurnDuration}, ui.render{component=InfoNotice}, ui.render{component=ToolProgress, props has {kind=background_hint}}, ui.render{component=Spinner}, turn.start, tool.call{tool=Bash}, prompt.submit, tool.call{tool=AskUserQuestion}, tool.call, turn.step, classic.PermissionRequest, classic.Notification, classic.Elicitation, classic.ElicitationResult, turn.complete",
+      "./register.ts hooks on prompt.context, classic.PermissionRequest, classic.Notification, classic.Elicitation, classic.ElicitationResult do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook without .catch: tool.call{tool=Bash}",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: tool.call{tool=AskUserQuestion}",
       "./register.ts gating hook without .catch: tool.call",
@@ -236,13 +259,19 @@
       "./register.ts gating hook without .catch: classic.Notification",
       "./register.ts gating hook without .catch: classic.Elicitation",
       "./register.ts gating hook without .catch: classic.ElicitationResult",
-      "./register.ts calls: $.clock.every (via pollInbox), $.clock.now (via record, writeUsage), $.env.get, $.fs.exists (via pollInbox), $.fs.list (via pollInbox), $.fs.read, $.fs.write (via record, writeUsage), $.process.run (via mark, pollInbox, record, resume, writeUsage), $.prompt.submit (via pollInbox), $.session.id (via record), $.state.get, $.state.set, $.ui.log, $.ui.resolve",
+      "./register.ts calls: $.clock.every (via pollInbox), $.clock.now (via record, writeUsage), $.env.get, $.fs.exists (via pollInbox), $.fs.list (via pollInbox), $.fs.read (via pollInbox, readBrief), $.fs.write (via record, writeUsage), $.process.run (via mark, pollInbox, record, resume, writeUsage), $.prompt.submit (via pollInbox), $.session.id (via record), $.session.turns (via turns), $.state.get, $.state.set, $.ui.log (via handedInThisTurn, mark, noteHandIn, pollInbox, readBrief, record, resume, turns, writeUsage), $.ui.resolve",
       "./register.ts env writes: nothing",
       "./register.ts env reads: NAT_BRIEF, NAT_INBOX, NAT_PROJECT, NAT_SESSION_RECORD, NAT_SLICE, NAT_USAGE",
-      "./register.ts state writes: nat-embedded.wait",
-      "./register.ts state reads: nat-embedded.wait"
+      "./register.ts state writes: nat-embedded.handedIn, nat-embedded.wait",
+      "./register.ts state reads: nat-embedded.handedIn, nat-embedded.wait"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "prompt.submit",
@@ -291,5 +320,5 @@
    "advice": []
   }
  },
- "sourceHash": "ee62d0b480abe30a"
+ "sourceHash": "51d1f0820ca7a7db"
 }

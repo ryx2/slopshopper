@@ -1,0 +1,8 @@
+{
+ "slug": "robgruhl-claude-mod-learnings-e1-fail-open",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Two copies of the same broken guard. Each throws before it calls next.\n// Bash: no .catch, so the docs say the guard is skipped and the call goes on (fail open).\n// Write: a .catch that refuses whenever next was never called (fail closed).\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    if (e.command.includes('rm')) throw new Error('guard bug')\n    return next(e)\n  })\n\n  on('tool.call', { tool: 'Write' }, async ($, e, next) => {\n    throw new Error('guard bug')\n  }).catch(($, e, next) => (next.called ? next(e) : { deny: `guard failed (${next.error.kind}), so the call was refused` }))\n\n  // Read: reports the budget it runs under, then passes the call on.\n  on('tool.call', { tool: 'Read' }, async ($, e, next) => {\n    const r = await next(e)\n    return { result: { budgetMs: next.budget.ms, remainingMs: next.budget.remainingMs, inner: r } } as never\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"e1-fail-open\",\n  \"version\": \"0.1.0\",\n  \"description\": \"A guard that throws, with and without .catch\",\n  \"author\": {\n    \"name\": \"Rob Gruhl\"\n  }\n}"
+ }
+}

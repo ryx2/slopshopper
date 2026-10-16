@@ -1,6 +1,6 @@
 {
  "slug": "joshuaoliphant-claude-plugins-compost",
- "generatedAt": "2026-10-07T15:21:39.982Z",
+ "generatedAt": "2026-10-16T14:16:03.304Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -21,25 +21,72 @@
     "matcher": {
      "name": "drift"
     }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__compost__architecture_review"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "name": "architecture-review"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "architecture-review"
+    }
    }
   ],
   "commands": [
    {
     "name": "drift",
     "description": "List skill drift the mod has recorded, by skill"
+   },
+   {
+    "name": "architecture-review",
+    "description": "Reopen the last deepening candidates from compost:deepen"
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "architecture_review",
+    "description": "Shows compost:deepen's deepening candidates as cards in the Architecture review pane, top recommendation first. Call it at deepen's step 5 with every candidate; the person picks one from the pane or the conversation."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1
+   "$.command.register": 2,
+   "$.tool.register": 1,
+   "$.ui.resolve": 1,
+   "$.state.get": 1
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "Pane": {
+    "architecture-review": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No deepening candidates yet: compost:deepen fills this pane."
+      ]
+     },
+     "title": "architecture-review"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -52,7 +99,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/drift → "
+   "/drift → ",
+   "/architecture-review → "
   ],
   "console": [],
   "warnings": []
@@ -66,7 +114,10 @@
    "skill.prompt",
    "turn.complete",
    "prompt.submit",
-   "command.run{name=drift}"
+   "command.run{name=drift}",
+   "tool.call{tool=mcp__compost__architecture_review}",
+   "command.run{name=architecture-review}",
+   "ui.render{component=Pane, requestId=architecture-review}"
   ],
   "calls": [
    "$.clock.now",
@@ -81,11 +132,21 @@
    "$.fs.write (via record)",
    "$.http.fetch (via nouls)",
    "$.process.run (via apiKey)",
+   "$.prompt.submit",
    "$.session.id",
-   "$.session.messages"
+   "$.session.messages",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "compost.review"
+  ],
+  "stateWrites": [
+   "compost.review"
+  ],
   "envReads": [
    "HOME",
    "TYPESAFE_API_KEY"
@@ -99,7 +160,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: compost.review"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -109,30 +173,48 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./skill-drift.ts hooks: session.start, skill.prompt, turn.complete, prompt.submit, command.run{name=drift}",
-      "./skill-drift.ts gating hook without .catch: prompt.submit",
-      "./skill-drift.ts gating hook without .catch: command.run{name=drift}",
-      "./skill-drift.ts calls: $.clock.now, $.command.register, $.env.get (via apiKey, logDir), $.fs.exists (via readLog, record), $.fs.list (via readLog), $.fs.read (via readLog, record), $.fs.write (via record), $.http.fetch (via nouls), $.process.run (via apiKey), $.session.id, $.session.messages",
-      "./skill-drift.ts env writes: nothing",
-      "./skill-drift.ts env reads: HOME, TYPESAFE_API_KEY"
+      "./compost.ts hooks: session.start, skill.prompt, turn.complete, prompt.submit, command.run{name=drift}, tool.call{tool=mcp__compost__architecture_review}, command.run{name=architecture-review}, ui.render{component=Pane, requestId=architecture-review}",
+      "./compost.ts hooks on skill.prompt do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./compost.ts gating hook without .catch: prompt.submit",
+      "./compost.ts gating hook without .catch: command.run{name=drift}",
+      "./compost.ts gating hook without .catch: tool.call{tool=mcp__compost__architecture_review}",
+      "./compost.ts gating hook without .catch: command.run{name=architecture-review}",
+      "./compost.ts calls: $.clock.now, $.command.register, $.env.get (via apiKey, logDir), $.fs.exists (via readLog, record), $.fs.list (via readLog), $.fs.read (via readLog, record), $.fs.write (via record), $.http.fetch (via nouls), $.process.run (via apiKey), $.prompt.submit, $.session.id, $.session.messages, $.state.get, $.state.set, $.tool.register, $.ui.open (via openPane), $.ui.resolve",
+      "./compost.ts env writes: nothing",
+      "./compost.ts env reads: HOME, TYPESAFE_API_KEY",
+      "./compost.ts state writes: compost.review",
+      "./compost.ts state reads: compost.review"
      ],
      "gatingHooks": [
       {
-       "module": "./skill-drift.ts",
+       "module": "./compost.ts",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
       },
       {
-       "module": "./skill-drift.ts",
+       "module": "./compost.ts",
        "pattern": "command.run",
        "hook": "command.run{name=drift}",
+       "hasCatch": false
+      },
+      {
+       "module": "./compost.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__compost__architecture_review}",
+       "hasCatch": false
+      },
+      {
+       "module": "./compost.ts",
+       "pattern": "command.run",
+       "hook": "command.run{name=architecture-review}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "f3481835883a6456"
+ "sourceHash": "5cf8615c2e0e7225"
 }

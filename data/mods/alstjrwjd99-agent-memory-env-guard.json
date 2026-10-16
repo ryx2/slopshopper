@@ -1,0 +1,9 @@
+{
+ "slug": "alstjrwjd99-agent-memory-env-guard",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\nimport { findEnvFiles } from './guard.ts'\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    const hits = findEnvFiles(e.command)\n    if (hits.length === 0) return next(e)\n\n    $.ui.toast(`env-guard: ${hits.join(', ')} 커밋 차단`)\n    return { deny: `${$.plugin.name}: .env 파일은 커밋 금지 (${hits.join(', ')}). .gitignore에 추가하고 해당 파일은 빼고 진행할 것.` }\n  }).catch(($, e, next) =>\n    // 가드 자체가 실패하면 안전하게 막는다\n    next.called ? next(e) : { deny: `${$.plugin.name}: 가드 실행 실패` },\n  )\n}\n",
+  "hooks/guard.ts": "// git add/commit 명령에서 .env 계열 파일 인자를 찾는다 (.env.example 등 템플릿은 허용)\nconst GIT_STAGE = /\\bgit\\s+(?:-C\\s+\\S+\\s+)?(add|commit)\\b/\nconst ENV_FILE = /(^|[\\/\\\\])\\.env(\\.[\\w.-]+)?$/\nconst TEMPLATE = /\\.(example|sample|template|dist)$/\n\nexport function findEnvFiles(command: string): string[] {\n  // && ; | 로 이어진 명령을 쪼개서 git add/commit 구간만 본다\n  return command\n    .split(/&&|\\|\\||;|\\|/)\n    .filter(part => GIT_STAGE.test(part))\n    .flatMap(part => part.trim().split(/\\s+/))\n    .map(token => token.replace(/^['\"]|['\"]$/g, ''))\n    .filter(token => ENV_FILE.test(token) && !TEMPLATE.test(token))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"env-guard\",\n  \"version\": \"0.1.0\",\n  \"description\": \"git add/commit에 .env 파일이 들어가면 Bash 호출을 막는다\"\n}"
+ }
+}

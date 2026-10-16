@@ -1,6 +1,6 @@
 {
  "slug": "ramtinj95-claude-mods-notes-compaction",
- "generatedAt": "2026-10-10T14:45:44.734Z",
+ "generatedAt": "2026-10-16T14:21:24.682Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,9 @@
    },
    {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "turn.step"
@@ -46,6 +49,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "compact"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "notes"
     }
    },
@@ -73,15 +82,15 @@
   "tools": [
    {
     "name": "notes",
-    "description": "Cross-window notes. write_file replaces; append_to_file adds. Virtual paths: relative uses current agent; cross-agent uses <agent>/notes[/path], read-only. Call with no arguments for help.\n\n<context_window_guidance>\nKeep one checkpoint per task at a stable notes path: request, constraints, decisions, progress, next steps, history IDs. Replace stale state; mark completion in place. Keep reusable findings and deferred ideas in separate topic notes; link, don't copy. Recording isn't permission to implement.\n\nSave changed state after substantial work, before replying, and before new_context or handoff. Skip routine or unchanged state. Include checkpoint paths in handoffs. After rollover, read the checkpoint, then linked notes as needed; history only for missing details.\n</context_window_guidance>"
+    "description": "Persistent notes. write_file replaces; append_to_file adds. Virtual paths: relative uses current agent; cross-agent uses <agent>/notes[/path], read-only. Call with no arguments for help.\n\n<context_window_guidance>\nNotes persist across windows. Keep one checkpoint per task at a stable notes path, covering the request, constraints, decisions, progress and how it was verified, next steps and identifiers needed to act (history IDs too), so you can resume without rereading the conversation. Replace stale state; mark completion in place. Keep reusable findings and deferred ideas in separate topic notes; link, don't copy. Recording isn't permission to implement.\n\nSave changed state after substantial work, before replying, and before new_context or handoff. Skip routine or unchanged state; raw output stays in history. Include checkpoint paths in handoffs. After rollover, read the checkpoint, then linked notes as needed. History retrieves earlier conversation; use it only for missing details.\n</context_window_guidance>"
    },
    {
     "name": "history",
-    "description": "Prior-window detail. Pass IDs unchanged. Search, never browse. Call with no arguments for help."
+    "description": "Search earlier conversation, don't browse it. Pass returned IDs unchanged. Call with no arguments for help."
    },
    {
     "name": "new_context",
-    "description": "Start a new context window"
+    "description": "Start fresh from saved notes; recover earlier conversation through history"
    },
    {
     "name": "get_context_remaining",
@@ -99,15 +108,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 1,
+   "$.store.get": 2,
    "$.tool.register": 4,
    "$.command.register": 1,
-   "$.session.usage": 11,
    "$.session.id": 1,
    "$.env.get": 4,
    "$.fs.exists": 4,
    "$.session.messages": 1,
    "$.fs.write": 1,
+   "$.session.usage": 13,
    "$.ui.invalidate": 2,
    "$.ui.open": 1,
    "$.ui.resolve": 1
@@ -212,6 +221,7 @@
   "hooks": [
    "tool.call",
    "session.start",
+   "prompt.submit",
    "turn.step",
    "session.end",
    "turn.start",
@@ -220,12 +230,16 @@
    "tool.call{tool=mcp__notes-compaction__notes}",
    "tool.call{tool=mcp__notes-compaction__history}",
    "tool.call{tool=mcp__notes-compaction__new_context}",
+   "command.run{command=compact}",
    "command.run{command=notes}",
    "ui.render{component=Pane, requestId=notes-compaction}",
    "tool.call{tool=mcp__notes-compaction__get_context_remaining}"
   ],
   "calls": [
-   "$.clock.after",
+   "$.clock.after (via checkpoint",
+   "continueAfterSummary",
+   "openWindow",
+   "roll)",
    "$.clock.now (via prune",
    "runNotes)",
    "$.command.register",
@@ -248,15 +262,19 @@
    "saveState",
    "writeNote)",
    "$.process.run (via prune)",
-   "$.prompt.submit",
+   "$.prompt.submit (via checkpoint",
+   "continueAfterSummary",
+   "openWindow)",
    "$.session.id (via session)",
    "$.session.messages (via callHistory",
    "isSessionAgent",
    "loadSession)",
    "$.session.usage (via contextUsed",
+   "continueAfterSummary",
    "refreshThreshold)",
    "$.store.get",
-   "$.store.set (via toggleNormalCompaction)",
+   "$.store.set (via setCompaction",
+   "toggleNormalCompaction)",
    "$.tool.register",
    "$.ui.close",
    "$.ui.invalidate (via showPanel)",
@@ -296,15 +314,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: tool.call, session.start, turn.step, session.end, turn.start, turn.complete, session.compact, tool.call{tool=mcp__notes-compaction__notes}, tool.call{tool=mcp__notes-compaction__history}, tool.call{tool=mcp__notes-compaction__new_context}, command.run{command=notes}, ui.render{component=Pane, requestId=notes-compaction}, tool.call{tool=mcp__notes-compaction__get_context_remaining}",
+      "./register.ts hooks: tool.call, session.start, prompt.submit, turn.step, session.end, turn.start, turn.complete, session.compact, tool.call{tool=mcp__notes-compaction__notes}, tool.call{tool=mcp__notes-compaction__history}, tool.call{tool=mcp__notes-compaction__new_context}, command.run{command=compact}, command.run{command=notes}, ui.render{component=Pane, requestId=notes-compaction}, tool.call{tool=mcp__notes-compaction__get_context_remaining}",
+      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=notes}",
       "./register.ts gating hook without .catch: tool.call",
+      "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook with .catch: session.compact",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__notes-compaction__notes}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__notes-compaction__history}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__notes-compaction__new_context}",
+      "./register.ts gating hook with .catch: command.run{command=compact}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__notes-compaction__get_context_remaining}",
-      "./register.ts calls: $.clock.after, $.clock.now (via prune, runNotes), $.command.register, $.command.run (via roll), $.env.get (via dataHome, transcriptsDir), $.fs.exists (via childNames, loadSession, prune, readNote, readNotes), $.fs.list (via childNames, prune, readNotes), $.fs.read (via loadSession, prune, readNote, readNotes), $.fs.write (via runNotes, saveState, writeNote), $.process.run (via prune), $.prompt.submit, $.session.id (via session), $.session.messages (via callHistory, isSessionAgent, loadSession), $.session.usage (via contextUsed, refreshThreshold), $.store.get, $.store.set (via toggleNormalCompaction), $.tool.register, $.ui.close, $.ui.invalidate (via showPanel), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.ts calls: $.clock.after (via checkpoint, continueAfterSummary, openWindow, roll), $.clock.now (via prune, runNotes), $.command.register, $.command.run (via roll), $.env.get (via dataHome, transcriptsDir), $.fs.exists (via childNames, loadSession, prune, readNote, readNotes), $.fs.list (via childNames, prune, readNotes), $.fs.read (via loadSession, prune, readNote, readNotes), $.fs.write (via runNotes, saveState, writeNote), $.process.run (via prune), $.prompt.submit (via checkpoint, continueAfterSummary, openWindow), $.session.id (via session), $.session.messages (via callHistory, isSessionAgent, loadSession), $.session.usage (via contextUsed, continueAfterSummary, refreshThreshold), $.store.get, $.store.set (via setCompaction, toggleNormalCompaction), $.tool.register, $.ui.close, $.ui.invalidate (via showPanel), $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, XDG_DATA_HOME"
      ],
@@ -313,6 +334,12 @@
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
        "hasCatch": false
       },
       {
@@ -341,6 +368,12 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=compact}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__notes-compaction__get_context_remaining}",
        "hasCatch": false
@@ -351,5 +384,5 @@
    "advice": []
   }
  },
- "sourceHash": "2e1d94168f9a94c6"
+ "sourceHash": "85d8e99028ef3bb9"
 }

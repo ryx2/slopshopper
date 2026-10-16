@@ -1,6 +1,6 @@
 {
  "slug": "k7term1a-cc-sticky-notes",
- "generatedAt": "2026-10-07T15:23:27.948Z",
+ "generatedAt": "2026-10-16T14:17:37.448Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,9 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "session.append"
@@ -39,13 +42,13 @@
   "commands": [
    {
     "name": "sticky-note",
-    "description": "Sticky Notes: open/close the pane, or new | back | feedback | calibrate | doctor | promote | outline | refresh | digest | export | mode | stats",
-    "argumentHint": "[new <問題> | back | feedback good|bad [main|sidebar|followup|project] | calibrate]"
+    "description": "Sticky Notes: open/close the pane, or new | back | rm | timeout | provider | every | ctx | notion | feedback | calibrate | doctor",
+    "argumentHint": "[new <問題> | back | provider claude|openai | every <n> | ctx [add <文字> | rm <n> | refresh] | feedback … | calibrate]"
    },
    {
     "name": "sn",
     "description": "Sticky Notes: open/close the pane (short for /sticky-note)",
-    "argumentHint": "[new <問題> | back | …]"
+    "argumentHint": "[new <問題> | back | provider claude|openai | every <n> | ctx …]"
    }
   ],
   "tools": [],
@@ -60,26 +63,30 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.store.get": 13,
    "$.command.register": 2,
-   "$.session.repo": 3,
-   "$.store.keys": 3,
-   "$.store.get": 2,
-   "$.state.get": 12,
+   "$.session.repo": 5,
+   "$.store.keys": 4,
+   "$.state.get": 13,
    "$.state.set": 4,
-   "$.session.id": 4,
    "$.ui.status": 2,
+   "$.session.id": 3,
    "$.env.get": 3,
    "$.fs.read": 2,
    "$.session.messages": 1,
    "$.session.turns": 1,
    "$.clock.now": 1,
-   "$.clock.after": 1,
+   "$.clock.after": 2,
    "$.ui.panes": 2,
    "$.ui.open": 1,
    "$.ui.close": 1,
    "$.ui.resolve": 1
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   },
    {
     "kind": "after",
     "ms": 0
@@ -117,38 +124,7 @@
            "dimColor": true
           },
           "children": [
-           "0",
-           " 則",
-           ""
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "flexDirection": "column",
-         "borderStyle": "round",
-         "borderDimColor": true,
-         "paddingX": 1
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "便利貼"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "還沒有。在主輸入框問「為什麼／是什麼」，或用 /sticky-note new。"
+           "0 張"
           ]
          }
         ]
@@ -159,7 +135,29 @@
          "dimColor": true
         },
         "children": [
-         "點一則便利貼，接著在主輸入框打字就是追問它。"
+         "還沒有便利貼。在主輸入框問「為什麼／是什麼」，或用 /sn new <問題>。"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "card:context",
+         "borderStyle": "round",
+         "borderDimColor": true,
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "open:context",
+           "plain": true,
+           "dimColor": true,
+           "label": "專案脈絡　0 條",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
         ]
        }
       ]
@@ -185,7 +183,7 @@
    "/sn → "
   ],
   "console": [],
-  "status": "cc-sticky-note",
+  "status": "今日 Jev 0 次 · Claude 0",
   "warnings": []
  },
  "validate": {
@@ -195,6 +193,7 @@
   "hooks": [
    "session.start",
    "turn.start",
+   "turn.complete",
    "session.append",
    "prompt.submit",
    "command.run{command=?}",
@@ -204,11 +203,15 @@
   "calls": [
    "$.clock.after (via portsOf)",
    "$.clock.now (via portsOf)",
+   "$.clock.sleep (via portsOf)",
    "$.command.register",
+   "$.config.list (via portsOf)",
+   "$.config.set (via portsOf)",
    "$.env.get (via keyFilesOf",
    "portsOf)",
    "$.fs.read (via portsOf)",
    "$.http.fetch (via portsOf)",
+   "$.mcp.call (via portsOf)",
    "$.model.complete (via portsOf)",
    "$.model.fork (via portsOf)",
    "$.session.id",
@@ -218,10 +221,12 @@
    "$.session.turns (via portsOf)",
    "$.state.get",
    "$.state.set",
-   "$.store.delete (via portsOf)",
-   "$.store.get (via portsOf)",
-   "$.store.keys (via portsOf)",
-   "$.store.set (via portsOf)",
+   "$.store.delete (via kvOf)",
+   "$.store.get (via kvOf)",
+   "$.store.keys (via kvOf)",
+   "$.store.set (via kvOf",
+   "portsOf)",
+   "$.tool.list (via portsOf)",
    "$.ui.ask (via portsOf)",
    "$.ui.close (via portsOf)",
    "$.ui.log (via portsOf)",
@@ -233,6 +238,9 @@
    "$.ui.toast (via portsOf)"
   ],
   "stateReads": [
+   "cc-sticky-notes.contextRev",
+   "cc-sticky-notes.digestStatus",
+   "cc-sticky-notes.editingId",
    "cc-sticky-notes.lastPromptUuid",
    "cc-sticky-notes.lastSampleId",
    "cc-sticky-notes.lastTurnId",
@@ -243,6 +251,9 @@
    "cc-sticky-notes.unread"
   ],
   "stateWrites": [
+   "cc-sticky-notes.contextRev",
+   "cc-sticky-notes.digestStatus",
+   "cc-sticky-notes.editingId",
    "cc-sticky-notes.lastPromptUuid",
    "cc-sticky-notes.lastSampleId",
    "cc-sticky-notes.lastTurnId",
@@ -253,9 +264,12 @@
    "cc-sticky-notes.unread"
   ],
   "envReads": [
+   "COMPUTERNAME",
    "HOME",
+   "HOSTNAME",
    "OPENAI_API_KEY",
    "TYPESAFE_API_KEY",
+   "USER",
    "USERPROFILE"
   ],
   "raw": {
@@ -269,7 +283,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: cc-sticky-notes.tree, cc-sticky-notes.selectedId, cc-sticky-notes.unread, cc-sticky-notes.onlyThisSession, cc-sticky-notes.selectMode, cc-sticky-notes.selection, cc-sticky-notes.pending, cc-sticky-notes.lastTurnId, cc-sticky-notes.turnsAtLastSidebar, cc-sticky-notes.lastPromptUuid, cc-sticky-notes.lastSampleId"
+     "types ./types/index.d.ts declares state: cc-sticky-notes.tree, cc-sticky-notes.selectedId, cc-sticky-notes.editingId, cc-sticky-notes.contextRev, cc-sticky-notes.digestStatus, cc-sticky-notes.unread, cc-sticky-notes.onlyThisSession, cc-sticky-notes.selectMode, cc-sticky-notes.selection, cc-sticky-notes.pending, cc-sticky-notes.lastTurnId, cc-sticky-notes.turnsAtLastSidebar, cc-sticky-notes.lastPromptUuid, cc-sticky-notes.lastSampleId"
     ],
     "gatingHooks": []
    },
@@ -280,16 +294,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, session.append, prompt.submit, command.run{command=?}, command.run{command=?}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx hooks: session.start, turn.start, turn.complete, session.append, prompt.submit, command.run{command=?}, command.run{command=?}, ui.render{component=Pane, requestId=?}",
       "./register.tsx gating hook without .catch: session.append",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: command.run{command=?}",
       "./register.tsx gating hook without .catch: command.run{command=?}",
-      "./register.tsx calls: $.clock.after (via portsOf), $.clock.now (via portsOf), $.command.register, $.env.get (via keyFilesOf, portsOf), $.fs.read (via portsOf), $.http.fetch (via portsOf), $.model.complete (via portsOf), $.model.fork (via portsOf), $.session.id, $.session.messages (via portsOf), $.session.repo (via portsOf), $.session.root (via portsOf), $.session.turns (via portsOf), $.state.get, $.state.set, $.store.delete (via portsOf), $.store.get (via portsOf), $.store.keys (via portsOf), $.store.set (via portsOf), $.ui.ask (via portsOf), $.ui.close (via portsOf), $.ui.log (via portsOf), $.ui.open (via portsOf), $.ui.panes (via portsOf), $.ui.resolve, $.ui.status (via portsOf, refreshStatus), $.ui.toast (via portsOf)",
+      "./register.tsx calls: $.clock.after (via portsOf), $.clock.now (via portsOf), $.clock.sleep (via portsOf), $.command.register, $.config.list (via portsOf), $.config.set (via portsOf), $.env.get (via keyFilesOf, portsOf), $.fs.read (via portsOf), $.http.fetch (via portsOf), $.mcp.call (via portsOf), $.model.complete (via portsOf), $.model.fork (via portsOf), $.session.id, $.session.messages (via portsOf), $.session.repo (via portsOf), $.session.root (via portsOf), $.session.turns (via portsOf), $.state.get, $.state.set, $.store.delete (via kvOf), $.store.get (via kvOf), $.store.keys (via kvOf), $.store.set (via kvOf, portsOf), $.tool.list (via portsOf), $.ui.ask (via portsOf), $.ui.close (via portsOf), $.ui.log (via portsOf), $.ui.open (via portsOf), $.ui.panes (via portsOf), $.ui.resolve, $.ui.status (via portsOf, refreshStatus), $.ui.toast (via portsOf)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME, OPENAI_API_KEY, TYPESAFE_API_KEY, USERPROFILE",
-      "./register.tsx state writes: cc-sticky-notes.lastPromptUuid, cc-sticky-notes.lastSampleId, cc-sticky-notes.lastTurnId, cc-sticky-notes.pending, cc-sticky-notes.selectedId, cc-sticky-notes.tree, cc-sticky-notes.turnsAtLastSidebar, cc-sticky-notes.unread",
-      "./register.tsx state reads: cc-sticky-notes.lastPromptUuid, cc-sticky-notes.lastSampleId, cc-sticky-notes.lastTurnId, cc-sticky-notes.pending, cc-sticky-notes.selectedId, cc-sticky-notes.tree, cc-sticky-notes.turnsAtLastSidebar, cc-sticky-notes.unread"
+      "./register.tsx env reads: COMPUTERNAME, HOME, HOSTNAME, OPENAI_API_KEY, TYPESAFE_API_KEY, USER, USERPROFILE",
+      "./register.tsx state writes: cc-sticky-notes.contextRev, cc-sticky-notes.digestStatus, cc-sticky-notes.editingId, cc-sticky-notes.lastPromptUuid, cc-sticky-notes.lastSampleId, cc-sticky-notes.lastTurnId, cc-sticky-notes.pending, cc-sticky-notes.selectedId, cc-sticky-notes.tree, cc-sticky-notes.turnsAtLastSidebar, cc-sticky-notes.unread",
+      "./register.tsx state reads: cc-sticky-notes.contextRev, cc-sticky-notes.digestStatus, cc-sticky-notes.editingId, cc-sticky-notes.lastPromptUuid, cc-sticky-notes.lastSampleId, cc-sticky-notes.lastTurnId, cc-sticky-notes.pending, cc-sticky-notes.selectedId, cc-sticky-notes.tree, cc-sticky-notes.turnsAtLastSidebar, cc-sticky-notes.unread"
      ],
      "gatingHooks": [
       {
@@ -318,8 +332,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "813a9e6e3106da77"
+ "sourceHash": "4c663c0499f5f9bf"
 }

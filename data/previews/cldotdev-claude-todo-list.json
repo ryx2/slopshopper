@@ -1,6 +1,6 @@
 {
  "slug": "cldotdev-claude-todo-list",
- "generatedAt": "2026-10-08T15:53:53.410Z",
+ "generatedAt": "2026-10-16T14:17:20.883Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -39,13 +39,33 @@
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "todos"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "todos"
+    }
+   },
+   {
+    "event": "ui.close",
+    "matcher": {
+     "id": "todos"
+    }
    }
   ],
   "commands": [
    {
     "name": "todos",
-    "description": "Show, refresh or clear the open items list, delete some, or send them all with a prompt",
-    "argumentHint": "[refresh|clear|delete <numbers>|<prompt>]",
+    "description": "Show, refresh, clear or reset the open items list, open it in a pane, delete some, list, restore or purge removed items, or send them all with a prompt",
+    "argumentHint": "[refresh|clear|pane|reset|trash|restore <numbers>|purge <numbers>|delete <numbers>|<prompt>]",
     "output": "No open items."
    }
   ],
@@ -57,14 +77,15 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.session.id": 1,
    "$.clock.now": 1,
    "$.settings.read": 1,
    "$.store.keys": 1,
-   "$.state.get": 16,
-   "$.state.set": 4,
-   "$.session.id": 1,
-   "$.store.get": 1,
-   "$.clock.after": 1
+   "$.state.get": 28,
+   "$.state.set": 5,
+   "$.config.list": 1,
+   "$.clock.after": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -75,6 +96,60 @@
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
+   },
+   "Pane": {
+    "todos": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "weight": "semibold"
+        },
+        "children": [
+         "  ",
+         "Todos"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "  ",
+         "No open items."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "width": 0,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "band",
+           "label": "band",
+           "hotkey": "t",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "todos"
+    }
    }
   },
   "script": [
@@ -107,50 +182,88 @@
    "turn.complete",
    "command.run{command=todos}",
    "ui.focus{component=AbovePrompt}",
-   "ui.render{component=AbovePrompt}"
+   "ui.render{component=AbovePrompt}",
+   "ui.focus{component=Pane, requestId=todos}",
+   "ui.render{component=Pane, requestId=todos}",
+   "ui.close{id=todos}"
   ],
   "calls": [
    "$.clock.after",
-   "$.clock.now",
+   "$.clock.now (via record",
+   "save",
+   "sweep)",
    "$.command.register",
    "$.command.run (via askAbout)",
-   "$.model.complete (via incremental)",
+   "$.config.list (via defaultView)",
+   "$.model.complete (via ask",
+   "refreshFromTranscript)",
    "$.model.fork (via refresh)",
    "$.prompt.fill (via insertQuote)",
    "$.prompt.submit",
    "$.session.id",
+   "$.session.messages (via refreshFromTranscript)",
+   "$.session.model (via refreshFromTranscript)",
    "$.settings.read (via maxAgeMs)",
    "$.state.get",
    "$.state.set",
    "$.store.delete",
    "$.store.get",
    "$.store.keys",
-   "$.store.set (via persist)",
+   "$.store.set (via setWithRetry)",
+   "$.ui.close (via closePane)",
    "$.ui.focus (via moveFocus",
+   "movePage",
    "watchLeave)",
+   "$.ui.log (via save)",
+   "$.ui.open (via openPane)",
    "$.ui.resolve",
    "$.ui.toast (via askAbout",
-   "insertQuote)"
+   "insertQuote",
+   "save)"
   ],
   "stateReads": [
    "todo-list.deleting",
    "todo-list.detailed",
-   "todo-list.done",
+   "todo-list.failureShown",
    "todo-list.focused",
    "todo-list.items",
    "todo-list.lastAnswer",
+   "todo-list.mode",
+   "todo-list.paneDeleting",
+   "todo-list.paneDetailed",
+   "todo-list.paneFocusIndex",
+   "todo-list.paneFocused",
+   "todo-list.paneSelected",
+   "todo-list.paneWindowStart",
    "todo-list.pending",
-   "todo-list.selected"
+   "todo-list.review",
+   "todo-list.savedKey",
+   "todo-list.selected",
+   "todo-list.trash",
+   "todo-list.viewApplied",
+   "todo-list.windowStart"
   ],
   "stateWrites": [
    "todo-list.deleting",
    "todo-list.detailed",
-   "todo-list.done",
+   "todo-list.failureShown",
    "todo-list.focused",
    "todo-list.items",
    "todo-list.lastAnswer",
+   "todo-list.mode",
+   "todo-list.paneDeleting",
+   "todo-list.paneDetailed",
+   "todo-list.paneFocusIndex",
+   "todo-list.paneFocused",
+   "todo-list.paneSelected",
+   "todo-list.paneWindowStart",
    "todo-list.pending",
-   "todo-list.selected"
+   "todo-list.review",
+   "todo-list.savedKey",
+   "todo-list.selected",
+   "todo-list.trash",
+   "todo-list.viewApplied",
+   "todo-list.windowStart"
   ],
   "envReads": [],
   "raw": {
@@ -164,7 +277,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: todo-list.items, todo-list.done, todo-list.focused, todo-list.detailed, todo-list.deleting, todo-list.selected, todo-list.lastAnswer, todo-list.pending"
+     "types ./types/index.d.ts declares state: todo-list.items, todo-list.trash, todo-list.review, todo-list.focused, todo-list.detailed, todo-list.windowStart, todo-list.deleting, todo-list.selected, todo-list.paneFocused, todo-list.paneFocusIndex, todo-list.paneDetailed, todo-list.paneDeleting, todo-list.paneSelected, todo-list.paneWindowStart, todo-list.mode, todo-list.viewApplied, todo-list.lastAnswer, todo-list.pending, todo-list.savedKey, todo-list.failureShown"
     ],
     "gatingHooks": []
    },
@@ -175,13 +288,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, prompt.edit, prompt.submit, turn.start, turn.complete, command.run{command=todos}, ui.focus{component=AbovePrompt}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, session.end, prompt.edit, prompt.submit, turn.start, turn.complete, command.run{command=todos}, ui.focus{component=AbovePrompt}, ui.render{component=AbovePrompt}, ui.focus{component=Pane, requestId=todos}, ui.render{component=Pane, requestId=todos}, ui.close{id=todos}",
       "./register.tsx answers its own command: command.run{command=todos}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: ui.focus{component=AbovePrompt}",
-      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.command.run (via askAbout), $.model.complete (via incremental), $.model.fork (via refresh), $.prompt.fill (via insertQuote), $.prompt.submit, $.session.id, $.settings.read (via maxAgeMs), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys, $.store.set (via persist), $.ui.focus (via moveFocus, watchLeave), $.ui.resolve, $.ui.toast (via askAbout, insertQuote)",
-      "./register.tsx state writes: todo-list.deleting, todo-list.detailed, todo-list.done, todo-list.focused, todo-list.items, todo-list.lastAnswer, todo-list.pending, todo-list.selected",
-      "./register.tsx state reads: todo-list.deleting, todo-list.detailed, todo-list.done, todo-list.focused, todo-list.items, todo-list.lastAnswer, todo-list.pending, todo-list.selected"
+      "./register.tsx gating hook without .catch: ui.focus{component=Pane, requestId=todos}",
+      "./register.tsx gating hook without .catch: ui.close{id=todos}",
+      "./register.tsx calls: $.clock.after, $.clock.now (via record, save, sweep), $.command.register, $.command.run (via askAbout), $.config.list (via defaultView), $.model.complete (via ask, refreshFromTranscript), $.model.fork (via refresh), $.prompt.fill (via insertQuote), $.prompt.submit, $.session.id, $.session.messages (via refreshFromTranscript), $.session.model (via refreshFromTranscript), $.settings.read (via maxAgeMs), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys, $.store.set (via setWithRetry), $.ui.close (via closePane), $.ui.focus (via moveFocus, movePage, watchLeave), $.ui.log (via save), $.ui.open (via openPane), $.ui.resolve, $.ui.toast (via askAbout, insertQuote, save)",
+      "./register.tsx state writes: todo-list.deleting, todo-list.detailed, todo-list.failureShown, todo-list.focused, todo-list.items, todo-list.lastAnswer, todo-list.mode, todo-list.paneDeleting, todo-list.paneDetailed, todo-list.paneFocusIndex, todo-list.paneFocused, todo-list.paneSelected, todo-list.paneWindowStart, todo-list.pending, todo-list.review, todo-list.savedKey, todo-list.selected, todo-list.trash, todo-list.viewApplied, todo-list.windowStart",
+      "./register.tsx state reads: todo-list.deleting, todo-list.detailed, todo-list.failureShown, todo-list.focused, todo-list.items, todo-list.lastAnswer, todo-list.mode, todo-list.paneDeleting, todo-list.paneDetailed, todo-list.paneFocusIndex, todo-list.paneFocused, todo-list.paneSelected, todo-list.paneWindowStart, todo-list.pending, todo-list.review, todo-list.savedKey, todo-list.selected, todo-list.trash, todo-list.viewApplied, todo-list.windowStart"
      ],
      "gatingHooks": [
       {
@@ -195,11 +310,24 @@
        "pattern": "ui.focus",
        "hook": "ui.focus{component=AbovePrompt}",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=Pane, requestId=todos}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close{id=todos}",
+       "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "3458466bcb8181ea"
+ "sourceHash": "e7e618d860f37b3"
 }
