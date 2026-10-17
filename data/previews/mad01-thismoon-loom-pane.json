@@ -1,6 +1,6 @@
 {
  "slug": "mad01-thismoon-loom-pane",
- "generatedAt": "2026-10-06T05:33:01.570Z",
+ "generatedAt": "2026-10-17T13:05:35.408Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -15,6 +15,12 @@
       "clear"
      ]
     }
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "prompt.submit",
@@ -70,14 +76,23 @@
   "rewrites": [],
   "apiCalls": {
    "$.ui.log": 2,
-   "$.state.get": 29,
-   "$.state.set": 7,
+   "$.state.get": 39,
+   "$.state.set": 8,
    "$.process.run": 3,
    "$.env.get": 5,
-   "$.ui.status": 1,
-   "$.session.cwd": 4
+   "$.ui.status": 2,
+   "$.clock.now": 2,
+   "$.agent.list": 1,
+   "$.session.id": 1,
+   "$.session.cwd": 4,
+   "$.clock.after": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 4980
+   }
+  ],
   "sites": {},
   "script": [
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
@@ -105,6 +120,8 @@
   "hooks": [
    "session.start",
    "classic.SessionStart{source=resume|clear}",
+   "agent.spawn",
+   "turn.complete",
    "prompt.submit{text=/\"^\\\\/loom\\\\b\"/}",
    "command.run{command=loom}",
    "tool.call{tool=Skill, skill=loom}",
@@ -113,9 +130,16 @@
    "tool.call{tool=Bash, command=/\"\\\\bgit\\\\b[\\\\s\\\\S]*\\\\b(branch|worktree)\\\\b\"/}"
   ],
   "calls": [
+   "$.agent.list (via listAgents)",
+   "$.clock.after (via scheduleTrailing)",
+   "$.clock.now (via refreshMembers)",
+   "$.clock.sleep (via withinBudget)",
    "$.env.get",
-   "$.process.run (via git)",
+   "$.http.fetch (via fetchLedger)",
+   "$.process.run (via git",
+   "listSessions)",
    "$.session.cwd",
+   "$.session.id (via sessionId)",
    "$.state.get",
    "$.state.set",
    "$.ui.ask (via askToRemove)",
@@ -125,6 +149,7 @@
   "stateReads": [
    "loom-pane.canonical",
    "loom-pane.isInteractive",
+   "loom-pane.members",
    "loom-pane.ownWorktree",
    "loom-pane.repo",
    "loom-pane.role",
@@ -135,6 +160,7 @@
   "stateWrites": [
    "loom-pane.canonical",
    "loom-pane.isInteractive",
+   "loom-pane.members",
    "loom-pane.ownWorktree",
    "loom-pane.repo",
    "loom-pane.role",
@@ -148,34 +174,95 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/mad01-thismoon-loom-pane/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/mad01-thismoon-loom-pane/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mad01-thismoon-loom-pane/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/mad01-thismoon-loom-pane/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: loom-pane.role, loom-pane.canonical, loom-pane.ownWorktree, loom-pane.worktreeRoot, loom-pane.worktrees, loom-pane.repo, loom-pane.weaveSeen, loom-pane.isInteractive"
-    ]
+     "types ./types/index.d.ts declares state: loom-pane.role, loom-pane.canonical, loom-pane.ownWorktree, loom-pane.worktreeRoot, loom-pane.worktrees, loom-pane.repo, loom-pane.weaveSeen, loom-pane.isInteractive, loom-pane.members"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/mad01-thismoon-loom-pane/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/mad01-thismoon-loom-pane/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.SessionStart{source=resume|clear}, prompt.submit{text=/\"^\\\\/loom\\\\b\"/}, command.run{command=loom}, tool.call{tool=Skill, skill=loom}, tool.call{tool=Write|Edit}, tool.call{tool=Bash}, tool.call{tool=Bash, command=/\"\\\\bgit\\\\b[\\\\s\\\\S]*\\\\b(branch|worktree)\\\\b\"/}",
-      "./register.tsx calls: $.env.get, $.process.run (via git), $.session.cwd, $.state.get, $.state.set, $.ui.ask (via askToRemove), $.ui.log, $.ui.status (via showStatus)",
+      "./register.tsx hooks: session.start, classic.SessionStart{source=resume|clear}, agent.spawn, turn.complete, prompt.submit{text=/\"^\\\\/loom\\\\b\"/}, command.run{command=loom}, tool.call{tool=Skill, skill=loom}, tool.call{tool=Write|Edit}, tool.call{tool=Bash}, tool.call{tool=Bash, command=/\"\\\\bgit\\\\b[\\\\s\\\\S]*\\\\b(branch|worktree)\\\\b\"/}",
+      "./register.tsx hooks on classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook with .catch: classic.SessionStart{source=resume|clear}",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: prompt.submit{text=/\"^\\\\/loom\\\\b\"/}",
+      "./register.tsx gating hook with .catch: command.run{command=loom}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Skill, skill=loom}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Write|Edit}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash, command=/\"\\\\bgit\\\\b[\\\\s\\\\S]*\\\\b(branch|worktree)\\\\b\"/}",
+      "./register.tsx calls: $.agent.list (via listAgents), $.clock.after (via scheduleTrailing), $.clock.now (via refreshMembers), $.clock.sleep (via withinBudget), $.env.get, $.http.fetch (via fetchLedger), $.process.run (via git, listSessions), $.session.cwd, $.session.id (via sessionId), $.state.get, $.state.set, $.ui.ask (via askToRemove), $.ui.log, $.ui.status (via showStatus)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: loom-pane.canonical, loom-pane.isInteractive, loom-pane.ownWorktree, loom-pane.repo, loom-pane.role, loom-pane.weaveSeen, loom-pane.worktreeRoot, loom-pane.worktrees",
-      "./register.tsx state reads: loom-pane.canonical, loom-pane.isInteractive, loom-pane.ownWorktree, loom-pane.repo, loom-pane.role, loom-pane.weaveSeen, loom-pane.worktreeRoot, loom-pane.worktrees"
+      "./register.tsx state writes: loom-pane.canonical, loom-pane.isInteractive, loom-pane.members, loom-pane.ownWorktree, loom-pane.repo, loom-pane.role, loom-pane.weaveSeen, loom-pane.worktreeRoot, loom-pane.worktrees",
+      "./register.tsx state reads: loom-pane.canonical, loom-pane.isInteractive, loom-pane.members, loom-pane.ownWorktree, loom-pane.repo, loom-pane.role, loom-pane.weaveSeen, loom-pane.worktreeRoot, loom-pane.worktrees"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=resume|clear}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{text=/\"^\\\\/loom\\\\b\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=loom}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Skill, skill=loom}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Write|Edit}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash, command=/\"\\\\bgit\\\\b[\\\\s\\\\S]*\\\\b(branch|worktree)\\\\b\"/}",
+       "hasCatch": true
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "a8c896c74b3aed7c"
+ "sourceHash": "6fec8b55cae49e6"
 }

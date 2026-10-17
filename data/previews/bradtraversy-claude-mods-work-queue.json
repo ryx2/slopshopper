@@ -1,11 +1,14 @@
 {
  "slug": "bradtraversy-claude-mods-work-queue",
- "generatedAt": "2026-10-16T14:16:42.952Z",
+ "generatedAt": "2026-10-17T13:05:17.778Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.compose"
    },
    {
     "event": "session.end"
@@ -40,7 +43,24 @@
     "output": "Work queue opened."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "task_create",
+    "description": "Add one concrete task to the Work Queue. Use this for substantive multi-step work and when the user asks for a task list. Returns the task id needed for dependencies and updates."
+   },
+   {
+    "name": "task_update",
+    "description": "Update a Work Queue task as work starts, changes, becomes blocked, or finishes. Keep the queue accurate while working."
+   },
+   {
+    "name": "task_list",
+    "description": "Read the current Work Queue tasks, statuses, owners, and dependencies before planning or updating work."
+   },
+   {
+    "name": "task_clear",
+    "description": "Clear every task from the current Work Queue when the user asks to clear, empty, or reset it. Returns the number of tasks removed."
+   }
+  ],
   "panes": [
    {
     "id": "work-queue",
@@ -53,6 +73,7 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.tool.register": 4,
    "$.clock.every": 1,
    "$.clock.now": 9,
    "$.ui.open": 1,
@@ -80,17 +101,37 @@
         "type": "Box",
         "props": {
          "justifyContent": "space-between",
-         "width": "100%"
+         "alignItems": "center",
+         "gap": 1,
+         "overflow": "hidden"
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "bold": true
+           "gap": 1,
+           "flexGrow": 1,
+           "flexShrink": 1,
+           "minWidth": 0
           },
           "children": [
-           "Work Queue"
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Work Queue"
+            ]
+           }
           ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "gap": 1
+          },
+          "children": []
          }
         ]
        },
@@ -115,7 +156,7 @@
            "dimColor": true
           },
           "children": [
-           "The queue updates when Claude creates a task."
+           "Ask Claude to break substantive work into tasks."
           ]
          }
         ]
@@ -150,6 +191,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "prompt.compose",
    "session.end",
    "command.run{command=work-queue}",
    "classic.TaskCreated",
@@ -161,6 +203,7 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
+   "$.tool.register",
    "$.ui.invalidate",
    "$.ui.open",
    "$.ui.panes (via tickOpenPane)",
@@ -188,13 +231,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, command.run{command=work-queue}, classic.TaskCreated, classic.TaskCompleted, tool.call, ui.render{component=Pane, requestId=work-queue}",
-      "./register.tsx hooks on classic.TaskCreated, classic.TaskCompleted do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, prompt.compose, session.end, command.run{command=work-queue}, classic.TaskCreated, classic.TaskCompleted, tool.call, ui.render{component=Pane, requestId=work-queue}",
+      "./register.tsx hooks on prompt.compose, classic.TaskCreated, classic.TaskCompleted do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=work-queue}",
       "./register.tsx gating hook with .catch: classic.TaskCreated",
       "./register.tsx gating hook with .catch: classic.TaskCompleted",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.ui.invalidate, $.ui.open, $.ui.panes (via tickOpenPane), $.ui.resolve"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.tool.register, $.ui.invalidate, $.ui.open, $.ui.panes (via tickOpenPane), $.ui.resolve"
      ],
      "gatingHooks": [
       {
@@ -221,5 +264,5 @@
    "advice": []
   }
  },
- "sourceHash": "62fe041347853a2f"
+ "sourceHash": "da212b59019b94a6"
 }

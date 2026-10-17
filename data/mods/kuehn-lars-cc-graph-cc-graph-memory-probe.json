@@ -1,0 +1,8 @@
+{
+ "slug": "kuehn-lars-cc-graph-cc-graph-memory-probe",
+ "files": {
+  "hooks/register.tsx": "// Throwaway recording probe for fixtures/sessions/memory.ts (see ../../README.md). Not part of the mod.\n// It logs session.start, session.measure and classic.InstructionsLoaded as the hooks see them (with the next(e) result), and at\n// session.start and at each session.measure whose `changed` holds `context` also the result of $.session.usage({ breakdown: 'summary' }).\nimport type { Register } from 'claude-code'\n\nconst OUT = '/tmp/cc-graph-memory/log-' + Date.now() + '.json'\nconst rows: any[] = []\nconst log = async (event: string, $: any, e: any, next: any) => {\n  const row: any = { event, input: e }\n  rows.push(row)\n  const out = await next(e)\n  row.result = out\n  if (event === 'session.start' || e.changed?.includes('context')) row.usage = await $.session.usage({ breakdown: 'summary' })\n  await $.fs.write(OUT, JSON.stringify(rows, null, 1))\n  return out\n}\n\nexport const register: Register = on => {\n  on('session.start', ($, e: any, next: any) => log('session.start', $, e, next)).catch(($, e, next) => next(e))\n  on('session.measure', ($, e: any, next: any) => log('session.measure', $, e, next)).catch(($, e, next) => next(e))\n  on('classic.InstructionsLoaded', ($, e: any, next: any) => log('classic.InstructionsLoaded', $, e, next)).catch(($, e, next) => next(e))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"cc-graph-memory-probe\",\n  \"version\": \"0.0.0\",\n  \"description\": \"Recording probe for the memory session, throwaway\"\n}"
+ }
+}

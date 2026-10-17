@@ -1,6 +1,6 @@
 {
  "slug": "cbundy-dev-system-factory-loop-2",
- "generatedAt": "2026-10-16T14:16:44.280Z",
+ "generatedAt": "2026-10-17T13:05:12.083Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -101,8 +101,8 @@
   "commands": [
    {
     "name": "factory",
-    "description": "Factory loop owner controls: status, pause, unpause, skip, noskip, priority, only, serial, new, override, resume, retry, update, drop, note, mode, trace, planner",
-    "argumentHint": "<op>",
+    "description": "Factory loop owner controls: pause, prioritise, retry or drop issues, set the mode; see /factory help",
+    "argumentHint": "[status | only <N...>|off | priority <N...>|off | pause <N> | resume <N...> | drop <N> | note [<N>] <text> | new on|off | mode off|observe|act | config set <key> <value> | config unset <key> | help]",
     "immediate": true,
     "output": "Factory loop: no pass yet.\nDirectives: none."
    }
@@ -110,7 +110,7 @@
   "tools": [
    {
     "name": "control",
-    "description": "Set the factory loop's owner directives (control.json) when the owner asks, as `/factory <op>` does; one op per call, answered in one line, and a malformed op changes nothing. Ops: status (what the loop is doing); pause <N> / unpause <N> (no action at all on N; its claim still renews); skip <N> / noskip <N> (never claim N); priority <N...>|off (claim these first, in order); only <N...>|off (claim only these; a tracker stands for its open sub-issues); serial on|off (one issue in flight at a time); new on|off (off: no new claims, designs or implementations); override <pct> <hours>|off (run past the usage tiers up to pct for hours); resume <N...> [\"note\"]|<run id> (release what waits on you: under planner v2 unpark issues, the note going to their next step; under v1 a hold on an issue or a run); retry <N> (clear N's exhausted actions); update [<reason>]|off (drain, then restart this workspace for an update); drop <N> (abandon N); note [<N>] <text> (an instruction the next agent prompts carry); mode off|observe|act (only when the owner asks for that mode); trace on|off (each pass's timing to a local trace file, for troubleshooting); planner v1|v2 (the layer that plans and acts, only when the owner asks)."
+    "description": "Set the factory loop's owner directives (control.json) when the owner asks, as `/factory <op>` does; one op per call, answered in one line, and a malformed op changes nothing. Ops: status (what the loop is doing); config [set <key> <value>|unset <key>] (no argument: the settings it runs with, each with its source; config set <key> <value> saves one setting in the workspace config file and config unset <key> removes it, checked as the loader reads it, only when the owner asks); pause <N> / unpause <N> (no action at all on N; its claim still renews); skip <N> / noskip <N> (never claim N); priority <N...>|off (claim these first, in order); only <N...>|off (claim only these; a tracker stands for its open sub-issues); serial on|off (one issue in flight at a time); new on|off (off: no new claims, designs or implementations); override <pct> <hours>|off (run past the usage tiers up to pct for hours); resume <N...> [\"note\"]|<run id> (release what waits on you: under planner v2 unpark issues, the note going to their next step; under v1 a hold on an issue or a run); retry <N> (clear N's exhausted actions); update [<reason>]|off (drain, then restart this workspace for an update); drop <N> (abandon N); note [<N>] <text> (an instruction the next agent prompts carry); mode off|observe|act (only when the owner asks for that mode); trace on|off (each pass's timing to a local trace file, for troubleshooting); planner v1|v2 (the layer that plans and acts, only when the owner asks)."
    },
    {
     "name": "answer",
@@ -136,13 +136,13 @@
   "rewrites": [],
   "apiCalls": {
    "$.env.set": 2,
-   "$.clock.now": 2,
+   "$.clock.now": 3,
    "$.command.register": 1,
    "$.tool.register": 5,
-   "$.clock.after": 2,
+   "$.clock.after": 3,
    "$.clock.every": 1,
    "$.env.get": 8,
-   "$.fs.exists": 7,
+   "$.fs.exists": 9,
    "$.process.run": 2,
    "$.session.id": 2,
    "$.state.get": 1
@@ -155,6 +155,10 @@
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "after",
+    "ms": 39960
    },
    {
     "kind": "after",
@@ -205,7 +209,8 @@
    "$.agent.list (via atWork",
    "listAgents)",
    "$.agent.spawn (via actIo)",
-   "$.clock.after (via bounded",
+   "$.clock.after (via armSummary",
+   "bounded",
    "ensure",
    "step",
    "within)",
@@ -217,7 +222,9 @@
    "agentTurnEnded",
    "answer",
    "appendLine",
+   "armSummary",
    "ensure",
+   "flushMinute",
    "io",
    "lateDrop",
    "loadLedger",
@@ -229,6 +236,7 @@
    "releaseLock",
    "request",
    "runPass",
+   "setTitle",
    "settingsIo",
    "step",
    "turnStarted",
@@ -268,9 +276,7 @@
    "$.session.send (via repairTo)",
    "$.session.usage (via actIo",
    "io)",
-   "$.state.get (via ownerOp)",
-   "$.state.set (via pass)",
-   "$… [+158 chars]"
+   "$.sta… [+205 chars]"
   ],
   "stateReads": [
    "factory-loop.lastPass"
@@ -321,7 +327,7 @@
       "./register.ts gating hook with .catch: agent.offer{agent=factory-loop:adjudicator}",
       "./register.ts gating hook with .catch: agent.offer{agent=factory-loop:designer}",
       "./register.ts gating hook with .catch: agent.offer{agent=?}",
-      "./register.ts calls: $.agent.list (via atWork, listAgents), $.agent.spawn (via actIo), $.clock.after (via bounded, ensure, step, within), $.clock.every (via pass, rearm), $.clock.now (via actIo, afterwards, agentTool, agentTurnEnded, answer, appendLine, ensure, io, lateDrop, loadLedger, mainTurnEnded, mayLoad, ownerOp, pass, persist, releaseLock, request, runPass, settingsIo, step, turnStarted, v2StoreIo), $.command.register (via registerControls), $.command.run (via actIo, setTitle), $.env.get (via configDir, pass, railEnv, runtime, tellError), $.env.set, $.fs.exists (via killed, text), $.fs.list (via writeTrace), $.fs.read (via text), $.fs.write (via actIo, fileIo, pass), $.process.run (via actIo, append, endsCut, io, lockIo, originOf, pass, settingsIo, writeTrace), $.prompt.submit (via actIo), $.session.id (via loadLedger, mayLoad, mayWrite, pass, runtime, tellError), $.session.send (via repairTo), $.session.usage (via actIo, io), $.state.get (via ownerOp), $.state.set (via pass), $… [+158 chars]",
+      "./register.ts calls: $.agent.list (via atWork, listAgents), $.agent.spawn (via actIo), $.clock.after (via armSummary, bounded, ensure, step, within), $.clock.every (via pass, rearm), $.clock.now (via actIo, afterwards, agentTool, agentTurnEnded, answer, appendLine, armSummary, ensure, flushMinute, io, lateDrop, loadLedger, mainTurnEnded, mayLoad, ownerOp, pass, persist, releaseLock, request, runPass, setTitle, settingsIo, step, turnStarted, v2StoreIo), $.command.register (via registerControls), $.command.run (via actIo, setTitle), $.env.get (via configDir, pass, railEnv, runtime, tellError), $.env.set, $.fs.exists (via killed, text), $.fs.list (via writeTrace), $.fs.read (via text), $.fs.write (via actIo, fileIo, pass), $.process.run (via actIo, append, endsCut, io, lockIo, originOf, pass, settingsIo, writeTrace), $.prompt.submit (via actIo), $.session.id (via loadLedger, mayLoad, mayWrite, pass, runtime, tellError), $.session.send (via repairTo), $.session.usage (via actIo, io), $.sta… [+205 chars]",
       "./register.ts env writes: BASH_DEFAULT_TIMEOUT_MS, BASH_MAX_TIMEOUT_MS",
       "./register.ts env reads: CLAUDE_CONFIG_DIR, DEV_MACHINE_NAME, DEV_ROLE, HOME, ORCHESTRATOR_WATCH_LOCK_DIR, PATH, TMPDIR, XDG_RUNTIME_DIR",
       "./register.ts state writes: factory-loop.lastPass",
@@ -388,5 +394,5 @@
    "advice": []
   }
  },
- "sourceHash": "cc0e8780c9861690"
+ "sourceHash": "a8a978049f90e4d5"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "naoanao-agent-cross-check",
- "generatedAt": "2026-10-09T15:34:01.008Z",
+ "generatedAt": "2026-10-17T13:06:41.799Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,24 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__agent-cross-check__mark_reviewed"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "PowerShell"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
@@ -26,11 +44,16 @@
   "commands": [
    {
     "name": "cross-check",
-    "description": "Review commits another agent made: mechanical checks, then ask Claude to audit them (/cross-check skip to dismiss)",
+    "description": "Review commits another agent made: mechanical checks, then ask Claude to audit them (/cross-check done when reviewed, /cross-check skip to dismiss)",
     "output": "No unreviewed commits from another agent."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "mark_reviewed",
+    "description": "After auditing commits another agent made (by diff, tests and the real files), mark them reviewed so git push may go ahead. Give the hashes you reviewed."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
@@ -38,9 +61,10 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.store.get": 4,
-   "$.process.run": 3,
-   "$.store.set": 1,
+   "$.tool.register": 1,
+   "$.store.get": 6,
+   "$.process.run": 4,
+   "$.store.set": 4,
    "$.clock.every": 1
   },
   "timers": [
@@ -55,7 +79,7 @@
    }
   },
   "script": [
-   "$.process.run(git rev-parse HEAD) → exit 0",
+   "$.process.run(git -c core.quotepath=false rev-parse HEAD) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -64,11 +88,12 @@
    "tool.call Write",
    "tool.call Bash bun test",
    "tool.call Bash git status --porcelain",
+   "$.process.run(git -c core.quotepath=false rev-parse HEAD) → exit 0",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "$.process.run(git rev-parse HEAD) → exit 0",
+   "$.process.run(git -c core.quotepath=false rev-parse HEAD) → exit 0",
    "turn.complete",
-   "$.process.run(git rev-parse HEAD) → exit 0",
+   "$.process.run(git -c core.quotepath=false rev-parse HEAD) → exit 0",
    "/cross-check → No unreviewed commits from another agent."
   ],
   "console": [],
@@ -82,6 +107,9 @@
    "session.start",
    "turn.complete",
    "command.run{command=cross-check}",
+   "tool.call{tool=mcp__agent-cross-check__mark_reviewed}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=PowerShell}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
@@ -90,12 +118,15 @@
    "$.clock.now (via check",
    "startReview)",
    "$.command.register",
-   "$.process.run (via git)",
+   "$.fs.stat (via exists)",
+   "$.process.run (via audioTracks",
+   "git)",
    "$.prompt.fill (via submitSoon)",
    "$.prompt.submit (via submitSoon)",
    "$.session.usage (via check)",
    "$.store.get (via load)",
    "$.store.set (via save)",
+   "$.tool.register",
    "$.ui.invalidate",
    "$.ui.resolve",
    "$.ui.toast (via check)"
@@ -122,15 +153,37 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.complete, command.run{command=cross-check}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, turn.complete, command.run{command=cross-check}, tool.call{tool=mcp__agent-cross-check__mark_reviewed}, tool.call{tool=Bash}, tool.call{tool=PowerShell}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=cross-check}",
-      "./register.tsx calls: $.clock.after (via submitSoon), $.clock.every, $.clock.now (via check, startReview), $.command.register, $.process.run (via git), $.prompt.fill (via submitSoon), $.prompt.submit (via submitSoon), $.session.usage (via check), $.store.get (via load), $.store.set (via save), $.ui.invalidate, $.ui.resolve, $.ui.toast (via check)"
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__agent-cross-check__mark_reviewed}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.call{tool=PowerShell}",
+      "./register.tsx calls: $.clock.after (via submitSoon), $.clock.every, $.clock.now (via check, startReview), $.command.register, $.fs.stat (via exists), $.process.run (via audioTracks, git), $.prompt.fill (via submitSoon), $.prompt.submit (via submitSoon), $.session.usage (via check), $.store.get (via load), $.store.set (via save), $.tool.register, $.ui.invalidate, $.ui.resolve, $.ui.toast (via check)"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__agent-cross-check__mark_reviewed}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=PowerShell}",
+       "hasCatch": true
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "477b7f20d5ec1ece"
+ "sourceHash": "72cb7e2148f872f5"
 }

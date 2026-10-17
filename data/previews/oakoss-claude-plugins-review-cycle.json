@@ -1,6 +1,6 @@
 {
  "slug": "oakoss-claude-plugins-review-cycle",
- "generatedAt": "2026-10-16T14:21:07.336Z",
+ "generatedAt": "2026-10-17T13:06:44.003Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -71,6 +71,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__review-cycle__sweep"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__review-cycle__codex_log"
     }
    },
    {
@@ -174,6 +180,10 @@
     "description": "Ends every process still running in, or naming a path inside, a scratch directory mcp__review-cycle__scratch made this session, then removes the directory. Call it once the cycle ends, after every leg reported, was dropped, or was stopped. Reports per directory how many processes it ended, whether it removed the directory, and any errors; a directory it could not remove stays listed for the next sweep."
    },
    {
+    "name": "codex_log",
+    "description": "Reads a `codex review` output file and lists every command Codex ran, in order: the command, its working directory, `status` (`succeeded`, `exited`, `rejected` when Codex refused to run it, or `unfinished` when the log ends with no status for it), `exitCode`, `durationMs`, `guessed` (true when overlapping commands, or a log without color, leave it unclear which command a status belongs to), `masked` (true when the command chains parts with `;`, a newline, `||`, `|` or `&`, so its exit code is only the last part's), and the first and last non-empty lines of its output, each clipped at 200 characters. Answers with an error, not an empty list, for a file that is not a Codex log. Build the Codex leg's execution receipt from this, not from its verdict. Read-only."
+   },
+   {
     "name": "status",
     "description": "review-cycle's view of the working tree: which changed paths a reviewer has seen, which were edited after the last review or never reviewed, and whether a push or a pull request may run now: asked for in the user's latest message, or below their stop-before setting. Read-only."
    },
@@ -193,7 +203,8 @@
   ],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 6,
+   "$.tool.register": 7,
+   "$.ui.status": 1,
    "$.state.get": 3,
    "$.clock.after": 3,
    "$.clock.every": 1,
@@ -271,6 +282,7 @@
    "tool.call{tool=mcp__review-cycle__ledger_record}",
    "tool.call{tool=mcp__review-cycle__scratch}",
    "tool.call{tool=mcp__review-cycle__sweep}",
+   "tool.call{tool=mcp__review-cycle__codex_log}",
    "tool.call{tool=mcp__review-cycle__status}",
    "prompt.submit",
    "agent.spawn",
@@ -299,20 +311,15 @@
    "$.env.get (via loadShellAliases",
    "onScratch",
    "readOwnAliases)",
-   "$.fs.exists (via currentText",
-   "readOwnAliases",
-   "slopNote)",
+   "$.fs.exists",
    "$.fs.list (via loadShellAliases)",
-   "$.fs.read (via currentText",
-   "loadShellAliases",
-   "slopNote)",
+   "$.fs.read",
    "$.fs.stat (via slopNote)",
    "$.model.complete (via askModel)",
    "$.process.run (via ghRead",
    "readOwnAliases",
    "run)",
-   "$.prompt.submit (via nudgeReview",
-   "overBudget)",
+   "$.prompt.submit (via overBudget)",
    "$.session.cwd (via ensureRoot)",
    "$.settings.read (via ladderOf",
    "nudgeWanted)",
@@ -325,6 +332,7 @@
    "$.tool.register",
    "$.ui.log (via modelRan",
    "ranUnasked)",
+   "$.ui.status (via showStatus)",
    "$.ui.toast"
   ],
   "stateReads": [
@@ -362,7 +370,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: config.set{key=\"review-cycle.modelCheck\"}, config.set{key=\"review-cycle.enabled\"}, config.set{key=\"review-cycle.stopBefore\"}, config.set{key=\"review-cycle.nudge\"}, config.set{key=\"review-cycle.unaskedNotice\"}, tool.call{tool=Edit}, tool.call{tool=Write}, session.start, tool.call{tool=mcp__review-cycle__ledger}, tool.call{tool=mcp__review-cycle__ledger_record}, tool.call{tool=mcp__review-cycle__scratch}, tool.call{tool=mcp__review-cycle__sweep}, tool.call{tool=mcp__review-cycle__status}, prompt.submit, agent.spawn, turn.complete, tool.call{tool=Skill}, tool.call{tool=Bash}, tool.call{tool=?}, tool.call{tool=Bash}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=NotebookEdit}, tool.call{tool=Monitor}, tool.call{tool=mcp__review-cycle__status}, tool.call{tool=mcp__review-cycle__misses}",
+      "./register.ts hooks: config.set{key=\"review-cycle.modelCheck\"}, config.set{key=\"review-cycle.enabled\"}, config.set{key=\"review-cycle.stopBefore\"}, config.set{key=\"review-cycle.nudge\"}, config.set{key=\"review-cycle.unaskedNotice\"}, tool.call{tool=Edit}, tool.call{tool=Write}, session.start, tool.call{tool=mcp__review-cycle__ledger}, tool.call{tool=mcp__review-cycle__ledger_record}, tool.call{tool=mcp__review-cycle__scratch}, tool.call{tool=mcp__review-cycle__sweep}, tool.call{tool=mcp__review-cycle__codex_log}, tool.call{tool=mcp__review-cycle__status}, prompt.submit, agent.spawn, turn.complete, tool.call{tool=Skill}, tool.call{tool=Bash}, tool.call{tool=?}, tool.call{tool=Bash}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=Write}, tool.call{tool=NotebookEdit}, tool.call{tool=Monitor}, tool.call{tool=mcp__review-cycle__status}, tool.call{tool=mcp__review-cycle__misses}",
       "./register.ts gating hook without .catch: config.set{key=\"review-cycle.modelCheck\"}",
       "./register.ts gating hook without .catch: config.set{key=\"review-cycle.enabled\"}",
       "./register.ts gating hook without .catch: config.set{key=\"review-cycle.stopBefore\"}",
@@ -374,6 +382,7 @@
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__ledger_record}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__scratch}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__sweep}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__codex_log}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__status}",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: agent.spawn",
@@ -389,7 +398,7 @@
       "./register.ts gating hook with .catch: tool.call{tool=Monitor}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__status}",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__review-cycle__misses}",
-      "./register.ts calls: $.agent.list (via nudgeReview), $.clock.after (via onAgentSpawn, recall, within), $.clock.every, $.clock.now, $.clock.sleep, $.env.get (via loadShellAliases, onScratch, readOwnAliases), $.fs.exists (via currentText, readOwnAliases, slopNote), $.fs.list (via loadShellAliases), $.fs.read (via currentText, loadShellAliases, slopNote), $.fs.stat (via slopNote), $.model.complete (via askModel), $.process.run (via ghRead, readOwnAliases, run), $.prompt.submit (via nudgeReview, overBudget), $.session.cwd (via ensureRoot), $.settings.read (via ladderOf, nudgeWanted), $.state.get, $.state.set, $.store.delete (via storeOf), $.store.get (via storeOf), $.store.keys (via storeOf), $.store.set (via storeOf), $.tool.register, $.ui.log (via modelRan, ranUnasked), $.ui.toast",
+      "./register.ts calls: $.agent.list (via nudgeReview), $.clock.after (via onAgentSpawn, recall, within), $.clock.every, $.clock.now, $.clock.sleep, $.env.get (via loadShellAliases, onScratch, readOwnAliases), $.fs.exists, $.fs.list (via loadShellAliases), $.fs.read, $.fs.stat (via slopNote), $.model.complete (via askModel), $.process.run (via ghRead, readOwnAliases, run), $.prompt.submit (via overBudget), $.session.cwd (via ensureRoot), $.settings.read (via ladderOf, nudgeWanted), $.state.get, $.state.set, $.store.delete (via storeOf), $.store.get (via storeOf), $.store.keys (via storeOf), $.store.set (via storeOf), $.tool.register, $.ui.log (via modelRan, ranUnasked), $.ui.status (via showStatus), $.ui.toast",
       "./register.ts env writes: nothing",
       "./register.ts env reads: CLAUDE_CODE_SHELL, CLAUDE_CONFIG_DIR, HOME, SHELL, TMPDIR",
       "./register.ts state writes: review-cycle.gate",
@@ -460,6 +469,12 @@
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__review-cycle__sweep}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__review-cycle__codex_log}",
        "hasCatch": false
       },
       {
@@ -558,5 +573,5 @@
    "advice": []
   }
  },
- "sourceHash": "7fe49f47ee43ad03"
+ "sourceHash": "16c8b0eccadee312"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "ivokund-claude-account-rotator",
- "generatedAt": "2026-10-16T14:15:51.474Z",
+ "generatedAt": "2026-10-17T13:04:59.861Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,18 @@
     "event": "command.run",
     "matcher": {
      "command": "login"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "/^mcp__claude-in-chrome__/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^mcp__claude-in-chrome__/"
     }
    },
    {
@@ -57,10 +69,11 @@
    "$.env.get": 3,
    "$.ui.panes": 1,
    "$.clock.every": 2,
-   "$.state.get": 11,
+   "$.state.get": 12,
    "$.state.set": 5,
-   "$.store.get": 8,
+   "$.store.get": 10,
    "$.store.set": 2,
+   "$.session.id": 1,
    "$.env.set": 1,
    "$.clock.now": 5,
    "$.fs.exists": 1,
@@ -729,7 +742,7 @@
             },
             "children": [
              " ",
-             "Rotation",
+             "Usage based rotation",
              " "
             ]
            }
@@ -1377,8 +1390,8 @@
    "tool.call Edit",
    "tool.call Write",
    "tool.call Write",
-   "$.process.run(claude auth status --json) → exit 0",
    "tool.call Bash bun test",
+   "$.process.run(claude auth status --json) → exit 0",
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
@@ -1396,15 +1409,22 @@
    "session.measure",
    "classic.StopFailure",
    "command.run{command=login}",
+   "tool.check{tool=?}",
+   "tool.call{tool=?}",
    "ui.close",
    "ui.render{component=SessionMode}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=claude-accounts}"
   ],
   "calls": [
-   "$.clock.after (via onStopFailure)",
+   "$.clock.after (via connectChrome",
+   "onBrowserCall",
+   "onStopFailure)",
    "$.clock.every",
    "$.clock.now",
+   "$.clock.sleep (via askChrome",
+   "connectingChrome)",
+   "$.command.run (via connectingChrome)",
    "$.env.get (via addAccount",
    "boot",
    "readCredentialsFile",
@@ -1415,34 +1435,34 @@
    "$.fs.write (via addAccount)",
    "$.http.fetch (via fetchIdentity",
    "fetchUsage)",
+   "$.mcp.call (via askChrome)",
    "$.process.run (via readKeychain",
    "removeAccount",
    "signedInAs)",
    "$.process.spawn (via signIn)",
-   "$.prompt.submit (via onStopFailure)",
+   "$.prompt.submit (via connectChrome",
+   "onStopFailure)",
+   "$.session.id (via boot)",
    "$.session.usage (via settlePending)",
    "$.state.get",
    "$.state.set",
-   "$.store.delete (via removeAccount)",
-   "$.store.get (via loadAccounts",
-   "mergeStore)",
-   "$.store.set (via saveAccounts",
+   "$.store.delete (via removeAccount",
+   "setChromeAccount)",
+   "$.store.get (via keepChrome",
+   "loadAccounts",
+   "mergeStore",
+   "noteChromeAccount)",
+   "$.store.set (via noteChrome",
+   "noteChromeAccount",
+   "saveAccounts",
    "saveHealth",
    "saveHolder",
    "saveReading",
+   "setChromeAccount",
    "setFooter",
    "setRotateTo)",
    "$.ui.close (via togglePane)",
-   "$.ui.log (via debug)",
-   "$.ui.notify (via announceLockout",
-   "blocked)",
-   "$.ui.open (via togglePane)",
-   "$.ui.panes",
-   "$.ui.resolve",
-   "$.ui.toast (via announceLockout",
-   "blocked",
-   "switchTo",
-   "tell)"
+   "$.u… [+174 chars]"
   ],
   "stateReads": [
    "account-rotator.view"
@@ -1478,12 +1498,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, classic.StopFailure, command.run{command=login}, ui.close, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=claude-accounts}",
+      "./register.tsx hooks: session.start, session.measure, classic.StopFailure, command.run{command=login}, tool.check{tool=?}, tool.call{tool=?}, ui.close, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=claude-accounts}",
       "./register.tsx hooks on classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook with .catch: classic.StopFailure",
       "./register.tsx gating hook with .catch: command.run{command=login}",
+      "./register.tsx gating hook with .catch: tool.check{tool=?}",
+      "./register.tsx gating hook with .catch: tool.call{tool=?}",
       "./register.tsx gating hook without .catch: ui.close",
-      "./register.tsx calls: $.clock.after (via onStopFailure), $.clock.every, $.clock.now, $.env.get (via addAccount, boot, readCredentialsFile, readKeychain), $.env.set (via useSlot), $.fs.exists (via readStored), $.fs.read (via readCredentialsFile), $.fs.write (via addAccount), $.http.fetch (via fetchIdentity, fetchUsage), $.process.run (via readKeychain, removeAccount, signedInAs), $.process.spawn (via signIn), $.prompt.submit (via onStopFailure), $.session.usage (via settlePending), $.state.get, $.state.set, $.store.delete (via removeAccount), $.store.get (via loadAccounts, mergeStore), $.store.set (via saveAccounts, saveHealth, saveHolder, saveReading, setFooter, setRotateTo), $.ui.close (via togglePane), $.ui.log (via debug), $.ui.notify (via announceLockout, blocked), $.ui.open (via togglePane), $.ui.panes, $.ui.resolve, $.ui.toast (via announceLockout, blocked, switchTo, tell)",
+      "./register.tsx calls: $.clock.after (via connectChrome, onBrowserCall, onStopFailure), $.clock.every, $.clock.now, $.clock.sleep (via askChrome, connectingChrome), $.command.run (via connectingChrome), $.env.get (via addAccount, boot, readCredentialsFile, readKeychain), $.env.set (via useSlot), $.fs.exists (via readStored), $.fs.read (via readCredentialsFile), $.fs.write (via addAccount), $.http.fetch (via fetchIdentity, fetchUsage), $.mcp.call (via askChrome), $.process.run (via readKeychain, removeAccount, signedInAs), $.process.spawn (via signIn), $.prompt.submit (via connectChrome, onStopFailure), $.session.id (via boot), $.session.usage (via settlePending), $.state.get, $.state.set, $.store.delete (via removeAccount, setChromeAccount), $.store.get (via keepChrome, loadAccounts, mergeStore, noteChromeAccount), $.store.set (via noteChrome, noteChromeAccount, saveAccounts, saveHealth, saveHolder, saveReading, setChromeAccount, setFooter, setRotateTo), $.ui.close (via togglePane), $.u… [+174 chars]",
       "./register.tsx env writes: CLAUDE_SECURESTORAGE_CONFIG_DIR",
       "./register.tsx env reads: CLAUDE_SECURESTORAGE_CONFIG_DIR, HOME, TERM_PROGRAM, USER",
       "./register.tsx state writes: account-rotator.view",
@@ -1504,6 +1526,18 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=?}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "ui.close",
        "hook": "ui.close",
        "hasCatch": false
@@ -1514,5 +1548,5 @@
    "advice": []
   }
  },
- "sourceHash": "23707af8f837457e"
+ "sourceHash": "7b518ee84de2d38c"
 }

@@ -1,0 +1,293 @@
+{
+ "slug": "danielhernandezzambrano-mods-claude-flujo-work",
+ "generatedAt": "2026-10-17T13:06:03.624Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart",
+    "matcher": {
+     "source": [
+      "clear"
+     ]
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "ExitPlanMode"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "EnterPlanMode"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": [
+      "Edit",
+      "Write",
+      "NotebookEdit"
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__flujo-work__cerrar_fase"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": [
+      "sin-protocolo",
+      "protocolo",
+      "plan-ok"
+     ]
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "sin-protocolo",
+    "description": "Apaga el flujo de fases en esta sesión: sin arranque, sin bloqueos (salvo Co-Authored-By)",
+    "immediate": true,
+    "output": "Flujo de fases apagado en esta sesión (los commits con Co-Authored-By siguen bloqueados)."
+   },
+   {
+    "name": "protocolo",
+    "description": "Vuelve a encender el flujo de fases en esta sesión",
+    "immediate": true,
+    "output": "Flujo de fases encendido."
+   },
+   {
+    "name": "plan-ok",
+    "description": "Da el plan por aprobado y habilita la edición (si saliste del modo plan a mano)",
+    "immediate": true,
+    "output": "Plan dado por aprobado: la edición está habilitada."
+   }
+  ],
+  "tools": [
+   {
+    "name": "cerrar_fase",
+    "description": "Registra el cierre de una fase del plan, después de validarla, actualizar la bitácora y commitearla (sin Co-Authored-By). Verifica que el repo tenga un commit posterior al cierre anterior; si no, rechaza el cierre. Después seguí con la fase siguiente."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [
+   {
+    "tool": "Edit: /work/app/src/auth.ts",
+    "reason": "flujo-work: todavía no hay un plan aprobado. Entrá en modo plan (EnterPlanMode), investigá y presentá el plan por fases con ExitPlanMode. Si Dani ya lo aprobó a mano, que corra /plan-ok."
+   },
+   {
+    "tool": "Write: /work/app/src/audit.ts",
+    "reason": "flujo-work: todavía no hay un plan aprobado. Entrá en modo plan (EnterPlanMode), investigá y presentá el plan por fases con ExitPlanMode. Si Dani ya lo aprobó a mano, que corra /plan-ok."
+   },
+   {
+    "tool": "Write: /work/app/src/cache.ts",
+    "reason": "flujo-work: todavía no hay un plan aprobado. Entrá en modo plan (EnterPlanMode), investigá y presentá el plan por fases con ExitPlanMode. Si Dani ya lo aprobó a mano, que corra /plan-ok."
+   },
+   {
+    "tool": "Bash: rm -rf build && git push --force origin main",
+    "reason": "flujo-work: los push y las escrituras en el remoto (gh pr create/merge, repo sync...) los hace Dani. Commiteá y avisale que está listo para pushear."
+   }
+  ],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"PROTOCOLO DE ARRANQUE (lo agrega el mod flujo-work de Dani; cumplilo antes de cualquier otra cosa):\\n\\n0. Llamá a EnterPlanMode YA, antes …"
+   }
+  ],
+  "apiCalls": {
+   "$.tool.register": 1,
+   "$.command.register": 3,
+   "$.process.run": 14,
+   "$.clock.now": 4,
+   "$.session.id": 18,
+   "$.store.get": 13,
+   "$.store.set": 5,
+   "$.clock.every": 1,
+   "$.session.cwd": 3,
+   "$.ui.status": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   }
+  ],
+  "sites": {},
+  "script": [
+   "$.process.run(git config --get-regexp ^alias\\.) → exit 0",
+   "session.start",
+   "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(bash -c ls -t sesiones/*.md 2>/dev/null | head -4) → exit 0",
+   "$.process.run(grep -rlE ^repo: */work/app/?$ /home/dani/ob_mint/Proyectos) → exit 0",
+   "$.process.run(bash -c ls -t /home/dani/ob_mint/Diario/*.md 2>/dev/null | head -2) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git -C /work rev-parse --show-toplevel) → exit 0",
+   "tool.call Edit denied: flujo-work: todavía no hay un plan aprobado. Entrá en modo plan (EnterPlanMode), investigá y present…",
+   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git -C /work rev-parse --show-toplevel) → exit 0",
+   "tool.call Write denied: flujo-work: todavía no hay un plan aprobado. Entrá en modo plan (EnterPlanMode), investigá y present…",
+   "$.process.run(git -C /work/app/src rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.process.run(git -C /work rev-parse --show-toplevel) → exit 0",
+   "tool.call Write denied: flujo-work: todavía no hay un plan aprobado. Entrá en modo plan (EnterPlanMode), investigá y present…",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash denied: flujo-work: los push y las escrituras en el remoto (gh pr create/merge, repo sync...) los hace Dani.…",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/sin-protocolo → Flujo de fases apagado en esta sesión (los commits con Co-Authored-By siguen blo…",
+   "/protocolo → Flujo de fases encendido.",
+   "/plan-ok → Plan dado por aprobado: la edición está habilitada."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "classic.SessionStart{source=clear}",
+   "prompt.submit",
+   "prompt.compose",
+   "session.measure",
+   "turn.complete",
+   "tool.call{tool=?}",
+   "tool.call{tool=Edit|Write|NotebookEdit}",
+   "tool.call{tool=Bash}",
+   "tool.call{tool=mcp__flujo-work__cerrar_fase}",
+   "command.run{command=sin-protocolo|protocolo|plan-ok}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.process.run (via sh)",
+   "$.session.cwd",
+   "$.session.id (via sessionKey)",
+   "$.store.get (via load)",
+   "$.store.set (via save)",
+   "$.tool.register",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [],
+  "stateWrites": [],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/danielhernandezzambrano-mods-claude-flujo-work/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/danielhernandezzambrano-mods-claude-flujo-work/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/danielhernandezzambrano-mods-claude-flujo-work/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, classic.SessionStart{source=clear}, prompt.submit, prompt.compose, session.measure, turn.complete, tool.call{tool=?}, tool.call{tool=Edit|Write|NotebookEdit}, tool.call{tool=Bash}, tool.call{tool=mcp__flujo-work__cerrar_fase}, command.run{command=sin-protocolo|protocolo|plan-ok}",
+      "./register.ts hooks on classic.SessionStart, prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook without .catch: classic.SessionStart{source=clear}",
+      "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: tool.call{tool=?}",
+      "./register.ts gating hook without .catch: tool.call{tool=Edit|Write|NotebookEdit}",
+      "./register.ts gating hook without .catch: tool.call{tool=Bash}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__flujo-work__cerrar_fase}",
+      "./register.ts gating hook without .catch: command.run{command=sin-protocolo|protocolo|plan-ok}",
+      "./register.ts calls: $.clock.every, $.clock.now, $.command.register, $.process.run (via sh), $.session.cwd, $.session.id (via sessionKey), $.store.get (via load), $.store.set (via save), $.tool.register, $.ui.status, $.ui.toast"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=clear}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Edit|Write|NotebookEdit}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__flujo-work__cerrar_fase}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=sin-protocolo|protocolo|plan-ok}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "2a152b043a52022f"
+}

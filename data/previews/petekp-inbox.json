@@ -1,6 +1,6 @@
 {
  "slug": "petekp-inbox",
- "generatedAt": "2026-10-16T14:15:37.322Z",
+ "generatedAt": "2026-10-17T13:04:52.407Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -106,6 +106,12 @@
     "event": "ui.press"
    },
    {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "inbox"
+    }
+   },
+   {
     "event": "ui.message"
    },
    {
@@ -140,6 +146,12 @@
     "description": "Show where this session stands and what is waiting on you",
     "immediate": true,
     "output": "Opened the inbox."
+   },
+   {
+    "name": "inbox",
+    "description": "Show where this session stands and what is waiting on you",
+    "immediate": true,
+    "output": "Opened the inbox."
    }
   ],
   "tools": [
@@ -163,24 +175,23 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 126,
-   "$.state.set": 27,
-   "$.command.register": 1,
+   "$.command.register": 2,
+   "$.session.id": 3,
+   "$.state.get": 160,
+   "$.state.set": 32,
    "$.tool.register": 2,
    "$.clock.every": 2,
-   "$.session.id": 1,
    "$.session.root": 1,
-   "$.store.get": 1,
+   "$.store.get": 2,
    "$.config.list": 1,
    "$.session.turns": 1,
    "$.env.get": 4,
-   "$.clock.now": 12,
-   "$.ui.panes": 5,
-   "$.store.delete": 1,
+   "$.clock.now": 14,
+   "$.ui.panes": 6,
    "$.store.set": 1,
    "$.store.keys": 1,
    "$.model.complete": 1,
-   "$.ui.open": 1,
+   "$.ui.open": 2,
    "$.ui.resolve": 2
   },
   "timers": [
@@ -736,6 +747,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(inbox)",
+   "/inbox → Opened the inbox.",
+   "$.ui.open(inbox)",
    "/inbox → Opened the inbox."
   ],
   "console": [],
@@ -768,6 +781,7 @@
    "session.append{door=command}",
    "command.run{command=inbox}",
    "ui.press",
+   "ui.scroll{requestId=inbox}",
    "ui.message",
    "ui.close{id=inbox}",
    "ui.render{component=AbovePrompt}",
@@ -775,12 +789,12 @@
    "ui.render{component=Pane, requestId=inbox}"
   ],
   "calls": [
-   "$.clock.every (via turnOn)",
+   "$.clock.every (via initializeInbox)",
    "$.clock.now",
    "$.clock.sleep (via later",
    "redrawWhileLeaving",
-   "scrollToRow)",
-   "$.command.register (via turnOn)",
+   "scrollToKey)",
+   "$.command.register (via registerInboxCommand)",
    "$.config.list (via syncTheme)",
    "$.env.get",
    "$.fs.exists (via openPath)",
@@ -793,26 +807,29 @@
    "publishStatus)",
    "$.prompt.submit (via send)",
    "$.session.append (via appendContext)",
-   "$.session.id (via turnOn)",
+   "$.session.id (via initializeInbox",
+   "upgradeState)",
    "$.session.messages (via catchUp)",
-   "$.session.root (via loadConversation)",
+   "$.session.root (via prepareConversation)",
    "$.session.surfaces",
-   "$.session.turns (via loadConversation",
+   "$.session.turns (via applyConversation",
    "readAgain)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via save)",
-   "$.store.get (via readSaved)",
+   "$.store.get (via readSaved",
+   "recordDoneRefusal",
+   "save)",
    "$.store.keys (via save)",
-   "$.store.set (via save)",
-   "$.tool.register (via turnOn)",
+   "$.store.set (via recordDoneRefusal",
+   "save)",
+   "$.tool.register (via initializeInbox)",
    "$.ui.copy (via perform)",
    "$.ui.focus",
    "$.ui.open (via openPane)",
    "$.ui.panes (via isPaneShown)",
    "$.ui.resolve",
-   "$.ui.scroll (via scrollToOpenRow",
-   "scrollToRow)"
+   "$.ui.scroll (vi… [+31 chars]"
   ],
   "stateReads": [
    "inbox.demo",
@@ -828,12 +845,14 @@
    "inbox.prViews",
    "inbox.presence",
    "inbox.selection",
+   "inbox.sent",
    "inbox.stop",
    "inbox.tab",
    "inbox.theme",
    "inbox.typing",
    "inbox.unfolded",
-   "inbox.unreadable"
+   "inbox.unreadable",
+   "inbox.untrackedSent"
   ],
   "stateWrites": [
    "inbox.demo",
@@ -849,12 +868,14 @@
    "inbox.prViews",
    "inbox.presence",
    "inbox.selection",
+   "inbox.sent",
    "inbox.stop",
    "inbox.tab",
    "inbox.theme",
    "inbox.typing",
    "inbox.unfolded",
-   "inbox.unreadable"
+   "inbox.unreadable",
+   "inbox.untrackedSent"
   ],
   "envReads": [
    "HERDR_PANE_ID",
@@ -872,7 +893,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: inbox.theme, inbox.ledger, inbox.presence, inbox.tab, inbox.prViews, inbox.selection, inbox.stop, inbox.dialogs, inbox.typing, inbox.drafts, inbox.notes, inbox.lastActions, inbox.unfolded, inbox.foldHover, inbox.optionsShown, inbox.isKeyListShown, inbox.demo, inbox.isDemoRecording, inbox.unreadable"
+     "types ./types/index.d.ts declares state: inbox.theme, inbox.ledger, inbox.presence, inbox.tab, inbox.prViews, inbox.selection, inbox.stop, inbox.dialogs, inbox.typing, inbox.drafts, inbox.notes, inbox.lastActions, inbox.sent, inbox.untrackedSent, inbox.unfolded, inbox.foldHover, inbox.optionsShown, inbox.isKeyListShown, inbox.demo, inbox.isDemoRecording, inbox.unreadable"
     ],
     "gatingHooks": []
    },
@@ -883,7 +904,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.attach{surface=desktop}, classic.SessionStart{source=clear|resume|fork}, session.end, prompt.submit, turn.start, prompt.compose, tool.describe{tool=mcp__inbox__record_finding}, tool.call{tool=mcp__inbox__record_finding}, tool.describe{tool=mcp__inbox__close}, tool.call{tool=mcp__inbox__close}, tool.call, classic.PermissionRequest, classic.StopFailure, classic.Stop, turn.complete, prompt.context, session.append{door=prompt|delivery, origin has {kind=plugin, name=inbox}}, session.append{door=command}, command.run{command=inbox}, ui.press, ui.message, ui.close{id=inbox}, ui.render{component=AbovePrompt}, config.set{key=theme}, ui.render{component=Pane, requestId=inbox}",
+      "./register.tsx hooks: session.start, session.attach{surface=desktop}, classic.SessionStart{source=clear|resume|fork}, session.end, prompt.submit, turn.start, prompt.compose, tool.describe{tool=mcp__inbox__record_finding}, tool.call{tool=mcp__inbox__record_finding}, tool.describe{tool=mcp__inbox__close}, tool.call{tool=mcp__inbox__close}, tool.call, classic.PermissionRequest, classic.StopFailure, classic.Stop, turn.complete, prompt.context, session.append{door=prompt|delivery, origin has {kind=plugin, name=inbox}}, session.append{door=command}, command.run{command=inbox}, ui.press, ui.scroll{requestId=inbox}, ui.message, ui.close{id=inbox}, ui.render{component=AbovePrompt}, config.set{key=theme}, ui.render{component=Pane, requestId=inbox}",
       "./register.tsx hooks on classic.SessionStart, prompt.compose, classic.PermissionRequest, classic.StopFailure, classic.Stop, prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=inbox}",
       "./register.tsx gating hook without .catch: classic.SessionStart{source=clear|resume|fork}",
@@ -896,13 +917,14 @@
       "./register.tsx gating hook without .catch: classic.Stop",
       "./register.tsx gating hook without .catch: session.append{door=prompt|delivery, origin has {kind=plugin, name=inbox}}",
       "./register.tsx gating hook without .catch: session.append{door=command}",
+      "./register.tsx gating hook without .catch: ui.scroll{requestId=inbox}",
       "./register.tsx gating hook without .catch: ui.close{id=inbox}",
       "./register.tsx gating hook without .catch: config.set{key=theme}",
-      "./register.tsx calls: $.clock.every (via turnOn), $.clock.now, $.clock.sleep (via later, redrawWhileLeaving, scrollToRow), $.command.register (via turnOn), $.config.list (via syncTheme), $.env.get, $.fs.exists (via openPath), $.fs.stat (via openPath), $.model.complete (via askLedgerModel), $.model.fork (via catchUp), $.process.run (via gh, openPath, openUrl, publishStatus), $.prompt.submit (via send), $.session.append (via appendContext), $.session.id (via turnOn), $.session.messages (via catchUp), $.session.root (via loadConversation), $.session.surfaces, $.session.turns (via loadConversation, readAgain), $.state.get, $.state.set, $.store.delete (via save), $.store.get (via readSaved), $.store.keys (via save), $.store.set (via save), $.tool.register (via turnOn), $.ui.copy (via perform), $.ui.focus, $.ui.open (via openPane), $.ui.panes (via isPaneShown), $.ui.resolve, $.ui.scroll (via scrollToOpenRow, scrollToRow)",
+      "./register.tsx calls: $.clock.every (via initializeInbox), $.clock.now, $.clock.sleep (via later, redrawWhileLeaving, scrollToKey), $.command.register (via registerInboxCommand), $.config.list (via syncTheme), $.env.get, $.fs.exists (via openPath), $.fs.stat (via openPath), $.model.complete (via askLedgerModel), $.model.fork (via catchUp), $.process.run (via gh, openPath, openUrl, publishStatus), $.prompt.submit (via send), $.session.append (via appendContext), $.session.id (via initializeInbox, upgradeState), $.session.messages (via catchUp), $.session.root (via prepareConversation), $.session.surfaces, $.session.turns (via applyConversation, readAgain), $.state.get, $.state.set, $.store.delete (via save), $.store.get (via readSaved, recordDoneRefusal, save), $.store.keys (via save), $.store.set (via recordDoneRefusal, save), $.tool.register (via initializeInbox), $.ui.copy (via perform), $.ui.focus, $.ui.open (via openPane), $.ui.panes (via isPaneShown), $.ui.resolve, $.ui.scroll (vi… [+31 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HERDR_PANE_ID, HOME, TERM_PROGRAM",
-      "./register.tsx state writes: inbox.demo, inbox.dialogs, inbox.drafts, inbox.foldHover, inbox.isDemoRecording, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.notes, inbox.optionsShown, inbox.prViews, inbox.presence, inbox.selection, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded, inbox.unreadable",
-      "./register.tsx state reads: inbox.demo, inbox.dialogs, inbox.drafts, inbox.foldHover, inbox.isDemoRecording, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.notes, inbox.optionsShown, inbox.prViews, inbox.presence, inbox.selection, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded, inbox.unreadable",
+      "./register.tsx state writes: inbox.demo, inbox.dialogs, inbox.drafts, inbox.foldHover, inbox.isDemoRecording, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.notes, inbox.optionsShown, inbox.prViews, inbox.presence, inbox.selection, inbox.sent, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded, inbox.unreadable, inbox.untrackedSent",
+      "./register.tsx state reads: inbox.demo, inbox.dialogs, inbox.drafts, inbox.foldHover, inbox.isDemoRecording, inbox.isKeyListShown, inbox.lastActions, inbox.ledger, inbox.notes, inbox.optionsShown, inbox.prViews, inbox.presence, inbox.selection, inbox.sent, inbox.stop, inbox.tab, inbox.theme, inbox.typing, inbox.unfolded, inbox.unreadable, inbox.untrackedSent",
       "./register.tsx surface modules: hooks/fold-client.tsx, hooks/links-client.tsx, hooks/row-client.tsx, hooks/tabs-client.tsx, hooks/undo-client.tsx"
      ],
      "gatingHooks": [
@@ -968,6 +990,12 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{requestId=inbox}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "ui.close",
        "hook": "ui.close{id=inbox}",
        "hasCatch": false
@@ -984,5 +1012,5 @@
    "advice": []
   }
  },
- "sourceHash": "8e8bc89c0f4284d"
+ "sourceHash": "83b57f5bbf672d05"
 }

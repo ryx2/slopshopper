@@ -1,6 +1,6 @@
 {
  "slug": "paradigm-study-claude-share-shared-session",
- "generatedAt": "2026-10-16T14:15:34.574Z",
+ "generatedAt": "2026-10-17T13:04:49.810Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -51,6 +51,15 @@
     "matcher": {
      "command": "room"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "who"
+    }
+   },
+   {
+    "event": "ui.message"
    },
    {
     "event": "command.run",
@@ -141,6 +150,42 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "UserMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AssistantMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "TurnDuration"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "CommandOutput",
+     "props": {
+      "command": "who"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "CommandOutput",
+     "props": {
+      "command": "shared-session:who"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "ToolUse"
     }
    },
@@ -224,6 +269,11 @@
     "name": "share-preview",
     "description": "Let teammates open this machine's localhost: /share-preview <port> [title]",
     "output": "Share this session first: press Share or type /share-session."
+   },
+   {
+    "name": "who",
+    "description": "Who's in this shared session and what each is doing",
+    "output": "This session is not shared. Press Share above the prompt, or type /share-session."
    }
   ],
   "tools": [],
@@ -238,14 +288,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 7,
+   "$.env.get": 32,
+   "$.store.get": 2,
+   "$.command.register": 8,
    "$.store.keys": 2,
-   "$.env.get": 19,
    "$.clock.every": 5,
    "$.clock.after": 4,
    "$.ui.invalidate": 1,
    "$.ui.resolve": 4,
-   "$.state.get": 127,
+   "$.state.get": 175,
    "$.fs.read": 6,
    "$.session.id": 6,
    "$.fs.exists": 4,
@@ -338,13 +389,22 @@
    "PromptHint": {
     "ok": "engine"
    },
+   "TurnDuration": {
+    "ok": "engine"
+   },
    "SessionMode": {
     "ok": "engine"
    },
    "UserMessage": {
     "ok": "engine"
    },
+   "AssistantMessage": {
+    "ok": "engine"
+   },
    "ToolUse": {
+    "ok": "engine"
+   },
+   "CommandOutput": {
     "ok": "engine"
    },
    "Pane": {
@@ -466,7 +526,8 @@
    "/stop-sharing → This session is not shared.",
    "/room → This session is not shared. Press Share above the prompt, or type /share-session…",
    "/share-file → Share this session first: press Share or type /share-session.",
-   "/share-preview → Share this session first: press Share or type /share-session."
+   "/share-preview → Share this session first: press Share or type /share-session.",
+   "/who → This session is not shared. Press Share above the prompt, or type /share-session…"
   ],
   "console": [],
   "warnings": []
@@ -485,6 +546,8 @@
    "command.run{command=team}",
    "command.run{command=shared-session:team}",
    "command.run{command=room}",
+   "command.run{command=who}",
+   "ui.message",
    "command.run{command=share-file}",
    "command.run{command=share-preview}",
    "command.run{command=stop-sharing}",
@@ -505,36 +568,20 @@
    "tool.check",
    "ui.render{component=UserMessage",
    "props.origin has {kind=plugin}}",
-   "ui.render{component=ToolUse}",
-   "ui.render{component=AskUserQuestion}",
-   "ui.render{component=SessionMode}",
-   "ui.render{component=Spinner}",
-   "ui.render{component=PromptHint}",
-   "ui.render{component=… [+112 chars]"
+   "ui.render{component=UserMessage}",
+   "ui.render{component=AssistantMessage}",
+   "ui.render{component=TurnDuration}",
+   "ui.render{component=CommandOutput",
+   "prop… [+395 chars]"
   ],
   "calls": [
+   "$.audio.play (via cue)",
+   "$.audio.speak (via cue)",
    "$.clock.after",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via accountFile",
-   "catchUpFromInstalled",
-   "isDesktop",
-   "joinFromTeam",
-   "liveDirOf",
-   "notifyInvite",
-   "openExternal",
-   "openPublicPreview",
-   "openShown",
-   "pinnedByDesktop",
-   "placeOf",
-   "roomCheckpointDir",
-   "runStream",
-   "selfUpdate",
-   "serverOf",
-   "settingsFile",
-   "updateHere",
-   "whoami)",
+   "$.env.get",
    "$.fs.exists (via readRoomCheckpointFile",
    "readSettings",
    "readUpdates",
@@ -568,18 +615,31 @@
    "runTcpWorker",
    "sh",
    "startLocalPreview)",
+   "$.prompt.fill (via mention)",
    "$.prompt.submit (via submitLater)",
+   "$.prompt.suggest (via noteMention)",
    "$.session.cwd",
-   "$.sessi… [+582 chars]"
+   "$.session.id (via forgetHosting",
+   "holdRoom",
+   "holdsElsewhere",
+   "leave",
+   "resumeHosting",
+   "savedKey",
+   "sessionHistory)",
+   "$.session.messages (via session… [+509 chars]"
   ],
   "stateReads": [
    "shared-session.activity",
    "shared-session.approving",
    "shared-session.asking",
    "shared-session.autoOpen",
+   "shared-session.calls",
+   "shared-session.changeOpen",
+   "shared-session.changes",
    "shared-session.chat",
    "shared-session.confirming",
    "shared-session.connection",
+   "shared-session.copied",
    "shared-session.forwardPorts",
    "shared-session.invited",
    "shared-session.invites",
@@ -592,28 +652,37 @@
    "shared-session.people",
    "shared-session.pinRefused",
    "shared-session.policy",
+   "shared-session.prefs",
    "shared-session.previews",
+   "shared-session.reactions",
    "shared-session.replayRun",
+   "shared-session.replyFor",
    "shared-session.room",
    "shared-session.roomTab",
+   "shared-session.seen",
    "shared-session.shown",
    "shared-session.sidebar",
    "shared-session.teamTab",
    "shared-session.teams",
    "shared-session.toolRows",
    "shared-session.trusted",
+   "shared-session.turns",
    "shared-session.unread",
    "shared-session.updates",
-   "shared-session.working"
+   "shared… [+16 chars]"
   ],
   "stateWrites": [
    "shared-session.activity",
    "shared-session.approving",
    "shared-session.asking",
    "shared-session.autoOpen",
+   "shared-session.calls",
+   "shared-session.changeOpen",
+   "shared-session.changes",
    "shared-session.chat",
    "shared-session.confirming",
    "shared-session.connection",
+   "shared-session.copied",
    "shared-session.forwardPorts",
    "shared-session.invited",
    "shared-session.invites",
@@ -626,21 +695,27 @@
    "shared-session.people",
    "shared-session.pinRefused",
    "shared-session.policy",
+   "shared-session.prefs",
    "shared-session.previews",
+   "shared-session.reactions",
    "shared-session.replayRun",
+   "shared-session.replyFor",
    "shared-session.room",
    "shared-session.roomTab",
+   "shared-session.seen",
    "shared-session.shown",
    "shared-session.sidebar",
    "shared-session.teamTab",
    "shared-session.teams",
    "shared-session.toolRows",
    "shared-session.trusted",
+   "shared-session.turns",
    "shared-session.unread",
    "shared-session.updates",
-   "shared-session.working"
+   "share… [+17 chars]"
   ],
   "envReads": [
+   "AI_AGENT",
    "CLAUDE_CODE_ENTRYPOINT",
    "CLAUDE_CODE_HOST_SESSION_ID",
    "CLAUDE_CONFIG_DIR",
@@ -663,7 +738,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: shared-session.mode, shared-session.room, shared-session.people, shared-session.working, shared-session.activity, shared-session.chat, shared-session.unread, shared-session.policy, shared-session.trusted, shared-session.owners, shared-session.shown, shared-session.autoOpen, shared-session.previews, shared-session.forwardPorts, shared-session.localPreviews, shared-session.sidebar, shared-session.asking, shared-session.connection, shared-session.toolRows, shared-session.replayRun, shared-session.approving, shared-session.confirming, shared-session.newer, shared-session.updates, shared-session.liveUpdates, shared-session.pages, shared-session.Record, shared-session.teams, shared-session.invites, shared-session.invited, shared-session.pinRefused, shared-session.roomTab, shared-session.teamTab"
+     "types ./types/index.d.ts declares state: shared-session.mode, shared-session.room, shared-session.people, shared-session.working, shared-session.activity, shared-session.chat, shared-session.unread, shared-session.policy, shared-session.trusted, shared-session.owners, shared-session.shown, shared-session.autoOpen, shared-session.previews, shared-session.forwardPorts, shared-session.localPreviews, shared-session.sidebar, shared-session.asking, shared-session.connection, shared-session.toolRows, shared-session.replayRun, shared-session.approving, shared-session.confirming, shared-session.newer, shared-session.updates, shared-session.liveUpdates, shared-session.pages, shared-session.Record, shared-session.teams, shared-session.invites, shared-session.invited, shared-session.pinRefused, shared-session.roomTab, shared-session.turns, shared-session.changes, shared-session.reactions, shared-session.seen, shared-session.replyFor, shared-session.calls, shared-session.changeOpen, shared-session.… [+13 chars]"
     ],
     "gatingHooks": []
    },
@@ -674,12 +749,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, command.run{command=share-session}, command.run{command=shared-session:share-session}, command.run{command=invite}, command.run{command=shared-session:invite}, command.run{command=team}, command.run{command=shared-session:team}, command.run{command=room}, command.run{command=share-file}, command.run{command=share-preview}, command.run{command=stop-sharing}, ui.close, prompt.submit, turn.start, classic.Stop, turn.complete, turn.step, tool.call{tool=mcp__shared-session__replay}, ui.render{component=ToolUse, props has {tool=mcp__shared-session__replay}}, ui.render{component=ToolResult, props has {tool=mcp__shared-session__replay}}, session.append, tool.call, tool.call{tool=Skill}, tool.check, ui.render{component=UserMessage, props.origin has {kind=plugin}}, ui.render{component=ToolUse}, ui.render{component=AskUserQuestion}, ui.render{component=SessionMode}, ui.render{component=Spinner}, ui.render{component=PromptHint}, ui.render{component=… [+112 chars]",
+      "./register.tsx hooks: session.start, session.end, command.run{command=share-session}, command.run{command=shared-session:share-session}, command.run{command=invite}, command.run{command=shared-session:invite}, command.run{command=team}, command.run{command=shared-session:team}, command.run{command=room}, command.run{command=who}, ui.message, command.run{command=share-file}, command.run{command=share-preview}, command.run{command=stop-sharing}, ui.close, prompt.submit, turn.start, classic.Stop, turn.complete, turn.step, tool.call{tool=mcp__shared-session__replay}, ui.render{component=ToolUse, props has {tool=mcp__shared-session__replay}}, ui.render{component=ToolResult, props has {tool=mcp__shared-session__replay}}, session.append, tool.call, tool.call{tool=Skill}, tool.check, ui.render{component=UserMessage, props.origin has {kind=plugin}}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=TurnDuration}, ui.render{component=CommandOutput, prop… [+395 chars]",
       "./register.tsx hooks on classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=share-session}",
       "./register.tsx answers its own command: command.run{command=invite}",
       "./register.tsx answers its own command: command.run{command=team}",
       "./register.tsx answers its own command: command.run{command=room}",
+      "./register.tsx answers its own command: command.run{command=who}",
       "./register.tsx answers its own command: command.run{command=share-file}",
       "./register.tsx answers its own command: command.run{command=share-preview}",
       "./register.tsx answers its own command: command.run{command=stop-sharing}",
@@ -694,11 +770,12 @@
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=Skill}",
       "./register.tsx gating hook without .catch: tool.check",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via accountFile, catchUpFromInstalled, isDesktop, joinFromTeam, liveDirOf, notifyInvite, openExternal, openPublicPreview, openShown, pinnedByDesktop, placeOf, roomCheckpointDir, runStream, selfUpdate, serverOf, settingsFile, updateHere, whoami), $.fs.exists (via readRoomCheckpointFile, readSettings, readUpdates, roomCheckpointKeys, writeUpdates), $.fs.list (via roomCheckpointKeys), $.fs.read (via catchUpFromInstalled, ownVersion, pinnedByDesktop, readRoomCheckpointFile, readSettings, readSignIns, readUpdates, updateHere, writeUpdates), $.fs.write (via allowDeskTools, nameLiveDir, readUpdates, writeUpdates), $.http.fetch (via api, tcpControl), $.mcp.call (via desk, openPublicPreview, openShown), $.process.run (via pause, whoami), $.process.spawn (via readBackward, rejectTcp, relaySocket, runStream, runTcpWorker, sh, startLocalPreview), $.prompt.submit (via submitLater), $.session.cwd, $.sessi… [+582 chars]",
+      "./register.tsx calls: $.audio.play (via cue), $.audio.speak (via cue), $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via readRoomCheckpointFile, readSettings, readUpdates, roomCheckpointKeys, writeUpdates), $.fs.list (via roomCheckpointKeys), $.fs.read (via catchUpFromInstalled, ownVersion, pinnedByDesktop, readRoomCheckpointFile, readSettings, readSignIns, readUpdates, updateHere, writeUpdates), $.fs.write (via allowDeskTools, nameLiveDir, readUpdates, writeUpdates), $.http.fetch (via api, tcpControl), $.mcp.call (via desk, openPublicPreview, openShown), $.process.run (via pause, whoami), $.process.spawn (via readBackward, rejectTcp, relaySocket, runStream, runTcpWorker, sh, startLocalPreview), $.prompt.fill (via mention), $.prompt.submit (via submitLater), $.prompt.suggest (via noteMention), $.session.cwd, $.session.id (via forgetHosting, holdRoom, holdsElsewhere, leave, resumeHosting, savedKey, sessionHistory), $.session.messages (via session… [+509 chars]",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CLAUDE_CODE_ENTRYPOINT, CLAUDE_CODE_HOST_SESSION_ID, CLAUDE_CONFIG_DIR, HOME, PATH, SHARED_SESSION_NO_BROWSER, SHARED_SESSION_RELEASE_URL, SHARED_SESSION_SERVER, SHARED_SESSION_TRANSPORT, USER",
-      "./register.tsx state writes: shared-session.activity, shared-session.approving, shared-session.asking, shared-session.autoOpen, shared-session.chat, shared-session.confirming, shared-session.connection, shared-session.forwardPorts, shared-session.invited, shared-session.invites, shared-session.liveUpdates, shared-session.localPreviews, shared-session.mode, shared-session.newer, shared-session.owners, shared-session.pages, shared-session.people, shared-session.pinRefused, shared-session.policy, shared-session.previews, shared-session.replayRun, shared-session.room, shared-session.roomTab, shared-session.shown, shared-session.sidebar, shared-session.teamTab, shared-session.teams, shared-session.toolRows, shared-session.trusted, shared-session.unread, shared-session.updates, shared-session.working",
-      "./register.tsx state reads: shared-session.activity, shared-session.approving, shared-session.asking, shared-session.autoOpen, shared-session.chat, shared-session.confirming, shared-session.connection, shared-session.forwardPorts, shared-session.invited, shared-session.invites, shared-session.liveUpdates, shared-session.localPreviews, shared-session.mode, shared-session.newer, shared-session.owners, shared-session.pages, shared-session.people, shared-session.pinRefused, shared-session.policy, shared-session.previews, shared-session.replayRun, shared-session.room, shared-session.roomTab, shared-session.shown, shared-session.sidebar, shared-session.teamTab, shared-session.teams, shared-session.toolRows, shared-session.trusted, shared-session.unread, shared-session.updates, shared-session.working"
+      "./register.tsx env reads: AI_AGENT, CLAUDE_CODE_ENTRYPOINT, CLAUDE_CODE_HOST_SESSION_ID, CLAUDE_CONFIG_DIR, HOME, PATH, SHARED_SESSION_NO_BROWSER, SHARED_SESSION_RELEASE_URL, SHARED_SESSION_SERVER, SHARED_SESSION_TRANSPORT, USER",
+      "./register.tsx state writes: shared-session.activity, shared-session.approving, shared-session.asking, shared-session.autoOpen, shared-session.calls, shared-session.changeOpen, shared-session.changes, shared-session.chat, shared-session.confirming, shared-session.connection, shared-session.copied, shared-session.forwardPorts, shared-session.invited, shared-session.invites, shared-session.liveUpdates, shared-session.localPreviews, shared-session.mode, shared-session.newer, shared-session.owners, shared-session.pages, shared-session.people, shared-session.pinRefused, shared-session.policy, shared-session.prefs, shared-session.previews, shared-session.reactions, shared-session.replayRun, shared-session.replyFor, shared-session.room, shared-session.roomTab, shared-session.seen, shared-session.shown, shared-session.sidebar, shared-session.teamTab, shared-session.teams, shared-session.toolRows, shared-session.trusted, shared-session.turns, shared-session.unread, shared-session.updates, share… [+17 chars]",
+      "./register.tsx state reads: shared-session.activity, shared-session.approving, shared-session.asking, shared-session.autoOpen, shared-session.calls, shared-session.changeOpen, shared-session.changes, shared-session.chat, shared-session.confirming, shared-session.connection, shared-session.copied, shared-session.forwardPorts, shared-session.invited, shared-session.invites, shared-session.liveUpdates, shared-session.localPreviews, shared-session.mode, shared-session.newer, shared-session.owners, shared-session.pages, shared-session.people, shared-session.pinRefused, shared-session.policy, shared-session.prefs, shared-session.previews, shared-session.reactions, shared-session.replayRun, shared-session.replyFor, shared-session.room, shared-session.roomTab, shared-session.seen, shared-session.shown, shared-session.sidebar, shared-session.teamTab, shared-session.teams, shared-session.toolRows, shared-session.trusted, shared-session.turns, shared-session.unread, shared-session.updates, shared… [+16 chars]",
+      "./register.tsx surface modules: hooks/live.tsx, hooks/timeline.tsx"
      ],
      "gatingHooks": [
       {
@@ -773,5 +850,5 @@
    "advice": []
   }
  },
- "sourceHash": "9f1098bffecd99f3"
+ "sourceHash": "30dfc46930e37e0c"
 }

@@ -1,0 +1,390 @@
+{
+ "slug": "wbld4a-pr-radar",
+ "generatedAt": "2026-10-17T13:07:01.769Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "prs"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__pr-radar__snapshot"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "pr-radar"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "prs",
+    "description": "Opens the PR Radar (GitHub PRs, Jira, Claude sessions); “/prs refresh” refreshes it",
+    "argumentHint": "[refresh]",
+    "output": "PR Radar opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "snapshot",
+    "description": "PR Radar: the account’s open GitHub PRs (authored, review requested, reviewed, assigned), sorted by who must act, with CI, review threads, Jira status and priority, linked Claude sessions and unfinished Agent Context work. Use it to answer “what should I do next” or “where are my PRs”."
+   }
+  ],
+  "panes": [
+   {
+    "id": "pr-radar",
+    "title": "PR Radar"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.clock.every": 1,
+   "$.clock.now": 4,
+   "$.ui.open": 2,
+   "$.state.get": 17,
+   "$.state.set": 7,
+   "$.store.get": 7,
+   "$.store.set": 3,
+   "$.env.get": 2,
+   "$.process.run": 3,
+   "$.tool.list": 2,
+   "$.ui.status": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "pr-radar": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "flexWrap": "wrap",
+         "columnGap": 2
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": []
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "filter-all",
+             "label": "All",
+             "variant": "primary",
+             "dimColor": false,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "filter-todo",
+             "label": "To do",
+             "plain": true,
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "filter-mine",
+             "label": "My PRs",
+             "plain": true,
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "filter-reviews",
+             "label": "Reviews",
+             "plain": true,
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " ",
+             "just now"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "refresh",
+             "label": "↻",
+             "plain": true,
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "error",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "⚠ ",
+           "GitHub: JSON Parse error: Unexpected EOF"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "error",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "⚠ ",
+           "Agent Context: JSON Parse error: Unexpected identifier \"dev\""
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No open PR for this filter."
+        ]
+       }
+      ]
+     },
+     "title": "PR Radar"
+    }
+   }
+  },
+  "script": [
+   "$.ui.open(pr-radar)",
+   "session.start",
+   "$.process.run(gh api user --jq .login) → exit 0",
+   "tool.call Read",
+   "$.process.run(gh api graphql -f query=query($q1:String!,$q2:String!,$q3:String!,$q4:String!){\n…) → exit 0",
+   "$.process.run(python -I /plugins/pr-radar/scripts/runs.py --root /Users/dev/agent-context --da…) → exit 0",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(pr-radar)",
+   "/prs → PR Radar opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=prs}",
+   "tool.call{tool=mcp__pr-radar__snapshot}",
+   "ui.close",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=pr-radar}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via homeOf",
+   "startConversation)",
+   "$.process.run (via checkoutOf",
+   "fetchPrs",
+   "fetchRuns",
+   "fetchSessions",
+   "graphql",
+   "resetOf",
+   "setReady)",
+   "$.prompt.fill (via startConversation)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via notePause)",
+   "$.store.get (via checkoutOf",
+   "fetchJira",
+   "fetchPrs",
+   "fetchSessions",
+   "notePause",
+   "refresh",
+   "setMark",
+   "tick",
+   "withMarks)",
+   "$.store.set (via checkoutOf",
+   "fetchJira",
+   "fetchPrs",
+   "fetchSessions",
+   "notePause",
+   "refresh",
+   "setMark",
+   "tick",
+   "withMarks)",
+   "$.tool.call (via callTool",
+   "continueSession",
+   "startConversation)",
+   "$.tool.check (via callTool",
+   "findTool)",
+   "$.tool.list (via findTool)",
+   "$.tool.register",
+   "$.ui.copy",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.status (via refresh",
+   "show)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "pr-radar.clock",
+   "pr-radar.filter",
+   "pr-radar.folded",
+   "pr-radar.isPaneOpen",
+   "pr-radar.isRefreshing",
+   "pr-radar.snapshot"
+  ],
+  "stateWrites": [
+   "pr-radar.clock",
+   "pr-radar.filter",
+   "pr-radar.folded",
+   "pr-radar.isPaneOpen",
+   "pr-radar.isRefreshing",
+   "pr-radar.snapshot"
+  ],
+  "envReads": [
+   "CLAUDE_CODE_EXECPATH",
+   "HOME",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/wbld4a-pr-radar/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/wbld4a-pr-radar/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: pr-radar.snapshot, pr-radar.isRefreshing, pr-radar.filter, pr-radar.folded, pr-radar.clock, pr-radar.isPaneOpen"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/wbld4a-pr-radar/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=prs}, tool.call{tool=mcp__pr-radar__snapshot}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=pr-radar}",
+      "./register.tsx answers its own command: command.run{command=prs}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__pr-radar__snapshot}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via homeOf, startConversation), $.process.run (via checkoutOf, fetchPrs, fetchRuns, fetchSessions, graphql, resetOf, setReady), $.prompt.fill (via startConversation), $.state.get, $.state.set, $.store.delete (via notePause), $.store.get (via checkoutOf, fetchJira, fetchPrs, fetchSessions, notePause, refresh, setMark, tick, withMarks), $.store.set (via checkoutOf, fetchJira, fetchPrs, fetchSessions, notePause, refresh, setMark, tick, withMarks), $.tool.call (via callTool, continueSession, startConversation), $.tool.check (via callTool, findTool), $.tool.list (via findTool), $.tool.register, $.ui.copy, $.ui.open (via openPane), $.ui.resolve, $.ui.status (via refresh, show), $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CODE_EXECPATH, HOME, USERPROFILE",
+      "./register.tsx state writes: pr-radar.clock, pr-radar.filter, pr-radar.folded, pr-radar.isPaneOpen, pr-radar.isRefreshing, pr-radar.snapshot",
+      "./register.tsx state reads: pr-radar.clock, pr-radar.filter, pr-radar.folded, pr-radar.isPaneOpen, pr-radar.isRefreshing, pr-radar.snapshot"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__pr-radar__snapshot}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "2e2738fc27edd26c"
+}

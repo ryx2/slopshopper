@@ -1,6 +1,6 @@
 {
  "slug": "ayejk-eidola-mod",
- "generatedAt": "2026-10-16T14:18:48.508Z",
+ "generatedAt": "2026-10-17T13:05:55.452Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,7 +20,7 @@
     "event": "tool.call"
    },
    {
-    "event": "tool.check"
+    "event": "classic.PermissionRequest"
    },
    {
     "event": "session.compact"
@@ -36,6 +36,9 @@
     "matcher": {
      "command": "eidola"
     }
+   },
+   {
+    "event": "ui.message"
    },
    {
     "event": "ui.close"
@@ -76,7 +79,7 @@
    {
     "name": "eidola",
     "description": "Open the Eidola Vessel pane",
-    "output": "Surfaces: terminal\nPane: placed.\nPane state: shown=undefined placed=true\nPlacement: both (setting: default). Band: showing. Status line: on.\nNetwork, from where this session runs:\n  eidola.app (hosted relay): reached, HTTP 0\n  example.com (control): reached, HTTP 0\n  api.github.com (a host cloud environments usually allow): reached, HTTP 0\n  Shrine on this host (127.0.0.1:9743): reached, HTTP 0"
+    "output": "Surfaces: terminal\nPane: placed.\nPane state: shown=undefined placed=true\nPlacement: band (setting: default). Band: showing. Status line: on.\nBand hook: not asked to draw since the mod loaded.\nLive drawings' clocks: none reported.\nNetwork, from where this session runs:\n  eidola.app (hosted relay): reached, HTTP 0\n  example.com (control): reached, HTTP 0\n  api.github.com (a host cloud environments usually allow): reached, HTTP 0\n  Shrine on this host (127.0.0.1:9743): reached, HTTP 0"
    },
    {
     "name": "awaken",
@@ -92,7 +95,7 @@
    {
     "name": "engrams",
     "description": "List the bundled Engrams",
-    "output": "wisp: The default Vessel. A quiet spirit that keeps you company and keeps out of the way.\nspirit: The first Eidola Vessel: a figure of drifting gold dust.\nskull: A grinning skull in chunky dithered bone.\nmoon: A sleepy crescent moon drawn in frosted scanlines.\nsigil: A spell circle of sparks whose wheels turn faster as work picks up.\nstarfield: Stars streaming past at warp, quicker when busy."
+    "output": "wisp: A will-o'-the-wisp in a night fen. It flies where it likes, its ghost fire burning the colour of your work, and speaks in flickers.\nspirit: The first Eidola Vessel: a figure of drifting gold dust.\nskull: A grinning skull in chunky dithered bone.\nmoon: A sleepy crescent moon drawn in frosted scanlines.\nsigil: A spell circle of sparks whose wheels turn faster as work picks up.\nkraken: Something vast in the deep water beside your work. It surfaces when there is work to do.\nlich: A crowned skull of alchemical signs, soul-fire in its sockets. It burns brighter while you work.\nstarfield: Stars streaming past at warp, quicker when busy."
    }
   ],
   "tools": [],
@@ -108,23 +111,25 @@
   "rewrites": [
    {
     "event": "prompt.submit",
-    "summary": "context added: [\"<eidola-soul engram=\\\"wisp\\\">\\n# Active Engram: Wisp\\n\\nYou have a small companion, Wisp, shown in a pane beside this conversation. It rea…"
+    "summary": "context added: [\"<eidola-soul engram=\\\"wisp\\\">\\n# Active Engram: Wisp\\n\\n# Wisp\\n\\n## Who You Are\\nA will-o'-the-wisp: a small light that drifts beside the…"
    }
   ],
   "apiCalls": {
    "$.command.register": 4,
-   "$.store.get": 1,
-   "$.state.get": 93,
-   "$.state.set": 23,
-   "$.ui.open": 5,
-   "$.ui.invalidate": 5,
-   "$.ui.resolve": 8,
+   "$.state.get": 130,
+   "$.clock.now": 4,
+   "$.state.set": 33,
+   "$.store.get": 2,
    "$.ui.status": 22,
    "$.clock.after": 14,
    "$.session.surfaces": 1,
+   "$.ui.open": 1,
+   "$.ui.invalidate": 3,
    "$.ui.panes": 3,
    "$.http.fetch": 4,
-   "$.store.set": 2
+   "$.store.set": 2,
+   "$.ui.resolve": 4,
+   "$.ui.close": 1
   },
   "timers": [
    {
@@ -205,12 +210,11 @@
        "( -_- ) z"
       ]
      },
-     "title": "Eidola"
+     "title": "eidola"
     }
    }
   },
   "script": [
-   "$.ui.open(eidola)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -228,12 +232,9 @@
    "$.http.fetch(https://api.github.com/) → blocked in preview",
    "$.http.fetch(http://127.0.0.1:9743/shrine/) → blocked in preview",
    "/eidola → Surfaces: terminal\nPane: placed.\nPane state: shown=undefined placed=true\nPlaceme…",
-   "$.ui.open(eidola)",
-   "$.ui.open(eidola)",
    "/awaken → Wisp is awake. Their Soul applies from your next message.",
-   "$.ui.open(eidola)",
    "/sleep → Wisp is asleep. Their Soul is gone from your next message.",
-   "/engrams → wisp: The default Vessel. A quiet spirit that keeps you company and keeps out of…"
+   "/engrams → wisp: A will-o'-the-wisp in a night fen. It flies where it likes, its ghost fire…"
   ],
   "console": [],
   "warnings": []
@@ -248,11 +249,12 @@
    "prompt.submit",
    "turn.start",
    "tool.call",
-   "tool.check",
+   "classic.PermissionRequest",
    "session.compact",
    "turn.complete",
    "prompt.compose",
    "command.run{command=eidola}",
+   "ui.message",
    "ui.close",
    "command.run{command=awaken}",
    "command.run{command=sleep}",
@@ -263,15 +265,19 @@
   "calls": [
    "$.clock.after (via probeLine",
    "signal)",
+   "$.clock.now",
    "$.command.register",
    "$.config.set",
-   "$.fs.read (via vesselFor)",
+   "$.fs.read (via thumbFor",
+   "vesselFor)",
    "$.http.fetch (via probeLine)",
    "$.session.surfaces",
    "$.state.get",
    "$.state.set",
    "$.store.get",
-   "$.store.set (via setEngram)",
+   "$.store.set",
+   "$.ui.close (via closePicker",
+   "setEngram)",
    "$.ui.invalidate",
    "$.ui.open (via openPane",
    "setEngram)",
@@ -280,13 +286,37 @@
    "$.ui.status"
   ],
   "stateReads": [
+   "eidola.blend",
    "eidola.engram",
+   "eidola.epoch",
+   "eidola.frame",
+   "eidola.ink",
+   "eidola.inkAt",
+   "eidola.live",
+   "eidola.measure",
    "eidola.media",
+   "eidola.mood",
+   "eidola.moodAt",
+   "eidola.moodBefore",
+   "eidola.picker",
+   "eidola.pickerFilter",
    "eidola.view"
   ],
   "stateWrites": [
+   "eidola.blend",
    "eidola.engram",
+   "eidola.epoch",
+   "eidola.frame",
+   "eidola.ink",
+   "eidola.inkAt",
+   "eidola.live",
+   "eidola.measure",
    "eidola.media",
+   "eidola.mood",
+   "eidola.moodAt",
+   "eidola.moodBefore",
+   "eidola.picker",
+   "eidola.pickerFilter",
    "eidola.view"
   ],
   "envReads": [],
@@ -301,7 +331,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: eidola.view, eidola.engram, eidola.media"
+     "types ./types/index.d.ts declares state: eidola.view, eidola.mood, eidola.engram, eidola.media, eidola.measure, eidola.blend, eidola.live, eidola.ink, eidola.frame, eidola.picker, eidola.pickerFilter, eidola.moodAt, eidola.moodBefore, eidola.inkAt, eidola.epoch"
     ],
     "gatingHooks": []
    },
@@ -312,20 +342,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.attach, prompt.submit, turn.start, tool.call, tool.check, session.compact, turn.complete, prompt.compose, command.run{command=eidola}, ui.close, command.run{command=awaken}, command.run{command=sleep}, command.run{command=engrams}, ui.render{component=Pane, requestId=eidola}, ui.render{component=AbovePrompt}",
-      "./register.tsx hooks on session.compact, prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, session.attach, prompt.submit, turn.start, tool.call, classic.PermissionRequest, session.compact, turn.complete, prompt.compose, command.run{command=eidola}, ui.message, ui.close, command.run{command=awaken}, command.run{command=sleep}, command.run{command=engrams}, ui.render{component=Pane, requestId=eidola}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on classic.PermissionRequest, session.compact, prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=eidola}",
       "./register.tsx answers its own command: command.run{command=awaken}",
       "./register.tsx answers its own command: command.run{command=sleep}",
       "./register.tsx answers its own command: command.run{command=engrams}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx gating hook with .catch: tool.check",
+      "./register.tsx gating hook with .catch: classic.PermissionRequest",
       "./register.tsx gating hook with .catch: session.compact",
       "./register.tsx gating hook with .catch: ui.close",
-      "./register.tsx calls: $.clock.after (via probeLine, signal), $.command.register, $.config.set, $.fs.read (via vesselFor), $.http.fetch (via probeLine), $.session.surfaces, $.state.get, $.state.set, $.store.get, $.store.set (via setEngram), $.ui.invalidate, $.ui.open (via openPane, setEngram), $.ui.panes, $.ui.resolve, $.ui.status",
-      "./register.tsx state writes: eidola.engram, eidola.media, eidola.view",
-      "./register.tsx state reads: eidola.engram, eidola.media, eidola.view"
+      "./register.tsx calls: $.clock.after (via probeLine, signal), $.clock.now, $.command.register, $.config.set, $.fs.read (via thumbFor, vesselFor), $.http.fetch (via probeLine), $.session.surfaces, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close (via closePicker, setEngram), $.ui.invalidate, $.ui.open (via openPane, setEngram), $.ui.panes, $.ui.resolve, $.ui.status",
+      "./register.tsx state writes: eidola.blend, eidola.engram, eidola.epoch, eidola.frame, eidola.ink, eidola.inkAt, eidola.live, eidola.measure, eidola.media, eidola.mood, eidola.moodAt, eidola.moodBefore, eidola.picker, eidola.pickerFilter, eidola.view",
+      "./register.tsx state reads: eidola.blend, eidola.engram, eidola.epoch, eidola.frame, eidola.ink, eidola.inkAt, eidola.live, eidola.measure, eidola.media, eidola.mood, eidola.moodAt, eidola.moodBefore, eidola.picker, eidola.pickerFilter, eidola.view",
+      "./register.tsx surface modules: hooks/frame-cam.tsx, hooks/frame-corner.tsx, hooks/frame-meter.tsx, hooks/frame-sigil.tsx, hooks/frame-sparks.tsx, hooks/frame-wave.tsx, hooks/kraken-live.tsx, hooks/lich-live.tsx, hooks/live-test.tsx, hooks/wisp-live.tsx"
      ],
      "gatingHooks": [
       {
@@ -342,8 +373,8 @@
       },
       {
        "module": "./register.tsx",
-       "pattern": "tool.check",
-       "hook": "tool.check",
+       "pattern": "classic.PermissionRequest",
+       "hook": "classic.PermissionRequest",
        "hasCatch": true
       },
       {
@@ -364,5 +395,5 @@
    "advice": []
   }
  },
- "sourceHash": "f50987ce2be9f307"
+ "sourceHash": "1ee6e07b2d9646cc"
 }

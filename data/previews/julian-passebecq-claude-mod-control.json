@@ -1,11 +1,17 @@
 {
  "slug": "julian-passebecq-claude-mod-control",
- "generatedAt": "2026-10-16T14:20:11.207Z",
+ "generatedAt": "2026-10-17T13:06:21.156Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "config-claude"
+    }
    },
    {
     "event": "command.run",
@@ -38,6 +44,13 @@
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
+     "requestId": "control-config"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
      "requestId": "control-history"
     }
    }
@@ -45,9 +58,15 @@
   "commands": [
    {
     "name": "control",
-    "description": "Claude Control panes: SETUP, USAGE, PRACTICES, HISTORY (args: setup | usage | practices | history | scan)",
-    "argumentHint": "[setup|usage|practices|history] [scan]",
-    "output": "control: opened SETUP, USAGE, PRACTICES, HISTORY · scanning (data never)"
+    "description": "Claude Control: SETUP (règles actives, mods chargés), USAGE, PRACTICES, HISTORY, CONFIG (args: setup | usage | practices | history | config | scan)",
+    "argumentHint": "[setup|usage|practices|history|config] [scan] | close",
+    "output": "control: opened SETUP, USAGE, PRACTICES, HISTORY, CONFIG · scanning (data never)"
+   },
+   {
+    "name": "config-claude",
+    "description": "Config Claude : toute la config de Claude Code en lecture seule (règles, agents, skills, réglages par priorité, défauts, hooks, mods, MCP, app, Claude Control), avec recherche",
+    "argumentHint": "[scan] | close",
+    "output": "config-claude: CONFIG ouvert · scan en cours"
    }
   ],
   "tools": [],
@@ -67,6 +86,10 @@
    {
     "id": "control-history",
     "title": "HISTORY"
+   },
+   {
+    "id": "control-config",
+    "title": "CONFIG"
    }
   ],
   "toasts": [],
@@ -74,15 +97,19 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.ui.open": 4,
-   "$.fs.read": 11,
-   "$.env.get": 10,
-   "$.clock.after": 1,
-   "$.ui.resolve": 8,
-   "$.state.get": 15
+   "$.command.register": 2,
+   "$.ui.open": 6,
+   "$.env.get": 14,
+   "$.fs.read": 16,
+   "$.clock.after": 2,
+   "$.ui.resolve": 9,
+   "$.state.get": 24
   },
   "timers": [
+   {
+    "kind": "after",
+    "ms": 0
+   },
    {
     "kind": "after",
     "ms": 0
@@ -111,7 +138,7 @@
            "dimColor": true
           },
           "children": [
-           "scanned never",
+           "scan never",
            ""
           ]
          },
@@ -134,9 +161,12 @@
         "type": "Text",
         "props": {},
         "children": [
-         "No setup.json yet in ",
+         "no_data",
+         " ",
          "/Users/dev/.claude/effort-board/control",
-         ": press Rescan."
+         "/setup.json : ",
+         "press_rescan",
+         "."
         ]
        }
       ]
@@ -164,7 +194,7 @@
            "dimColor": true
           },
           "children": [
-           "scanned never",
+           "scan never",
            ""
           ]
          },
@@ -187,9 +217,12 @@
         "type": "Text",
         "props": {},
         "children": [
-         "No usage.json yet in ",
+         "no_data",
+         " ",
          "/Users/dev/.claude/effort-board/control",
-         ": press Rescan."
+         "/usage.json : ",
+         "press_rescan",
+         "."
         ]
        }
       ]
@@ -217,7 +250,7 @@
            "dimColor": true
           },
           "children": [
-           "scanned never",
+           "scan never",
            ""
           ]
          },
@@ -240,9 +273,12 @@
         "type": "Text",
         "props": {},
         "children": [
-         "No practices.json yet in ",
+         "no_data",
+         " ",
          "/Users/dev/.claude/effort-board/control",
-         ": press Rescan."
+         "/practices.json : ",
+         "press_rescan",
+         "."
         ]
        }
       ]
@@ -270,7 +306,7 @@
            "dimColor": true
           },
           "children": [
-           "scanned never",
+           "scan never",
            ""
           ]
          },
@@ -299,6 +335,61 @@
       ]
      },
      "title": "HISTORY"
+    },
+    "control-config": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "scan never",
+           ""
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "rescan",
+           "hotkey": "r",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           "Rescan"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "wrap"
+        },
+        "children": [
+         "Pas encore de données dans ",
+         "/Users/dev/.claude/effort-board/control",
+         "/config-claude.json : appuie sur Rescan."
+        ]
+       }
+      ]
+     },
+     "title": "CONFIG"
     }
    }
   },
@@ -318,7 +409,10 @@
    "$.ui.open(control-usage)",
    "$.ui.open(control-practices)",
    "$.ui.open(control-history)",
-   "/control → control: opened SETUP, USAGE, PRACTICES, HISTORY · scanning (data never)"
+   "$.ui.open(control-config)",
+   "/control → control: opened SETUP, USAGE, PRACTICES, HISTORY, CONFIG · scanning (data never)",
+   "$.ui.open(control-config)",
+   "/config-claude → config-claude: CONFIG ouvert · scan en cours"
   ],
   "console": [],
   "warnings": []
@@ -329,7 +423,9 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=config-claude}",
    "command.run{command=control}",
+   "ui.render{component=Pane, requestId=?}",
    "ui.render{component=Pane, requestId=?}",
    "ui.render{component=Pane, requestId=?}",
    "ui.render{component=Pane, requestId=?}",
@@ -337,18 +433,26 @@
   ],
   "calls": [
    "$.clock.after (via scanSoon)",
+   "$.command.list",
    "$.command.register",
    "$.env.get (via loadConfig)",
    "$.fs.read (via readJson)",
    "$.process.run (via scan)",
    "$.state.get",
    "$.state.set",
+   "$.ui.close",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast (via scan)"
   ],
   "stateReads": [
+   "control.cfgItem",
+   "control.cfgOpen",
+   "control.cfgPage",
+   "control.cfgQuery",
+   "control.cfgRaw",
    "control.error",
+   "control.rule",
    "control.scanning",
    "control.section",
    "control.showReference",
@@ -356,7 +460,13 @@
    "control.window"
   ],
   "stateWrites": [
+   "control.cfgItem",
+   "control.cfgOpen",
+   "control.cfgPage",
+   "control.cfgQuery",
+   "control.cfgRaw",
    "control.error",
+   "control.rule",
    "control.scanning",
    "control.section",
    "control.showReference",
@@ -378,7 +488,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: control.tick, control.scanning, control.error, control.window, control.section, control.showReference"
+     "types ./types/index.d.ts declares state: control.cfgOpen, control.cfgItem, control.cfgQuery, control.cfgRaw, control.cfgPage, control.tick, control.scanning, control.error, control.window, control.section, control.showReference, control.rule"
     ],
     "gatingHooks": []
    },
@@ -389,13 +499,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=control}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx hooks: session.start, command.run{command=config-claude}, command.run{command=control}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}",
+      "./register.tsx answers its own command: command.run{command=config-claude}",
       "./register.tsx answers its own command: command.run{command=control}",
-      "./register.tsx calls: $.clock.after (via scanSoon), $.command.register, $.env.get (via loadConfig), $.fs.read (via readJson), $.process.run (via scan), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast (via scan)",
+      "./register.tsx calls: $.clock.after (via scanSoon), $.command.list, $.command.register, $.env.get (via loadConfig), $.fs.read (via readJson), $.process.run (via scan), $.state.get, $.state.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast (via scan)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, USERPROFILE",
-      "./register.tsx state writes: control.error, control.scanning, control.section, control.showReference, control.tick, control.window",
-      "./register.tsx state reads: control.error, control.scanning, control.section, control.showReference, control.tick, control.window"
+      "./register.tsx state writes: control.cfgItem, control.cfgOpen, control.cfgPage, control.cfgQuery, control.cfgRaw, control.error, control.rule, control.scanning, control.section, control.showReference, control.tick, control.window",
+      "./register.tsx state reads: control.cfgItem, control.cfgOpen, control.cfgPage, control.cfgQuery, control.cfgRaw, control.error, control.rule, control.scanning, control.section, control.showReference, control.tick, control.window"
      ],
      "gatingHooks": []
     }
@@ -403,5 +514,5 @@
    "advice": []
   }
  },
- "sourceHash": "17b7959e62db7de"
+ "sourceHash": "c7b6eadab5bd6b5"
 }

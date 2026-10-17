@@ -1,12 +1,9 @@
 {
  "slug": "cookys-autopilot",
- "generatedAt": "2026-10-16T14:15:53.665Z",
+ "generatedAt": "2026-10-17T13:05:01.357Z",
  "harness": {
   "ok": true,
   "hooks": [
-   {
-    "event": "session.start"
-   },
    {
     "event": "session.end"
    },
@@ -22,12 +19,47 @@
      "component": "Pane",
      "requestId": "autopilot-live"
     }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__autopilot__show"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "show"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "autopilot-viewer"
+    }
+   },
+   {
+    "event": "session.start"
    }
   ],
-  "commands": [],
-  "tools": [],
+  "commands": [
+   {
+    "name": "show",
+    "description": "Show a file or a git diff in a window (the text does not go to the model)",
+    "argumentHint": "<path[:line]> | diff <git diff arguments>"
+   }
+  ],
+  "tools": [
+   {
+    "name": "show",
+    "description": "Show a file or a git diff to the USER in a window on their screen. Use it when the user asks to see, open or look at a file or a diff, instead of reading it and retyping it. The content is displayed to the user only and is NOT returned to you: you get one line saying what was shown. If you need to analyze the content yourself, read the file or run the diff separately. Give exactly one of: path (optionally start and end, 1-based inclusive line numbers), or diff (the arguments after \"git diff\", one string each, e.g. [\"HEAD~1\"] or [\"HEAD~1\", \"--\", \"src/a.ts\"])."
+   }
+  ],
   "panes": [],
-  "toasts": [],
+  "toasts": [
+   "Nothing to show yet. Type /show <path> or /show diff <arguments>."
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
@@ -45,7 +77,10 @@
    "$.agent.list": 1,
    "$.state.get": 2,
    "$.ui.invalidate": 1,
-   "$.ui.resolve": 3
+   "$.ui.resolve": 4,
+   "$.tool.register": 1,
+   "$.command.register": 1,
+   "$.ui.toast": 1
   },
   "timers": [
    {
@@ -438,6 +473,38 @@
       ]
      },
      "title": "autopilot-live"
+    },
+    "autopilot-viewer": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "key": "name",
+         "wrap": "truncate-start"
+        },
+        "children": [
+         ""
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "hint",
+         "dimColor": true
+        },
+        "children": [
+         "Esc closes   arrows, PgUp, PgDn, Home, End scroll"
+        ]
+       }
+      ]
+     },
+     "title": "autopilot-viewer"
     }
    }
   },
@@ -452,7 +519,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/show → "
   ],
   "console": [],
   "warnings": []
@@ -501,19 +569,25 @@
    "Shell command uses ${CLAUDE_PLUGIN_ROOT} without quotes: node ${CLAUDE_PLUGIN_ROOT}/hooks/awaiting-owner.js. If the expanded path contains a space the command can split into several words and fail. Wrap the placeholder in double quotes, or use exec form: {\"command\": \"<executable>\", \"args\": [\"${CLAUDE_PLUGIN_ROOT}/...\"]}."
   ],
   "hooks": [
-   "session.start",
    "session.end",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane, requestId=autopilot-live}"
+   "ui.render{component=Pane, requestId=autopilot-live}",
+   "tool.call{tool=?}",
+   "command.run{command=show}",
+   "ui.render{component=Pane, requestId=?}",
+   "session.start"
   ],
   "calls": [
    "$.agent.list (via readActivity)",
-   "$.clock.every",
+   "$.clock.every (via startLive)",
    "$.clock.now (via refresh",
    "sendDecide)",
-   "$.config.list (via claudeLanguage)",
+   "$.command.register (via startViewer)",
+   "$.config.list (via claudeLanguage",
+   "localeOf)",
    "$.env.get (via buildSnapshot",
    "fuseModeOf",
+   "localeOf",
    "pollAdvisories",
    "readAccountQuota",
    "resolveT)",
@@ -523,13 +597,18 @@
    "$.fs.list (via findJobDate",
    "receiptStart",
    "resolveScope)",
-   "$.fs.read (via readText)",
+   "$.fs.read (via localeOf",
+   "readText",
+   "show)",
    "$.fs.stat (via readAccountQuota",
    "readActivity",
-   "resolveScope)",
-   "$.process.run (via cleanPress)",
+   "resolveScope",
+   "show)",
+   "$.process.run (via cleanPress",
+   "show)",
    "$.prompt.submit (via sendDecide)",
    "$.session.cwd (via cleanWorktrees",
+   "cwdPath",
    "orphanResidueCount",
    "resolveScope)",
    "$.session.id (via buildSnapshot",
@@ -539,13 +618,14 @@
    "$.session.usage (via readAccountQuota)",
    "$.state.get",
    "$.state.set",
+   "$.tool.register (via startViewer)",
+   "$.ui.close (via show)",
    "$.ui.focus (via ringToNext)",
    "$.ui.invalidate",
+   "$.ui.log",
    "$.ui.open",
    "$.ui.panes",
-   "$.ui.resolve",
-   "$.ui.toast (via pollAdvisories",
-   "refresh)"
+   "$.ui.resolv… [+26 chars]"
   ],
   "stateReads": [
    "autopilot.decide"
@@ -774,18 +854,27 @@
       }
      ],
      "notes": [
-      "../mods/live/register.ts hooks: session.start, session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=autopilot-live}",
-      "../mods/live/register.ts calls: $.agent.list (via readActivity), $.clock.every, $.clock.now (via refresh, sendDecide), $.config.list (via claudeLanguage), $.env.get (via buildSnapshot, fuseModeOf, pollAdvisories, readAccountQuota, resolveT), $.fs.exists (via cleanPress, cleanWorktrees, readAccountQuota), $.fs.list (via findJobDate, receiptStart, resolveScope), $.fs.read (via readText), $.fs.stat (via readAccountQuota, readActivity, resolveScope), $.process.run (via cleanPress), $.prompt.submit (via sendDecide), $.session.cwd (via cleanWorktrees, orphanResidueCount, resolveScope), $.session.id (via buildSnapshot, pollAdvisories, refresh), $.session.messages (via refresh), $.session.usage (via readAccountQuota), $.state.get, $.state.set, $.ui.focus (via ringToNext), $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via pollAdvisories, refresh)",
-      "../mods/live/register.ts env writes: nothing",
-      "../mods/live/register.ts env reads: AUTOPILOT_COST_FUSE_MODE, AUTOPILOT_LOCALE, CLAUDE_CONFIG_DIR, HOME, LANG, LC_ALL",
-      "../mods/live/register.ts state writes: autopilot.decide",
-      "../mods/live/register.ts state reads: autopilot.decide"
+      "../mods/register.ts hooks: session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=autopilot-live}, tool.call{tool=?}, command.run{command=show}, ui.render{component=Pane, requestId=?}, session.start",
+      "../mods/register.ts answers its own command: command.run{command=show}",
+      "../mods/register.ts gating hook without .catch: tool.call{tool=?}",
+      "../mods/register.ts calls: $.agent.list (via readActivity), $.clock.every (via startLive), $.clock.now (via refresh, sendDecide), $.command.register (via startViewer), $.config.list (via claudeLanguage, localeOf), $.env.get (via buildSnapshot, fuseModeOf, localeOf, pollAdvisories, readAccountQuota, resolveT), $.fs.exists (via cleanPress, cleanWorktrees, readAccountQuota), $.fs.list (via findJobDate, receiptStart, resolveScope), $.fs.read (via localeOf, readText, show), $.fs.stat (via readAccountQuota, readActivity, resolveScope, show), $.process.run (via cleanPress, show), $.prompt.submit (via sendDecide), $.session.cwd (via cleanWorktrees, cwdPath, orphanResidueCount, resolveScope), $.session.id (via buildSnapshot, pollAdvisories, refresh), $.session.messages (via refresh), $.session.usage (via readAccountQuota), $.state.get, $.state.set, $.tool.register (via startViewer), $.ui.close (via show), $.ui.focus (via ringToNext), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolv… [+26 chars]",
+      "../mods/register.ts env writes: nothing",
+      "../mods/register.ts env reads: AUTOPILOT_COST_FUSE_MODE, AUTOPILOT_LOCALE, CLAUDE_CONFIG_DIR, HOME, LANG, LC_ALL",
+      "../mods/register.ts state writes: autopilot.decide",
+      "../mods/register.ts state reads: autopilot.decide"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "../mods/register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "5713f26043c14d37"
+ "sourceHash": "e481bc9dfd21b6b6"
 }

@@ -1,0 +1,217 @@
+{
+ "slug": "joeldg-claude-mods-usage-meter",
+ "generatedAt": "2026-10-17T13:05:32.542Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.append"
+   },
+   {
+    "event": "classic.StopFailure"
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "mcp__usage-meter__usage_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__usage-meter__usage_status"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "meter"
+    }
+   },
+   {
+    "event": "session.end"
+   }
+  ],
+  "commands": [
+   {
+    "name": "meter",
+    "description": "The plan's five-hour usage across every session: effective tokens, the share of the limit, the reset, each session's share, the limit hits, the weights",
+    "immediate": true,
+    "output": "Usage in the last 5h, all sessions: 0 eff (no turns counted yet)\nEstimate: no limit hit seen yet, so the cap is unknown until the first\nAPI five-hour window: no reading yet\nSessions in the window: 0\nLimit hits: none yet\nWeights: eff = input + 0.1·cache read + 2·cache write + 5·output, an estimate of what the session limit meters; the API line is the limit’s own reading.\nSettings: window 5h · refresh every 30s · warn at 80%"
+   }
+  ],
+  "tools": [
+   {
+    "name": "usage_status",
+    "description": "The plan's rolling five-hour usage across every Claude Code session on this Mac: effective tokens in the window, the share of the limit used (the API's own reading when fresh, else the estimate against the last limit hit), when the window resets, each session’s share and the limit hits seen. Check it before fanning out subagents or starting optional work when the budget is tight; it reads the shared files and makes no model call."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.env.get": 1,
+   "$.clock.now": 4,
+   "$.fs.list": 3,
+   "$.fs.read": 4,
+   "$.fs.write": 2,
+   "$.ui.status": 1,
+   "$.clock.every": 1,
+   "$.session.usage": 1,
+   "$.session.id": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   }
+  ],
+  "sites": {},
+  "script": [
+   "$.fs.write(/Users/dev/.claude/usage-meter/summary.json)",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "$.fs.write(/Users/dev/.claude/usage-meter/turns/preview-session.jsonl)",
+   "turn.complete",
+   "/meter → Usage in the last 5h, all sessions: 0 eff (no turns counted yet)\nEstimate: no li…"
+  ],
+  "console": [],
+  "status": "usage 5h: 0 eff",
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.complete",
+   "session.append",
+   "classic.StopFailure",
+   "tool.check{tool=mcp__usage-meter__usage_status}",
+   "tool.call{tool=mcp__usage-meter__usage_status}",
+   "command.run{command=meter}",
+   "session.end"
+  ],
+  "calls": [
+   "$.clock.every (via ensureTicker)",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via where)",
+   "$.fs.list (via readWindow)",
+   "$.fs.read (via readText)",
+   "$.fs.write (via doRefresh",
+   "onLimit",
+   "record)",
+   "$.session.id (via whoAmI)",
+   "$.session.usage (via apiReading)",
+   "$.state.get (via alerts)",
+   "$.state.set (via onLimit",
+   "warn)",
+   "$.tool.register",
+   "$.ui.log (via debug)",
+   "$.ui.status (via showStatus)",
+   "$.ui.toast (via onLimit",
+   "warn)"
+  ],
+  "stateReads": [
+   "usage-meter.alerts"
+  ],
+  "stateWrites": [
+   "usage-meter.alerts"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/joeldg-claude-mods-usage-meter/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/joeldg-claude-mods-usage-meter/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: usage-meter.alerts"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/joeldg-claude-mods-usage-meter/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, turn.complete, session.append, classic.StopFailure, tool.check{tool=mcp__usage-meter__usage_status}, tool.call{tool=mcp__usage-meter__usage_status}, command.run{command=meter}, session.end",
+      "./register.ts hooks on classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook without .catch: session.append",
+      "./register.ts gating hook without .catch: classic.StopFailure",
+      "./register.ts gating hook without .catch: tool.check{tool=mcp__usage-meter__usage_status}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__usage-meter__usage_status}",
+      "./register.ts gating hook without .catch: command.run{command=meter}",
+      "./register.ts calls: $.clock.every (via ensureTicker), $.clock.now, $.command.register, $.env.get (via where), $.fs.list (via readWindow), $.fs.read (via readText), $.fs.write (via doRefresh, onLimit, record), $.session.id (via whoAmI), $.session.usage (via apiReading), $.state.get (via alerts), $.state.set (via onLimit, warn), $.tool.register, $.ui.log (via debug), $.ui.status (via showStatus), $.ui.toast (via onLimit, warn)",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: HOME",
+      "./register.ts state writes: usage-meter.alerts",
+      "./register.ts state reads: usage-meter.alerts"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.StopFailure",
+       "hook": "classic.StopFailure",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=mcp__usage-meter__usage_status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__usage-meter__usage_status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=meter}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "e8c04b9785e32cc2"
+}

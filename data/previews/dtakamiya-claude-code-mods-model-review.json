@@ -1,6 +1,6 @@
 {
  "slug": "dtakamiya-claude-code-mods-model-review",
- "generatedAt": "2026-10-16T14:19:28.663Z",
+ "generatedAt": "2026-10-17T13:06:09.095Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,12 @@
     "event": "session.measure"
    },
    {
+    "event": "classic.PreModelSwitch"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
     "event": "turn.start"
    },
    {
@@ -27,6 +33,15 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "prompt.attachment",
+    "matcher": {
+     "type": "plan_mode"
+    }
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "ui.render",
@@ -40,6 +55,7 @@
    {
     "name": "model-review",
     "description": "セッションのモデル・effort・トークン・推定コストと、モデル選択の妥当性を表示する（読み取り専用）",
+    "argumentHint": "[copy|text|help]",
     "output": "モデル振り返りペインを開きました。"
    }
   ],
@@ -59,7 +75,10 @@
    "$.session.usage": 2,
    "$.state.get": 6,
    "$.state.set": 4,
+   "$.clock.now": 14,
+   "$.session.model": 1,
    "$.ui.invalidate": 11,
+   "$.ui.status": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -77,35 +96,44 @@
        {
         "type": "Text",
         "props": {
-         "wrap": "truncate-end"
+         "bold": true,
+         "wrap": "wrap",
+         "color": "success"
         },
         "children": [
+         "✓ 結論: 目立った指摘なし"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "wrap"
+        },
+        "children": [
+         "推定 ",
          {
           "type": "Text",
           "props": {
            "bold": true
           },
           "children": [
-           "1 ターン"
+           "$0.0777〜$0.0906"
           ]
          },
          {
           "type": "Text",
           "props": {
-           "color": "inactive",
-           "dimColor": true
+           "color": "subtle"
           },
           "children": [
-           "  ·  サブエージェント 0  ·  推定 "
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "$0.0777"
+           "  ·  1 ターン  ·  サブエージェント 0"
           ]
          }
         ]
@@ -121,10 +149,10 @@
         "type": "Text",
         "props": {
          "bold": true,
-         "wrap": "truncate-end"
+         "wrap": "wrap"
         },
         "children": [
-         "▎妥当性（参考）"
+         "▎妥当性（参考）· 見直し候補の内訳"
         ]
        },
        {
@@ -161,7 +189,7 @@
         "type": "Text",
         "props": {
          "bold": true,
-         "wrap": "truncate-end"
+         "wrap": "wrap"
         },
         "children": [
          "▎モデル × effort（コスト比）"
@@ -176,7 +204,7 @@
          {
           "type": "Text",
           "props": {
-           "wrap": "truncate-end"
+           "wrap": "wrap"
           },
           "children": [
            {
@@ -208,8 +236,7 @@
            {
             "type": "Text",
             "props": {
-             "color": "inactive",
-             "dimColor": true
+             "color": "subtle"
             },
             "children": [
              "  1 ターン"
@@ -220,9 +247,18 @@
          {
           "type": "Text",
           "props": {
-           "wrap": "truncate-end"
+           "wrap": "wrap"
           },
           "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "  $0.0777"
+            ]
+           },
            {
             "type": "Text",
             "props": {},
@@ -236,7 +272,7 @@
              "color": "warning"
             },
             "children": [
-             "██████████████"
+             "███████████"
             ]
            },
            {
@@ -252,17 +288,7 @@
            {
             "type": "Text",
             "props": {
-             "bold": true
-            },
-            "children": [
-             "  $0.0777"
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "color": "inactive",
-             "dimColor": true
+             "color": "subtle"
             },
             "children": [
              "  100%"
@@ -273,12 +299,21 @@
          {
           "type": "Text",
           "props": {
-           "color": "inactive",
-           "dimColor": true,
-           "wrap": "truncate-end"
+           "color": "subtle",
+           "wrap": "wrap"
           },
           "children": [
-           "  ヒット 93% · 入力 2,100 · 出力 1,480 · キャッシュ 読 91,000 / 書 4,300"
+           "  ヒット 93% · 入力 2,100 · 出力 1,480"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "subtle",
+           "wrap": "wrap"
+          },
+          "children": [
+           "  キャッシュ 読 91,000 / 書 4,300"
           ]
          }
         ]
@@ -294,45 +329,53 @@
         "type": "Text",
         "props": {
          "bold": true,
-         "wrap": "truncate-end"
+         "wrap": "wrap"
         },
         "children": [
          "▎高コストターン"
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "wrap": "truncate-end"
+         "flexDirection": "column"
         },
         "children": [
          {
           "type": "Text",
           "props": {
-           "bold": true,
-           "color": "warning"
+           "wrap": "wrap"
           },
           "children": [
-           "opus-5-5"
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "warning"
+            },
+            "children": [
+             "opus-5-5"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "  $0.0777"
+            ]
+           }
           ]
          },
          {
           "type": "Text",
           "props": {
-           "bold": true
+           "color": "subtle",
+           "wrap": "wrap"
           },
           "children": [
-           "  $0.0777"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "color": "inactive",
-           "dimColor": true
-          },
-          "children": [
-           "  turn-1 · メイン · ツール 9 回 · 42000 ms"
+           "  #1（たった今） · ツール 9 回 · 42 秒"
           ]
          }
         ]
@@ -348,7 +391,54 @@
         "type": "Text",
         "props": {
          "bold": true,
-         "wrap": "truncate-end"
+         "wrap": "wrap"
+        },
+        "children": [
+         "▎いま切り替えたら（目安）"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "subtle",
+         "wrap": "wrap"
+        },
+        "children": [
+         "  ・haiku-5-5 へ: 再構築 +$0.0005 · 1 ターンあたり -$0.0753 · 約 1 ターンで回収"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "subtle",
+         "wrap": "wrap"
+        },
+        "children": [
+         "  ・sonnet-5-5 へ: 再構築 +$0.0103 · 1 ターンあたり -$0.0388 · 約 1 ターンで回収"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "subtle",
+         "wrap": "wrap"
+        },
+        "children": [
+         "直近のメインのターンのトークン内訳を各モデルの単価で置き換えた目安です。実際の使用量・キャッシュの温度・effort の違いは含みません。"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true,
+         "wrap": "wrap"
         },
         "children": [
          "▎コスト"
@@ -363,8 +453,7 @@
          {
           "type": "Text",
           "props": {
-           "color": "inactive",
-           "dimColor": true
+           "color": "subtle"
           },
           "children": [
            "コスト  "
@@ -374,9 +463,87 @@
           "type": "Text",
           "props": {},
           "children": [
-           "推定 $0.0777〜$0.0906 / 実 $0.0000（読み込み後）/ 差 -$0.0777"
+           "API 換算の推定 $0.0777〜$0.0906 / 実 $0.0000（読み込み後）/ 差 -$0.0777"
           ]
          }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "subtle"
+          },
+          "children": [
+           "使用率 5h  "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "31%"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "subtle",
+         "wrap": "wrap"
+        },
+        "children": [
+         "金額は API 換算の参考値で、請求額ではありません。サブスクの枠は上の使用率で見てください（ペースは直近の測定からの目安で、上限への到達を断定しません）"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "subtle"
+          },
+          "children": [
+           "内訳  "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "出力 38% · 書込 28% · 読込 23% · 入力 11%"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "subtle",
+         "wrap": "wrap"
+        },
+        "children": [
+         "内訳の合計 $0.0777（推定の下限と同じ基準。書込は 5 分単価。1 時間 TTL ならもっと大きくなる幅があります）"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "subtle",
+         "wrap": "wrap"
+        },
+        "children": [
+         "用語  ヒット率: プロンプトのうちキャッシュから読んだ割合（高いほど安い） / 読み込み後: この Mod を読み込んでからの実コスト / 差（実コスト − 推定）: + は推定より実額が大きい"
         ]
        },
        {
@@ -389,23 +556,31 @@
        {
         "type": "Text",
         "props": {
-         "color": "inactive",
-         "dimColor": true,
+         "color": "subtle",
          "wrap": "wrap"
         },
         "children": [
-         "推定に含まれないもの: fast mode の割増、advisor の費用（未確認）。キャッシュ書込の TTL は分からないため、推定は 5 分単価（下限）〜1 時間単価（上限）の幅で示します。"
+         "推定に含まれないもの: fast mode の割増、advisor の費用（usage に載らず取得できないため含まれません。Claude Code の更新時に再確認します）。キャッシュ書込の TTL は分からないため、推定は 5 分単価（下限）〜1 時間単価（上限）の幅で示します。"
         ]
        },
        {
         "type": "Text",
         "props": {
-         "color": "inactive",
-         "dimColor": true,
+         "color": "subtle",
          "wrap": "wrap"
         },
         "children": [
          "軽作業 = ツール 3 回以下・編集なし・出力 1000 tokens 以下 / 重い = ツール 10 回以上・長時間・エラー"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "subtle",
+         "wrap": "wrap"
+        },
+        "children": [
+         "/model-review で更新"
         ]
        }
       ]
@@ -430,6 +605,7 @@
    "/model-review → モデル振り返りペインを開きました。"
   ],
   "console": [],
+  "status": "実コスト $0.42 · 5h 31%",
   "warnings": []
  },
  "validate": {
@@ -440,20 +616,31 @@
    "session.start",
    "command.run{command=model-review}",
    "session.measure",
+   "classic.PreModelSwitch",
+   "agent.spawn",
    "turn.start",
    "turn.step",
    "tool.call",
    "turn.complete",
+   "prompt.attachment{type=plan_mode}",
+   "session.compact",
    "ui.render{component=Pane, requestId=model-review}"
   ],
   "calls": [
+   "$.agent.list",
+   "$.clock.now",
    "$.command.register",
+   "$.session.model",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.ui.copy",
    "$.ui.invalidate",
+   "$.ui.log",
    "$.ui.open",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
   ],
   "stateReads": [
    "model-review.review"
@@ -484,19 +671,41 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=model-review}, session.measure, turn.start, turn.step, tool.call, turn.complete, ui.render{component=Pane, requestId=model-review}",
+      "./register.tsx hooks: session.start, command.run{command=model-review}, session.measure, classic.PreModelSwitch, agent.spawn, turn.start, turn.step, tool.call, turn.complete, prompt.attachment{type=plan_mode}, session.compact, ui.render{component=Pane, requestId=model-review}",
+      "./register.tsx hooks on classic.PreModelSwitch, prompt.attachment, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=model-review}",
-      "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.command.register, $.session.usage, $.state.get, $.state.set, $.ui.invalidate, $.ui.open, $.ui.resolve",
+      "./register.tsx gating hook with .catch: classic.PreModelSwitch",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook with .catch: session.compact",
+      "./register.tsx calls: $.agent.list, $.clock.now, $.command.register, $.session.model, $.session.usage, $.state.get, $.state.set, $.ui.copy, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
       "./register.tsx state writes: model-review.review",
       "./register.tsx state reads: model-review.review"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
+       "pattern": "classic.PreModelSwitch",
+       "hook": "classic.PreModelSwitch",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
       }
      ]
     }
@@ -504,5 +713,5 @@
    "advice": []
   }
  },
- "sourceHash": "83e3794b22b99602"
+ "sourceHash": "4127562ce1038724"
 }

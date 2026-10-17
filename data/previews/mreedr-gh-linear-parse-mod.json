@@ -1,6 +1,6 @@
 {
  "slug": "mreedr-gh-linear-parse-mod",
- "generatedAt": "2026-10-16T14:20:57.324Z",
+ "generatedAt": "2026-10-17T13:06:40.285Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -20,6 +20,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__gh-linear-parse-mod__set_status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__gh-linear-parse-mod__group_prs"
     }
    },
    {
@@ -47,7 +53,7 @@
   "commands": [
    {
     "name": "gh-linear-parse-mod",
-    "description": "Toggle the GitHub/Linear links band (args: add <url>, on, off, clear, reset, refresh, watch on|off, color <color> [fill])",
+    "description": "Toggle the GitHub/Linear links band (args: add <url>, group [how], group clear, on, off, clear, reset, refresh, watch on|off, color <color> [fill])",
     "output": "Session links hidden."
    }
   ],
@@ -59,6 +65,10 @@
    {
     "name": "set_status",
     "description": "Sets this session's status line at the top of the gh-linear-parse-mod links band: a short note of what you are doing or waiting on (for example \"waiting on CI for #812\"), under 80 characters. Replaces any earlier status; an empty or missing text clears it. Set it when the person would want to see it at a glance, and clear it when the work is done."
+   },
+   {
+    "name": "group_prs",
+    "description": "Sets how the GitHub section of the gh-linear-parse-mod links band is grouped: a list of groups, top to bottom, each with an optional label (a divider such as \"round 1\" or \"blocked\"), an optional line of text, and optional PRs (PR links, owner/repo#N, or repo#N for a PR already in the band). A group with only a label or text is informational, such as a step between rounds. Sends the whole layout each time and replaces the last one; an empty list clears it. PRs not in any group show under \"other\". Use it only when the person asks you to group or order PRs (for example through /gh-linear-parse-mod group), or to keep a grouping they asked for current."
    }
   ],
   "panes": [],
@@ -73,7 +83,7 @@
    "$.state.set": 3,
    "$.session.id": 1,
    "$.clock.after": 3,
-   "$.tool.register": 2,
+   "$.tool.register": 3,
    "$.store.keys": 1,
    "$.ui.invalidate": 1,
    "$.store.set": 1
@@ -123,6 +133,7 @@
    "session.end",
    "tool.call{tool=mcp__gh-linear-parse-mod__links_band}",
    "tool.call{tool=mcp__gh-linear-parse-mod__set_status}",
+   "tool.call{tool=mcp__gh-linear-parse-mod__group_prs}",
    "command.run{command=gh-linear-parse-mod}",
    "prompt.submit",
    "turn.complete",
@@ -130,8 +141,7 @@
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
-   "$.clock.after (via backfillSoon",
-   "refreshSoon)",
+   "$.clock.after",
    "$.clock.every (via ensurePolling",
    "ensureWatching)",
    "$.clock.now",
@@ -141,6 +151,7 @@
    "ok",
    "openLink",
    "refresh)",
+   "$.prompt.submit",
    "$.session.id (via persist",
    "restore)",
    "$.session.messages (via backfill)",
@@ -161,11 +172,13 @@
    "gh-linear-parse-mod.bandColor",
    "gh-linear-parse-mod.dismissed",
    "gh-linear-parse-mod.hasBackfilled",
+   "gh-linear-parse-mod.hidesAwaitingReview",
    "gh-linear-parse-mod.isExpanded",
    "gh-linear-parse-mod.isHidden",
    "gh-linear-parse-mod.isWatching",
    "gh-linear-parse-mod.issueStatuses",
    "gh-linear-parse-mod.items",
+   "gh-linear-parse-mod.prGroups",
    "gh-linear-parse-mod.prStatuses",
    "gh-linear-parse-mod.refreshing"
   ],
@@ -174,11 +187,13 @@
    "gh-linear-parse-mod.bandColor",
    "gh-linear-parse-mod.dismissed",
    "gh-linear-parse-mod.hasBackfilled",
+   "gh-linear-parse-mod.hidesAwaitingReview",
    "gh-linear-parse-mod.isExpanded",
    "gh-linear-parse-mod.isHidden",
    "gh-linear-parse-mod.isWatching",
    "gh-linear-parse-mod.issueStatuses",
    "gh-linear-parse-mod.items",
+   "gh-linear-parse-mod.prGroups",
    "gh-linear-parse-mod.prStatuses",
    "gh-linear-parse-mod.refreshing"
   ],
@@ -194,7 +209,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: gh-linear-parse-mod.items, gh-linear-parse-mod.dismissed, gh-linear-parse-mod.isHidden, gh-linear-parse-mod.isExpanded, gh-linear-parse-mod.bandColor, gh-linear-parse-mod.hasBackfilled, gh-linear-parse-mod.prStatuses, gh-linear-parse-mod.issueStatuses, gh-linear-parse-mod.isWatching, gh-linear-parse-mod.refreshing, gh-linear-parse-mod.agentStatus"
+     "types ./types/index.d.ts declares state: gh-linear-parse-mod.items, gh-linear-parse-mod.dismissed, gh-linear-parse-mod.isHidden, gh-linear-parse-mod.isExpanded, gh-linear-parse-mod.bandColor, gh-linear-parse-mod.hasBackfilled, gh-linear-parse-mod.prStatuses, gh-linear-parse-mod.issueStatuses, gh-linear-parse-mod.isWatching, gh-linear-parse-mod.refreshing, gh-linear-parse-mod.agentStatus, gh-linear-parse-mod.prGroups, gh-linear-parse-mod.hidesAwaitingReview"
     ],
     "gatingHooks": []
    },
@@ -205,15 +220,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, tool.call{tool=mcp__gh-linear-parse-mod__links_band}, tool.call{tool=mcp__gh-linear-parse-mod__set_status}, command.run{command=gh-linear-parse-mod}, prompt.submit, turn.complete, prompt.compose, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, session.end, tool.call{tool=mcp__gh-linear-parse-mod__links_band}, tool.call{tool=mcp__gh-linear-parse-mod__set_status}, tool.call{tool=mcp__gh-linear-parse-mod__group_prs}, command.run{command=gh-linear-parse-mod}, prompt.submit, turn.complete, prompt.compose, ui.render{component=AbovePrompt}",
       "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=gh-linear-parse-mod}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__gh-linear-parse-mod__links_band}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__gh-linear-parse-mod__set_status}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__gh-linear-parse-mod__group_prs}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after (via backfillSoon, refreshSoon), $.clock.every (via ensurePolling, ensureWatching), $.clock.now, $.command.register, $.mcp.call (via readIssue), $.process.run (via detectPlatform, ok, openLink, refresh), $.session.id (via persist, restore), $.session.messages (via backfill), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys, $.store.set, $.tool.list (via readIssue), $.tool.register, $.ui.invalidate, $.ui.resolve, $.ui.toast (via openLink)",
-      "./register.tsx state writes: gh-linear-parse-mod.agentStatus, gh-linear-parse-mod.bandColor, gh-linear-parse-mod.dismissed, gh-linear-parse-mod.hasBackfilled, gh-linear-parse-mod.isExpanded, gh-linear-parse-mod.isHidden, gh-linear-parse-mod.isWatching, gh-linear-parse-mod.issueStatuses, gh-linear-parse-mod.items, gh-linear-parse-mod.prStatuses, gh-linear-parse-mod.refreshing",
-      "./register.tsx state reads: gh-linear-parse-mod.agentStatus, gh-linear-parse-mod.bandColor, gh-linear-parse-mod.dismissed, gh-linear-parse-mod.hasBackfilled, gh-linear-parse-mod.isExpanded, gh-linear-parse-mod.isHidden, gh-linear-parse-mod.isWatching, gh-linear-parse-mod.issueStatuses, gh-linear-parse-mod.items, gh-linear-parse-mod.prStatuses, gh-linear-parse-mod.refreshing"
+      "./register.tsx calls: $.clock.after, $.clock.every (via ensurePolling, ensureWatching), $.clock.now, $.command.register, $.mcp.call (via readIssue), $.process.run (via detectPlatform, ok, openLink, refresh), $.prompt.submit, $.session.id (via persist, restore), $.session.messages (via backfill), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys, $.store.set, $.tool.list (via readIssue), $.tool.register, $.ui.invalidate, $.ui.resolve, $.ui.toast (via openLink)",
+      "./register.tsx state writes: gh-linear-parse-mod.agentStatus, gh-linear-parse-mod.bandColor, gh-linear-parse-mod.dismissed, gh-linear-parse-mod.hasBackfilled, gh-linear-parse-mod.hidesAwaitingReview, gh-linear-parse-mod.isExpanded, gh-linear-parse-mod.isHidden, gh-linear-parse-mod.isWatching, gh-linear-parse-mod.issueStatuses, gh-linear-parse-mod.items, gh-linear-parse-mod.prGroups, gh-linear-parse-mod.prStatuses, gh-linear-parse-mod.refreshing",
+      "./register.tsx state reads: gh-linear-parse-mod.agentStatus, gh-linear-parse-mod.bandColor, gh-linear-parse-mod.dismissed, gh-linear-parse-mod.hasBackfilled, gh-linear-parse-mod.hidesAwaitingReview, gh-linear-parse-mod.isExpanded, gh-linear-parse-mod.isHidden, gh-linear-parse-mod.isWatching, gh-linear-parse-mod.issueStatuses, gh-linear-parse-mod.items, gh-linear-parse-mod.prGroups, gh-linear-parse-mod.prStatuses, gh-linear-parse-mod.refreshing"
      ],
      "gatingHooks": [
       {
@@ -230,6 +246,12 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__gh-linear-parse-mod__group_prs}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
@@ -240,5 +262,5 @@
    "advice": []
   }
  },
- "sourceHash": "59f330a2827c6fec"
+ "sourceHash": "80b4c4723045c1ab"
 }

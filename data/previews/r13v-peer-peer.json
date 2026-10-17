@@ -1,6 +1,6 @@
 {
  "slug": "r13v-peer-peer",
- "generatedAt": "2026-10-16T14:16:16.280Z",
+ "generatedAt": "2026-10-17T13:05:09.925Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,27 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Spinner"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "room"
+    }
+   },
+   {
+    "event": "prompt.autocomplete",
+    "matcher": {
+     "token": "/^@/"
+    }
    },
    {
     "event": "tool.call",
@@ -26,6 +47,18 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "SessionMode"
     }
    },
@@ -36,9 +69,21 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "room",
+    "description": "peer: open or close the pane of this session's room",
+    "immediate": true,
+    "output": "peer: pane opened"
+   }
+  ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "peer",
+    "title": "peer"
+   }
+  ],
   "toasts": [],
   "logs": [
    "peer watch stopped: no output"
@@ -47,8 +92,9 @@
   "rewrites": [],
   "apiCalls": {
    "$.ui.invalidate": 1,
-   "$.state.get": 5,
+   "$.state.get": 7,
    "$.session.messages": 1,
+   "$.command.register": 1,
    "$.process.spawn": 1,
    "$.clock.every": 2,
    "$.process.run": 2,
@@ -56,7 +102,10 @@
    "$.state.set": 1,
    "$.session.cwd": 1,
    "$.clock.after": 1,
-   "$.ui.resolve": 1
+   "$.ui.panes": 1,
+   "$.ui.open": 1,
+   "$.ui.scroll": 1,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -73,10 +122,46 @@
    }
   ],
   "sites": {
-   "SessionMode": {
+   "AbovePrompt": {
     "ok": "engine"
    },
+   "Spinner": {
+    "ok": "engine"
+   },
+   "SessionMode": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "gap": 1
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "auto-accept edits"
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "peer-open",
+        "label": "👀 peer",
+        "plain": true,
+        "onPress": "[fn]"
+       },
+       "children": []
+      }
+     ]
+    }
+   },
    "UserMessage": {
+    "ok": "engine"
+   },
+   "ToolUse": {
     "ok": "engine"
    },
    "Pane": {
@@ -85,7 +170,8 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "column"
+       "flexDirection": "column",
+       "gap": 1
       },
       "children": [
        {
@@ -95,6 +181,27 @@
         },
         "children": [
          "No active peer room in this checkout. Start one with /peer:peer TASK."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "paddingY": "xs",
+         "paddingX": "xs"
+        },
+        "children": [
+         {
+          "type": "Input",
+          "props": {
+           "key": "new-room",
+           "label": "new room",
+           "placeholder": "task",
+           "submitLabel": "start",
+           "autoFocus": true,
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         }
         ]
        },
        {
@@ -126,7 +233,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.ui.open(peer)",
+   "/room → peer: pane opened"
   ],
   "console": [],
   "warnings": []
@@ -138,21 +247,32 @@
   "hooks": [
    "session.start",
    "turn.start",
+   "turn.complete",
+   "ui.render{component=Spinner}",
+   "command.run{command=room}",
+   "prompt.autocomplete{token=/\"^@\"/}",
    "tool.call{tool=Bash}",
    "ui.render{component=Pane, requestId=peer}",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=AbovePrompt}",
    "ui.render{component=SessionMode}",
    "ui.render{component=UserMessage}"
   ],
   "calls": [
    "$.clock.after",
    "$.clock.every (via begin)",
+   "$.command.register (via begin)",
+   "$.command.run",
    "$.fs.read (via readBoard)",
    "$.process.run (via loadBoards",
+   "loadDiff",
    "loadFiles",
    "loadOffset",
    "peer)",
    "$.process.spawn (via watch)",
+   "$.prompt.fill",
    "$.prompt.submit (via deliver)",
+   "$.prompt.suggest",
    "$.session.cwd (via loadFiles)",
    "$.session.messages (via restore)",
    "$.state.get (via get",
@@ -160,13 +280,14 @@
    "restore",
    "snapshot)",
    "$.state.set (via put)",
-   "$.ui.close",
-   "$.ui.invalidate (via begin",
-   "loadBoards",
-   "loadOffset)",
+   "$.ui.close (via togglePane)",
+   "$.ui.invalidate",
    "$.ui.log (via watch)",
+   "$.ui.notice",
+   "$.ui.notify (via notify)",
    "$.ui.open (via openPane)",
-   "$.ui.panes",
+   "$.ui.panes (via refresh",
+   "togglePane)",
    "$.ui.resolve",
    "$.ui.scroll (via toNewest)",
    "$.ui.toast"
@@ -200,9 +321,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, tool.call{tool=Bash}, ui.render{component=Pane, requestId=peer}, ui.render{component=SessionMode}, ui.render{component=UserMessage}",
+      "./register.tsx hooks: session.start, turn.start, turn.complete, ui.render{component=Spinner}, command.run{command=room}, prompt.autocomplete{token=/\"^@\"/}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=peer}, ui.render{component=ToolUse}, ui.render{component=AbovePrompt}, ui.render{component=SessionMode}, ui.render{component=UserMessage}",
+      "./register.tsx answers its own command: command.run{command=room}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.after, $.clock.every (via begin), $.fs.read (via readBoard), $.process.run (via loadBoards, loadFiles, loadOffset, peer), $.process.spawn (via watch), $.prompt.submit (via deliver), $.session.cwd (via loadFiles), $.session.messages (via restore), $.state.get (via get, put, restore, snapshot), $.state.set (via put), $.ui.close, $.ui.invalidate (via begin, loadBoards, loadOffset), $.ui.log (via watch), $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.scroll (via toNewest), $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.clock.every (via begin), $.command.register (via begin), $.command.run, $.fs.read (via readBoard), $.process.run (via loadBoards, loadDiff, loadFiles, loadOffset, peer), $.process.spawn (via watch), $.prompt.fill, $.prompt.submit (via deliver), $.prompt.suggest, $.session.cwd (via loadFiles), $.session.messages (via restore), $.state.get (via get, put, restore, snapshot), $.state.set (via put), $.ui.close (via togglePane), $.ui.invalidate, $.ui.log (via watch), $.ui.notice, $.ui.notify (via notify), $.ui.open (via openPane), $.ui.panes (via refresh, togglePane), $.ui.resolve, $.ui.scroll (via toNewest), $.ui.toast",
       "./register.tsx state writes: peer.state",
       "./register.tsx state reads: peer.state"
      ],
@@ -219,5 +341,5 @@
    "advice": []
   }
  },
- "sourceHash": "37e05fa2ccb4d0a6"
+ "sourceHash": "8744fbbc03c1a883"
 }

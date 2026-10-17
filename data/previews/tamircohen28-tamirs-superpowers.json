@@ -1,11 +1,21 @@
 {
  "slug": "tamircohen28-tamirs-superpowers",
- "generatedAt": "2026-10-07T15:22:11.047Z",
+ "generatedAt": "2026-10-17T13:05:23.616Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart",
+    "matcher": {
+     "source": [
+      "clear",
+      "resume",
+      "fork"
+     ]
+    }
    },
    {
     "event": "command.run",
@@ -50,6 +60,18 @@
     }
    },
    {
+    "event": "skill.prompt",
+    "matcher": {
+     "pluginName": "tamirs-superpowers"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__tamirs-superpowers__objective_status"
+    }
+   },
+   {
     "event": "prompt.submit"
    },
    {
@@ -75,11 +97,17 @@
    {
     "name": "objective",
     "description": "Show the active orchestration objective and its tasks (tamirs-superpowers)",
+    "argumentHint": "[objective-id]",
     "immediate": true,
     "output": "No objective is active (nothing under .dev-files/objectives). /plan-dev writes one."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "objective_status",
+    "description": "The active tamirs-superpowers orchestration objective and its tasks (status, role, branch, handoff) as JSON, read from .dev-files/objectives/. Pass `objective` to read a specific objective id instead of the active one."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
@@ -92,15 +120,19 @@
   ],
   "apiCalls": {
    "$.session.root": 1,
+   "$.session.version": 1,
    "$.session.repo": 1,
    "$.env.get": 3,
    "$.fs.exists": 2,
    "$.fs.read": 1,
+   "$.store.get": 2,
+   "$.state.get": 12,
+   "$.state.set": 5,
    "$.command.register": 1,
+   "$.tool.register": 1,
    "$.clock.now": 2,
-   "$.state.get": 11,
-   "$.state.set": 4,
    "$.clock.every": 1,
+   "$.store.delete": 1,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -185,6 +217,7 @@
   ],
   "hooks": [
    "session.start",
+   "classic.SessionStart{source=clear|resume|fork}",
    "command.run{command=objective}",
    "ui.render{component=Pane, requestId=objective}",
    "agent.spawn",
@@ -193,6 +226,8 @@
    "props.origin has {kind=task-notification}}",
    "session.measure",
    "ui.render{component=AbovePrompt}",
+   "skill.prompt{pluginName=tamirs-superpowers}",
+   "tool.call{tool=mcp__tamirs-superpowers__objective_status}",
    "prompt.submit",
    "turn.start",
    "tool.call",
@@ -201,6 +236,7 @@
    "attribution.text{kind=commit}"
   ],
   "calls": [
+   "$.agent.list",
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
@@ -211,22 +247,28 @@
    "$.model.classify",
    "$.session.repo",
    "$.session.root",
+   "$.session.version",
    "$.state.get",
    "$.state.set",
+   "$.store.delete",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
    "$.ui.invalidate",
+   "$.ui.notify",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
-   "tamirs-superpowers.dismissedAtPercent",
+   "tamirs-superpowers.dismissed",
    "tamirs-superpowers.limitWarning",
    "tamirs-superpowers.objective",
    "tamirs-superpowers.usage",
    "tamirs-superpowers.workers"
   ],
   "stateWrites": [
-   "tamirs-superpowers.dismissedAtPercent",
+   "tamirs-superpowers.dismissed",
    "tamirs-superpowers.limitWarning",
    "tamirs-superpowers.objective",
    "tamirs-superpowers.usage",
@@ -284,7 +326,7 @@
     "warnings": [],
     "notes": [
      "types ./mod/types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./mod/types/index.d.ts declares state: tamirs-superpowers.objective, tamirs-superpowers.usage, tamirs-superpowers.limitWarning, tamirs-superpowers.dismissedAtPercent, tamirs-superpowers.workers"
+     "types ./mod/types/index.d.ts declares state: tamirs-superpowers.objective, tamirs-superpowers.usage, tamirs-superpowers.limitWarning, tamirs-superpowers.dismissed, tamirs-superpowers.workers"
     ],
     "gatingHooks": []
    },
@@ -295,47 +337,63 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "../mod/register.tsx hooks: session.start, command.run{command=objective}, ui.render{component=Pane, requestId=objective}, agent.spawn, ui.render{component=Spinner}, ui.render{component=UserMessage, props.origin has {kind=task-notification}}, session.measure, ui.render{component=AbovePrompt}, prompt.submit, turn.start, tool.call, turn.complete, session.compact, attribution.text{kind=commit}",
+      "../mod/register.tsx hooks: session.start, classic.SessionStart{source=clear|resume|fork}, command.run{command=objective}, ui.render{component=Pane, requestId=objective}, agent.spawn, ui.render{component=Spinner}, ui.render{component=UserMessage, props.origin has {kind=task-notification}}, session.measure, ui.render{component=AbovePrompt}, skill.prompt{pluginName=tamirs-superpowers}, tool.call{tool=mcp__tamirs-superpowers__objective_status}, prompt.submit, turn.start, tool.call, turn.complete, session.compact, attribution.text{kind=commit}",
+      "../mod/register.tsx hooks on classic.SessionStart, skill.prompt, session.compact, attribution.text do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "../mod/register.tsx answers its own command: command.run{command=objective}",
-      "../mod/register.tsx gating hook without .catch: agent.spawn",
-      "../mod/register.tsx gating hook without .catch: prompt.submit",
-      "../mod/register.tsx gating hook without .catch: tool.call",
-      "../mod/register.tsx gating hook without .catch: session.compact",
-      "../mod/register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.model.classify, $.session.repo, $.session.root, $.state.get, $.state.set, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
+      "../mod/register.tsx gating hook with .catch: classic.SessionStart{source=clear|resume|fork}",
+      "../mod/register.tsx gating hook with .catch: agent.spawn",
+      "../mod/register.tsx gating hook with .catch: tool.call{tool=mcp__tamirs-superpowers__objective_status}",
+      "../mod/register.tsx gating hook with .catch: prompt.submit",
+      "../mod/register.tsx gating hook with .catch: tool.call",
+      "../mod/register.tsx gating hook with .catch: session.compact",
+      "../mod/register.tsx calls: $.agent.list, $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.model.classify, $.session.repo, $.session.root, $.session.version, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.invalidate, $.ui.notify, $.ui.open, $.ui.resolve, $.ui.toast",
       "../mod/register.tsx env writes: nothing",
       "../mod/register.tsx env reads: OBJECTIVES_ROOT, SUPERPOWERS_OBJECTIVE_ID, SUPERPOWERS_OBJECTIVE_STATE_DIRNAME",
-      "../mod/register.tsx state writes: tamirs-superpowers.dismissedAtPercent, tamirs-superpowers.limitWarning, tamirs-superpowers.objective, tamirs-superpowers.usage, tamirs-superpowers.workers",
-      "../mod/register.tsx state reads: tamirs-superpowers.dismissedAtPercent, tamirs-superpowers.limitWarning, tamirs-superpowers.objective, tamirs-superpowers.usage, tamirs-superpowers.workers"
+      "../mod/register.tsx state writes: tamirs-superpowers.dismissed, tamirs-superpowers.limitWarning, tamirs-superpowers.objective, tamirs-superpowers.usage, tamirs-superpowers.workers",
+      "../mod/register.tsx state reads: tamirs-superpowers.dismissed, tamirs-superpowers.limitWarning, tamirs-superpowers.objective, tamirs-superpowers.usage, tamirs-superpowers.workers"
      ],
      "gatingHooks": [
       {
        "module": "../mod/register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=clear|resume|fork}",
+       "hasCatch": true
+      },
+      {
+       "module": "../mod/register.tsx",
        "pattern": "agent.spawn",
        "hook": "agent.spawn",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "../mod/register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__tamirs-superpowers__objective_status}",
+       "hasCatch": true
       },
       {
        "module": "../mod/register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
-       "hasCatch": false
+       "hasCatch": true
       },
       {
        "module": "../mod/register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call",
-       "hasCatch": false
+       "hasCatch": true
       },
       {
        "module": "../mod/register.tsx",
        "pattern": "session.compact",
        "hook": "session.compact",
-       "hasCatch": false
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "bb08fb1501b204c8"
+ "sourceHash": "8c6e3403b949ee14"
 }

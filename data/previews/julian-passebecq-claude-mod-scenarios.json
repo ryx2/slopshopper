@@ -1,6 +1,6 @@
 {
  "slug": "julian-passebecq-claude-mod-scenarios",
- "generatedAt": "2026-10-16T14:20:11.421Z",
+ "generatedAt": "2026-10-17T13:06:23.637Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -28,7 +28,7 @@
    {
     "name": "scenarios",
     "description": "Scénarios d'agents: roles -> model, effort, unit, max parallel, with ready-to-paste snippets (args: [S1..] [prompt|agent|workflow|frontmatter|env])",
-    "argumentHint": "[scenario id] [prompt|agent|workflow|frontmatter|env]",
+    "argumentHint": "[scenario id] [prompt|agent|workflow|frontmatter|env] | vs [benchmark id] | close",
     "output": "scenarios: 0 scenario(s), 1 error(s) in the files · pane opened"
    }
   ],
@@ -45,10 +45,12 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.fs.read": 2,
-   "$.state.get": 4,
+   "$.state.get": 7,
+   "$.state.set": 1,
+   "$.fs.read": 4,
    "$.ui.open": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 1,
+   "$.env.get": 2
   },
   "timers": [],
   "sites": {
@@ -58,42 +60,40 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "column",
-       "gap": 1
+       "flexDirection": "column"
       },
       "children": [
        {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "Read-only guide. Edit scenarios.json or your own file (userConfig \"file\") to add S5 and more."
-        ]
-       },
-       {
         "type": "Box",
         "props": {
-         "flexDirection": "column"
+         "flexDirection": "row",
+         "gap": 1
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Button",
           "props": {
-           "color": "error",
-           "bold": true
+           "key": "tab-scenarios",
+           "plain": true,
+           "bold": true,
+           "dimColor": false,
+           "onPress": "[fn]"
           },
           "children": [
-           "1 error(s): those scenarios are left out"
+           "▸ Scénarios"
           ]
          },
          {
-          "type": "Text",
+          "type": "Button",
           "props": {
-           "color": "error"
+           "key": "tab-versus",
+           "plain": true,
+           "bold": false,
+           "dimColor": true,
+           "onPress": "[fn]"
           },
           "children": [
-           "· cannot read /plugins/scenarios/scenarios.json"
+           "Claude vs GPT"
           ]
          }
         ]
@@ -101,17 +101,62 @@
        {
         "type": "Box",
         "props": {
-         "flexDirection": "row",
-         "gap": 1,
-         "flexWrap": "wrap"
+         "flexDirection": "column",
+         "gap": 1
         },
-        "children": []
-       },
-       {
-        "type": "Text",
-        "props": {},
         "children": [
-         "No valid scenario. Fix the errors above."
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "Read-only guide. Edit scenarios.json or your own file (userConfig \"file\") to add S5 and more."
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "error",
+             "bold": true
+            },
+            "children": [
+             "1 error(s): those scenarios are left out"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "error"
+            },
+            "children": [
+             "· cannot read /plugins/scenarios/scenarios.json"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 1,
+           "flexWrap": "wrap"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "No valid scenario. Fix the errors above."
+          ]
+         }
         ]
        }
       ]
@@ -149,25 +194,35 @@
    "ui.render{component=Pane, requestId=scenarios}"
   ],
   "calls": [
+   "$.clock.now",
    "$.command.register",
    "$.env.get (via home)",
-   "$.fs.read (via readJson)",
+   "$.fs.read (via io",
+   "readJson)",
+   "$.fs.write (via io)",
    "$.state.get",
    "$.state.set",
+   "$.ui.close",
    "$.ui.copy",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
+   "scenarios.applyMsg",
+   "scenarios.bench",
    "scenarios.copied",
    "scenarios.kind",
-   "scenarios.selected"
+   "scenarios.selected",
+   "scenarios.tab"
   ],
   "stateWrites": [
+   "scenarios.applyMsg",
+   "scenarios.bench",
    "scenarios.copied",
    "scenarios.kind",
-   "scenarios.selected"
+   "scenarios.selected",
+   "scenarios.tab"
   ],
   "envReads": [
    "HOME",
@@ -184,7 +239,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: scenarios.selected, scenarios.kind, scenarios.copied"
+     "types ./types/index.d.ts declares state: scenarios.selected, scenarios.kind, scenarios.copied, scenarios.applyMsg, scenarios.tab, scenarios.bench"
     ],
     "gatingHooks": []
    },
@@ -198,11 +253,11 @@
       "./register.tsx hooks: session.start, command.run{command=scenarios}, agent.spawn, ui.render{component=Pane, requestId=scenarios}",
       "./register.tsx answers its own command: command.run{command=scenarios}",
       "./register.tsx gating hook with .catch: agent.spawn",
-      "./register.tsx calls: $.command.register, $.env.get (via home), $.fs.read (via readJson), $.state.get, $.state.set, $.ui.copy, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.now, $.command.register, $.env.get (via home), $.fs.read (via io, readJson), $.fs.write (via io), $.state.get, $.state.set, $.ui.close, $.ui.copy, $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, USERPROFILE",
-      "./register.tsx state writes: scenarios.copied, scenarios.kind, scenarios.selected",
-      "./register.tsx state reads: scenarios.copied, scenarios.kind, scenarios.selected"
+      "./register.tsx state writes: scenarios.applyMsg, scenarios.bench, scenarios.copied, scenarios.kind, scenarios.selected, scenarios.tab",
+      "./register.tsx state reads: scenarios.applyMsg, scenarios.bench, scenarios.copied, scenarios.kind, scenarios.selected, scenarios.tab"
      ],
      "gatingHooks": [
       {
@@ -217,5 +272,5 @@
    "advice": []
   }
  },
- "sourceHash": "29d1c231c272d980"
+ "sourceHash": "ce8c93735317da5"
 }

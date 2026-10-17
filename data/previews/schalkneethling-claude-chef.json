@@ -1,6 +1,6 @@
 {
  "slug": "schalkneethling-claude-chef",
- "generatedAt": "2026-10-08T15:54:41.304Z",
+ "generatedAt": "2026-10-17T13:06:50.448Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -26,6 +26,9 @@
     "event": "turn.complete"
    },
    {
+    "event": "ui.close"
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "chef"
@@ -34,21 +37,27 @@
    {
     "event": "ui.render",
     "matcher": {
-     "component": "AbovePrompt"
+     "component": "Pane",
+     "requestId": "chef-station"
     }
    }
   ],
   "commands": [
    {
     "name": "chef",
-    "description": "Show a station of the chef tray, or rescan your Claude Code history with backfill.",
-    "argumentHint": "[usage|trend|breakdown|activity|context|backfill]",
+    "description": "Open the Chef Station sidebar or one of its stations, or rescan your Claude Code history with backfill.",
+    "argumentHint": "[usage|trend|breakdown|activity|context|agents|backfill]",
     "immediate": true,
-    "output": "Chef tray: trend"
+    "output": "Chef Station is open."
    }
   ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "chef-station",
+    "title": "Chef Station"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
@@ -57,16 +66,20 @@
    "$.session.usage": 4,
    "$.session.root": 1,
    "$.session.model": 2,
-   "$.store.get": 5,
-   "$.state.get": 25,
-   "$.state.set": 13,
-   "$.clock.now": 6,
+   "$.store.get": 6,
+   "$.store.set": 2,
+   "$.store.delete": 1,
+   "$.state.get": 29,
+   "$.state.set": 15,
+   "$.clock.now": 7,
    "$.store.keys": 2,
    "$.command.register": 1,
-   "$.clock.every": 2,
+   "$.clock.every": 3,
+   "$.ui.open": 2,
+   "$.env.get": 2,
+   "$.fs.list": 1,
    "$.clock.after": 1,
    "$.session.id": 1,
-   "$.store.set": 2,
    "$.fs.stat": 1,
    "$.ui.resolve": 1
   },
@@ -74,6 +87,10 @@
    {
     "kind": "every",
     "ms": 60000
+   },
+   {
+    "kind": "every",
+    "ms": 5000
    },
    {
     "kind": "after",
@@ -85,1046 +102,548 @@
    }
   ],
   "sites": {
-   "AbovePrompt": {
-    "ok": true,
-    "tree": {
-     "type": "Box",
-     "props": {
-      "flexDirection": "column",
-      "paddingX": 1
-     },
-     "children": [
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "row",
-        "flexWrap": "wrap",
-        "columnGap": 1
-       },
-       "children": [
-        {
-         "type": "Text",
-         "props": {
-          "color": "claude",
-          "bold": true
-         },
-         "children": [
-          "✻ Claude"
-         ]
-        },
-        {
-         "type": "Text",
-         "props": {
-          "dimColor": true
-         },
-         "children": [
-          "·"
-         ]
-        },
-        {
-         "type": "Button",
-         "props": {
-          "key": "station-usage",
-          "label": "Usage",
-          "hotkey": "1",
-          "variant": "secondary",
-          "onPress": "[fn]"
-         },
-         "children": []
-        },
-        {
-         "type": "Button",
-         "props": {
-          "key": "station-trend",
-          "label": "Trend",
-          "hotkey": "2",
-          "variant": "primary",
-          "onPress": "[fn]"
-         },
-         "children": []
-        },
-        {
-         "type": "Button",
-         "props": {
-          "key": "station-breakdown",
-          "label": "Breakdown",
-          "hotkey": "3",
-          "variant": "secondary",
-          "onPress": "[fn]"
-         },
-         "children": []
-        },
-        {
-         "type": "Button",
-         "props": {
-          "key": "station-activity",
-          "label": "Activity",
-          "hotkey": "4",
-          "variant": "secondary",
-          "onPress": "[fn]"
-         },
-         "children": []
-        },
-        {
-         "type": "Button",
-         "props": {
-          "key": "station-context",
-          "label": "Context",
-          "hotkey": "5",
-          "variant": "secondary",
-          "onPress": "[fn]"
-         },
-         "children": []
-        }
-       ]
+   "Pane": {
+    "chef-station": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "paddingX": 1
       },
-      {
-       "type": "Box",
-       "props": {
-        "flexDirection": "column",
-        "marginTop": 1
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "claude",
+           "bold": true
+          },
+          "children": [
+           "✻ Claude"
+          ]
+         }
+        ]
        },
-       "children": [
-        {
-         "type": "Box",
-         "props": {
-          "flexDirection": "row",
-          "width": 72,
-          "justifyContent": "space-between"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "bold": true
-           },
-           "children": [
-            "Spend by hour"
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "dimColor": true
-           },
-           "children": [
-            "Today · $0.00"
-           ]
-          }
-         ]
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 2,
+         "marginTop": 1
         },
-        {
-         "type": "Box",
-         "props": {
-          "flexDirection": "row"
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "section-usage",
+             "plain": true,
+             "hotkey": "1",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "▾ Usage"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "$0.00 today · Session 31%"
+            ]
+           }
+          ]
          },
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginTop": 1
           },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "Session"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "claude"
+                },
+                "children": [
+                 "██████"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "subtle"
+                },
+                "children": [
+                 "░░░░░░░░░░░░░░"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "  31%"
+                ]
+               }
+              ]
+             }
+            ]
            },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "width": 10,
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "Today"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "bold": true
+                },
+                "children": [
+                 "$0.00"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " API value · 98.9k tokens · 93% from cache"
+                ]
+               }
+              ]
+             }
+            ]
            },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          }
-         ]
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column"
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 10,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   "Now"
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "flexShrink": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "subtle"
+                  },
+                  "children": [
+                   "● "
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "bold": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "app"
+                  ]
+                 },
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   " · Opus 5.5 · 1.5k written · $0.42 · context 49%"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "width": 10,
+                 "flexShrink": 0
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true
+                  },
+                  "children": [
+                   ""
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "flexShrink": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "dimColor": true,
+                   "wrap": "truncate-end"
+                  },
+                  "children": [
+                   "last turn 0:42"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 2,
+         "marginTop": 1
         },
-        {
-         "type": "Box",
-         "props": {
-          "flexDirection": "row"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "columnGap": 1
           },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "section-trend",
+             "plain": true,
+             "hotkey": "2",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "▸ Trend"
+            ]
            },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          }
-         ]
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "$0.00 this hour"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 2,
+         "marginTop": 1
         },
-        {
-         "type": "Box",
-         "props": {
-          "flexDirection": "row"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "columnGap": 1
           },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "section-breakdown",
+             "plain": true,
+             "hotkey": "3",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "▸ Breakdown"
+            ]
            },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          }
-         ]
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "Opus 5.5 $0.00"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 2,
+         "marginTop": 1
         },
-        {
-         "type": "Box",
-         "props": {
-          "flexDirection": "row"
-         },
-         "children": [
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "columnGap": 1
           },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "section-activity",
+             "plain": true,
+             "hotkey": "4",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "▸ Activity"
+            ]
            },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "subtle"
-           },
-           "children": [
-            "▁▁ "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          },
-          {
-           "type": "Text",
-           "props": {
-            "color": "claude"
-           },
-           "children": [
-            "   "
-           ]
-          }
-         ]
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "1-day streak"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 2,
+         "marginTop": 1
         },
-        {
-         "type": "Text",
-         "props": {
-          "dimColor": true
-         },
-         "children": [
-          "00                                  12                                23"
-         ]
-        }
-       ]
-      }
-     ]
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "section-context",
+             "plain": true,
+             "hotkey": "5",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "▸ Context"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "49% used"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "inactive",
+         "paddingX": 2,
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "justifyContent": "space-between",
+           "columnGap": 1
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "section-agents",
+             "plain": true,
+             "hotkey": "6",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "▸ Agents"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "0 active of 0"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Chef Station"
     }
    }
   },
   "script": [
+   "$.ui.open(chef-station)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -1136,7 +655,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/chef → Chef tray: trend"
+   "$.ui.open(chef-station)",
+   "/chef → Chef Station is open."
   ],
   "console": [],
   "warnings": []
@@ -1153,8 +673,9 @@
    "turn.start",
    "session.measure",
    "turn.complete",
+   "ui.close",
    "command.run{command=chef}",
-   "ui.render{component=AbovePrompt}"
+   "ui.render{component=Pane, requestId=chef-station}"
   ],
   "calls": [
    "$.clock.after",
@@ -1162,13 +683,18 @@
    "$.clock.now",
    "$.command.register",
    "$.command.run (via runContextAction)",
-   "$.env.get (via projectsDirectory)",
-   "$.fs.list (via listTranscripts)",
-   "$.fs.read (via readTranscriptTail",
+   "$.env.get (via configDirectory)",
+   "$.fs.list (via listTranscripts",
+   "readRegistry)",
+   "$.fs.read (via readRegistry",
+   "readTranscriptTail",
    "scanWithFs)",
-   "$.fs.stat (via readTranscriptTail)",
-   "$.process.run (via readTranscriptTail",
-   "scanWithNode)",
+   "$.fs.stat (via readTranscriptTail",
+   "summariseSession)",
+   "$.process.run (via liveEntriesOf",
+   "readTranscriptTail",
+   "scanWithNode",
+   "summariseSession)",
    "$.session.compact (via runContextAction)",
    "$.session.id",
    "$.session.model",
@@ -1176,33 +702,43 @@
    "$.session.usage",
    "$.state.get",
    "$.state.set",
-   "$.store.delete (via loadLedger)",
+   "$.store.delete (via loadLedger",
+   "restoreOpenSections)",
    "$.store.get",
    "$.store.keys (via loadLedger)",
    "$.store.set",
-   "$.ui.resolve"
+   "$.ui.open",
+   "$.ui.panes (via isSidebarShown)",
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
+   "chef-station.agents",
    "chef-station.backfillStatus",
    "chef-station.cache",
    "chef-station.context",
    "chef-station.contextAction",
+   "chef-station.isIdleOpen",
+   "chef-station.isSidebarClosed",
    "chef-station.ledger",
    "chef-station.live",
    "chef-station.now",
-   "chef-station.recordedUsd",
-   "chef-station.station"
+   "chef-station.openSections",
+   "chef-station.recordedUsd"
   ],
   "stateWrites": [
+   "chef-station.agents",
    "chef-station.backfillStatus",
    "chef-station.cache",
    "chef-station.context",
    "chef-station.contextAction",
+   "chef-station.isIdleOpen",
+   "chef-station.isSidebarClosed",
    "chef-station.ledger",
    "chef-station.live",
    "chef-station.now",
-   "chef-station.recordedUsd",
-   "chef-station.station"
+   "chef-station.openSections",
+   "chef-station.recordedUsd"
   ],
   "envReads": [
    "CLAUDE_CONFIG_DIR",
@@ -1220,7 +756,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: chef-station.station, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.backfillStatus"
+     "types ./types/index.d.ts declares state: chef-station.openSections, chef-station.isIdleOpen, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.backfillStatus, chef-station.agents, chef-station.isSidebarClosed"
     ],
     "gatingHooks": []
    },
@@ -1231,14 +767,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.step, classic.Stop, session.end, turn.start, session.measure, turn.complete, command.run{command=chef}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, turn.step, classic.Stop, session.end, turn.start, session.measure, turn.complete, ui.close, command.run{command=chef}, ui.render{component=Pane, requestId=chef-station}",
+      "./register.tsx hooks on classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=chef}",
       "./register.tsx gating hook without .catch: classic.Stop",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via runContextAction), $.env.get (via projectsDirectory), $.fs.list (via listTranscripts), $.fs.read (via readTranscriptTail, scanWithFs), $.fs.stat (via readTranscriptTail), $.process.run (via readTranscriptTail, scanWithNode), $.session.compact (via runContextAction), $.session.id, $.session.model, $.session.root, $.session.usage, $.state.get, $.state.set, $.store.delete (via loadLedger), $.store.get, $.store.keys (via loadLedger), $.store.set, $.ui.resolve",
+      "./register.tsx gating hook with .catch: ui.close",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.command.run (via runContextAction), $.env.get (via configDirectory), $.fs.list (via listTranscripts, readRegistry), $.fs.read (via readRegistry, readTranscriptTail, scanWithFs), $.fs.stat (via readTranscriptTail, summariseSession), $.process.run (via liveEntriesOf, readTranscriptTail, scanWithNode, summariseSession), $.session.compact (via runContextAction), $.session.id, $.session.model, $.session.root, $.session.usage, $.state.get, $.state.set, $.store.delete (via loadLedger, restoreOpenSections), $.store.get, $.store.keys (via loadLedger), $.store.set, $.ui.open, $.ui.panes (via isSidebarShown), $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./register.tsx state writes: chef-station.backfillStatus, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station",
-      "./register.tsx state reads: chef-station.backfillStatus, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.ledger, chef-station.live, chef-station.now, chef-station.recordedUsd, chef-station.station"
+      "./register.tsx state writes: chef-station.agents, chef-station.backfillStatus, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.isIdleOpen, chef-station.isSidebarClosed, chef-station.ledger, chef-station.live, chef-station.now, chef-station.openSections, chef-station.recordedUsd",
+      "./register.tsx state reads: chef-station.agents, chef-station.backfillStatus, chef-station.cache, chef-station.context, chef-station.contextAction, chef-station.isIdleOpen, chef-station.isSidebarClosed, chef-station.ledger, chef-station.live, chef-station.now, chef-station.openSections, chef-station.recordedUsd"
      ],
      "gatingHooks": [
       {
@@ -1246,11 +784,18 @@
        "pattern": "classic.Stop",
        "hook": "classic.Stop",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": true
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "f2e4fbb662565744"
+ "sourceHash": "4cfc1800436f61c8"
 }

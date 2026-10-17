@@ -1,9 +1,66 @@
 {
  "slug": "moabualruz-rice-multi-models",
- "generatedAt": "2026-10-16T14:20:55.754Z",
+ "generatedAt": "2026-10-17T13:06:38.349Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "agent.register",
+    "matcher": {
+     "name": "/.+/"
+    }
+   },
+   {
+    "event": "plugin.register",
+    "matcher": {
+     "name": "/.+/"
+    }
+   },
+   {
+    "event": "skill.prompt",
+    "matcher": {
+     "skill": "/.+/"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "/:evaluator-[0-9a-f-]+$/"
+    }
+   },
+   {
+    "event": "turn.step",
+    "matcher": {
+     "agentId": "/.+/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/^SubagentHandback$/"
+    }
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "isAborted": true
+    }
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": "/.+/"
+    }
+   },
+   {
+    "event": "classic.UserPromptSubmit"
+   },
    {
     "event": "session.start"
    },
@@ -20,19 +77,25 @@
     "event": "prompt.compose"
    },
    {
+    "event": "classic.ConfigChange"
+   },
+   {
+    "event": "prompt.context"
+   },
+   {
+    "event": "agent.register"
+   },
+   {
+    "event": "classic.PreToolUse"
+   },
+   {
     "event": "tool.call"
    },
    {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "mcp__rice-multi-models__models"
-    }
+    "event": "tool.check"
    },
    {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "mcp__rice-multi-models__agent_type"
-    }
+    "event": "agent.spawn"
    },
    {
     "event": "tool.describe"
@@ -63,20 +126,11 @@
    {
     "name": "rice-models",
     "description": "Native model setup, repair, read-only doctor, candidates, approvals and preferences",
-    "argumentHint": "[setup [repair|codex|native] | doctor | status | models | picker [write] | providers | approve <provider> | refresh | reload | opencode [zen|go] [write] | effort <level> | transport auto|ws|sse | helper session|once | workers read|write]",
-    "output": "helper: Node.js is not available to this session. Install Node.js 22+ from https://nodejs.org, or set RICE_MULTI_MODELS_NODE to its absolute executable path, then /rice-models setup repair.\ntransport: auto (auto = WebSocket, falling back to server-sent events)\neffort: unset; provider chooses, unless the session sets one\nCodex session candidate: none discovered\nDiscovery: runtime: unavailable (helper-unavailable)\nPrimary context (claude-opus-5-5): active context unknown, maximum context unknown, reported input unknown, effective input bound unknown, native window 200000; override unmanaged.\nNative context scope: primary model only; process-wide override does not establish independent custom-subagent windows or plugin-unload restoration. Numeric per-model registration is unsupported.\nCompaction: start with rice-claude for direct native inference; /rice-models setup native installs its launcher. Routed compaction refuses without the adapter.\ntool schemas: generated for 2.1.296 (this is 2.1.289: regenerate with scripts/gen-schemas.ts)\nChatGPT limits: shown after the first WebSocket request\nno routed step yet"
+    "argumentHint": "[setup [repair|codex] | search [setup|add|remove|priority] | doctor | status | models | picker [write] | providers | approve <provider> | refresh | reload | opencode [zen|go] [write] | effort <level> | transport auto|ws|sse | helper session|once | workers read|write]",
+    "output": "helper: Node.js is not available to this session. Install Node.js 22+ from https://nodejs.org, or set RICE_MULTI_MODELS_NODE to its absolute executable path, then /rice-models setup repair.\ntransport: auto (auto = WebSocket, falling back to server-sent events)\neffort: unset; provider chooses, unless the session sets one\nCodex session candidate: none discovered\nDiscovery: runtime: unavailable (helper-unavailable)\nPrimary context (claude-opus-5-5): active context unknown, maximum context unknown, reported input unknown, effective input bound unknown, native window 200000; override unmanaged.\nNative context scope: primary model only; process-wide override does not establish independent custom-subagent windows or plugin-unload restoration. Numeric per-model registration is unsupported.\nCompaction: the supported session.compact hook summarizes with the selected conversation provider. Failed or incomplete summaries retain the original transcript.\ntool schemas: generated for 2.1.296 (this is 2.1.289: regenerate with scripts/gen-schemas.ts)\nChatGPT limits: shown after the first WebSocket request\nno routed step yet"
    }
   ],
-  "tools": [
-   {
-    "name": "models",
-    "description": "Discover this session's supplied non-Anthropic model candidates or inspect their current status. Use action models or status. Candidates are not proof of live entitlement."
-   },
-   {
-    "name": "agent_type",
-    "description": "Register and return a reusable native Agent type for an exact supplied model id. Choose read or write mode; registration does not start an agent."
-   }
-  ],
+  "tools": [],
   "panes": [],
   "toasts": [],
   "logs": [
@@ -85,19 +139,20 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.env.set": 1,
    "$.command.register": 1,
-   "$.env.get": 19,
+   "$.env.get": 8,
    "$.process.run": 2,
    "$.fs.read": 1,
    "$.fs.exists": 1,
-   "$.tool.register": 2,
    "$.state.get": 4,
    "$.state.set": 2,
+   "$.session.model": 4,
    "$.store.get": 1,
    "$.ui.log": 1,
    "$.store.set": 1,
+   "$.session.id": 1,
    "$.session.version": 1,
-   "$.session.model": 1,
    "$.session.usage": 1
   },
   "timers": [],
@@ -126,14 +181,29 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "agent.register{name=/\".+\"/}",
+   "plugin.register{name=/\".+\"/}",
+   "skill.prompt{skill=/\".+\"/}",
+   "agent.offer{agent=/\":evaluator-[0-9a-f-]+$\"/}",
+   "turn.step{agentId=/\".+\"/}",
+   "tool.call{tool=/\"^SubagentHandback$\"/}",
+   "classic.Stop",
+   "classic.SubagentStop",
+   "turn.complete{isAborted=true}",
+   "session.end{reason=/\".+\"/}",
+   "classic.UserPromptSubmit",
    "session.start",
    "classic.PreModelSwitch",
    "classic.PostModelSwitch",
    "session.end",
    "prompt.compose",
+   "classic.ConfigChange",
+   "prompt.context",
+   "agent.register",
+   "classic.PreToolUse",
    "tool.call",
-   "tool.call{tool=mcp__rice-multi-models__models}",
-   "tool.call{tool=mcp__rice-multi-models__agent_type}",
+   "tool.check",
+   "agent.spawn",
    "tool.describe",
    "turn.step",
    "session.compact",
@@ -143,52 +213,52 @@
    "command.run{command=rice-models}"
   ],
   "calls": [
-   "$.agent.list",
-   "$.agent.register (via dynamicAgentType",
+   "$.agent.list (via buildRequest",
+   "buildWorkerRequest",
+   "permissionInstructions",
+   "runFor",
+   "stepOwnerModel)",
+   "$.agent.register (via agent",
    "registerAgents)",
+   "$.agent.spawn (via agent)",
    "$.clock.now (via promptsPort",
    "routedStep",
    "superviseHelper)",
    "$.clock.sleep (via ensureHelper",
    "superviseHelper)",
    "$.command.register",
-   "$.env.get (via detectRuntime",
-   "doctorCommand",
-   "loadProviders",
-   "nativeActive",
-   "nativeContextStatus",
-   "opencodeCommand",
-   "promptsPort",
-   "readCodexDefaults",
-   "syncNativeContext)",
-   "$.env.set (via publishNativeState",
-   "syncNativeContext)",
+   "$.env.get",
+   "$.env.set",
    "$.fs.exists (via detectRuntime",
+   "hiddenSource",
    "loadProviders",
    "opencodeCommand",
    "promptsPort)",
    "$.fs.list (via promptsPort)",
-   "$.fs.read (via loadProviders",
+   "$.fs.read (via hiddenSource",
+   "loadProviders",
    "opencodeCommand",
    "promptsPort",
    "readCodexDefaults)",
-   "$.fs.write (via opencodeCommand)",
-   "$.http.fetch (via opencodeCommand)",
-   "$.process.run (via detectRuntime",
-   "helperPort",
-   "opencodeCommand",
-   "promptsPort",
-   "refreshCatalogue",
-   "setupCommand",
-   "syncPicker)",
+   "$.fs.write (via nativePermissionDefaults",
+   "opencodeCommand)",
+   "$.http.fetch",
+   "$.process.run",
    "$.process.spawn (via helperPort",
    "superviseHelper)",
    "$.prompt.compose",
-   "$.session.cwd (via buildWorkerRequest",
-   "promptsPort)",
-   "$.session.id (via auxiliaryOwner",
-   "buildRequest",
-   "buildWorke… [+664 chars]"
+   "$.session.authorize",
+   "$.session.cwd",
+   "$.session.id",
+   "$.session.messages",
+   "$.session.model",
+   "$.session.usage (via nativeContextStatus)",
+   "$.session.version (via discoveryStatus",
+   "nativePermissionDefaults",
+   "statusText)",
+   "$.settings.read (via effectivePermissionPolicy",
+   "hiddenSource",
+   "sources)… [+566 chars]"
   ],
   "stateReads": [
    "rice-multi-models.nativeContext",
@@ -199,13 +269,16 @@
    "rice-multi-models.prefs"
   ],
   "envReads": [
+   "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
    "CLAUDE_CODE_MAX_CONTEXT_TOKENS",
+   "CLAUDE_CODE_PLUGIN_DIRS",
    "CLAUDE_CONFIG_DIR",
    "CODEX_HOME",
    "DISABLE_COMPACT",
    "HOME",
-   "RICE_MULTI_MODELS_NATIVE_ACTIVE",
+   "OS",
    "RICE_MULTI_MODELS_NODE",
+   "RICE_MULTI_MODELS_PERMISSION_CONTEXT_NONCE",
    "RICE_MULTI_MODELS_SEARCH_URL",
    "USERPROFILE"
   ],
@@ -231,25 +304,77 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, classic.PreModelSwitch, classic.PostModelSwitch, session.end, prompt.compose, tool.call, tool.call{tool=mcp__rice-multi-models__models}, tool.call{tool=mcp__rice-multi-models__agent_type}, tool.describe, turn.step, session.compact, model.complete, model.classify, model.fork, command.run{command=rice-models}",
-      "./register.ts hooks on classic.PreModelSwitch, classic.PostModelSwitch, prompt.compose, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts hooks: agent.register{name=/\".+\"/}, plugin.register{name=/\".+\"/}, skill.prompt{skill=/\".+\"/}, agent.offer{agent=/\":evaluator-[0-9a-f-]+$\"/}, turn.step{agentId=/\".+\"/}, tool.call{tool=/\"^SubagentHandback$\"/}, classic.Stop, classic.SubagentStop, turn.complete{isAborted=true}, session.end{reason=/\".+\"/}, classic.UserPromptSubmit, session.start, classic.PreModelSwitch, classic.PostModelSwitch, session.end, prompt.compose, classic.ConfigChange, prompt.context, agent.register, classic.PreToolUse, tool.call, tool.check, agent.spawn, tool.describe, turn.step, session.compact, model.complete, model.classify, model.fork, command.run{command=rice-models}",
+      "./register.ts hooks on skill.prompt, classic.Stop, classic.SubagentStop, classic.UserPromptSubmit, classic.PreModelSwitch, classic.PostModelSwitch, prompt.compose, classic.ConfigChange, prompt.context, classic.PreToolUse, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=rice-models}",
+      "./register.ts gating hook without .catch: agent.register{name=/\".+\"/}",
+      "./register.ts gating hook without .catch: plugin.register{name=/\".+\"/}",
+      "./register.ts gating hook without .catch: agent.offer{agent=/\":evaluator-[0-9a-f-]+$\"/}",
+      "./register.ts gating hook with .catch: tool.call{tool=/\"^SubagentHandback$\"/}",
+      "./register.ts gating hook with .catch: classic.Stop",
+      "./register.ts gating hook with .catch: classic.SubagentStop",
+      "./register.ts gating hook with .catch: classic.UserPromptSubmit",
       "./register.ts gating hook with .catch: classic.PreModelSwitch",
       "./register.ts gating hook without .catch: classic.PostModelSwitch",
-      "./register.ts gating hook without .catch: tool.call",
-      "./register.ts gating hook without .catch: tool.call{tool=mcp__rice-multi-models__models}",
-      "./register.ts gating hook without .catch: tool.call{tool=mcp__rice-multi-models__agent_type}",
+      "./register.ts gating hook without .catch: classic.ConfigChange",
+      "./register.ts gating hook without .catch: agent.register",
+      "./register.ts gating hook without .catch: classic.PreToolUse",
+      "./register.ts gating hook with .catch: tool.call",
+      "./register.ts gating hook with .catch: tool.check",
+      "./register.ts gating hook without .catch: agent.spawn",
       "./register.ts gating hook with .catch: session.compact",
       "./register.ts gating hook with .catch: model.complete",
       "./register.ts gating hook with .catch: model.classify",
       "./register.ts gating hook with .catch: model.fork",
-      "./register.ts calls: $.agent.list, $.agent.register (via dynamicAgentType, registerAgents), $.clock.now (via promptsPort, routedStep, superviseHelper), $.clock.sleep (via ensureHelper, superviseHelper), $.command.register, $.env.get (via detectRuntime, doctorCommand, loadProviders, nativeActive, nativeContextStatus, opencodeCommand, promptsPort, readCodexDefaults, syncNativeContext), $.env.set (via publishNativeState, syncNativeContext), $.fs.exists (via detectRuntime, loadProviders, opencodeCommand, promptsPort), $.fs.list (via promptsPort), $.fs.read (via loadProviders, opencodeCommand, promptsPort, readCodexDefaults), $.fs.write (via opencodeCommand), $.http.fetch (via opencodeCommand), $.process.run (via detectRuntime, helperPort, opencodeCommand, promptsPort, refreshCatalogue, setupCommand, syncPicker), $.process.spawn (via helperPort, superviseHelper), $.prompt.compose, $.session.cwd (via buildWorkerRequest, promptsPort), $.session.id (via auxiliaryOwner, buildRequest, buildWorke… [+664 chars]",
-      "./register.ts env writes: CLAUDE_CODE_MAX_CONTEXT_TOKENS, RICE_MULTI_MODELS_NATIVE_STATE",
-      "./register.ts env reads: CLAUDE_CODE_MAX_CONTEXT_TOKENS, CLAUDE_CONFIG_DIR, CODEX_HOME, DISABLE_COMPACT, HOME, RICE_MULTI_MODELS_NATIVE_ACTIVE, RICE_MULTI_MODELS_NODE, RICE_MULTI_MODELS_SEARCH_URL, USERPROFILE",
+      "./register.ts calls: $.agent.list (via buildRequest, buildWorkerRequest, permissionInstructions, runFor, stepOwnerModel), $.agent.register (via agent, registerAgents), $.agent.spawn (via agent), $.clock.now (via promptsPort, routedStep, superviseHelper), $.clock.sleep (via ensureHelper, superviseHelper), $.command.register, $.env.get, $.env.set, $.fs.exists (via detectRuntime, hiddenSource, loadProviders, opencodeCommand, promptsPort), $.fs.list (via promptsPort), $.fs.read (via hiddenSource, loadProviders, opencodeCommand, promptsPort, readCodexDefaults), $.fs.write (via nativePermissionDefaults, opencodeCommand), $.http.fetch, $.process.run, $.process.spawn (via helperPort, superviseHelper), $.prompt.compose, $.session.authorize, $.session.cwd, $.session.id, $.session.messages, $.session.model, $.session.usage (via nativeContextStatus), $.session.version (via discoveryStatus, nativePermissionDefaults, statusText), $.settings.read (via effectivePermissionPolicy, hiddenSource, sources)… [+566 chars]",
+      "./register.ts env writes: CLAUDE_CODE_MAX_CONTEXT_TOKENS, RICE_MULTI_MODELS_PERMISSION_CONTEXT_NONCE",
+      "./register.ts env reads: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, CLAUDE_CODE_MAX_CONTEXT_TOKENS, CLAUDE_CODE_PLUGIN_DIRS, CLAUDE_CONFIG_DIR, CODEX_HOME, DISABLE_COMPACT, HOME, OS, RICE_MULTI_MODELS_NODE, RICE_MULTI_MODELS_PERMISSION_CONTEXT_NONCE, RICE_MULTI_MODELS_SEARCH_URL, USERPROFILE",
       "./register.ts state writes: rice-multi-models.nativeContext, rice-multi-models.prefs",
       "./register.ts state reads: rice-multi-models.nativeContext, rice-multi-models.prefs"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "agent.register",
+       "hook": "agent.register{name=/\".+\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "plugin.register",
+       "hook": "plugin.register{name=/\".+\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=/\":evaluator-[0-9a-f-]+$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^SubagentHandback$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
+       "hasCatch": true
+      },
       {
        "module": "./register.ts",
        "pattern": "classic.PreModelSwitch",
@@ -264,20 +389,38 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "classic.ConfigChange",
+       "hook": "classic.ConfigChange",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "agent.register",
+       "hook": "agent.register",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call",
-       "hasCatch": false
+       "hasCatch": true
       },
       {
        "module": "./register.ts",
-       "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__rice-multi-models__models}",
-       "hasCatch": false
+       "pattern": "tool.check",
+       "hook": "tool.check",
+       "hasCatch": true
       },
       {
        "module": "./register.ts",
-       "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__rice-multi-models__agent_type}",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
        "hasCatch": false
       },
       {
@@ -310,5 +453,5 @@
    "advice": []
   }
  },
- "sourceHash": "a7dfc1943bfbed33"
+ "sourceHash": "4f2c195969ce12d4"
 }
