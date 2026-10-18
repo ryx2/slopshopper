@@ -1,0 +1,391 @@
+{
+ "slug": "stalicji-my-mods-agent-supervisor",
+ "generatedAt": "2026-10-18T13:55:54.709Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "supervisor"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "agent-supervisor"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "supervisor",
+    "description": "開關 Agent Supervisor 面板：子代理、任務、阻塞與建議",
+    "argumentHint": "[agents|tasks|logs|focus]",
+    "immediate": true,
+    "output": "已開啟 Agent Supervisor 面板。"
+   }
+  ],
+  "tools": [
+   {
+    "name": "report",
+    "description": "Report tasks, their dependencies and what you are waiting on to the Agent Supervisor panel the person watches. Report only real progress: never invent tasks or completion. Task titles and waitingFor are short phrases in Traditional Chinese (Taiwan usage); keep code identifiers as they are."
+   }
+  ],
+  "panes": [
+   {
+    "id": "agent-supervisor",
+    "title": "Agent Supervisor"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.agent.list": 1,
+   "$.state.get": 21,
+   "$.clock.after": 1,
+   "$.ui.panes": 3,
+   "$.ui.status": 1,
+   "$.state.set": 11,
+   "$.clock.now": 10,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 500
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "agent-supervisor": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "view-agents",
+           "hotkey": "a",
+           "plain": true,
+           "label": "代理",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "view-tasks",
+           "hotkey": "t",
+           "plain": true,
+           "label": "任務",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "view-events",
+           "hotkey": "l",
+           "plain": true,
+           "label": "事件",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "hotkey": "r",
+           "plain": true,
+           "label": "更新",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "close",
+           "hotkey": "q",
+           "plain": true,
+           "label": "關閉",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "○ "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Supervisor                                        "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "IDLE"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "  等你下指令"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "這個 session 還沒有派出子代理"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Agent Supervisor"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(agent-supervisor)",
+   "/supervisor → 已開啟 Agent Supervisor 面板。"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "session.start",
+   "session.end",
+   "command.run{command=supervisor}",
+   "prompt.compose",
+   "turn.start",
+   "agent.spawn",
+   "turn.step",
+   "tool.call",
+   "turn.complete",
+   "ui.render{component=Pane, requestId=agent-supervisor}"
+  ],
+  "calls": [
+   "$.agent.list (via pollAgentList",
+   "recordFinish)",
+   "$.clock.after (via markSnapshotDirty)",
+   "$.clock.every (via syncTimerAndStatus)",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via resolveSnapshotTarget)",
+   "$.fs.write (via writeSnapshot)",
+   "$.process.run (via resolveSnapshotTarget)",
+   "$.session.cwd (via resolveSnapshotTarget)",
+   "$.session.id (via resolveSnapshotTarget)",
+   "$.state.get (via changeAgents)",
+   "$.state.set (via changeAgents)",
+   "$.tool.register",
+   "$.ui.close (via closePanel)",
+   "$.ui.open (via openPanel)",
+   "$.ui.panes (via isPanelOpen)",
+   "$.ui.resolve",
+   "$.ui.status (via clearStatus",
+   "showStatus)"
+  ],
+  "stateReads": [
+   "agent-supervisor.agents",
+   "agent-supervisor.events",
+   "agent-supervisor.mainLoop",
+   "agent-supervisor.tasks",
+   "agent-supervisor.tick",
+   "agent-supervisor.view",
+   "agent-supervisor.waiting"
+  ],
+  "stateWrites": [
+   "agent-supervisor.agents",
+   "agent-supervisor.events",
+   "agent-supervisor.mainLoop",
+   "agent-supervisor.tasks",
+   "agent-supervisor.tick",
+   "agent-supervisor.view",
+   "agent-supervisor.waiting"
+  ],
+  "envReads": [
+   "HOME"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/stalicji-my-mods-agent-supervisor/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/stalicji-my-mods-agent-supervisor/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: agent-supervisor.view, agent-supervisor.agents, agent-supervisor.mainLoop, agent-supervisor.tasks, agent-supervisor.waiting, agent-supervisor.events, agent-supervisor.tick"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/stalicji-my-mods-agent-supervisor/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, session.end, command.run{command=supervisor}, prompt.compose, turn.start, agent.spawn, turn.step, tool.call, turn.complete, ui.render{component=Pane, requestId=agent-supervisor}",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=supervisor}",
+      "./register.tsx gating hook without .catch: agent.spawn",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.agent.list (via pollAgentList, recordFinish), $.clock.after (via markSnapshotDirty), $.clock.every (via syncTimerAndStatus), $.clock.now, $.command.register, $.env.get (via resolveSnapshotTarget), $.fs.write (via writeSnapshot), $.process.run (via resolveSnapshotTarget), $.session.cwd (via resolveSnapshotTarget), $.session.id (via resolveSnapshotTarget), $.state.get (via changeAgents), $.state.set (via changeAgents), $.tool.register, $.ui.close (via closePanel), $.ui.open (via openPanel), $.ui.panes (via isPanelOpen), $.ui.resolve, $.ui.status (via clearStatus, showStatus)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: agent-supervisor.agents, agent-supervisor.events, agent-supervisor.mainLoop, agent-supervisor.tasks, agent-supervisor.tick, agent-supervisor.view, agent-supervisor.waiting",
+      "./register.tsx state reads: agent-supervisor.agents, agent-supervisor.events, agent-supervisor.mainLoop, agent-supervisor.tasks, agent-supervisor.tick, agent-supervisor.view, agent-supervisor.waiting"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "ced3683340bfdfb"
+}

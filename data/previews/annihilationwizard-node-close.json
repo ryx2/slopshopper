@@ -1,14 +1,33 @@
 {
  "slug": "annihilationwizard-node-close",
- "generatedAt": "2026-10-17T13:05:51.869Z",
+ "generatedAt": "2026-10-18T13:55:05.793Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
+    "event": "session.start"
+   },
+   {
     "event": "tool.call"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "node-close"
+    }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "node-close",
+    "description": "List orphaned Node processes; kill <PID ...> or kill all ends them",
+    "argumentHint": "[kill <PID ...> | kill all]",
+    "output": "Cannot list processes."
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -16,7 +35,9 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.process.run": 2
+   "$.command.register": 1,
+   "$.state.get": 1,
+   "$.process.run": 4
   },
   "timers": [],
   "sites": {},
@@ -33,7 +54,10 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.process.run(ps -axww -o pid=,ppid=,command=) → exit 0",
+   "$.process.run(powershell.exe -NoProfile -NonInteractive -Command Get-CimInstance Win32_Process…) → exit 0",
+   "/node-close → Cannot list processes."
   ],
   "console": [],
   "warnings": []
@@ -43,16 +67,28 @@
   "errors": [],
   "warnings": [],
   "hooks": [
-   "tool.call"
+   "session.start",
+   "tool.call",
+   "session.end",
+   "command.run{command=node-close}"
   ],
   "calls": [
-   "$.clock.sleep (via close)",
+   "$.clock.every (via startSweeping)",
+   "$.clock.sleep",
+   "$.command.register",
    "$.process.run (via end",
-   "tryList)",
+   "tryList",
+   "usage)",
+   "$.state.get",
+   "$.state.set",
    "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "node-close.tracked"
+  ],
+  "stateWrites": [
+   "node-close.tracked"
+  ],
   "envReads": [],
   "raw": {
    "success": true,
@@ -63,7 +99,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: node-close.tracked"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -73,15 +112,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: tool.call",
+      "./register.ts hooks: session.start, tool.call, session.end, command.run{command=node-close}",
       "./register.ts gating hook with .catch: tool.call",
-      "./register.ts calls: $.clock.sleep (via close), $.process.run (via end, tryList), $.ui.toast"
+      "./register.ts gating hook with .catch: command.run{command=node-close}",
+      "./register.ts calls: $.clock.every (via startSweeping), $.clock.sleep, $.command.register, $.process.run (via end, tryList, usage), $.state.get, $.state.set, $.ui.toast",
+      "./register.ts state writes: node-close.tracked",
+      "./register.ts state reads: node-close.tracked"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=node-close}",
        "hasCatch": true
       }
      ]
@@ -90,5 +138,5 @@
    "advice": []
   }
  },
- "sourceHash": "829c01965ac41d39"
+ "sourceHash": "47aecdfbb077b201"
 }

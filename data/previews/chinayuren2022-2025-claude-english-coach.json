@@ -1,6 +1,6 @@
 {
  "slug": "chinayuren2022-2025-claude-english-coach",
- "generatedAt": "2026-10-17T13:06:00.928Z",
+ "generatedAt": "2026-10-18T13:55:11.242Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,12 @@
     "event": "command.run",
     "matcher": {
      "command": "en"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "zh"
     }
    },
    {
@@ -55,13 +61,18 @@
     "name": "english",
     "description": "English coach: show or change its settings",
     "argumentHint": "[on|off|level auto|goal IELTS 7.5|gloss on|chinese review|feedback before|demo]",
-    "output": "English coach is on · level B1? (measuring) · goal IELTS 7.5 · glosses on · Chinese input: review · feedback before\n\n/english on | off              turn the mode on or off\n/english level auto            measure your level from what you write (default)\n/english level A2|B1|B2|C1     fix the level of Claude's English\n/english goal <text>           your target, e.g. IELTS 7.5\n/english gloss on|off          Chinese glosses after hard words\n/english chinese review        Chinese input becomes an English draft in the box for you to check (default)\n/english chinese auto          Chinese input is translated and sent at once\n/english chinese off           Chinese input is sent as typed\n/english feedback before       check your English when you press Enter; the fix goes in the box (default)\n/english feedback after        send at once, show the feedback afterwards\n/english feedback off          no feedback on your English\n/english demo                  show a sample feedback card\n/en <text>                     turn Chinese or rough English into an English draft in the box\nStart a prompt with \"zh:\" to send it as typed."
+    "output": "English coach is on · level B1? (measuring) · goal IELTS 7.5 · glosses on · key points on · Chinese input: review · feedback before\n\n/english on | off              turn the mode on or off\n/english level auto            measure your level from what you write (default)\n/english level A2|B1|B2|C1     fix the level of Claude's English\n/english goal <text>           your target, e.g. IELTS 7.5\n/english gloss on|off          Chinese glosses after hard words\n/english points on|off         key points in Chinese under Claude's long replies\n/english chinese review        Chinese input becomes an English draft in the box for you to check (default)\n/english chinese auto          Chinese input is translated and sent at once\n/english chinese off           Chinese input is sent as typed\n/english feedback before       check your English when you press Enter; the fix goes in the box (default)\n/english feedback after        send at once, show the feedback afterwards\n/english feedback off          no feedback on your English\n/english demo                  show a sample feedback card\n/en <text>                     turn Chinese or rough English into an English draft in the box\n/zh                            Chinese translation of Claude's last reply, under it; again hides it (/zh 2: the reply before)\nStart a prompt with \"zh:\" to send it as typed."
    },
    {
     "name": "en",
     "description": "Turn Chinese or rough English into an English draft in the prompt box",
     "argumentHint": "<text>",
     "output": "Usage: /en <Chinese or rough English>"
+   },
+   {
+    "name": "zh",
+    "description": "Chinese translation of Claude's last reply, drawn under it for you alone; again hides it",
+    "argumentHint": "[2 for the reply before, 3, …]"
    }
   ],
   "tools": [],
@@ -71,20 +82,24 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
+   "$.command.register": 3,
    "$.ui.status": 1,
    "$.store.get": 9,
-   "$.state.get": 6,
-   "$.state.set": 3,
-   "$.session.messages": 1,
+   "$.state.get": 11,
+   "$.state.set": 4,
+   "$.session.messages": 2,
    "$.model.complete": 1,
-   "$.clock.after": 1,
+   "$.clock.after": 2,
    "$.ui.resolve": 1
   },
   "timers": [
    {
     "kind": "after",
     "ms": 300
+   },
+   {
+    "kind": "after",
+    "ms": 0
    }
   ],
   "sites": {
@@ -245,8 +260,9 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/english → English coach is on · level B1? (measuring) · goal IELTS 7.5 · glosses on · Chin…",
-   "/en → Usage: /en <Chinese or rough English>"
+   "/english → English coach is on · level B1? (measuring) · goal IELTS 7.5 · glosses on · key …",
+   "/en → Usage: /en <Chinese or rough English>",
+   "/zh → "
   ],
   "console": [],
   "warnings": []
@@ -259,6 +275,7 @@
    "session.start",
    "command.run{command=english}",
    "command.run{command=en}",
+   "command.run{command=zh}",
    "prompt.compose",
    "prompt.submit",
    "prompt.edit",
@@ -270,9 +287,10 @@
   "calls": [
    "$.clock.after",
    "$.command.register",
-   "$.model.complete (via ask)",
+   "$.model.complete (via ask",
+   "translatePara)",
    "$.prompt.fill",
-   "$.session.messages (via lastReply)",
+   "$.session.messages",
    "$.state.get",
    "$.state.set",
    "$.store.get (via loadEstimates",
@@ -286,12 +304,16 @@
   "stateReads": [
    "english-coach.feedback",
    "english-coach.glosses",
-   "english-coach.level"
+   "english-coach.level",
+   "english-coach.points",
+   "english-coach.translations"
   ],
   "stateWrites": [
    "english-coach.feedback",
    "english-coach.glosses",
-   "english-coach.level"
+   "english-coach.level",
+   "english-coach.points",
+   "english-coach.translations"
   ],
   "envReads": [],
   "raw": {
@@ -305,7 +327,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: english-coach.feedback, english-coach.level, english-coach.glosses"
+     "types ./types/index.d.ts declares state: english-coach.feedback, english-coach.level, english-coach.glosses, english-coach.translations, english-coach.points"
     ],
     "gatingHooks": []
    },
@@ -316,14 +338,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=english}, command.run{command=en}, prompt.compose, prompt.submit, prompt.edit, ui.render{component=AbovePrompt}, turn.complete, ui.render{component=AssistantMessage}, ui.render{component=SessionMode}",
+      "./register.tsx hooks: session.start, command.run{command=english}, command.run{command=en}, command.run{command=zh}, prompt.compose, prompt.submit, prompt.edit, ui.render{component=AbovePrompt}, turn.complete, ui.render{component=AssistantMessage}, ui.render{component=SessionMode}",
       "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=english}",
       "./register.tsx answers its own command: command.run{command=en}",
+      "./register.tsx answers its own command: command.run{command=zh}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after, $.command.register, $.model.complete (via ask), $.prompt.fill, $.session.messages (via lastReply), $.state.get, $.state.set, $.store.get (via loadEstimates, loadSettings), $.store.set (via addEstimate, saveSettings), $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: english-coach.feedback, english-coach.glosses, english-coach.level",
-      "./register.tsx state reads: english-coach.feedback, english-coach.glosses, english-coach.level"
+      "./register.tsx calls: $.clock.after, $.command.register, $.model.complete (via ask, translatePara), $.prompt.fill, $.session.messages, $.state.get, $.state.set, $.store.get (via loadEstimates, loadSettings), $.store.set (via addEstimate, saveSettings), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx state writes: english-coach.feedback, english-coach.glosses, english-coach.level, english-coach.points, english-coach.translations",
+      "./register.tsx state reads: english-coach.feedback, english-coach.glosses, english-coach.level, english-coach.points, english-coach.translations"
      ],
      "gatingHooks": [
       {
@@ -338,5 +361,5 @@
    "advice": []
   }
  },
- "sourceHash": "a07d43789976e4ac"
+ "sourceHash": "80c584e813a71da"
 }

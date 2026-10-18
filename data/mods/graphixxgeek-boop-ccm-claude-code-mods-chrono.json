@@ -1,0 +1,8 @@
+{
+ "slug": "graphixxgeek-boop-ccm-claude-code-mods-chrono",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Une durée = l'écart de deux heures LUES sur l'horloge du moteur, jamais une impression.\nconst enClair = (ms: number) => {\n  const s = Math.round(ms / 1000)\n  return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`\n}\n\nexport const register: Register = on => {\n  let debut = 0\n  let outils = 0\n\n  on('prompt.submit', async ($, e, next) => {\n    debut = await $.clock.now()\n    outils = 0\n    $.ui.status('Tour en cours…')\n    return next(e)\n  }).catch(($, e, next) => next(e))\n\n  on('tool.call', ($, e, next) => {\n    outils += 1\n    return next(e)\n  }).catch(($, e, next) => next(e))\n\n  on('turn.complete', async ($, e, next) => {\n    const ran = await next(e)\n    if (debut > 0) {\n      const duree = (await $.clock.now()) - debut\n      $.ui.status(`Dernier tour : ${enClair(duree)}, ${outils} appel${outils > 1 ? 's' : ''} d'outil`)\n    }\n    return ran\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"chrono\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Durée réelle et nombre d'outils du dernier tour, dans la ligne d'état\"\n}"
+ }
+}

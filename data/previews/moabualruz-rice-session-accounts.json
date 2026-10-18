@@ -1,6 +1,6 @@
 {
  "slug": "moabualruz-rice-session-accounts",
- "generatedAt": "2026-10-17T13:06:38.513Z",
+ "generatedAt": "2026-10-18T13:55:43.016Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -27,6 +27,9 @@
    },
    {
     "event": "turn.start"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "command.run",
@@ -62,6 +65,27 @@
     "event": "model.*"
    },
    {
+    "event": "session.compact"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "WebFetch"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "WebSearch"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
     "event": "turn.step"
    },
    {
@@ -71,8 +95,8 @@
   "commands": [
    {
     "name": "rice-account",
-    "description": "Choose a Claude OAuth account by email and tier, or add, set up and check accounts",
-    "argumentHint": "[<name> | list | usage | setup <name> | check [name] | add <name> [kind] | remove <name>]",
+    "description": "Choose the Claude OAuth account for this session by email and plan, or add, set up and check accounts",
+    "argumentHint": "[<name> | use <name> | list | usage | check [name] | add <name> [kind] | setup <name> | remove <name> | default | set-default <name> | setup-native | help]",
     "output": "Choose an account in the account list. This changes only this session."
    }
   ],
@@ -88,13 +112,15 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.state.get": 5,
-   "$.env.get": 48,
+   "$.state.get": 11,
+   "$.store.get": 1,
+   "$.env.get": 44,
+   "$.fs.exists": 2,
    "$.state.set": 1,
+   "$.command.register": 1,
+   "$.store.delete": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1,
-   "$.fs.exists": 1,
    "$.process.run": 1
   },
   "timers": [],
@@ -144,16 +170,6 @@
        {
         "type": "Button",
         "props": {
-         "key": "account:login",
-         "plain": true,
-         "label": "* login | Unknown | Unknown | current session",
-         "onPress": "[fn]"
-        },
-        "children": []
-       },
-       {
-        "type": "Button",
-        "props": {
          "key": "account-picker-close",
          "role": "dismiss",
          "label": "Cancel",
@@ -197,6 +213,7 @@
    "ui.render{component=Pane}",
    "session.start",
    "turn.start",
+   "session.end",
    "command.run{command=rice-account}",
    "session.authorize",
    "http.fetch",
@@ -205,6 +222,11 @@
    "command.run{command=usage}",
    "command.run{command=status}",
    "model.*",
+   "session.compact",
+   "agent.spawn",
+   "tool.call{tool=WebFetch}",
+   "tool.call{tool=WebSearch}",
+   "prompt.submit",
    "turn.step",
    "prompt.autocomplete"
   ],
@@ -214,44 +236,46 @@
    "$.clock.sleep (via machineIo)",
    "$.command.register",
    "$.env.get",
-   "$.env.set (via setDescendantAuth",
-   "setManaged",
-   "syncDescendantAuth)",
+   "$.env.set (via neutralizeBearer",
+   "setManaged)",
    "$.fs.exists (via loadConfig",
    "machineIo)",
    "$.fs.read (via loadConfig",
    "machineIo)",
    "$.fs.stat (via machineIo)",
-   "$.fs.write (via machineIo",
-   "saveConfig)",
-   "$.http.fetch (via checkText",
-   "machineIo",
-   "refreshReport",
-   "usageText)",
+   "$.fs.write (via editConfig",
+   "machineIo)",
+   "$.http.fetch (via oauthFetch)",
    "$.process.run (via machineIo)",
-   "$.session.authorize (via usageText)",
    "$.session.cwd (via statusText)",
    "$.session.model (via statusText)",
-   "$.session.version (via statusText)",
+   "$.session.version (via oauthFetch",
+   "statusText)",
+   "$.settings.read (via switchContext)",
    "$.state.get",
    "$.state.set",
+   "$.store.delete",
+   "$.store.get (via clearedWithAccount)",
+   "$.store.set",
    "$.ui.close",
    "$.ui.invalidate",
    "$.ui.log",
    "$.ui.open (via runCommand)",
    "$.ui.resolve",
-   "$.ui.status (via refreshReport",
-   "switchTo)",
-   "$.ui.toast (via renewIfActive",
-   "restore)"
+   "$.ui.status",
+   "$.ui.toast"
   ],
   "stateReads": [
    "rice-session-accounts.active",
-   "rice-session-accounts.originals"
+   "rice-session-accounts.authorizations",
+   "rice-session-accounts.originals",
+   "rice-session-accounts.problem"
   ],
   "stateWrites": [
    "rice-session-accounts.active",
-   "rice-session-accounts.originals"
+   "rice-session-accounts.authorizations",
+   "rice-session-accounts.originals",
+   "rice-session-accounts.problem"
   ],
   "envReads": [
    "ANTHROPIC_API_KEY",
@@ -259,16 +283,20 @@
    "ANTHROPIC_BASE_URL",
    "ANTHROPIC_BEDROCK_BASE_URL",
    "ANTHROPIC_CUSTOM_HEADERS",
+   "ANTHROPIC_FEDERATION_RULE_ID",
    "ANTHROPIC_FOUNDRY_API_KEY",
    "ANTHROPIC_FOUNDRY_BASE_URL",
    "ANTHROPIC_FOUNDRY_RESOURCE",
+   "ANTHROPIC_ORGANIZATION_ID",
    "ANTHROPIC_VERTEX_BASE_URL",
    "ANTHROPIC_VERTEX_PROJECT_ID",
    "AWS_BEARER_TOKEN_BEDROCK",
    "AWS_PROFILE",
    "AWS_REGION",
    "CLAUDE_BG_AUTH_SNAPSHOT_PATH",
+   "CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR",
    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
+   "CLAUDE_CODE_FORCE_WINDOWS_CREDMAN",
    "CLAUDE_CODE_GATEWAY_TOKEN_FILE_DESCRIPTOR",
    "CLAUDE_CODE_HOST_AUTH_ENV_VAR",
    "CLAUDE_CODE_HOST_CREDS_FILE",
@@ -284,16 +312,7 @@
    "CLAUDE_CODE_USE_VERTEX",
    "CLAUDE_CONFIG_DIR",
    "CLAUDE_SECURESTORAGE_CONFIG_DIR",
-   "CLOUD_ML_REGION",
-   "FORCE_WINDOWS_CREDMAN",
-   "HOME",
-   "OS",
-   "RICE_SESSION_ACCOUNTS_OAUTH_RELAY",
-   "SystemRoot",
-   "USER",
-   "USERNAME",
-   "USERPROFILE",
-   "WINDIR"
+   "CLOUD_ML_REGION,… [+58 chars]"
   ],
   "raw": {
    "success": true,
@@ -306,7 +325,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: rice-session-accounts.active, rice-session-accounts.originals"
+     "types ./types/index.d.ts declares state: rice-session-accounts.active, rice-session-accounts.originals, rice-session-accounts.problem, rice-session-accounts.authorizations"
     ],
     "gatingHooks": []
    },
@@ -317,22 +336,28 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: process.run, process.spawn, tool.call{tool=Bash}, ui.render{component=Pane}, session.start, turn.start, command.run{command=rice-account}, session.authorize, http.fetch, session.*, turn.complete, command.run{command=usage}, command.run{command=status}, model.*, turn.step, prompt.autocomplete",
+      "./register.ts hooks: process.run, process.spawn, tool.call{tool=Bash}, ui.render{component=Pane}, session.start, turn.start, session.end, command.run{command=rice-account}, session.authorize, http.fetch, session.*, turn.complete, command.run{command=usage}, command.run{command=status}, model.*, session.compact, agent.spawn, tool.call{tool=WebFetch}, tool.call{tool=WebSearch}, prompt.submit, turn.step, prompt.autocomplete",
+      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=rice-account}",
       "./register.ts gating hook with .catch: process.run",
       "./register.ts gating hook with .catch: process.spawn",
       "./register.ts gating hook with .catch: tool.call{tool=Bash}",
       "./register.ts gating hook with .catch: session.authorize",
       "./register.ts gating hook with .catch: http.fetch",
-      "./register.ts gating hook without .catch: session.*",
+      "./register.ts gating hook with .catch: session.*",
       "./register.ts gating hook with .catch: command.run{command=usage}",
       "./register.ts gating hook with .catch: command.run{command=status}",
-      "./register.ts gating hook without .catch: model.*",
-      "./register.ts calls: $.clock.after (via scheduleRenewal), $.clock.now, $.clock.sleep (via machineIo), $.command.register, $.env.get, $.env.set (via setDescendantAuth, setManaged, syncDescendantAuth), $.fs.exists (via loadConfig, machineIo), $.fs.read (via loadConfig, machineIo), $.fs.stat (via machineIo), $.fs.write (via machineIo, saveConfig), $.http.fetch (via checkText, machineIo, refreshReport, usageText), $.process.run (via machineIo), $.session.authorize (via usageText), $.session.cwd (via statusText), $.session.model (via statusText), $.session.version (via statusText), $.state.get, $.state.set, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open (via runCommand), $.ui.resolve, $.ui.status (via refreshReport, switchTo), $.ui.toast (via renewIfActive, restore)",
-      "./register.ts env writes: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_BASE_URL, ANTHROPIC_BEDROCK_BASE_URL, ANTHROPIC_CUSTOM_HEADERS, ANTHROPIC_FOUNDRY_API_KEY, ANTHROPIC_FOUNDRY_BASE_URL, ANTHROPIC_FOUNDRY_RESOURCE, ANTHROPIC_VERTEX_BASE_URL, ANTHROPIC_VERTEX_PROJECT_ID, AWS_BEARER_TOKEN_BEDROCK, AWS_PROFILE, AWS_REGION, CLAUDE_BG_AUTH_SNAPSHOT_PATH, CLAUDE_CODE_GATEWAY_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_HOST_AUTH_ENV_VAR, CLAUDE_CODE_HOST_CREDS_FILE, CLAUDE_CODE_OAUTH_TOKEN, CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST, CLAUDE_CODE_USE_ANTHROPIC_AWS, CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_GATEWAY, CLAUDE_CODE_USE_MANTLE, CLAUDE_CODE_USE_VERTEX, CLAUDE_SECURESTORAGE_CONFIG_DIR, CLOUD_ML_REGION, RICE_SESSION_ACCOUNTS_OAUTH_RELAY",
-      "./register.ts env reads: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_BASE_URL, ANTHROPIC_BEDROCK_BASE_URL, ANTHROPIC_CUSTOM_HEADERS, ANTHROPIC_FOUNDRY_API_KEY, ANTHROPIC_FOUNDRY_BASE_URL, ANTHROPIC_FOUNDRY_RESOURCE, ANTHROPIC_VERTEX_BASE_URL, ANTHROPIC_VERTEX_PROJECT_ID, AWS_BEARER_TOKEN_BEDROCK, AWS_PROFILE, AWS_REGION, CLAUDE_BG_AUTH_SNAPSHOT_PATH, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, CLAUDE_CODE_GATEWAY_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_HOST_AUTH_ENV_VAR, CLAUDE_CODE_HOST_CREDS_FILE, CLAUDE_CODE_OAUTH_TOKEN, CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST, CLAUDE_CODE_USE_ANTHROPIC_AWS, CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_GATEWAY, CLAUDE_CODE_USE_MANTLE, CLAUDE_CODE_USE_VERTEX, CLAUDE_CONFIG_DIR, CLAUDE_SECURESTORAGE_CONFIG_DIR, CLOUD_ML_REGION, FORCE_WINDOWS_CREDMAN, HOME, OS, RICE_SESSION_ACCOUNTS_OAUTH_RELAY, SystemRoot, USER, USERNAME, USERPROFILE, WINDIR",
-      "./register.ts state writes: rice-session-accounts.active, rice-session-accounts.originals",
-      "./register.ts state reads: rice-session-accounts.active, rice-session-accounts.originals"
+      "./register.ts gating hook with .catch: model.*",
+      "./register.ts gating hook with .catch: session.compact",
+      "./register.ts gating hook with .catch: agent.spawn",
+      "./register.ts gating hook with .catch: tool.call{tool=WebFetch}",
+      "./register.ts gating hook with .catch: tool.call{tool=WebSearch}",
+      "./register.ts gating hook with .catch: prompt.submit",
+      "./register.ts calls: $.clock.after (via scheduleRenewal), $.clock.now, $.clock.sleep (via machineIo), $.command.register, $.env.get, $.env.set (via neutralizeBearer, setManaged), $.fs.exists (via loadConfig, machineIo), $.fs.read (via loadConfig, machineIo), $.fs.stat (via machineIo), $.fs.write (via editConfig, machineIo), $.http.fetch (via oauthFetch), $.process.run (via machineIo), $.session.cwd (via statusText), $.session.model (via statusText), $.session.version (via oauthFetch, statusText), $.settings.read (via switchContext), $.state.get, $.state.set, $.store.delete, $.store.get (via clearedWithAccount), $.store.set, $.ui.close, $.ui.invalidate, $.ui.log, $.ui.open (via runCommand), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.ts env writes: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_BASE_URL, ANTHROPIC_BEDROCK_BASE_URL, ANTHROPIC_CUSTOM_HEADERS, ANTHROPIC_FOUNDRY_API_KEY, ANTHROPIC_FOUNDRY_BASE_URL, ANTHROPIC_FOUNDRY_RESOURCE, ANTHROPIC_VERTEX_BASE_URL, ANTHROPIC_VERTEX_PROJECT_ID, AWS_BEARER_TOKEN_BEDROCK, AWS_PROFILE, AWS_REGION, CLAUDE_BG_AUTH_SNAPSHOT_PATH, CLAUDE_CODE_GATEWAY_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_HOST_AUTH_ENV_VAR, CLAUDE_CODE_HOST_CREDS_FILE, CLAUDE_CODE_OAUTH_TOKEN, CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST, CLAUDE_CODE_USE_ANTHROPIC_AWS, CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_GATEWAY, CLAUDE_CODE_USE_MANTLE, CLAUDE_CODE_USE_VERTEX, CLAUDE_SECURESTORAGE_CONFIG_DIR, CLOUD_ML_REGION",
+      "./register.ts env reads: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_BASE_URL, ANTHROPIC_BEDROCK_BASE_URL, ANTHROPIC_CUSTOM_HEADERS, ANTHROPIC_FEDERATION_RULE_ID, ANTHROPIC_FOUNDRY_API_KEY, ANTHROPIC_FOUNDRY_BASE_URL, ANTHROPIC_FOUNDRY_RESOURCE, ANTHROPIC_ORGANIZATION_ID, ANTHROPIC_VERTEX_BASE_URL, ANTHROPIC_VERTEX_PROJECT_ID, AWS_BEARER_TOKEN_BEDROCK, AWS_PROFILE, AWS_REGION, CLAUDE_BG_AUTH_SNAPSHOT_PATH, CLAUDE_CODE_API_KEY_FILE_DESCRIPTOR, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, CLAUDE_CODE_FORCE_WINDOWS_CREDMAN, CLAUDE_CODE_GATEWAY_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_HOST_AUTH_ENV_VAR, CLAUDE_CODE_HOST_CREDS_FILE, CLAUDE_CODE_OAUTH_TOKEN, CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST, CLAUDE_CODE_USE_ANTHROPIC_AWS, CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_GATEWAY, CLAUDE_CODE_USE_MANTLE, CLAUDE_CODE_USE_VERTEX, CLAUDE_CONFIG_DIR, CLAUDE_SECURESTORAGE_CONFIG_DIR, CLOUD_ML_REGION,… [+58 chars]",
+      "./register.ts state writes: rice-session-accounts.active, rice-session-accounts.authorizations, rice-session-accounts.originals, rice-session-accounts.problem",
+      "./register.ts state reads: rice-session-accounts.active, rice-session-accounts.authorizations, rice-session-accounts.originals, rice-session-accounts.problem"
      ],
      "gatingHooks": [
       {
@@ -369,7 +394,7 @@
        "module": "./register.ts",
        "pattern": "session.*",
        "hook": "session.*",
-       "hasCatch": false
+       "hasCatch": true
       },
       {
        "module": "./register.ts",
@@ -387,7 +412,37 @@
        "module": "./register.ts",
        "pattern": "model.*",
        "hook": "model.*",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=WebFetch}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=WebSearch}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
       }
      ]
     }
@@ -395,5 +450,5 @@
    "advice": []
   }
  },
- "sourceHash": "b84bd2b6a4aa5d16"
+ "sourceHash": "e2b6eb78fb9265f2"
 }

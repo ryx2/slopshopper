@@ -1,0 +1,8 @@
+{
+ "slug": "graphixxgeek-boop-ccm-claude-code-mods-bilan",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst NOMS: Record<string, string> = { five_hour: 'quota 5 h', seven_day: 'quota 7 jours', spend_limit: 'plafond de dépense' }\n\nexport const register: Register = on => {\n  let outils = 0\n\n  on('session.start', async ($, e, next) => {\n    await $.command.register({ name: 'bilan', description: 'Coût, durée, remplissage du fil et quotas de cette session' })\n    return next(e)\n  })\n\n  on('tool.call', ($, e, next) => {\n    outils += 1\n    return next(e)\n  }).catch(($, e, next) => next(e))\n\n  on('command.run', { command: 'bilan' }, async $ => {\n    const { startedAt, context, rateLimits, cost } = await $.session.usage()\n    const minutes = Math.round(((await $.clock.now()) - startedAt) / 60_000)\n    const lignes = [\n      `Bilan de la session (chiffres lus sur le moteur, pas estimés)`,\n      `- Durée : ${minutes} min`,\n      `- Fil rempli à ${context.percent ?? '?'} % (${context.tokens ?? '?'} sur ${context.window} tokens)`,\n      `- Appels d'outils depuis le chargement : ${outils}`,\n      ...(cost ? [`- Coût : ${cost.usd.toFixed(2)} $`] : []),\n      ...rateLimits.map(r => `- ${NOMS[r.kind] ?? r.kind} : ${r.percentUsed} %${r.resetsAt ? `, remis à zéro le ${r.resetsAt}` : ''}`),\n    ]\n    return { text: lignes.join('\\n') }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"bilan\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Commande /bilan : coût, durée, remplissage du fil et quotas, lus sur le moteur\"\n}"
+ }
+}

@@ -1,0 +1,8 @@
+{
+ "slug": "novie131-smart-agent-route-reply-detail",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\n// 不接手畫回覆訊息：mod 一畫 AssistantMessage，VS Code 就會加外框和「From the reply-detail plugin」標籤，\n// 而且 mod 關不掉。回覆模式切換鍵改放在 agent-board 看板；只要單次詳細版，也可以直接輸入「詳細說明」。\nexport const FORMAT_RULE = `# 回覆格式（reply-detail plugin）\n本段只適用於直接回覆使用者的主對話；如果你是子 agent，忽略本段，照你自己的回報格式。\n- 每一輪結束的回覆預設是精簡版，讓使用者一眼看懂，固定三段（某段沒有內容就寫「無」）：\n  - **現況**：一到三句，做到哪、結果如何、驗證有沒有過\n  - **你要做的**：需要使用者動手的事，附可直接複製的指令\n  - **需要你決定／提供**：問題附推薦答案；要使用者提供的資訊說清楚是什麼\n- 過程、證據、檔案清單、取捨分析不放精簡版；工作途中的進度更新維持一句話\n- 使用者送出「詳細說明」開頭的訊息時，把上一則回覆改寫成詳細版：背景、做了什麼、證據與檔案位置、取捨與風險；不重做工作，只展開說明\n- 使用者訊息附有「回覆模式：詳細」時（看板上的切換鍵），那一輪結束的回覆直接寫詳細版，不用三段式`\n\nexport const register: Register = on => {\n  on('prompt.compose', async ($, e, next) => {\n    const r = await next(e)\n    return { ...r, sections: [...r.sections, { id: 'reply-detail:format', text: FORMAT_RULE, scope: 'session' }] }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"reply-detail\",\n  \"version\": \"0.2.1\",\n  \"description\": \"注入「精簡版三段式」回覆格式規則（只對主對話）；看板的切換鍵切到詳細後每則都寫詳細版；只要單次的話輸入「詳細說明」，就把上一則回覆改寫成詳細版。\",\n  \"author\": {\n    \"name\": \"Novie131\"\n  }\n}"
+ }
+}

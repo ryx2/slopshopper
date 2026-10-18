@@ -1,6 +1,6 @@
 {
  "slug": "jeremyho1123-claude-code-agent-board",
- "generatedAt": "2026-10-16T14:20:02.609Z",
+ "generatedAt": "2026-10-18T13:55:30.692Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -46,6 +46,12 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "Pane",
      "requestId": "agent-board"
     }
@@ -54,16 +60,16 @@
   "commands": [
    {
     "name": "agent-board",
-    "description": "子代理進度：每個子代理的狀態、步數、最近一步、時間與 token",
+    "description": "Subagents: the state, steps, last step, time and tokens of each",
     "immediate": true,
-    "output": "0 執行中 · 0 已結束\n\n這個 session 還沒有子代理。派出子代理後，這裡會自動更新。\n\n狀態符號：● 執行中　⏸ 超過 2 分鐘沒動靜　✓ 完成　✗ 失敗　■ 中止\n\n圖形面板：VS Code 左側活動列的 Agent Board 圖示，或 Ctrl+Shift+P →「Agent Board: 打開子代理面板」。"
+    "output": "0 running · 0 ended\n\nNo subagents in this session yet. Once one starts, this updates by itself.\n\nKey: ● running · ⏸ quiet for over 2 min · ✓ done · ✗ failed · ■ stopped\n\nThe graphical board: the Agent Board icon in VS Code's activity bar, or Ctrl+Shift+P → \"Agent Board: Open Subagent Board\".\n\n[context bar] surfaces attached: terminal\n[context bar] asked to draw 0 times\n[context bar] figures: 49% · 97k / 200k"
    }
   ],
   "tools": [],
   "panes": [
    {
     "id": "agent-board",
-    "title": "子代理進度"
+    "title": "Subagents"
    }
   ],
   "toasts": [],
@@ -73,17 +79,18 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.clock.every": 3,
-   "$.state.get": 7,
+   "$.state.get": 11,
    "$.clock.now": 3,
    "$.session.id": 2,
    "$.session.cwd": 2,
    "$.session.model": 2,
    "$.session.usage": 2,
+   "$.state.set": 4,
    "$.env.get": 3,
    "$.fs.write": 2,
-   "$.state.set": 2,
    "$.ui.open": 1,
-   "$.ui.resolve": 1
+   "$.session.surfaces": 1,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -100,6 +107,53 @@
    }
   ],
   "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row"
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        "Context "
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "color": "success"
+       },
+       "children": [
+        "██████████░░░░░░░░░░"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "bold": true
+       },
+       "children": [
+        " 49%"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "dimColor": true
+       },
+       "children": [
+        " · 97k / 200k"
+       ]
+      }
+     ]
+    }
+   },
    "Pane": {
     "agent-board": {
      "ok": true,
@@ -122,7 +176,7 @@
            "bold": true
           },
           "children": [
-           "0 執行中 · 0 已結束"
+           "0 running · 0 ended"
           ]
          }
         ]
@@ -133,12 +187,12 @@
          "dimColor": true
         },
         "children": [
-         "這個 session 還沒有子代理。派出子代理後，這裡會即時顯示它們的進度。"
+         "No subagents in this session yet. Once one starts, its progress shows here as it happens."
         ]
        }
       ]
      },
-     "title": "子代理進度"
+     "title": "Subagents"
     }
    }
   },
@@ -157,7 +211,7 @@
    "turn.complete",
    "$.ui.open(agent-board)",
    "$.fs.write(/Users/dev/.claude/agent-board/sessions/preview-session.json)",
-   "/agent-board → 0 執行中 · 0 已結束\n\n這個 session 還沒有子代理。派出子代理後，這裡會自動更新。\n\n狀態符號：● 執行中　⏸ 超過 2 分鐘沒動靜　✓ 完成　✗…"
+   "/agent-board → 0 running · 0 ended\n\nNo subagents in this session yet. Once one starts, this upd…"
   ],
   "console": [],
   "warnings": []
@@ -178,6 +232,7 @@
    "classic.PermissionRequest",
    "classic.PermissionDenied",
    "turn.complete",
+   "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=agent-board}"
   ],
   "calls": [
@@ -196,6 +251,7 @@
    "$.session.cwd (via writeSnapshot)",
    "$.session.id (via writeSnapshot)",
    "$.session.model (via writeSnapshot)",
+   "$.session.surfaces",
    "$.session.usage (via writeSnapshot)",
    "$.state.get",
    "$.state.set",
@@ -204,11 +260,13 @@
    "$.ui.status (via refreshStatusLine)"
   ],
   "stateReads": [
+   "agent-board.context",
    "agent-board.isDismissed",
    "agent-board.now",
    "agent-board.rows"
   ],
   "stateWrites": [
+   "agent-board.context",
    "agent-board.isDismissed",
    "agent-board.now",
    "agent-board.rows"
@@ -229,7 +287,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: agent-board.rows, agent-board.now, agent-board.isDismissed"
+     "types ./types/index.d.ts declares state: agent-board.rows, agent-board.now, agent-board.isDismissed, agent-board.context"
     ],
     "gatingHooks": []
    },
@@ -240,7 +298,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, session.end, command.run{command=agent-board}, ui.close{id=agent-board}, agent.spawn, tool.call, turn.start, classic.PermissionRequest, classic.PermissionDenied, turn.complete, ui.render{component=Pane, requestId=agent-board}",
+      "./register.tsx hooks: session.start, session.measure, session.end, command.run{command=agent-board}, ui.close{id=agent-board}, agent.spawn, tool.call, turn.start, classic.PermissionRequest, classic.PermissionDenied, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agent-board}",
       "./register.tsx hooks on classic.PermissionRequest, classic.PermissionDenied do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=agent-board}",
       "./register.tsx gating hook without .catch: ui.close{id=agent-board}",
@@ -248,11 +306,11 @@
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
       "./register.tsx gating hook without .catch: classic.PermissionDenied",
-      "./register.tsx calls: $.agent.list (via tick), $.clock.every, $.clock.now, $.command.register, $.env.get (via boardPath), $.fs.read (via readSharedPlan), $.fs.write (via maybeReadPlan, writeSnapshot), $.http.fetch (via askAccount, fetchPlan), $.session.authorize (via askAccount, fetchPlan), $.session.cwd (via writeSnapshot), $.session.id (via writeSnapshot), $.session.model (via writeSnapshot), $.session.usage (via writeSnapshot), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status (via refreshStatusLine)",
+      "./register.tsx calls: $.agent.list (via tick), $.clock.every, $.clock.now, $.command.register, $.env.get (via boardPath), $.fs.read (via readSharedPlan), $.fs.write (via maybeReadPlan, writeSnapshot), $.http.fetch (via askAccount, fetchPlan), $.session.authorize (via askAccount, fetchPlan), $.session.cwd (via writeSnapshot), $.session.id (via writeSnapshot), $.session.model (via writeSnapshot), $.session.surfaces, $.session.usage (via writeSnapshot), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.status (via refreshStatusLine)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE",
-      "./register.tsx state writes: agent-board.isDismissed, agent-board.now, agent-board.rows",
-      "./register.tsx state reads: agent-board.isDismissed, agent-board.now, agent-board.rows"
+      "./register.tsx state writes: agent-board.context, agent-board.isDismissed, agent-board.now, agent-board.rows",
+      "./register.tsx state reads: agent-board.context, agent-board.isDismissed, agent-board.now, agent-board.rows"
      ],
      "gatingHooks": [
       {
@@ -291,5 +349,5 @@
    "advice": []
   }
  },
- "sourceHash": "8bbaafa548ba4b8a"
+ "sourceHash": "6d1b7118f645ea11"
 }

@@ -1,0 +1,8 @@
+{
+ "slug": "graphixxgeek-boop-ccm-claude-code-mods-garde-fou",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Chaque règle porte sa raison : le refus l'affiche, pour que Claude et la personne la lisent.\nconst REGLES: { motif: RegExp; raison: string }[] = [\n  { motif: /\\bgit\\s+remote\\s+(set-url|add|remove|rm|rename)\\b/, raison: \"on ne change jamais l'adresse distante git\" },\n  { motif: /\\bgit\\s+push\\b.*(\\s--force\\b|\\s-f\\b|--force-with-lease)/, raison: 'une poussée forcée efface du travail sur GitHub' },\n  { motif: /\\bgit\\s+push\\b.*\\s(main|master)\\b/, raison: 'on ne pousse jamais directement sur la branche principale' },\n  { motif: /\\brm\\s+-[a-zA-Z]*r[a-zA-Z]*f?\\s+(\\/|~|\\*|\\.\\s*$)/, raison: 'suppression massive de dossiers' },\n  { motif: /\\bgit\\s+(reset\\s+--hard|clean\\s+-[a-zA-Z]*f)/, raison: 'efface des changements non sauvegardés' },\n]\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    const regle = REGLES.find(r => r.motif.test(e.command))\n    return regle ? { deny: `garde-fou : refusé, ${regle.raison}. Demandez d'abord à la personne responsable du projet.` } : next(e)\n  }).catch(($, e, next) => (next.called ? next(e) : { deny: 'garde-fou : la vérification a échoué.' }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"garde-fou\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Refuse les commandes qui ne se défont pas : adresse distante git, poussée forcée, suppression massive\"\n}"
+ }
+}

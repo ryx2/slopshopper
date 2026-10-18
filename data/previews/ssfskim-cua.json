@@ -1,6 +1,6 @@
 {
  "slug": "ssfskim-cua",
- "generatedAt": "2026-10-17T13:06:53.669Z",
+ "generatedAt": "2026-10-18T13:55:54.647Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -45,13 +45,52 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "/(?:)/"
+    }
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "uuid": "/(?:)/"
+    }
+   },
+   {
+    "event": "prompt.compose",
+    "matcher": {
+     "model": "/(?:)/"
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": true
+    }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": false
+    }
+   },
+   {
     "event": "tool.call"
    },
    {
     "event": "session.append"
    },
    {
+    "event": "session.compact"
+   },
+   {
     "event": "prompt.compose"
+   },
+   {
+    "event": "prompt.context"
+   },
+   {
+    "event": "prompt.attachment"
    }
   ],
   "commands": [
@@ -70,9 +109,12 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.process.run": 1,
-   "$.env.get": 1,
+   "$.process.run": 2,
+   "$.env.get": 2,
    "$.fs.exists": 2,
+   "$.state.get": 19,
+   "$.fs.list": 68,
+   "$.fs.stat": 153,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -118,6 +160,7 @@
   },
   "script": [
    "$.process.run(git rev-parse --path-format=absolute --git-common-dir --show-toplevel) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir --show-toplevel) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -146,28 +189,47 @@
    "ui.render{component=Pane, requestId=secret}",
    "ui.input{element=secret-value}",
    "ui.close{id=secret}",
+   "tool.call{tool=/\"(?:)\"/}",
+   "session.append{uuid=/\"(?:)\"/}",
+   "prompt.compose{model=/\"(?:)\"/}",
+   "session.start{isInteractive=true}",
+   "session.start{isInteractive=false}",
    "tool.call",
    "session.append",
-   "prompt.compose"
+   "session.compact",
+   "prompt.compose",
+   "prompt.context",
+   "prompt.attachment"
   ],
   "calls": [
    "$.command.register",
    "$.env.get",
    "$.fs.exists",
    "$.fs.list",
-   "$.fs.read",
+   "$.fs.read (via readSource",
+   "scrubPersisted)",
+   "$.fs.stat (via scrubPersisted",
+   "statFile)",
+   "$.fs.write (via scrubPersisted)",
    "$.process.run (via projectOf",
+   "readLarge",
+   "scrubPersisted",
    "storeField)",
    "$.session.append (via storeField)",
    "$.session.cwd (via projectOf)",
+   "$.state.get (via devcloudGuards)",
    "$.ui.close (via storeField)",
    "$.ui.invalidate",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "devcloud.secrets-guard"
+  ],
+  "stateWrites": [
+   "nothing"
+  ],
   "envReads": [
    "HOME"
   ],
@@ -190,21 +252,39 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./mods/register.tsx hooks: session.start{isInteractive=true}, session.start{isInteractive=false}, prompt.edit, command.run{command=secret}, ui.render{component=Pane, requestId=secret}, ui.input{element=secret-value}, ui.close{id=secret}, tool.call, session.append, prompt.compose",
-      "./mods/register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./mods/register.tsx hooks: session.start{isInteractive=true}, session.start{isInteractive=false}, prompt.edit, command.run{command=secret}, ui.render{component=Pane, requestId=secret}, ui.input{element=secret-value}, ui.close{id=secret}, tool.call{tool=/\"(?:)\"/}, session.append{uuid=/\"(?:)\"/}, prompt.compose{model=/\"(?:)\"/}, session.start{isInteractive=true}, session.start{isInteractive=false}, tool.call, session.append, session.compact, prompt.compose, prompt.context, prompt.attachment",
+      "./mods/register.tsx hooks on prompt.compose, session.compact, prompt.context, prompt.attachment do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./mods/register.tsx answers its own command: command.run{command=secret}",
       "./mods/register.tsx gating hook without .catch: ui.close{id=secret}",
+      "./mods/register.tsx gating hook with .catch: tool.call{tool=/\"(?:)\"/}",
+      "./mods/register.tsx gating hook without .catch: session.append{uuid=/\"(?:)\"/}",
       "./mods/register.tsx gating hook with .catch: tool.call",
-      "./mods/register.tsx gating hook without .catch: session.append",
-      "./mods/register.tsx calls: $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read, $.process.run (via projectOf, storeField), $.session.append (via storeField), $.session.cwd (via projectOf), $.ui.close (via storeField), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./mods/register.tsx gating hook with .catch: session.append",
+      "./mods/register.tsx gating hook with .catch: session.compact",
+      "./mods/register.tsx calls: $.command.register, $.env.get, $.fs.exists, $.fs.list, $.fs.read (via readSource, scrubPersisted), $.fs.stat (via scrubPersisted, statFile), $.fs.write (via scrubPersisted), $.process.run (via projectOf, readLarge, scrubPersisted, storeField), $.session.append (via storeField), $.session.cwd (via projectOf), $.state.get (via devcloudGuards), $.ui.close (via storeField), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.toast",
       "./mods/register.tsx env writes: nothing",
-      "./mods/register.tsx env reads: HOME"
+      "./mods/register.tsx env reads: HOME",
+      "./mods/register.tsx state writes: nothing",
+      "./mods/register.tsx state reads: devcloud.secrets-guard",
+      "./mods/register.tsx state of other plugins, not checked (run validate in a session with them enabled): devcloud.secrets-guard"
      ],
      "gatingHooks": [
       {
        "module": "./mods/register.tsx",
        "pattern": "ui.close",
        "hook": "ui.close{id=secret}",
+       "hasCatch": false
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"(?:)\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{uuid=/\"(?:)\"/}",
        "hasCatch": false
       },
       {
@@ -217,7 +297,13 @@
        "module": "./mods/register.tsx",
        "pattern": "session.append",
        "hook": "session.append",
-       "hasCatch": false
+       "hasCatch": true
+      },
+      {
+       "module": "./mods/register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": true
       }
      ]
     }
@@ -225,5 +311,5 @@
    "advice": []
   }
  },
- "sourceHash": "64f64e0fbaa3d8cc"
+ "sourceHash": "ea1cfbc6ca76d0b0"
 }

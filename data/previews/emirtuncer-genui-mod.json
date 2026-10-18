@@ -1,0 +1,250 @@
+{
+ "slug": "emirtuncer-genui-mod",
+ "generatedAt": "2026-10-18T13:55:23.998Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "genui"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__genui__render"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__genui__preview_template"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse",
+     "props": {
+      "tool": "mcp__genui__render"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult",
+     "props": {
+      "tool": "mcp__genui__render"
+     }
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "genui"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "genui",
+    "description": "Open the GenUI pane, or a template: /genui [name | open <name> | list | init <name> | refresh]",
+    "argumentHint": "[name | open <name> | list | init <name> | refresh]",
+    "output": "No generated UI yet. Templates: /genui list"
+   }
+  ],
+  "tools": [
+   {
+    "name": "render",
+    "description": "Draw a generative UI for the user, in the side pane (or inline in the transcript with placement \"inline\"): cards, layouts, tables, progress, markdown, code, and forms.\n\nUse it when a visual layout or a form communicates better than prose: summaries, dashboards, comparisons, choices with several fields, gathering structured input, or live things like timers.\n\nPlacement: \"pane\" (the default) draws it in the side pane, with a one-line pointer in the transcript; \"inline\" draws it in the transcript. Use \"pane\" for anything live or long-lived (timers, dashboards), \"inline\" for one-off answers.\n\nEach node is a JSON object with a \"type\":\n- box: { direction?: \"row\"|\"column\", gap?, padding?, border?: boolean, title?, children?: Node[] }\n- text: { text, bold?, dim?, italic?, color? (a color name or #hex) }\n- markdown: { text }  (headings, lists, tables, code fences, links)\n- code: { source, language? }\n- link: { href, label? }\n- divider: {}\n- table: { columns: string[], rows: string[][] }\n- progress: { value, max? (default 100), label? }\n- kv: { items: [{ key, value }] }\n- input: { id, label?, placeholder?, default? }  (a text field)\n- select: { id, label?, options: [{ value, label? }], default? }  (pick one)\n- button: { id, label, variant?: \"primary\"|\"secondary\", action?: \"submit\"|\"cancel\"|\"action\"|\"prompt\", prompt? }  (\"prompt\" sends its prompt text to Claude as the user's message without closing the form; {{form.<id>}} in it is that field's value)\nLive nodes, which the mod itself redraws every second (no script needed):\n- countdown: { id, seconds? | until? (ISO time), label?, doneText? }  (remaining time and a bar; a toast and a notification when it ends)\n- stopwatch: { label? }  (time since the UI was drawn)\n- clock: { label? }  (the current local time)\nIds of input, select, button and countdown must be unique within the tree.\n\nForms: set \"awaitResponse\": true when the UI holds inputs, selects or buttons whose answers you need. After calling the tool with awaitResponse, END YOUR TURN immediately without further text or tool calls: the user's answers arrive as their next message, as <genui-response id=\"...\" action=\"submit|cancel|<button id>\">{json of field values}</genui-response>. Buttons with action \"submit\" or \"cancel\" (or \"action\", which sends the button's id) close the form."
+   },
+   {
+    "name": "preview_template",
+    "description": "Run a GenUI template and show it in the side pane, answering the problems found (validation, command errors, binding errors) or a short summary. Use it while writing a template file to check it.\n\nA GenUI template is a JSON file: .claude/genui/<name>.json in the project, or ~/.claude/genui/<name>.json for the user. The user opens it with /genui <name>.\n{\n  \"title\": \"…\", \"description\"?: \"…\",\n  \"sources\": { \"<name>\": { \"argv\": [\"cmd\", \"arg\"], \"parse\": \"json\"|\"text\"|\"lines\", \"timeoutMs\"?, \"cwd\"?, \"allowFailure\"?: true, \"manual\"?: true } },\n  \"refreshSeconds\"?: 10,\n  \"tree\": <node>\n}\nCommands run without a shell. Their output is data under the source's name. In any string of the tree, {{path | filter:arg}} binds it: a string that is one whole {{…}} keeps the value's type (numbers for progress), others interpolate.\nPaths: r.items[0].name. Filters: length, first, last, count:k=v, where:k=v, where:k!=v, map:k, join:x, sort:k, take:n, split:x, trim, upper, default:x (\t \n s escapes).\nExtra nodes: { \"type\": \"each\", \"items\": \"{{…}}\", \"as\": \"x\", \"node\": <node, or a table row array> }, { \"type\": \"when\", \"test\": \"{{…}}\", \"node\": <node>, \"else\"?: <node> }.\nExtra button actions in templates: \"refresh\" (run every source again), \"run\" with \"source\" (run a \"manual\" source, then refresh). \"prompt\" may use {{source.path}} and {{form.<id>}}."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.tool.register": 2,
+   "$.command.register": 1,
+   "$.clock.every": 1,
+   "$.state.get": 2,
+   "$.ui.resolve": 1,
+   "$.clock.now": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1000
+   }
+  ],
+  "sites": {
+   "ToolUse": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "genui": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No generated UI yet. Try /genui list."
+      ]
+     },
+     "title": "genui"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/genui → No generated UI yet. Templates: /genui list"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=genui}",
+   "tool.call{tool=mcp__genui__render}",
+   "tool.call{tool=mcp__genui__preview_template}",
+   "ui.render{component=ToolUse",
+   "props has {tool=mcp__genui__render}}",
+   "ui.render{component=ToolResult",
+   "props has {tool=mcp__genui__render}}",
+   "ui.render{component=Pane, requestId=genui}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via runArgv",
+   "templateDirs)",
+   "$.fs.exists (via initTemplate",
+   "listTemplates",
+   "locate)",
+   "$.fs.list (via listTemplates)",
+   "$.fs.read (via listTemplates",
+   "locate)",
+   "$.fs.write (via initTemplate)",
+   "$.process.run (via runArgv)",
+   "$.prompt.submit (via handlersFor)",
+   "$.session.root (via sessionRoot)",
+   "$.state.get",
+   "$.state.set (via openTemplate",
+   "refreshTemplate)",
+   "$.store.get (via ensureApproved)",
+   "$.store.set (via ensureApproved)",
+   "$.tool.register",
+   "$.ui.ask (via ensureApproved)",
+   "$.ui.invalidate (via tick)",
+   "$.ui.notify (via tick)",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.toast (via runManualSource",
+   "tick)"
+  ],
+  "stateReads": [
+   "genui.fired",
+   "genui.forms",
+   "genui.latest",
+   "genui.runs"
+  ],
+  "stateWrites": [
+   "genui.fired",
+   "genui.forms",
+   "genui.latest",
+   "genui.runs"
+  ],
+  "envReads": [
+   "ComSpec",
+   "HOME",
+   "OS",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/emirtuncer-genui-mod/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/emirtuncer-genui-mod/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: genui.forms, genui.latest, genui.fired, genui.runs"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/emirtuncer-genui-mod/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=genui}, tool.call{tool=mcp__genui__render}, tool.call{tool=mcp__genui__preview_template}, ui.render{component=ToolUse, props has {tool=mcp__genui__render}}, ui.render{component=ToolResult, props has {tool=mcp__genui__render}}, ui.render{component=Pane, requestId=genui}",
+      "./register.tsx gating hook with .catch: command.run{command=genui}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__genui__render}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__genui__preview_template}",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via runArgv, templateDirs), $.fs.exists (via initTemplate, listTemplates, locate), $.fs.list (via listTemplates), $.fs.read (via listTemplates, locate), $.fs.write (via initTemplate), $.process.run (via runArgv), $.prompt.submit (via handlersFor), $.session.root (via sessionRoot), $.state.get, $.state.set (via openTemplate, refreshTemplate), $.store.get (via ensureApproved), $.store.set (via ensureApproved), $.tool.register, $.ui.ask (via ensureApproved), $.ui.invalidate (via tick), $.ui.notify (via tick), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via runManualSource, tick)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: ComSpec, HOME, OS, USERPROFILE",
+      "./register.tsx state writes: genui.fired, genui.forms, genui.latest, genui.runs",
+      "./register.tsx state reads: genui.fired, genui.forms, genui.latest, genui.runs"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=genui}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__genui__render}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__genui__preview_template}",
+       "hasCatch": true
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "2b6e9be97c63b66f"
+}

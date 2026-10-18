@@ -1,0 +1,8 @@
+{
+ "slug": "kutschersteffen-cmd-agentic-research-pipeline-token-usage",
+ "files": {
+  "hooks/register.ts": "import type { Register, SessionContextUsage, SessionRateLimit } from 'claude-code'\n\nconst LABELS: Record<string, string> = { five_hour: '5h', seven_day: '7d' }\nconst k = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`)\n\nexport const format = (context: SessionContextUsage, rateLimits: SessionRateLimit[], usd?: number) =>\n  [\n    context.tokens === undefined\n      ? `ctx –/${k(context.window)}`\n      : `ctx ${k(context.tokens)}/${k(context.window)} (${Math.round(context.percent ?? (100 * context.tokens) / context.window)}%)`,\n    usd === undefined ? undefined : `$${usd.toFixed(2)}`,\n    ...rateLimits.map(r => `${LABELS[r.kind] ?? r.kind} ${Math.round(r.percentUsed)}%`),\n  ]\n    .filter(Boolean)\n    .join(' · ')\n\nexport const register: Register = on => {\n  on('session.measure', async ($, e, next) => {\n    const { cost } = await $.session.usage()\n    $.ui.status(format(e.context, e.rateLimits, cost?.usd))\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"token-usage\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Status line with context-window fill, session cost and rate-limit use\"\n}"
+ }
+}

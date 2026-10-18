@@ -1,6 +1,6 @@
 {
  "slug": "moabualruz-rice-multi-models",
- "generatedAt": "2026-10-17T13:06:38.349Z",
+ "generatedAt": "2026-10-18T13:55:42.974Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -60,6 +60,9 @@
    },
    {
     "event": "classic.UserPromptSubmit"
+   },
+   {
+    "event": "classic.SessionStart"
    },
    {
     "event": "session.start"
@@ -127,7 +130,7 @@
     "name": "rice-models",
     "description": "Native model setup, repair, read-only doctor, candidates, approvals and preferences",
     "argumentHint": "[setup [repair|codex] | search [setup|add|remove|priority] | doctor | status | models | picker [write] | providers | approve <provider> | refresh | reload | opencode [zen|go] [write] | effort <level> | transport auto|ws|sse | helper session|once | workers read|write]",
-    "output": "helper: Node.js is not available to this session. Install Node.js 22+ from https://nodejs.org, or set RICE_MULTI_MODELS_NODE to its absolute executable path, then /rice-models setup repair.\ntransport: auto (auto = WebSocket, falling back to server-sent events)\neffort: unset; provider chooses, unless the session sets one\nCodex session candidate: none discovered\nDiscovery: runtime: unavailable (helper-unavailable)\nPrimary context (claude-opus-5-5): active context unknown, maximum context unknown, reported input unknown, effective input bound unknown, native window 200000; override unmanaged.\nNative context scope: primary model only; process-wide override does not establish independent custom-subagent windows or plugin-unload restoration. Numeric per-model registration is unsupported.\nCompaction: the supported session.compact hook summarizes with the selected conversation provider. Failed or incomplete summaries retain the original transcript.\ntool schemas: generated for 2.1.296 (this is 2.1.289: regenerate with scripts/gen-schemas.ts)\nChatGPT limits: shown after the first WebSocket request\nno routed step yet"
+    "output": "helper: Node.js is not available to this session. Install Node.js 22+ from https://nodejs.org, or set RICE_MULTI_MODELS_NODE to its absolute executable path, then /rice-models setup repair.\ntransport: auto (auto = WebSocket, falling back to server-sent events)\neffort: unset; provider chooses, unless the session sets one\nCodex session candidate: none discovered\nDiscovery: runtime: unavailable (helper-unavailable)\nPrimary context (claude-opus-5-5): active context unknown, maximum context unknown, reported input unknown, effective input bound unknown, native window 200000; override unmanaged.\nNative context scope: primary model only; process-wide override does not establish independent custom-subagent windows or plugin-unload restoration. Numeric per-model registration is unsupported.\nCompaction: the supported session.compact hook sends Claude Code's own summary prompt (read from the installed claude) over the conversation to the selected provider and writes the engine's own summary message. Failed or incomplete summaries retain the original transcript.\nTool definitions and agent prompts: not read from the installed claude yet; built-in tools use the schema table generated for 2.1.302 (this is 2.1.289) and the descriptions the session lists, and a routed subagent step is refused until they are read.\nChatGPT limits: shown after the first WebSocket request\nno routed step yet"
    }
   ],
   "tools": [],
@@ -145,14 +148,15 @@
    "$.process.run": 2,
    "$.fs.read": 1,
    "$.fs.exists": 1,
-   "$.state.get": 4,
-   "$.state.set": 2,
+   "$.state.get": 5,
+   "$.state.set": 3,
+   "$.tool.list": 2,
+   "$.session.version": 3,
+   "$.store.get": 3,
    "$.session.model": 4,
-   "$.store.get": 1,
    "$.ui.log": 1,
    "$.store.set": 1,
    "$.session.id": 1,
-   "$.session.version": 1,
    "$.session.usage": 1
   },
   "timers": [],
@@ -192,6 +196,7 @@
    "turn.complete{isAborted=true}",
    "session.end{reason=/\".+\"/}",
    "classic.UserPromptSubmit",
+   "classic.SessionStart",
    "session.start",
    "classic.PreModelSwitch",
    "classic.PostModelSwitch",
@@ -213,15 +218,16 @@
    "command.run{command=rice-models}"
   ],
   "calls": [
-   "$.agent.list (via buildRequest",
-   "buildWorkerRequest",
+   "$.agent.list (via buildWorkerRequest",
    "permissionInstructions",
+   "promptOwner",
    "runFor",
    "stepOwnerModel)",
    "$.agent.register (via agent",
-   "registerAgents)",
+   "registerAgentTypes)",
    "$.agent.spawn (via agent)",
-   "$.clock.now (via promptsPort",
+   "$.clock.now (via nativeTools",
+   "promptsPort",
    "routedStep",
    "superviseHelper)",
    "$.clock.sleep (via ensureHelper",
@@ -254,19 +260,22 @@
    "$.session.model",
    "$.session.usage (via nativeContextStatus)",
    "$.session.version (via discoveryStatus",
+   "nativeCompaction",
    "nativePermissionDefaults",
+   "nativeTools",
+   "readyTools",
    "statusText)",
-   "$.settings.read (via effectivePermissionPolicy",
-   "hiddenSource",
-   "sources)… [+566 chars]"
+   "$.settings.… [+652 chars]"
   ],
   "stateReads": [
    "rice-multi-models.nativeContext",
-   "rice-multi-models.prefs"
+   "rice-multi-models.prefs",
+   "rice-multi-models.transcript"
   ],
   "stateWrites": [
    "rice-multi-models.nativeContext",
-   "rice-multi-models.prefs"
+   "rice-multi-models.prefs",
+   "rice-multi-models.transcript"
   ],
   "envReads": [
    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
@@ -293,7 +302,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: rice-multi-models.prefs, rice-multi-models.nativeContext"
+     "types ./types/index.d.ts declares state: rice-multi-models.prefs, rice-multi-models.nativeContext, rice-multi-models.transcript"
     ],
     "gatingHooks": []
    },
@@ -304,8 +313,8 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: agent.register{name=/\".+\"/}, plugin.register{name=/\".+\"/}, skill.prompt{skill=/\".+\"/}, agent.offer{agent=/\":evaluator-[0-9a-f-]+$\"/}, turn.step{agentId=/\".+\"/}, tool.call{tool=/\"^SubagentHandback$\"/}, classic.Stop, classic.SubagentStop, turn.complete{isAborted=true}, session.end{reason=/\".+\"/}, classic.UserPromptSubmit, session.start, classic.PreModelSwitch, classic.PostModelSwitch, session.end, prompt.compose, classic.ConfigChange, prompt.context, agent.register, classic.PreToolUse, tool.call, tool.check, agent.spawn, tool.describe, turn.step, session.compact, model.complete, model.classify, model.fork, command.run{command=rice-models}",
-      "./register.ts hooks on skill.prompt, classic.Stop, classic.SubagentStop, classic.UserPromptSubmit, classic.PreModelSwitch, classic.PostModelSwitch, prompt.compose, classic.ConfigChange, prompt.context, classic.PreToolUse, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts hooks: agent.register{name=/\".+\"/}, plugin.register{name=/\".+\"/}, skill.prompt{skill=/\".+\"/}, agent.offer{agent=/\":evaluator-[0-9a-f-]+$\"/}, turn.step{agentId=/\".+\"/}, tool.call{tool=/\"^SubagentHandback$\"/}, classic.Stop, classic.SubagentStop, turn.complete{isAborted=true}, session.end{reason=/\".+\"/}, classic.UserPromptSubmit, classic.SessionStart, session.start, classic.PreModelSwitch, classic.PostModelSwitch, session.end, prompt.compose, classic.ConfigChange, prompt.context, agent.register, classic.PreToolUse, tool.call, tool.check, agent.spawn, tool.describe, turn.step, session.compact, model.complete, model.classify, model.fork, command.run{command=rice-models}",
+      "./register.ts hooks on skill.prompt, classic.Stop, classic.SubagentStop, classic.UserPromptSubmit, classic.SessionStart, classic.PreModelSwitch, classic.PostModelSwitch, prompt.compose, classic.ConfigChange, prompt.context, classic.PreToolUse, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts answers its own command: command.run{command=rice-models}",
       "./register.ts gating hook without .catch: agent.register{name=/\".+\"/}",
       "./register.ts gating hook without .catch: plugin.register{name=/\".+\"/}",
@@ -314,6 +323,7 @@
       "./register.ts gating hook with .catch: classic.Stop",
       "./register.ts gating hook with .catch: classic.SubagentStop",
       "./register.ts gating hook with .catch: classic.UserPromptSubmit",
+      "./register.ts gating hook with .catch: classic.SessionStart",
       "./register.ts gating hook with .catch: classic.PreModelSwitch",
       "./register.ts gating hook without .catch: classic.PostModelSwitch",
       "./register.ts gating hook without .catch: classic.ConfigChange",
@@ -326,11 +336,11 @@
       "./register.ts gating hook with .catch: model.complete",
       "./register.ts gating hook with .catch: model.classify",
       "./register.ts gating hook with .catch: model.fork",
-      "./register.ts calls: $.agent.list (via buildRequest, buildWorkerRequest, permissionInstructions, runFor, stepOwnerModel), $.agent.register (via agent, registerAgents), $.agent.spawn (via agent), $.clock.now (via promptsPort, routedStep, superviseHelper), $.clock.sleep (via ensureHelper, superviseHelper), $.command.register, $.env.get, $.env.set, $.fs.exists (via detectRuntime, hiddenSource, loadProviders, opencodeCommand, promptsPort), $.fs.list (via promptsPort), $.fs.read (via hiddenSource, loadProviders, opencodeCommand, promptsPort, readCodexDefaults), $.fs.write (via nativePermissionDefaults, opencodeCommand), $.http.fetch, $.process.run, $.process.spawn (via helperPort, superviseHelper), $.prompt.compose, $.session.authorize, $.session.cwd, $.session.id, $.session.messages, $.session.model, $.session.usage (via nativeContextStatus), $.session.version (via discoveryStatus, nativePermissionDefaults, statusText), $.settings.read (via effectivePermissionPolicy, hiddenSource, sources)… [+566 chars]",
+      "./register.ts calls: $.agent.list (via buildWorkerRequest, permissionInstructions, promptOwner, runFor, stepOwnerModel), $.agent.register (via agent, registerAgentTypes), $.agent.spawn (via agent), $.clock.now (via nativeTools, promptsPort, routedStep, superviseHelper), $.clock.sleep (via ensureHelper, superviseHelper), $.command.register, $.env.get, $.env.set, $.fs.exists (via detectRuntime, hiddenSource, loadProviders, opencodeCommand, promptsPort), $.fs.list (via promptsPort), $.fs.read (via hiddenSource, loadProviders, opencodeCommand, promptsPort, readCodexDefaults), $.fs.write (via nativePermissionDefaults, opencodeCommand), $.http.fetch, $.process.run, $.process.spawn (via helperPort, superviseHelper), $.prompt.compose, $.session.authorize, $.session.cwd, $.session.id, $.session.messages, $.session.model, $.session.usage (via nativeContextStatus), $.session.version (via discoveryStatus, nativeCompaction, nativePermissionDefaults, nativeTools, readyTools, statusText), $.settings.… [+652 chars]",
       "./register.ts env writes: CLAUDE_CODE_MAX_CONTEXT_TOKENS, RICE_MULTI_MODELS_PERMISSION_CONTEXT_NONCE",
       "./register.ts env reads: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, CLAUDE_CODE_MAX_CONTEXT_TOKENS, CLAUDE_CODE_PLUGIN_DIRS, CLAUDE_CONFIG_DIR, CODEX_HOME, DISABLE_COMPACT, HOME, OS, RICE_MULTI_MODELS_NODE, RICE_MULTI_MODELS_PERMISSION_CONTEXT_NONCE, RICE_MULTI_MODELS_SEARCH_URL, USERPROFILE",
-      "./register.ts state writes: rice-multi-models.nativeContext, rice-multi-models.prefs",
-      "./register.ts state reads: rice-multi-models.nativeContext, rice-multi-models.prefs"
+      "./register.ts state writes: rice-multi-models.nativeContext, rice-multi-models.prefs, rice-multi-models.transcript",
+      "./register.ts state reads: rice-multi-models.nativeContext, rice-multi-models.prefs, rice-multi-models.transcript"
      ],
      "gatingHooks": [
       {
@@ -373,6 +383,12 @@
        "module": "./register.ts",
        "pattern": "classic.UserPromptSubmit",
        "hook": "classic.UserPromptSubmit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
        "hasCatch": true
       },
       {
@@ -453,5 +469,5 @@
    "advice": []
   }
  },
- "sourceHash": "4f2c195969ce12d4"
+ "sourceHash": "b2748fc616db875"
 }

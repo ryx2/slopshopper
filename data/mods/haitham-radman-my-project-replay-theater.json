@@ -1,0 +1,8 @@
+{
+ "slug": "haitham-radman-my-project-replay-theater",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\nconst EDIT_TOOLS = new Set(['Edit', 'MultiEdit', 'Write', 'NotebookEdit'])\n\nexport const register: Register = on => {\n  let edits: string[] = []\n\n  on('session.start', async ($, e, next) => {\n    await $.command.register({\n      name: 'replay',\n      description: 'Replay the file edits of the last turn, in order',\n    })\n\n    return next(e)\n  })\n\n  on('prompt.submit', ($, e, next) => {\n    if (e.command === undefined) {\n      edits = []\n    }\n\n    return next(e)\n  })\n\n  on('tool.call', async ($, e, next) => {\n    const path = typeof e.file_path === 'string' ? e.file_path : undefined\n\n    if (path !== undefined && EDIT_TOOLS.has(e.tool)) {\n      edits.push(`${edits.length + 1}. ${e.tool} ${path}`)\n      $.ui.status(`${edits.length} edits across ${new Set(edits.map(x => x.split(' ')[2])).size} files`)\n    }\n\n    return next(e)\n  })\n\n  on('command.run', { command: 'replay' }, () => ({\n    text: edits.length === 0 ? 'No edits in the last turn.' : edits.join('\\n'),\n  }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"replay-theater\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Records every file edit of a turn and replays them with /replay\"\n}"
+ }
+}

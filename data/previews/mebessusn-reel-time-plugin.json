@@ -1,6 +1,6 @@
 {
  "slug": "mebessusn-reel-time-plugin",
- "generatedAt": "2026-10-17T13:06:34.160Z",
+ "generatedAt": "2026-10-18T13:55:39.796Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,18 @@
     "event": "command.run",
     "matcher": {
      "command": "fish"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "lake"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "reel-time:lake"
     }
    },
    {
@@ -46,7 +58,12 @@
    {
     "name": "fish",
     "description": "Open Reel Time, the cozy fishing game, while Claude works",
-    "output": "Gone fishin'. When Claude finishes, a golden fish bites and a bell rings."
+    "output": "Reel Time doesn't know your lake yet. Run /reel-time:lake and paste your lake's link (https://claude.ai/artifact/...). No lake? Make one in 5 minutes: https://github.com/mebessusn/reel-time-game"
+   },
+   {
+    "name": "lake",
+    "description": "Point Reel Time at your own lake: /reel-time:lake <your lake link>",
+    "output": "Reel Time is using no lake yet.\nTo use your own lake, run /reel-time:lake and paste its link (https://claude.ai/artifact/...). /reel-time:lake reset goes back to the default."
    }
   ],
   "tools": [],
@@ -58,11 +75,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
-   "$.state.get": 12,
-   "$.state.set": 7,
+   "$.store.get": 1,
+   "$.command.register": 2,
+   "$.state.get": 9,
+   "$.state.set": 6,
    "$.clock.now": 10,
-   "$.tool.call": 4,
    "$.ui.toast": 1,
    "$.audio.play": 1,
    "$.ui.resolve": 1
@@ -88,12 +105,13 @@
         ]
        },
        {
-        "type": "Link",
+        "type": "Text",
         "props": {
-         "href": "https://claude.ai/artifact/NeeNLcodQSp3x3RW7MTQn7?src=claude",
-         "label": "Open the lake"
+         "dimColor": true
         },
-        "children": []
+        "children": [
+         "Run /reel-time:lake with your lake's link to get a link here."
+        ]
        },
        {
         "type": "Text",
@@ -113,7 +131,7 @@
          "Game signal (",
          "done",
          "): ",
-         "sent"
+         "off"
         ]
        },
        {
@@ -144,7 +162,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/fish → Gone fishin'. When Claude finishes, a golden fish bites and a bell rings."
+   "/fish → Reel Time doesn't know your lake yet. Run /reel-time:lake and paste your lake's …",
+   "/lake → Reel Time is using no lake yet.\nTo use your own lake, run /reel-time:lake and pa…"
   ],
   "console": [],
   "warnings": []
@@ -156,6 +175,8 @@
   "hooks": [
    "session.start",
    "command.run{command=fish}",
+   "command.run{command=lake}",
+   "command.run{command=reel-time:lake}",
    "command.run{command=reel-time:fish}",
    "prompt.submit",
    "tool.check{tool=ArtifactData}",
@@ -167,11 +188,10 @@
    "$.audio.play",
    "$.clock.now",
    "$.command.register",
-   "$.http.fetch (via broadcast)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via pairCode)",
-   "$.store.set (via pairCode)",
+   "$.store.get (via loadLake)",
+   "$.store.set (via setLake)",
    "$.tool.call (via currentVersion",
    "openLake",
    "readLake",
@@ -209,17 +229,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=fish}, command.run{command=reel-time:fish}, prompt.submit, tool.check{tool=ArtifactData}, tool.call, turn.complete, ui.render{component=Pane, requestId=reel-time}",
+      "./register.tsx hooks: session.start, command.run{command=fish}, command.run{command=lake}, command.run{command=reel-time:lake}, command.run{command=reel-time:fish}, prompt.submit, tool.check{tool=ArtifactData}, tool.call, turn.complete, ui.render{component=Pane, requestId=reel-time}",
       "./register.tsx answers its own command: command.run{command=fish}",
+      "./register.tsx answers its own command: command.run{command=lake}",
+      "./register.tsx gating hook with .catch: command.run{command=reel-time:lake}",
       "./register.tsx gating hook with .catch: command.run{command=reel-time:fish}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.check{tool=ArtifactData}",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.audio.play, $.clock.now, $.command.register, $.http.fetch (via broadcast), $.state.get, $.state.set, $.store.get (via pairCode), $.store.set (via pairCode), $.tool.call (via currentVersion, openLake, readLake, writeDoc), $.ui.open (via openLake), $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.audio.play, $.clock.now, $.command.register, $.state.get, $.state.set, $.store.get (via loadLake), $.store.set (via setLake), $.tool.call (via currentVersion, openLake, readLake, writeDoc), $.ui.open (via openLake), $.ui.resolve, $.ui.toast",
       "./register.tsx state writes: reel-time.fish",
       "./register.tsx state reads: reel-time.fish"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=reel-time:lake}",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "command.run",
@@ -250,5 +278,5 @@
    "advice": []
   }
  },
- "sourceHash": "71d7e670a8e024c2"
+ "sourceHash": "c7936bcc13305680"
 }

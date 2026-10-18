@@ -1,0 +1,8 @@
+{
+ "slug": "duanenielsen-running-stag-pathfinder-frontier",
+ "files": {
+  "hooks/register.js": "// Fetches the Frontier binary with the beta token when it is not cached yet. The download is mise's tool stub\n// (bin/frontier.stub names the per-platform URLs, checksums and the Authorization header); this only starts it.\n// On Windows the launcher is mise.cmd (no bash is assumed); elsewhere it is the bash script bin/mise.\nexport function register(on, options) {\n  on('session.start', async ($, e, next) => {\n    const root = $.plugin.root\n    const windows = (await $.env.get('OS')) === 'Windows_NT'\n    const mise = windows ? root + '\\\\bin\\\\mise.cmd' : root + '/bin/mise'\n    $.process.run([mise, 'tool-stub', root + '/bin/frontier.stub', '--help'],\n      { env: { FRONTIER_TOKEN: String(options.beta_token) }, timeoutMs: 600000 })\n      .then(r => $.ui.toast(r.exitCode === 0 ? 'Frontier is ready' : 'Frontier download failed: ' + r.stderr.trim().split('\\n').pop().slice(0, 120), { timeoutMs: 8000 }))\n      .catch(err => $.ui.toast('Frontier download failed: ' + String(err.message ?? err).slice(0, 120), { timeoutMs: 8000 }))\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{\"modules\":[\"./register.js\"]}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"frontier\",\n  \"version\": \"0.1.56\",\n  \"description\": \"Frontier (beta): fetches its binary with your beta token\",\n  \"author\": {\n    \"name\": \"wild-west\"\n  },\n  \"userConfig\": {\n    \"beta_token\": {\n      \"type\": \"string\",\n      \"title\": \"Frontier beta token\",\n      \"description\": \"Token for the Frontier beta download\",\n      \"sensitive\": true,\n      \"required\": true\n    }\n  }\n}"
+ }
+}

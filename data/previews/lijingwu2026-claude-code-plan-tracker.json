@@ -1,6 +1,6 @@
 {
  "slug": "lijingwu2026-claude-code-plan-tracker",
- "generatedAt": "2026-10-16T14:20:27.995Z",
+ "generatedAt": "2026-10-18T13:55:37.024Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -27,6 +27,27 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "agent.spawn"
+   },
+   {
+    "event": "classic.SubagentStop"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "ui.render",
@@ -65,6 +86,12 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "/^(Edit|Write|MultiEdit)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "Bash"
     }
    }
@@ -90,18 +117,20 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.session.root": 1,
-   "$.state.get": 24,
+   "$.state.get": 65,
    "$.clock.every": 1,
+   "$.session.id": 4,
    "$.ui.panes": 1,
-   "$.fs.exists": 3,
-   "$.state.set": 1,
+   "$.env.get": 8,
+   "$.fs.exists": 6,
+   "$.fs.list": 5,
+   "$.session.usage": 1,
+   "$.state.set": 5,
+   "$.process.run": 2,
    "$.clock.now": 3,
    "$.session.surfaces": 1,
    "$.ui.open": 1,
-   "$.ui.resolve": 1,
-   "$.env.get": 1,
-   "$.session.id": 1,
-   "$.process.run": 1
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -140,6 +169,7 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(/bin/sh -c mkdir -p \"$1\" && cat >> \"$1/plan-tracker.jsonl\" sh /Users/dev/.claude…) → exit 0",
    "turn.complete",
    "$.ui.open(plan-tracker)",
    "/plan-tracker → ",
@@ -158,34 +188,52 @@
    "ui.open{id=plan-tracker}",
    "ui.close{id=plan-tracker}",
    "prompt.submit",
+   "turn.start",
+   "turn.complete",
+   "agent.spawn",
+   "classic.SubagentStop",
+   "turn.step",
+   "session.measure",
+   "session.end",
    "ui.render{component=AbovePrompt}",
    "ui.press{plugin=plan-tracker}",
    "ui.input{plugin=plan-tracker}",
    "ui.message",
    "ui.message{requestId=plan-tracker}",
    "ui.render{component=Pane, requestId=plan-tracker}",
+   "tool.call{tool=/\"^(Edit|Write|MultiEdit)$\"/}",
    "tool.call{tool=Bash}"
   ],
   "calls": [
+   "$.agent.list (via pruneAgents)",
    "$.audio.play (via chime)",
+   "$.clock.after (via writeBounded)",
    "$.clock.every (via startRefresh",
    "startWatch",
    "syncAnimation)",
    "$.clock.now",
+   "$.clock.sleep (via readLedgers)",
    "$.command.register",
    "$.env.get",
-   "$.fs.exists (via readBoardFile)",
-   "$.fs.read (via loadFile",
+   "$.fs.exists (via ensureLedger",
    "readBoardFile)",
+   "$.fs.list (via readLedgers)",
+   "$.fs.read (via ensureLedger",
+   "loadFile",
+   "readBoardFile",
+   "readOne)",
+   "$.fs.write (via writeBounded)",
    "$.process.run (via fetchBoard",
-   "loadUsage",
    "log)",
    "$.session.append (via notify)",
-   "$.session.id (via fetchBoard",
-   "loadUsage",
-   "log)",
+   "$.session.id (via ensureLedger",
+   "fetchBoard",
+   "log",
+   "persistCarry",
+   "restoreCarry)",
    "$.session.root (via projectRoot)",
    "$.session.surfaces",
+   "$.session.usage (via startLedger)",
    "$.state.get",
    "$.state.set",
    "$.ui.close (via toggleBoard)",
@@ -210,7 +258,10 @@
    "plan-tracker.menu",
    "plan-tracker.query",
    "plan-tracker.search",
-   "plan-tracker.selected"
+   "plan-tracker.selected",
+   "plan-tracker.stoppedAt",
+   "plan-tracker.usageCarry",
+   "plan-tracker.working"
   ],
   "stateWrites": [
    "plan-tracker.allPlans",
@@ -225,7 +276,10 @@
    "plan-tracker.menu",
    "plan-tracker.query",
    "plan-tracker.search",
-   "plan-tracker.selected"
+   "plan-tracker.selected",
+   "plan-tracker.stoppedAt",
+   "plan-tracker.usageCarry",
+   "plan-tracker.working"
   ],
   "envReads": [
    "HOME"
@@ -241,7 +295,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: plan-tracker.live, plan-tracker.query, plan-tracker.listing, plan-tracker.search, plan-tracker.allPlans, plan-tracker.selected, plan-tracker.card, plan-tracker.file, plan-tracker.finished, plan-tracker.frame, plan-tracker.menu, plan-tracker.expanded, plan-tracker.bandMenu"
+     "types ./types/index.d.ts declares state: plan-tracker.live, plan-tracker.query, plan-tracker.listing, plan-tracker.search, plan-tracker.allPlans, plan-tracker.selected, plan-tracker.card, plan-tracker.file, plan-tracker.finished, plan-tracker.frame, plan-tracker.menu, plan-tracker.expanded, plan-tracker.bandMenu, plan-tracker.working, plan-tracker.stoppedAt, plan-tracker.usageCarry"
     ],
     "gatingHooks": []
    },
@@ -252,17 +306,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=plan-tracker}, ui.open{id=plan-tracker}, ui.close{id=plan-tracker}, prompt.submit, ui.render{component=AbovePrompt}, ui.press{plugin=plan-tracker}, ui.input{plugin=plan-tracker}, ui.message, ui.message{requestId=plan-tracker}, ui.render{component=Pane, requestId=plan-tracker}, tool.call{tool=Bash}",
+      "./register.tsx hooks: session.start, command.run{command=plan-tracker}, ui.open{id=plan-tracker}, ui.close{id=plan-tracker}, prompt.submit, turn.start, turn.complete, agent.spawn, classic.SubagentStop, turn.step, session.measure, session.end, ui.render{component=AbovePrompt}, ui.press{plugin=plan-tracker}, ui.input{plugin=plan-tracker}, ui.message, ui.message{requestId=plan-tracker}, ui.render{component=Pane, requestId=plan-tracker}, tool.call{tool=/\"^(Edit|Write|MultiEdit)$\"/}, tool.call{tool=Bash}",
+      "./register.tsx hooks on classic.SubagentStop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx gating hook without .catch: command.run{command=plan-tracker}",
       "./register.tsx gating hook without .catch: ui.open{id=plan-tracker}",
       "./register.tsx gating hook without .catch: ui.close{id=plan-tracker}",
       "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: agent.spawn",
+      "./register.tsx gating hook with .catch: classic.SubagentStop",
+      "./register.tsx gating hook with .catch: tool.call{tool=/\"^(Edit|Write|MultiEdit)$\"/}",
       "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.audio.play (via chime), $.clock.every (via startRefresh, startWatch, syncAnimation), $.clock.now, $.command.register, $.env.get, $.fs.exists (via readBoardFile), $.fs.read (via loadFile, readBoardFile), $.process.run (via fetchBoard, loadUsage, log), $.session.append (via notify), $.session.id (via fetchBoard, loadUsage, log), $.session.root (via projectRoot), $.session.surfaces, $.state.get, $.state.set, $.ui.close (via toggleBoard), $.ui.focus, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.scroll (via openFile, refocus), $.ui.toast",
+      "./register.tsx calls: $.agent.list (via pruneAgents), $.audio.play (via chime), $.clock.after (via writeBounded), $.clock.every (via startRefresh, startWatch, syncAnimation), $.clock.now, $.clock.sleep (via readLedgers), $.command.register, $.env.get, $.fs.exists (via ensureLedger, readBoardFile), $.fs.list (via readLedgers), $.fs.read (via ensureLedger, loadFile, readBoardFile, readOne), $.fs.write (via writeBounded), $.process.run (via fetchBoard, log), $.session.append (via notify), $.session.id (via ensureLedger, fetchBoard, log, persistCarry, restoreCarry), $.session.root (via projectRoot), $.session.surfaces, $.session.usage (via startLedger), $.state.get, $.state.set, $.ui.close (via toggleBoard), $.ui.focus, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.scroll (via openFile, refocus), $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: plan-tracker.allPlans, plan-tracker.bandMenu, plan-tracker.card, plan-tracker.expanded, plan-tracker.file, plan-tracker.finished, plan-tracker.frame, plan-tracker.listing, plan-tracker.live, plan-tracker.menu, plan-tracker.query, plan-tracker.search, plan-tracker.selected",
-      "./register.tsx state reads: plan-tracker.allPlans, plan-tracker.bandMenu, plan-tracker.card, plan-tracker.expanded, plan-tracker.file, plan-tracker.finished, plan-tracker.frame, plan-tracker.listing, plan-tracker.live, plan-tracker.menu, plan-tracker.query, plan-tracker.search, plan-tracker.selected",
+      "./register.tsx state writes: plan-tracker.allPlans, plan-tracker.bandMenu, plan-tracker.card, plan-tracker.expanded, plan-tracker.file, plan-tracker.finished, plan-tracker.frame, plan-tracker.listing, plan-tracker.live, plan-tracker.menu, plan-tracker.query, plan-tracker.search, plan-tracker.selected, plan-tracker.stoppedAt, plan-tracker.usageCarry, plan-tracker.working",
+      "./register.tsx state reads: plan-tracker.allPlans, plan-tracker.bandMenu, plan-tracker.card, plan-tracker.expanded, plan-tracker.file, plan-tracker.finished, plan-tracker.frame, plan-tracker.listing, plan-tracker.live, plan-tracker.menu, plan-tracker.query, plan-tracker.search, plan-tracker.selected, plan-tracker.stoppedAt, plan-tracker.usageCarry, plan-tracker.working",
       "./register.tsx surface modules: hooks/band.tsx, hooks/card.tsx"
      ],
      "gatingHooks": [
@@ -292,6 +350,24 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^(Edit|Write|MultiEdit)$\"/}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
        "hasCatch": false
@@ -302,5 +378,5 @@
    "advice": []
   }
  },
- "sourceHash": "70168f20791e3050"
+ "sourceHash": "1979b457ded72443"
 }

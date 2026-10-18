@@ -1,6 +1,6 @@
 {
  "slug": "julian-passebecq-claude-mod-cockpit",
- "generatedAt": "2026-10-17T13:06:21.614Z",
+ "generatedAt": "2026-10-18T13:55:31.954Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,9 @@
     "matcher": {
      "command": "cockpit"
     }
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "command.run",
@@ -42,8 +45,8 @@
   "commands": [
    {
     "name": "cockpit",
-    "description": "Cockpit : cartes (conso, t’attend, à toi, Claude Control, CI, quota, problèmes, en cours), Méga › Projet › Conversation › Agent, écrans Factory, Machine, Claude ↔ Codex, Galerie, Bilan avant la nuit",
-    "argumentHint": "[conv|projet|mega|agent|mission|focus|arbre|pipeline|workflow [all]|journal|machine|relais|galerie|nuit] [projet ou conversation] | close",
+    "description": "Cockpit : Depuis ton dernier message (le résumé de la nuit), cartes (conso, t’attend, à toi, Claude Control, CI, quota, problèmes, en cours), Méga › Projet › Conversation › Agent, écrans Factory, Machine, Claude ↔ Codex, Galerie, Bilan avant la nuit",
+    "argumentHint": "[conv|projet|mega|agent|mission|focus|arbre|pipeline|workflow [all]|journal|machine|relais|galerie|nuit|depuis [8h|24h|nuit|HH:MM]] [projet ou conversation] | close",
     "immediate": true
    }
   ],
@@ -61,16 +64,17 @@
   "apiCalls": {
    "$.session.id": 2,
    "$.session.version": 2,
-   "$.env.get": 39,
+   "$.env.get": 41,
    "$.fs.exists": 16,
    "$.command.register": 1,
    "$.clock.after": 1,
    "$.clock.every": 3,
    "$.ui.open": 2,
-   "$.ui.invalidate": 10,
+   "$.ui.invalidate": 12,
    "$.ui.resolve": 6,
-   "$.process.run": 7,
-   "$.clock.now": 4,
+   "$.process.run": 8,
+   "$.store.get": 1,
+   "$.clock.now": 5,
    "$.session.usage": 2
   },
   "timers": [
@@ -98,84 +102,57 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "row",
-       "flexWrap": "nowrap",
-       "gap": 1
+       "flexDirection": "column"
       },
       "children": [
        {
         "type": "Box",
         "props": {
          "flexDirection": "column",
-         "width": 12,
-         "flexShrink": 0,
-         "key": "menu"
+         "key": "p-fichiers",
+         "marginBottom": 1
         },
         "children": [
          {
-          "type": "Button",
+          "type": "Box",
           "props": {
-           "variant": "secondary",
-           "onPress": "[fn]",
-           "key": "menu-0"
+           "flexDirection": "row",
+           "flexWrap": "nowrap",
+           "gap": 1,
+           "alignItems": "center"
           },
           "children": [
-           "Jauge"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "variant": "primary",
-           "onPress": "[fn]",
-           "key": "menu-1"
-          },
-          "children": [
-           "Cockpit"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "variant": "secondary",
-           "onPress": "[fn]",
-           "key": "menu-2"
-          },
-          "children": [
-           "Veille"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "variant": "secondary",
-           "onPress": "[fn]",
-           "key": "menu-3"
-          },
-          "children": [
-           "À toi"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "variant": "secondary",
-           "onPress": "[fn]",
-           "key": "menu-4"
-          },
-          "children": [
-           "Registres"
-          ]
-         },
-         {
-          "type": "Button",
-          "props": {
-           "variant": "secondary",
-           "onPress": "[fn]",
-           "key": "menu-5"
-          },
-          "children": [
-           "Référence"
+           {
+            "type": "Button",
+            "props": {
+             "label": "▸ Fichiers",
+             "onPress": "[fn]",
+             "key": "p-sec-fichiers"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end",
+               "bold": true,
+               "size": "heading"
+              },
+              "children": [
+               "▸ Fichiers"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate-end",
+             "dimColor": true
+            },
+            "children": [
+             "pas de dossier de travail"
+            ]
+           }
           ]
          }
         ]
@@ -184,15 +161,149 @@
         "type": "Box",
         "props": {
          "flexDirection": "column",
-         "flexGrow": 1,
-         "flexShrink": 1,
-         "key": "body"
+         "key": "p-sep-conv",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end",
+           "dimColor": true
+          },
+          "children": [
+           "───────────────────────────────────────────────────────"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "key": "p-conv",
+         "marginBottom": 1
         },
         "children": [
          {
           "type": "Box",
           "props": {
-           "flexDirection": "column"
+           "flexDirection": "row",
+           "flexWrap": "nowrap",
+           "gap": 1,
+           "alignItems": "center"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "label": "▾ Cette conversation",
+             "onPress": "[fn]",
+             "key": "p-sec-conv"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end",
+               "bold": true,
+               "size": "heading"
+              },
+              "children": [
+               "▾ Cette conversation"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginLeft": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap",
+             "dimColor": true,
+             "key": "pt-empty"
+            },
+            "children": [
+             "aucun agent dans cette conversation"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "key": "p-sep-convs",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end",
+           "dimColor": true
+          },
+          "children": [
+           "───────────────────────────────────────────────────────"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "key": "p-convs",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "flexWrap": "nowrap",
+           "gap": 1,
+           "alignItems": "center"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "label": "▾ Toutes les conversations",
+             "onPress": "[fn]",
+             "key": "p-sec-convs"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end",
+               "bold": true,
+               "size": "heading"
+              },
+              "children": [
+               "▾ Toutes les conversations"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginLeft": 1
           },
           "children": [
            {
@@ -201,872 +312,7 @@
              "flexDirection": "row",
              "flexWrap": "wrap",
              "gap": 1,
-             "key": "tabs",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Button",
-              "props": {
-               "variant": "primary",
-               "onPress": "[fn]",
-               "key": "tab-home"
-              },
-              "children": [
-               "Cockpit"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-mission"
-              },
-              "children": [
-               "Mission"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-focus"
-              },
-              "children": [
-               "Focus"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-arbre"
-              },
-              "children": [
-               "Arbre"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-pipeline"
-              },
-              "children": [
-               "Pipeline"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-workflow"
-              },
-              "children": [
-               "Workflow"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-journal"
-              },
-              "children": [
-               "Journal"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-machine"
-              },
-              "children": [
-               "Machine"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-relais"
-              },
-              "children": [
-               "Claude ↔ Codex"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "tab-galerie"
-              },
-              "children": [
-               "Galerie"
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row",
-             "flexWrap": "wrap",
-             "gap": 1,
-             "key": "day-night",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "btn-nuit"
-              },
-              "children": [
-               "Nuit"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "btn-jour"
-              },
-              "children": [
-               "Jour"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "btn-codex"
-              },
-              "children": [
-               "Codex"
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row",
-             "flexWrap": "wrap",
-             "gap": 1,
-             "key": "breadcrumb",
-             "alignItems": "center",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Button",
-              "props": {
-               "variant": "primary",
-               "onPress": "[fn]",
-               "key": "crumb-mega"
-              },
-              "children": [
-               "Méga"
-              ]
-             },
-             {
-              "type": "Button",
-              "props": {
-               "variant": "secondary",
-               "onPress": "[fn]",
-               "key": "refresh"
-              },
-              "children": [
-               "↻"
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "wrap": "wrap",
-               "dimColor": true,
-               "key": "time"
-              },
-              "children": [
-               "--:--"
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "borderStyle": "round",
-             "paddingX": 1,
-             "marginBottom": 1,
-             "key": "cards"
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-conso",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "Qui consomme"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-conso"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-conso"
-                },
-                "children": [
-                 "pas encore de classement (le mod usage écrit classement.json)"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-attend",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "T’attend"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-attend"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-attend"
-                },
-                "children": [
-                 "veille : aucune lecture"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-atoi",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "À toi"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-atoi"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-atoi"
-                },
-                "children": [
-                 "À toi : non lu (le mod a-faire écrit summary.json)"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-controle",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "Claude Control"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-controle"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-controle"
-                },
-                "children": [
-                 "aucun fichier ~/.claude/a-faire/claude-control.md"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-ci",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "CI"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-ci"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-ci"
-                },
-                "children": [
-                 "pas de cache du mod ci"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-quota",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "Quota"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-quota"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-quota"
-                },
-                "children": [
-                 "quotas non lus (le mod usage écrit samples.jsonl)"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-problemes",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "Problèmes du jour"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-problemes"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-problemes"
-                },
-                "children": [
-                 "registre des problèmes non lu"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "key": "card-encours",
-               "marginBottom": 1
-              },
-              "children": [
-               {
-                "type": "Box",
-                "props": {
-                 "flexDirection": "row",
-                 "flexWrap": "nowrap",
-                 "gap": 1,
-                 "justifyContent": "space-between",
-                 "alignItems": "center"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "wrap": "truncate-end",
-                   "bold": true
-                  },
-                  "children": [
-                   "En cours"
-                  ]
-                 },
-                 {
-                  "type": "Button",
-                  "props": {
-                   "variant": "secondary",
-                   "onPress": "[fn]",
-                   "key": "card-btn-encours"
-                  },
-                  "children": [
-                   "Voir"
-                  ]
-                 }
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "color": "inactive",
-                 "dimColor": true,
-                 "key": "card-line-encours"
-                },
-                "children": [
-                 "rien ne tourne"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Text",
-              "props": {
-               "wrap": "wrap",
-               "color": "error",
-               "key": "cards-error"
-              },
-              "children": [
-               "cartes : JSON Parse error: Unexpected identifier \"dev\""
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "key": "sec-conv",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexWrap": "nowrap",
-               "gap": 1,
-               "alignItems": "center"
-              },
-              "children": [
-               {
-                "type": "Button",
-                "props": {
-                 "variant": "secondary",
-                 "onPress": "[fn]",
-                 "key": "sec-conv"
-                },
-                "children": [
-                 "▾ Cette conversation"
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "column",
-               "marginLeft": 1
-              },
-              "children": [
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "wrap",
-                 "dimColor": true
-                },
-                "children": [
-                 "aucune conversation récente"
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "key": "sec-project",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexWrap": "nowrap",
-               "gap": 1,
-               "alignItems": "center"
-              },
-              "children": [
-               {
-                "type": "Button",
-                "props": {
-                 "variant": "secondary",
-                 "onPress": "[fn]",
-                 "key": "sec-project"
-                },
-                "children": [
-                 "▸ Ce projet"
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "key": "sec-all",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexWrap": "nowrap",
-               "gap": 1,
-               "alignItems": "center"
-              },
-              "children": [
-               {
-                "type": "Button",
-                "props": {
-                 "variant": "secondary",
-                 "onPress": "[fn]",
-                 "key": "sec-all"
-                },
-                "children": [
-                 "▸ Tous les projets"
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "key": "sec-conso",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexWrap": "nowrap",
-               "gap": 1,
-               "alignItems": "center"
-              },
-              "children": [
-               {
-                "type": "Button",
-                "props": {
-                 "variant": "secondary",
-                 "onPress": "[fn]",
-                 "key": "sec-conso"
-                },
-                "children": [
-                 "▸ Qui consomme"
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "column",
-             "key": "sec-global",
-             "marginBottom": 1
-            },
-            "children": [
-             {
-              "type": "Box",
-              "props": {
-               "flexDirection": "row",
-               "flexWrap": "nowrap",
-               "gap": 1,
-               "alignItems": "center"
-              },
-              "children": [
-               {
-                "type": "Button",
-                "props": {
-                 "variant": "secondary",
-                 "onPress": "[fn]",
-                 "key": "sec-global"
-                },
-                "children": [
-                 "▸ Claude global"
-                ]
-               },
-               {
-                "type": "Text",
-                "props": {
-                 "wrap": "truncate-end",
-                 "dimColor": true
-                },
-                "children": [
-                 "5 h 31 %"
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           {
-            "type": "Box",
-            "props": {
-             "flexDirection": "row",
-             "flexWrap": "wrap",
-             "gap": 1,
-             "key": "fichiers",
+             "key": "pf-row",
              "alignItems": "center",
              "marginBottom": 1
             },
@@ -1076,10 +322,43 @@
               "props": {
                "variant": "secondary",
                "onPress": "[fn]",
-               "key": "files"
+               "key": "pf-period"
               },
               "children": [
-               "Ouvrir Fichiers (/filetree)"
+               "aujourd’hui ▾"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "variant": "secondary",
+               "onPress": "[fn]",
+               "key": "pf-project"
+              },
+              "children": [
+               "Projet ▾"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "variant": "secondary",
+               "onPress": "[fn]",
+               "key": "pf-state"
+              },
+              "children": [
+               "État ▾"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "variant": "secondary",
+               "onPress": "[fn]",
+               "key": "pf-who"
+              },
+              "children": [
+               "Claude ▾"
               ]
              }
             ]
@@ -1088,15 +367,368 @@
             "type": "Text",
             "props": {
              "wrap": "wrap",
-             "color": "error",
-             "key": "scan-error"
+             "dimColor": true,
+             "key": "pc-nodata"
             },
             "children": [
-             "scanner : JSON Parse error: Unexpected identifier \"dev\""
+             "pas encore de classement : le mod usage écrit classement.json (/conso classement)"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column",
+             "key": "pw-title",
+             "marginTop": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "wrap",
+               "bold": true
+              },
+              "children": [
+               "Workflows actifs"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap",
+             "dimColor": true,
+             "key": "pw-none"
+            },
+            "children": [
+             "aucun Workflow en cours"
             ]
            }
           ]
          }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "key": "p-sep-barres",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end",
+           "dimColor": true
+          },
+          "children": [
+           "───────────────────────────────────────────────────────"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "key": "p-barres",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "flexWrap": "nowrap",
+           "gap": 1,
+           "alignItems": "center"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "label": "▾ Barres",
+             "onPress": "[fn]",
+             "key": "p-sec-barres"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end",
+               "bold": true,
+               "size": "heading"
+              },
+              "children": [
+               "▾ Barres"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginLeft": 1
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "column",
+             "key": "pbc-five",
+             "marginBottom": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexWrap": "nowrap",
+               "gap": 1,
+               "justifyContent": "space-between",
+               "alignItems": "center",
+               "key": "pb-five"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "Session 5 h"
+                ]
+               },
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row",
+                 "flexWrap": "nowrap",
+                 "gap": 1
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "wrap": "wrap",
+                   "bold": true
+                  },
+                  "children": [
+                   "31 %"
+                  ]
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "wrap",
+               "color": "claude",
+               "key": "pbb-five"
+              },
+              "children": [
+               "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱"
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "flexWrap": "nowrap",
+             "gap": 1,
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "key": "pb-week"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "Semaine"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexWrap": "nowrap",
+               "gap": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "wrap",
+                 "bold": true
+                },
+                "children": [
+                 "non lu"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexDirection": "row",
+             "flexWrap": "nowrap",
+             "gap": 1,
+             "justifyContent": "space-between",
+             "alignItems": "center",
+             "key": "pb-tps"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               "tok/s toutes conv"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "flexWrap": "nowrap",
+               "gap": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "wrap": "wrap",
+                 "bold": true
+                },
+                "children": [
+                 "non lu"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "key": "p-sep-graphe",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "truncate-end",
+           "dimColor": true
+          },
+          "children": [
+           "───────────────────────────────────────────────────────"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "key": "p-graphe",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "flexWrap": "nowrap",
+           "gap": 1,
+           "alignItems": "center"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "label": "▾ Graphe des conversations",
+             "onPress": "[fn]",
+             "key": "p-sec-graphe"
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end",
+               "bold": true,
+               "size": "heading"
+              },
+              "children": [
+               "▾ Graphe des conversations"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "marginLeft": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap",
+             "dimColor": true,
+             "key": "pg-slot"
+            },
+            "children": [
+             "lecture des sessions…"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end",
+         "dimColor": true,
+         "key": "p-other-views"
+        },
+        "children": [
+         "Autres vues : /cockpit cartes · mission · focus · arbre…"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "wrap",
+         "color": "error",
+         "key": "scan-error"
+        },
+        "children": [
+         "scanner : JSON Parse error: Unexpected identifier \"dev\""
         ]
        }
       ]
@@ -1114,6 +746,7 @@
    "tool.call Grep",
    "$.process.run(python -I /plugins/cockpit/lib/factory/scanner/workflow_scan.py --cache /Users/d…) → exit 0",
    "tool.call Edit",
+   "$.process.run(node /plugins/cockpit/scanner/cards.mjs) → exit 0",
    "tool.call Write",
    "tool.call Write",
    "tool.call Bash bun test",
@@ -1138,6 +771,7 @@
   "hooks": [
    "session.start",
    "command.run{command=cockpit}",
+   "prompt.submit",
    "command.run{command=factory}",
    "command.run{command=machine}",
    "ui.close{id=cockpit}",
@@ -1151,6 +785,7 @@
    "loadConso",
    "loadPart",
    "loadVeille",
+   "refreshPanel",
    "refreshStrips",
    "rescan",
    "rescanWorkflow)",
@@ -1161,43 +796,51 @@
    "runTarget)",
    "$.env.get (via board",
    "homeDir",
-   "loadVeille)",
-   "$.fs.exists (via loadVeille",
-   "readJson)",
+   "loadVeille",
+   "openUrl",
+   "refreshFiles)",
+   "$.fs.exists",
+   "$.fs.list (via listDir)",
    "$.fs.read (via loadVeille",
    "readJson)",
-   "$.process.run (via loadConso",
+   "$.fs.stat (via listDir)",
+   "$.process.run (via gitInto",
+   "loadConso",
+   "openUrl",
    "rescan",
    "runScanner",
    "sampleMachine",
    "scanWorkflows)",
+   "$.session.cwd (via refreshFiles)",
    "$.session.id",
    "$.session.identity (via loadIdentity)",
-   "$.session.usage (via refreshStrips)",
+   "$.session.usage (via refreshPanel",
+   "refreshStrips)",
    "$.session.version",
+   "$.store.get (via loadPanelState)",
+   "$.store.set (via savePanelState)",
    "$.ui.close (via runCockpit)",
+   "$.ui.copy (via actions)",
    "$.ui.invalidate (via actions",
    "loadCards",
    "loadConso",
    "loadPart",
+   "pressFile",
+   "refreshFiles",
+   "refreshPanel",
    "refreshStrips",
    "rescan",
    "rescanWorkflow",
    "sampleMachine",
    "setTab)",
-   "$.ui.open (via openPane)",
-   "$.ui.panes (via shown)",
-   "$.ui.resolve",
-   "$.ui.toast (via actions",
-   "runTarget",
-   "viewAgent)",
-   "$.ui.view (via viewAgent)"
+   "$.ui.… [+132 chars]"
   ],
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
    "FACTORY_BOARD",
    "HOME",
+   "OS",
    "USERPROFILE",
    "VEILLE_HOME"
   ],
@@ -1220,16 +863,23 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.mjs hooks: session.start, command.run{command=cockpit}, command.run{command=factory}, command.run{command=machine}, ui.close{id=cockpit}, ui.render{component=Pane, requestId=cockpit}",
+      "./register.mjs hooks: session.start, command.run{command=cockpit}, prompt.submit, command.run{command=factory}, command.run{command=machine}, ui.close{id=cockpit}, ui.render{component=Pane, requestId=cockpit}",
       "./register.mjs answers its own command: command.run{command=cockpit}",
+      "./register.mjs gating hook with .catch: prompt.submit",
       "./register.mjs gating hook with .catch: command.run{command=factory}",
       "./register.mjs gating hook with .catch: command.run{command=machine}",
       "./register.mjs gating hook with .catch: ui.close{id=cockpit}",
-      "./register.mjs calls: $.clock.after, $.clock.every, $.clock.now (via actions, loadCards, loadConso, loadPart, loadVeille, refreshStrips, rescan, rescanWorkflow), $.command.list (via registerAliases, runTarget), $.command.register, $.command.run (via actions, runTarget), $.env.get (via board, homeDir, loadVeille), $.fs.exists (via loadVeille, readJson), $.fs.read (via loadVeille, readJson), $.process.run (via loadConso, rescan, runScanner, sampleMachine, scanWorkflows), $.session.id, $.session.identity (via loadIdentity), $.session.usage (via refreshStrips), $.session.version, $.ui.close (via runCockpit), $.ui.invalidate (via actions, loadCards, loadConso, loadPart, refreshStrips, rescan, rescanWorkflow, sampleMachine, setTab), $.ui.open (via openPane), $.ui.panes (via shown), $.ui.resolve, $.ui.toast (via actions, runTarget, viewAgent), $.ui.view (via viewAgent)",
+      "./register.mjs calls: $.clock.after, $.clock.every, $.clock.now (via actions, loadCards, loadConso, loadPart, loadVeille, refreshPanel, refreshStrips, rescan, rescanWorkflow), $.command.list (via registerAliases, runTarget), $.command.register, $.command.run (via actions, runTarget), $.env.get (via board, homeDir, loadVeille, openUrl, refreshFiles), $.fs.exists, $.fs.list (via listDir), $.fs.read (via loadVeille, readJson), $.fs.stat (via listDir), $.process.run (via gitInto, loadConso, openUrl, rescan, runScanner, sampleMachine, scanWorkflows), $.session.cwd (via refreshFiles), $.session.id, $.session.identity (via loadIdentity), $.session.usage (via refreshPanel, refreshStrips), $.session.version, $.store.get (via loadPanelState), $.store.set (via savePanelState), $.ui.close (via runCockpit), $.ui.copy (via actions), $.ui.invalidate (via actions, loadCards, loadConso, loadPart, pressFile, refreshFiles, refreshPanel, refreshStrips, rescan, rescanWorkflow, sampleMachine, setTab), $.ui.… [+132 chars]",
       "./register.mjs env writes: nothing",
-      "./register.mjs env reads: FACTORY_BOARD, HOME, USERPROFILE, VEILLE_HOME"
+      "./register.mjs env reads: FACTORY_BOARD, HOME, OS, USERPROFILE, VEILLE_HOME"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.mjs",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
       {
        "module": "./register.mjs",
        "pattern": "command.run",
@@ -1254,5 +904,5 @@
    "advice": []
   }
  },
- "sourceHash": "1c880d203ba8ecab"
+ "sourceHash": "9fd8cf74d1ab4ff3"
 }

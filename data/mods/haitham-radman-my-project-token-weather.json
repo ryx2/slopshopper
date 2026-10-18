@@ -1,0 +1,8 @@
+{
+ "slug": "haitham-radman-my-project-token-weather",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\nconst WIDTH = 20\n\nconst weather = (rawPercent: number) => {\n  const percent = Math.min(100, Math.max(0, rawPercent))\n  const filled = Math.round((percent / 100) * WIDTH)\n  const bar = '█'.repeat(filled) + '░'.repeat(WIDTH - filled)\n  const label = percent >= 85 ? 'stormy' : percent >= 60 ? 'cloudy' : 'clear'\n\n  return `Context ${bar} ${percent}% · ${label}`\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({\n      name: 'token-weather',\n      description: 'Show how full the context window is',\n    })\n\n    return next(e)\n  })\n\n  on('command.run', { command: 'token-weather' }, async $ => {\n    const { context } = await $.session.usage()\n\n    return {\n      text:\n        context.percent === undefined\n          ? 'token-weather: no context reading yet (send a message first).'\n          : `token-weather: ${weather(context.percent)}`,\n    }\n  })\n\n  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {\n    const { context } = await $.session.usage()\n\n    if (e.props.hasSurvey || context.percent === undefined) {\n      return next(e)\n    }\n\n    const { Box, Text } = $.ui.resolve(e)\n\n    return (\n      <Box>\n        <Text dimColor>{weather(context.percent)}</Text>\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"token-weather\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Band above the prompt showing how full the context window is\"\n}"
+ }
+}

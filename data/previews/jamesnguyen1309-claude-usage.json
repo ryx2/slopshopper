@@ -1,6 +1,6 @@
 {
  "slug": "jamesnguyen1309-claude-usage",
- "generatedAt": "2026-10-16T14:19:59.692Z",
+ "generatedAt": "2026-10-18T13:55:29.883Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,13 +32,6 @@
     }
    },
    {
-    "event": "ui.scroll",
-    "matcher": {
-     "component": "Pane",
-     "requestId": "usage-panel"
-    }
-   },
-   {
     "event": "turn.start"
    },
    {
@@ -67,7 +60,7 @@
   "commands": [
    {
     "name": "usage-panel",
-    "description": "Show or hide the live Usage pane: session cost, context, rate limits, this prompt, and every prompt of the session",
+    "description": "Show or hide the live Usage pane: statistics, this prompt, burn rate, and context export and import",
     "output": "Usage pane closed."
    }
   ],
@@ -85,11 +78,16 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.session.usage": 1,
-   "$.state.get": 19,
-   "$.state.set": 6,
+   "$.state.get": 21,
+   "$.state.set": 8,
+   "$.clock.now": 5,
+   "$.store.get": 3,
+   "$.store.set": 1,
    "$.clock.every": 1,
+   "$.session.root": 1,
    "$.ui.open": 1,
-   "$.clock.now": 2,
+   "$.env.get": 1,
+   "$.fs.exists": 1,
    "$.ui.panes": 1,
    "$.ui.close": 1,
    "$.ui.resolve": 2
@@ -261,7 +259,6 @@
    "session.measure",
    "session.append{door=prompt}",
    "ui.render{component=UserMessage}",
-   "ui.scroll{component=Pane, requestId=usage-panel}",
    "turn.start",
    "turn.step",
    "agent.spawn",
@@ -273,17 +270,30 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
+   "$.env.get (via contextFolder)",
+   "$.fs.exists (via refreshExports)",
+   "$.fs.list (via refreshExports)",
+   "$.fs.read (via importContext)",
+   "$.fs.write (via exportContext)",
+   "$.session.append (via importContext)",
+   "$.session.id (via exportContext)",
+   "$.session.messages (via exportContext)",
+   "$.session.model (via exportContext)",
+   "$.session.root (via contextFolder",
+   "exportContext)",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
+   "$.store.get (via readSamples)",
+   "$.store.set",
    "$.ui.close (via togglePane)",
    "$.ui.open",
    "$.ui.panes (via togglePane)",
    "$.ui.resolve"
   ],
   "stateReads": [
-   "usage-panel.isListOpen",
-   "usage-panel.listStart",
+   "usage-panel.contextNote",
+   "usage-panel.exports",
    "usage-panel.now",
    "usage-panel.prompts",
    "usage-panel.rows",
@@ -291,15 +301,17 @@
    "usage-panel.totals"
   ],
   "stateWrites": [
-   "usage-panel.isListOpen",
-   "usage-panel.listStart",
+   "usage-panel.contextNote",
+   "usage-panel.exports",
    "usage-panel.now",
    "usage-panel.prompts",
    "usage-panel.rows",
    "usage-panel.session",
    "usage-panel.totals"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -311,7 +323,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: usage-panel.prompts, usage-panel.session, usage-panel.rows, usage-panel.totals, usage-panel.listStart, usage-panel.isListOpen, usage-panel.now"
+     "types ./types/index.d.ts declares state: usage-panel.prompts, usage-panel.session, usage-panel.rows, usage-panel.totals, usage-panel.now, usage-panel.exports, usage-panel.contextNote"
     ],
     "gatingHooks": []
    },
@@ -322,26 +334,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=usage-panel}, session.end, session.measure, session.append{door=prompt}, ui.render{component=UserMessage}, ui.scroll{component=Pane, requestId=usage-panel}, turn.start, turn.step, agent.spawn, turn.complete, ui.render{component=Pane, requestId=usage-panel}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=usage-panel}, session.end, session.measure, session.append{door=prompt}, ui.render{component=UserMessage}, turn.start, turn.step, agent.spawn, turn.complete, ui.render{component=Pane, requestId=usage-panel}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=usage-panel}",
       "./register.tsx gating hook without .catch: session.append{door=prompt}",
-      "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=usage-panel}",
       "./register.tsx gating hook with .catch: agent.spawn",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.session.usage, $.state.get, $.state.set, $.ui.close (via togglePane), $.ui.open, $.ui.panes (via togglePane), $.ui.resolve",
-      "./register.tsx state writes: usage-panel.isListOpen, usage-panel.listStart, usage-panel.now, usage-panel.prompts, usage-panel.rows, usage-panel.session, usage-panel.totals",
-      "./register.tsx state reads: usage-panel.isListOpen, usage-panel.listStart, usage-panel.now, usage-panel.prompts, usage-panel.rows, usage-panel.session, usage-panel.totals"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via contextFolder), $.fs.exists (via refreshExports), $.fs.list (via refreshExports), $.fs.read (via importContext), $.fs.write (via exportContext), $.session.append (via importContext), $.session.id (via exportContext), $.session.messages (via exportContext), $.session.model (via exportContext), $.session.root (via contextFolder, exportContext), $.session.usage, $.state.get, $.state.set, $.store.get (via readSamples), $.store.set, $.ui.close (via togglePane), $.ui.open, $.ui.panes (via togglePane), $.ui.resolve",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: usage-panel.contextNote, usage-panel.exports, usage-panel.now, usage-panel.prompts, usage-panel.rows, usage-panel.session, usage-panel.totals",
+      "./register.tsx state reads: usage-panel.contextNote, usage-panel.exports, usage-panel.now, usage-panel.prompts, usage-panel.rows, usage-panel.session, usage-panel.totals"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "session.append",
        "hook": "session.append{door=prompt}",
-       "hasCatch": false
-      },
-      {
-       "module": "./register.tsx",
-       "pattern": "ui.scroll",
-       "hook": "ui.scroll{component=Pane, requestId=usage-panel}",
        "hasCatch": false
       },
       {
@@ -356,5 +363,5 @@
    "advice": []
   }
  },
- "sourceHash": "fe66db54c80ffe8c"
+ "sourceHash": "703c7b2a87868ef1"
 }

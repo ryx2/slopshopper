@@ -1,6 +1,6 @@
 {
  "slug": "hasuwini77-agentille",
- "generatedAt": "2026-10-16T14:17:30.864Z",
+ "generatedAt": "2026-10-18T13:54:54.633Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,12 +17,6 @@
     "event": "command.run",
     "matcher": {
      "command": "agt-tell"
-    }
-   },
-   {
-    "event": "command.run",
-    "matcher": {
-     "command": "agt-routing"
     }
    },
    {
@@ -59,18 +53,6 @@
     "event": "command.run",
     "matcher": {
      "command": "agt-highlight"
-    }
-   },
-   {
-    "event": "command.run",
-    "matcher": {
-     "command": "agt-squads"
-    }
-   },
-   {
-    "event": "command.run",
-    "matcher": {
-     "command": "agt-ledger"
     }
    },
    {
@@ -184,22 +166,10 @@
     "output": "Usage: /agt-tell <worker> <message>   (worker: exec-1 or agt-<run>-exec-1)"
    },
    {
-    "name": "agt-routing",
-    "description": "Moved to /agt-info routing: the model + effort agentille picked for each agent this session",
-    "immediate": true,
-    "output": "No agentille dispatches this session.\nmoved: /agt-info routing"
-   },
-   {
     "name": "agt-spawn",
-    "description": "Open a routed claude pane beside this one (Herdr or tmux); it is never reaped",
+    "description": "Open a routed claude pane beside this one (Herdr or tmux); it closes itself once its answer is saved",
     "argumentHint": "\"task\" [--model sonnet|opus|haiku|fable]",
     "output": "Usage: /agt-spawn \"task\" [--model sonnet|opus|haiku|fable]"
-   },
-   {
-    "name": "agt-ledger",
-    "description": "Moved to /agt-info ledger: tokens per agent role for the latest agentille run",
-    "immediate": true,
-    "output": "No agents in this run yet.\nmoved: /agt-info ledger"
    },
    {
     "name": "agt-info",
@@ -214,12 +184,6 @@
     "argumentHint": "[on|all|off]",
     "immediate": true,
     "output": "Highlight: on — /agt replies get an essentials card and a dim body with paths, versions, refs and numbers lit. /agt-highlight all covers plain prompts too.\nmoved: display.highlight in ~/.agentille/profile.json — this command goes away in v4"
-   },
-   {
-    "name": "agt-squads",
-    "description": "Moved to /agt-info squads: which squads match this repo, which nearly do, and the reviewers they add",
-    "immediate": true,
-    "output": "squads.json is unreadable: squad detection is off until it parses again.\nmoved: /agt-info squads"
    },
    {
     "name": "agt-focus",
@@ -242,9 +206,9 @@
   "rewrites": [],
   "apiCalls": {
    "$.env.get": 5,
-   "$.fs.read": 5,
+   "$.fs.read": 4,
    "$.session.id": 1,
-   "$.command.register": 9,
+   "$.command.register": 6,
    "$.store.get": 4,
    "$.clock.now": 2,
    "$.agent.list": 1,
@@ -349,12 +313,9 @@
    "$.ui.open(agt-deck)",
    "/agt-deck → deck open",
    "/agt-tell → Usage: /agt-tell <worker> <message>   (worker: exec-1 or agt-<run>-exec-1)",
-   "/agt-routing → No agentille dispatches this session.\nmoved: /agt-info routing",
    "/agt-spawn → Usage: /agt-spawn \"task\" [--model sonnet|opus|haiku|fable]",
-   "/agt-ledger → No agents in this run yet.\nmoved: /agt-info ledger",
    "/agt-info → display (profile.json → display):\n  deck      off   default\n  focus     true  de…",
    "/agt-highlight → Highlight: on — /agt replies get an essentials card and a dim body with paths, v…",
-   "/agt-squads → squads.json is unreadable: squad detection is off until it parses again.\nmoved: …",
    "/agt-focus → focus: on (agent flags show above the prompt)\nNothing to flag right now.\nmoved: …"
   ],
   "console": [],
@@ -368,15 +329,12 @@
    "session.start",
    "command.run{command=agt-deck}",
    "command.run{command=agt-tell}",
-   "command.run{command=agt-routing}",
    "command.run{command=agt-info}",
    "command.run{command=agt-spawn}",
    "tool.call{tool=mcp__agentille__spawn_pane}",
    "tool.call{tool=mcp__agentille__close_pane}",
    "command.run{command=agt-focus}",
    "command.run{command=agt-highlight}",
-   "command.run{command=agt-squads}",
-   "command.run{command=agt-ledger}",
    "prompt.submit",
    "skill.prompt",
    "session.receive",
@@ -406,7 +364,8 @@
    "$.clock.every (via ensurePolling",
    "ensureTicker)",
    "$.clock.now",
-   "$.clock.sleep (via openPane)",
+   "$.clock.sleep (via clearDialogs",
+   "openPane)",
    "$.command.register",
    "$.env.get",
    "$.fs.exists (via installedSkew",
@@ -419,6 +378,7 @@
    "$.fs.stat",
    "$.fs.write (via completeReport",
    "saveDisplay",
+   "saveTabs",
    "tipOnce",
    "writeRunFile)",
    "$.process.run",
@@ -444,6 +404,7 @@
    "AGENTILLE_WORKER",
    "HERDR_ENV",
    "HERDR_PANE_ID",
+   "HERDR_WORKSPACE_ID",
    "HOME",
    "SHELL",
    "TMUX",
@@ -468,17 +429,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, command.run{command=agt-deck}, command.run{command=agt-tell}, command.run{command=agt-routing}, command.run{command=agt-info}, command.run{command=agt-spawn}, tool.call{tool=mcp__agentille__spawn_pane}, tool.call{tool=mcp__agentille__close_pane}, command.run{command=agt-focus}, command.run{command=agt-highlight}, command.run{command=agt-squads}, command.run{command=agt-ledger}, prompt.submit, skill.prompt, session.receive, tool.call{tool=Write}, tool.call, session.measure, agent.spawn, turn.step, turn.start, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agt-deck}, ui.render{component=AssistantMessage}, ui.render{component=Spinner}, agent.spawn{subagentType=/\".\"/}, ui.render{component=ToolUse, props has {tool=Agent}}, ui.render{component=ToolUse, props has {tool=Workflow}}, session.measure{context has {}}, prompt.autocomplete{text=/\"^\\\\s*\\\\/(agentille:)?agt(\\\\s|$)\"/}",
+      "./register.js hooks: session.start, command.run{command=agt-deck}, command.run{command=agt-tell}, command.run{command=agt-info}, command.run{command=agt-spawn}, tool.call{tool=mcp__agentille__spawn_pane}, tool.call{tool=mcp__agentille__close_pane}, command.run{command=agt-focus}, command.run{command=agt-highlight}, prompt.submit, skill.prompt, session.receive, tool.call{tool=Write}, tool.call, session.measure, agent.spawn, turn.step, turn.start, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agt-deck}, ui.render{component=AssistantMessage}, ui.render{component=Spinner}, agent.spawn{subagentType=/\".\"/}, ui.render{component=ToolUse, props has {tool=Agent}}, ui.render{component=ToolUse, props has {tool=Workflow}}, session.measure{context has {}}, prompt.autocomplete{text=/\"^\\\\s*\\\\/(agentille:)?agt(\\\\s|$)\"/}",
       "./register.js hooks on skill.prompt do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.js answers its own command: command.run{command=agt-deck}",
       "./register.js answers its own command: command.run{command=agt-tell}",
-      "./register.js answers its own command: command.run{command=agt-routing}",
       "./register.js answers its own command: command.run{command=agt-info}",
       "./register.js answers its own command: command.run{command=agt-spawn}",
       "./register.js answers its own command: command.run{command=agt-focus}",
       "./register.js answers its own command: command.run{command=agt-highlight}",
-      "./register.js answers its own command: command.run{command=agt-squads}",
-      "./register.js answers its own command: command.run{command=agt-ledger}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__agentille__spawn_pane}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__agentille__close_pane}",
       "./register.js gating hook without .catch: prompt.submit",
@@ -487,9 +445,9 @@
       "./register.js gating hook without .catch: tool.call",
       "./register.js gating hook without .catch: agent.spawn",
       "./register.js gating hook without .catch: agent.spawn{subagentType=/\".\"/}",
-      "./register.js calls: $.agent.list (via refreshAgents), $.clock.after (via ioOf, tickModules), $.clock.every (via ensurePolling, ensureTicker), $.clock.now, $.clock.sleep (via openPane), $.command.register, $.env.get, $.fs.exists (via installedSkew, loadSquads, saveDisplay, tipOnce), $.fs.list (via completeReport, installedSkew), $.fs.read, $.fs.stat, $.fs.write (via completeReport, saveDisplay, tipOnce, writeRunFile), $.process.run, $.session.cwd, $.session.id, $.session.send, $.session.surfaces, $.store.get, $.store.set, $.tool.register, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status (via ioOf, tickModules), $.ui.toast",
+      "./register.js calls: $.agent.list (via refreshAgents), $.clock.after (via ioOf, tickModules), $.clock.every (via ensurePolling, ensureTicker), $.clock.now, $.clock.sleep (via clearDialogs, openPane), $.command.register, $.env.get, $.fs.exists (via installedSkew, loadSquads, saveDisplay, tipOnce), $.fs.list (via completeReport, installedSkew), $.fs.read, $.fs.stat, $.fs.write (via completeReport, saveDisplay, saveTabs, tipOnce, writeRunFile), $.process.run, $.session.cwd, $.session.id, $.session.send, $.session.surfaces, $.store.get, $.store.set, $.tool.register, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status (via ioOf, tickModules), $.ui.toast",
       "./register.js env writes: nothing",
-      "./register.js env reads: AGENTILLE_LEAD, AGENTILLE_NAME, AGENTILLE_WORKER, HERDR_ENV, HERDR_PANE_ID, HOME, SHELL, TMUX, TMUX_PANE"
+      "./register.js env reads: AGENTILLE_LEAD, AGENTILLE_NAME, AGENTILLE_WORKER, HERDR_ENV, HERDR_PANE_ID, HERDR_WORKSPACE_ID, HOME, SHELL, TMUX, TMUX_PANE"
      ],
      "gatingHooks": [
       {
@@ -546,5 +504,5 @@
    "advice": []
   }
  },
- "sourceHash": "1bb4b70e22f2481e"
+ "sourceHash": "9ebd9082564aaf47"
 }

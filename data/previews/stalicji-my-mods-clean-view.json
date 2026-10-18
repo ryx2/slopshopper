@@ -1,6 +1,6 @@
 {
  "slug": "stalicji-my-mods-clean-view",
- "generatedAt": "2026-10-09T15:34:28.118Z",
+ "generatedAt": "2026-10-18T13:55:54.734Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -33,6 +33,12 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.SubagentStop"
    },
    {
     "event": "session.end"
@@ -72,20 +78,26 @@
   "tools": [
    {
     "name": "update_plan",
-    "description": "Show the person a checklist of your plan above their prompt; they see it instead of your tool calls. Send the whole list every time: it replaces the previous one. Keep exactly one step in_progress while you work. Step titles are short phrases (about 20 CJK or 40 Latin characters at most) in the language you reply in."
+    "description": "Show the person a checklist of your plan above their prompt; they see it instead of your tool calls. Send the whole list every time: it replaces the previous one. Keep exactly one step in_progress while you work. Step titles are short phrases (about 20 CJK characters at most) in Traditional Chinese (Taiwan usage), keeping code identifiers, commands and paths as they are."
    }
   ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
-  "rewrites": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"Reply in Traditional Chinese (Taiwan usage): the final answer, the progress notes between tool calls, and any status update after a system…"
+   }
+  ],
   "apiCalls": {
    "$.command.register": 1,
    "$.tool.register": 1,
    "$.state.get": 26,
    "$.state.set": 4,
-   "$.clock.now": 2
+   "$.clock.now": 2,
+   "$.agent.list": 2
   },
   "timers": [],
   "sites": {
@@ -128,6 +140,8 @@
    "prompt.submit",
    "turn.start",
    "turn.complete",
+   "classic.Stop",
+   "classic.SubagentStop",
    "session.end",
    "ui.render{component=ToolUse}",
    "ui.render{component=ToolResult}",
@@ -135,10 +149,12 @@
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.agent.list (via isAgentWorkRunning)",
    "$.clock.every (via syncAnimation)",
    "$.clock.now",
    "$.command.register",
-   "$.state.get (via readRecapSummary)",
+   "$.state.get (via isNextStepsOffering",
+   "readRecapSummary)",
    "$.state.set",
    "$.tool.register",
    "$.ui.resolve"
@@ -149,6 +165,7 @@
    "clean-view.plan",
    "clean-view.tick",
    "clean-view.turnClock",
+   "next-steps.active",
    "where-am-i.live",
    "where-am-i.recap"
   ],
@@ -177,7 +194,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: clean-view.isEnabled, clean-view.plan, clean-view.tick, clean-view.turnClock, clean-view.combinedBox, where-am-i.recap, where-am-i.live"
+     "types ./types/index.d.ts declares state: clean-view.isEnabled, clean-view.plan, clean-view.tick, clean-view.turnClock, clean-view.combinedBox, where-am-i.recap, where-am-i.live, next-steps.active"
     ],
     "gatingHooks": []
    },
@@ -188,15 +205,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=clean}, prompt.compose, agent.spawn, tool.call{tool=mcp__clean-view__update_plan}, prompt.submit, turn.start, turn.complete, session.end, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=clean}, prompt.compose, agent.spawn, tool.call{tool=mcp__clean-view__update_plan}, prompt.submit, turn.start, turn.complete, classic.Stop, classic.SubagentStop, session.end, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks on prompt.compose, classic.Stop, classic.SubagentStop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=clean}",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__clean-view__update_plan}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.every (via syncAnimation), $.clock.now, $.command.register, $.state.get (via readRecapSummary), $.state.set, $.tool.register, $.ui.resolve",
+      "./register.tsx gating hook without .catch: classic.Stop",
+      "./register.tsx gating hook without .catch: classic.SubagentStop",
+      "./register.tsx calls: $.agent.list (via isAgentWorkRunning), $.clock.every (via syncAnimation), $.clock.now, $.command.register, $.state.get (via isNextStepsOffering, readRecapSummary), $.state.set, $.tool.register, $.ui.resolve",
       "./register.tsx state writes: clean-view.combinedBox, clean-view.isEnabled, clean-view.plan, clean-view.tick, clean-view.turnClock",
-      "./register.tsx state reads: clean-view.combinedBox, clean-view.isEnabled, clean-view.plan, clean-view.tick, clean-view.turnClock, where-am-i.live, where-am-i.recap",
-      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): where-am-i.live, where-am-i.recap"
+      "./register.tsx state reads: clean-view.combinedBox, clean-view.isEnabled, clean-view.plan, clean-view.tick, clean-view.turnClock, next-steps.active, where-am-i.live, where-am-i.recap",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): next-steps.active, where-am-i.live, where-am-i.recap"
      ],
      "gatingHooks": [
       {
@@ -216,6 +236,18 @@
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SubagentStop",
+       "hook": "classic.SubagentStop",
+       "hasCatch": false
       }
      ]
     }
@@ -223,5 +255,5 @@
    "advice": []
   }
  },
- "sourceHash": "5e6208dd3a9319ec"
+ "sourceHash": "d91eafac302460fd"
 }

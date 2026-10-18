@@ -1,0 +1,8 @@
+{
+ "slug": "haitham-radman-my-project-blast-radius",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\nconst DESTRUCTIVE = /\\b(rm\\s+(-\\w*[rf]\\w*|--recursive|--force)|git\\s+clean|git\\s+reset\\s+--hard|find\\b.*\\s-delete|shred|truncate)\\b/\n\nexport const register: Register = on => {\n  const approved = new Set<string>()\n\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => {\n    const command = e.command.trim()\n\n    if (!DESTRUCTIVE.test(command) || approved.has(command)) {\n      return next(e)\n    }\n\n    approved.add(command)\n\n    return {\n      deny:\n        `${$.plugin.name}: this command deletes files:\\n  ${command}\\n` +\n        'List what it would remove (e.g. with ls or a dry run) and tell the user. ' +\n        'If the user confirms, run the exact same command again.',\n    }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"blast-radius\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Asks for confirmation before destructive deletes, showing what would be removed\"\n}"
+ }
+}

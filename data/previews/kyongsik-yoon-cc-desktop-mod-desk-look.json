@@ -1,6 +1,6 @@
 {
  "slug": "kyongsik-yoon-cc-desktop-mod-desk-look",
- "generatedAt": "2026-10-17T13:05:20.326Z",
+ "generatedAt": "2026-10-18T13:54:50.192Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -58,6 +58,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "desk-quote"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "desk-context"
     }
    },
@@ -75,6 +81,12 @@
    },
    {
     "event": "turn.step"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "desk-slack"
+    }
    },
    {
     "event": "command.run",
@@ -202,6 +214,13 @@
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
+     "requestId": "desk-slack"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
      "requestId": "desk-asana"
     }
    },
@@ -248,6 +267,12 @@
     "output": "No Asana MCP server is connected. Connect Asana in /mcp."
    },
    {
+    "name": "desk-slack",
+    "description": "Open the Slack DMs and group DMs sent to you as conversations in a pane: recent messages, replying, closing, and a notification for new ones (needs a Slack MCP server)",
+    "immediate": true,
+    "output": "No Slack MCP server is connected. Connect Slack in /mcp."
+   },
+   {
     "name": "desk-context",
     "description": "Open context usage by category, with usage limits and cost",
     "immediate": true,
@@ -264,7 +289,12 @@
     "name": "desk-fold",
     "description": "Fold the open desk-look panes away so the conversation takes the width; run it again to unfold them where they were",
     "immediate": true,
-    "output": "Folded 6 panes. Run /desk-fold again to unfold."
+    "output": "Folded 7 panes. Run /desk-fold again to unfold."
+   },
+   {
+    "name": "desk-quote",
+    "description": "Put the text you selected in the conversation into the prompt as a quote",
+    "immediate": true
    },
    {
     "name": "desk-update",
@@ -296,6 +326,10 @@
     "title": "Asana"
    },
    {
+    "id": "desk-slack",
+    "title": "Slack"
+   },
+   {
     "id": "desk-context",
     "title": "Context"
    },
@@ -304,31 +338,36 @@
     "title": "Background tasks"
    }
   ],
-  "toasts": [],
+  "toasts": [
+   "Select the text to quote in the conversation with the mouse first."
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.config.list": 1,
    "$.tool.register": 1,
-   "$.command.register": 9,
+   "$.command.register": 11,
    "$.process.run": 53,
    "$.session.usage": 3,
-   "$.clock.now": 22,
+   "$.clock.now": 23,
    "$.env.get": 21,
-   "$.clock.every": 2,
+   "$.clock.every": 3,
+   "$.store.get": 3,
    "$.session.messages": 10,
    "$.agent.list": 2,
    "$.fs.read": 2,
-   "$.state.get": 153,
-   "$.state.set": 80,
+   "$.state.get": 161,
+   "$.state.set": 82,
    "$.fs.list": 1,
-   "$.ui.open": 6,
+   "$.ui.open": 7,
    "$.ui.scroll": 1,
-   "$.tool.list": 1,
+   "$.tool.list": 2,
    "$.ui.panes": 1,
-   "$.ui.close": 6,
-   "$.ui.resolve": 14,
+   "$.ui.close": 7,
+   "$.ui.selection": 1,
+   "$.ui.toast": 1,
+   "$.ui.resolve": 15,
    "$.session.cwd": 1,
    "$.session.id": 1
   },
@@ -336,6 +375,10 @@
    {
     "kind": "every",
     "ms": 3000
+   },
+   {
+    "kind": "every",
+    "ms": 60000
    },
    {
     "kind": "every",
@@ -513,6 +556,17 @@
           "word": "Worked",
           "durationMs": 42000
          }
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "quote-turn-42000",
+          "plain": true,
+          "dimColor": true,
+          "label": "❝ quote",
+          "onPress": "[fn]"
+         },
+         "children": []
         }
        ]
       },
@@ -1321,6 +1375,57 @@
      },
      "title": "desk-diff"
     },
+    "desk-slack": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "rowGap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "columnGap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "color": "text",
+           "weight": "semibold"
+          },
+          "children": [
+           "0 conversations"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "slack-refresh",
+           "plain": true,
+           "dimColor": true,
+           "label": "↻",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "inactive"
+        },
+        "children": [
+         "No Slack MCP server is connected. Connect Slack in /mcp."
+        ]
+       }
+      ]
+     },
+     "title": "desk-slack"
+    },
     "desk-asana": {
      "ok": true,
      "tree": {
@@ -1637,11 +1742,14 @@
    "/desk-pr → Opened the PR #NaN pane.",
    "$.ui.open(desk-asana)",
    "/desk-asana → No Asana MCP server is connected. Connect Asana in /mcp.",
+   "$.ui.open(desk-slack)",
+   "/desk-slack → No Slack MCP server is connected. Connect Slack in /mcp.",
    "$.ui.open(desk-context)",
    "/desk-context → Opened the context pane.",
    "$.ui.open(desk-tasks)",
    "/desk-tasks → Opened the background tasks pane.",
-   "/desk-fold → Folded 6 panes. Run /desk-fold again to unfold.",
+   "/desk-fold → Folded 7 panes. Run /desk-fold again to unfold.",
+   "/desk-quote → ",
    "$.process.run(claude plugin marketplace update cc-desktop-mod) → exit 0",
    "$.process.run(claude plugin update desk-look@cc-desktop-mod --json) → exit 0",
    "/desk-update → Couldn't update desk-look: "
@@ -1665,10 +1773,12 @@
    "command.run{command=desk-preview}",
    "tool.call{tool=?}",
    "command.run{command=desk-fold}",
+   "command.run{command=desk-quote}",
    "command.run{command=desk-context}",
    "command.run{command=desk-diff}",
    "command.run{command=desk-tasks}",
    "turn.step",
+   "command.run{command=desk-slack}",
    "command.run{command=desk-asana}",
    "command.run{command=desk-pr}",
    "tool.call",
@@ -1684,13 +1794,13 @@
    "ui.render{component=AbovePrompt}",
    "ui.render{component=TurnDuration}",
    "ui.render{component=Pane, requestId=desk-sessions}",
-   "ui.render{component=Pane, requestId=desk-tasks}",
-   "ui.render{component=Pane, requestId=?}",
-   "ui.render{component=… [+199 chars]"
+   "ui.render{component=Pane",
+   "requestId=desk-ta… [+314 chars]"
   ],
   "calls": [
    "$.agent.list (via refreshAgents)",
    "$.clock.after (via armAssign",
+   "armSlackClose",
    "mergeFromPane",
    "openSession",
    "revertFile",
@@ -1712,7 +1822,9 @@
    "$.fs.read",
    "$.fs.stat (via isPreviewed",
    "loadPreview)",
-   "$.mcp.call (via callAsana)",
+   "$.mcp.call (via callAsana",
+   "callSlack",
+   "sendSlack)",
    "$.process.run",
    "$.prompt.fill (via fillPrompt",
    "openSession)",
@@ -1726,17 +1838,17 @@
    "refreshUsage)",
    "$.state.get",
    "$.state.set",
+   "$.store.get",
+   "$.store.set (via pollSlack",
+   "saveInbox",
+   "slackMe)",
    "$.tool.call (via stopTask)",
-   "$.tool.check (via findUnruled)",
-   "$.tool.list (via findAsana)",
+   "$.tool.check (via findUnruled",
+   "slackUnruled)",
+   "$.tool.list (via findAsana",
+   "findSlack)",
    "$.tool.register",
-   "$.ui.close (via toggleFold)",
-   "$.ui.copy (via copyText)",
-   "$.ui.focus (via pickLine)",
-   "$.ui.invalidate",
-   "$.ui.notify",
-   "$.ui.open",
-   "$.ui.panes… [+126 chars]"
+   "$.ui.clos… [+287 chars]"
   ],
   "stateReads": [
    "desk-look.agentClock",
@@ -1769,6 +1881,8 @@
    "desk-look.runs",
    "desk-look.sessionQuery",
    "desk-look.sessions",
+   "desk-look.slack",
+   "desk-look.slackView",
    "desk-look.surface",
    "desk-look.taskOutput",
    "desk-look.tasks",
@@ -1809,6 +1923,8 @@
    "desk-look.runs",
    "desk-look.sessionQuery",
    "desk-look.sessions",
+   "desk-look.slack",
+   "desk-look.slackView",
    "desk-look.surface",
    "desk-look.taskOutput",
    "desk-look.tasks",
@@ -1841,7 +1957,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: desk-look.open, desk-look.diff, desk-look.repo, desk-look.surface, desk-look.runs, desk-look.images, desk-look.graphics, desk-look.pendingEdits, desk-look.turnCards, desk-look.sessions, desk-look.sessionQuery, desk-look.turnStartedAt, desk-look.tick, desk-look.tasks, desk-look.ask, desk-look.promptOrigin, desk-look.usage, desk-look.usageBreakdown, desk-look.folded, desk-look.pr, desk-look.asana, desk-look.asanaView, desk-look.asanaUsers, desk-look.asanaSearch, desk-look.asanaTab, desk-look.asanaProjects, desk-look.asanaProject, desk-look.diffView, desk-look.agents, desk-look.agentView, desk-look.agentDetail, desk-look.agentClock, desk-look.taskOutput, desk-look.diffWindow, desk-look.commentDraft, desk-look.lineComments, desk-look.preview, desk-look.previewWritten"
+     "types ./types/index.d.ts declares state: desk-look.open, desk-look.diff, desk-look.repo, desk-look.surface, desk-look.runs, desk-look.images, desk-look.graphics, desk-look.pendingEdits, desk-look.turnCards, desk-look.sessions, desk-look.sessionQuery, desk-look.turnStartedAt, desk-look.tick, desk-look.tasks, desk-look.ask, desk-look.promptOrigin, desk-look.usage, desk-look.usageBreakdown, desk-look.folded, desk-look.pr, desk-look.asana, desk-look.asanaView, desk-look.asanaUsers, desk-look.asanaSearch, desk-look.asanaTab, desk-look.asanaProjects, desk-look.asanaProject, desk-look.slack, desk-look.slackView, desk-look.diffView, desk-look.agents, desk-look.agentView, desk-look.agentDetail, desk-look.agentClock, desk-look.taskOutput, desk-look.diffWindow, desk-look.commentDraft, desk-look.lineComments, desk-look.preview, desk-look.previewWritten"
     ],
     "gatingHooks": []
    },
@@ -1852,14 +1968,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.call{tool=AskUserQuestion}, session.start, prompt.submit, session.append, turn.start, turn.complete, command.run{command=desk-sessions}, command.run{command=desk-update}, command.run{command=desk-preview}, tool.call{tool=?}, command.run{command=desk-fold}, command.run{command=desk-context}, command.run{command=desk-diff}, command.run{command=desk-tasks}, turn.step, command.run{command=desk-asana}, command.run{command=desk-pr}, tool.call, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=Spinner}, ui.render{component=SessionMode}, ui.render{component=CommandOutput}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, ui.render{component=TurnDuration}, ui.render{component=Pane, requestId=desk-sessions}, ui.render{component=Pane, requestId=desk-tasks}, ui.render{component=Pane, requestId=?}, ui.render{component=… [+199 chars]",
+      "./register.tsx hooks: tool.call{tool=AskUserQuestion}, session.start, prompt.submit, session.append, turn.start, turn.complete, command.run{command=desk-sessions}, command.run{command=desk-update}, command.run{command=desk-preview}, tool.call{tool=?}, command.run{command=desk-fold}, command.run{command=desk-quote}, command.run{command=desk-context}, command.run{command=desk-diff}, command.run{command=desk-tasks}, turn.step, command.run{command=desk-slack}, command.run{command=desk-asana}, command.run{command=desk-pr}, tool.call, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, ui.render{component=ToolGroup}, ui.render{component=Spinner}, ui.render{component=SessionMode}, ui.render{component=CommandOutput}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, ui.render{component=TurnDuration}, ui.render{component=Pane, requestId=desk-sessions}, ui.render{component=Pane, requestId=desk-ta… [+314 chars]",
       "./register.tsx answers its own command: command.run{command=desk-sessions}",
       "./register.tsx answers its own command: command.run{command=desk-update}",
       "./register.tsx answers its own command: command.run{command=desk-preview}",
       "./register.tsx answers its own command: command.run{command=desk-fold}",
+      "./register.tsx answers its own command: command.run{command=desk-quote}",
       "./register.tsx answers its own command: command.run{command=desk-context}",
       "./register.tsx answers its own command: command.run{command=desk-diff}",
       "./register.tsx answers its own command: command.run{command=desk-tasks}",
+      "./register.tsx answers its own command: command.run{command=desk-slack}",
       "./register.tsx answers its own command: command.run{command=desk-asana}",
       "./register.tsx answers its own command: command.run{command=desk-pr}",
       "./register.tsx gating hook without .catch: tool.call{tool=AskUserQuestion}",
@@ -1868,11 +1986,11 @@
       "./register.tsx gating hook without .catch: tool.call{tool=?}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane}",
-      "./register.tsx calls: $.agent.list (via refreshAgents), $.clock.after (via armAssign, mergeFromPane, openSession, revertFile, stopTask, watchPr), $.clock.every, $.clock.now, $.clock.sleep (via openDiffAt, restoreScroll), $.command.register, $.command.run (via openSession), $.config.list, $.env.get, $.fs.exists (via findImagesDir), $.fs.list (via findImagesDir, isBridged, listImages, listSessions), $.fs.read, $.fs.stat (via isPreviewed, loadPreview), $.mcp.call (via callAsana), $.process.run, $.prompt.fill (via fillPrompt, openSession), $.prompt.read (via fillPrompt), $.session.cwd, $.session.id, $.session.messages (via refreshAgentDetail, refreshRuns), $.session.surfaces, $.session.usage (via refreshBreakdown, refreshUsage), $.state.get, $.state.set, $.tool.call (via stopTask), $.tool.check (via findUnruled), $.tool.list (via findAsana), $.tool.register, $.ui.close (via toggleFold), $.ui.copy (via copyText), $.ui.focus (via pickLine), $.ui.invalidate, $.ui.notify, $.ui.open, $.ui.panes… [+126 chars]",
+      "./register.tsx calls: $.agent.list (via refreshAgents), $.clock.after (via armAssign, armSlackClose, mergeFromPane, openSession, revertFile, stopTask, watchPr), $.clock.every, $.clock.now, $.clock.sleep (via openDiffAt, restoreScroll), $.command.register, $.command.run (via openSession), $.config.list, $.env.get, $.fs.exists (via findImagesDir), $.fs.list (via findImagesDir, isBridged, listImages, listSessions), $.fs.read, $.fs.stat (via isPreviewed, loadPreview), $.mcp.call (via callAsana, callSlack, sendSlack), $.process.run, $.prompt.fill (via fillPrompt, openSession), $.prompt.read (via fillPrompt), $.session.cwd, $.session.id, $.session.messages (via refreshAgentDetail, refreshRuns), $.session.surfaces, $.session.usage (via refreshBreakdown, refreshUsage), $.state.get, $.state.set, $.store.get, $.store.set (via pollSlack, saveInbox, slackMe), $.tool.call (via stopTask), $.tool.check (via findUnruled, slackUnruled), $.tool.list (via findAsana, findSlack), $.tool.register, $.ui.clos… [+287 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_FORCE_TERMINAL_IMAGES, CLAUDE_CONFIG_DIR, COLORTERM, HERDR_ENV, HOME, TERM, TERM_PROGRAM, TMUX, XDG_CONFIG_HOME, ZELLIJ",
-      "./register.tsx state writes: desk-look.agentClock, desk-look.agentDetail, desk-look.agentView, desk-look.agents, desk-look.asana, desk-look.asanaProject, desk-look.asanaProjects, desk-look.asanaSearch, desk-look.asanaTab, desk-look.asanaUsers, desk-look.asanaView, desk-look.ask, desk-look.commentDraft, desk-look.diff, desk-look.diffView, desk-look.diffWindow, desk-look.folded, desk-look.graphics, desk-look.images, desk-look.lineComments, desk-look.open, desk-look.pendingEdits, desk-look.pr, desk-look.preview, desk-look.previewWritten, desk-look.promptOrigin, desk-look.repo, desk-look.runs, desk-look.sessionQuery, desk-look.sessions, desk-look.surface, desk-look.taskOutput, desk-look.tasks, desk-look.tick, desk-look.turnCards, desk-look.turnStartedAt, desk-look.usage, desk-look.usageBreakdown",
-      "./register.tsx state reads: desk-look.agentClock, desk-look.agentDetail, desk-look.agentView, desk-look.agents, desk-look.asana, desk-look.asanaProject, desk-look.asanaProjects, desk-look.asanaSearch, desk-look.asanaTab, desk-look.asanaUsers, desk-look.asanaView, desk-look.ask, desk-look.commentDraft, desk-look.diff, desk-look.diffView, desk-look.diffWindow, desk-look.folded, desk-look.graphics, desk-look.images, desk-look.lineComments, desk-look.open, desk-look.pendingEdits, desk-look.pr, desk-look.preview, desk-look.previewWritten, desk-look.promptOrigin, desk-look.repo, desk-look.runs, desk-look.sessionQuery, desk-look.sessions, desk-look.surface, desk-look.taskOutput, desk-look.tasks, desk-look.tick, desk-look.turnCards, desk-look.turnStartedAt, desk-look.usage, desk-look.usageBreakdown"
+      "./register.tsx state writes: desk-look.agentClock, desk-look.agentDetail, desk-look.agentView, desk-look.agents, desk-look.asana, desk-look.asanaProject, desk-look.asanaProjects, desk-look.asanaSearch, desk-look.asanaTab, desk-look.asanaUsers, desk-look.asanaView, desk-look.ask, desk-look.commentDraft, desk-look.diff, desk-look.diffView, desk-look.diffWindow, desk-look.folded, desk-look.graphics, desk-look.images, desk-look.lineComments, desk-look.open, desk-look.pendingEdits, desk-look.pr, desk-look.preview, desk-look.previewWritten, desk-look.promptOrigin, desk-look.repo, desk-look.runs, desk-look.sessionQuery, desk-look.sessions, desk-look.slack, desk-look.slackView, desk-look.surface, desk-look.taskOutput, desk-look.tasks, desk-look.tick, desk-look.turnCards, desk-look.turnStartedAt, desk-look.usage, desk-look.usageBreakdown",
+      "./register.tsx state reads: desk-look.agentClock, desk-look.agentDetail, desk-look.agentView, desk-look.agents, desk-look.asana, desk-look.asanaProject, desk-look.asanaProjects, desk-look.asanaSearch, desk-look.asanaTab, desk-look.asanaUsers, desk-look.asanaView, desk-look.ask, desk-look.commentDraft, desk-look.diff, desk-look.diffView, desk-look.diffWindow, desk-look.folded, desk-look.graphics, desk-look.images, desk-look.lineComments, desk-look.open, desk-look.pendingEdits, desk-look.pr, desk-look.preview, desk-look.previewWritten, desk-look.promptOrigin, desk-look.repo, desk-look.runs, desk-look.sessionQuery, desk-look.sessions, desk-look.slack, desk-look.slackView, desk-look.surface, desk-look.taskOutput, desk-look.tasks, desk-look.tick, desk-look.turnCards, desk-look.turnStartedAt, desk-look.usage, desk-look.usageBreakdown"
      ],
      "gatingHooks": [
       {
@@ -1917,5 +2035,5 @@
    "advice": []
   }
  },
- "sourceHash": "cd569827f708abb9"
+ "sourceHash": "8f5786e2782132b6"
 }

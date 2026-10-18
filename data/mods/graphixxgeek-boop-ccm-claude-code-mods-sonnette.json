@@ -1,0 +1,8 @@
+{
+ "slug": "graphixxgeek-boop-ccm-claude-code-mods-sonnette",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\n// Au-delà de ce seuil, on suppose que la personne est partie faire autre chose.\nconst SEUIL_MS = 60_000\n\nexport const register: Register = on => {\n  let debut = 0\n\n  on('prompt.submit', async ($, e, next) => {\n    debut = await $.clock.now()\n    return next(e)\n  }).catch(($, e, next) => next(e))\n\n  on('turn.complete', async ($, e, next) => {\n    const ran = await next(e)\n    const duree = debut > 0 ? (await $.clock.now()) - debut : 0\n    if (duree >= SEUIL_MS) {\n      const minutes = Math.round(duree / 60_000)\n      const fin = e.reason === 'answer' ? 'Claude a fini' : 'Claude s\\'est arrêté'\n      $.ui.toast(`🔔 ${fin}, après ${minutes} min de travail.`)\n    }\n    return ran\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"sonnette\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Prévient d'une notification quand Claude a fini un long travail\"\n}"
+ }
+}
