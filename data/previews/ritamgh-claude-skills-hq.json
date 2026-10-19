@@ -1,0 +1,444 @@
+{
+ "slug": "ritamgh-claude-skills-hq",
+ "generatedAt": "2026-10-19T16:28:02.399Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__hq__hq_board"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__hq__hq_answer"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "hq"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "hq-board"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "hq",
+    "description": "Refresh the crew board and show its pane; \"show <id>\" prints one task, \"view\" switches Focus and Projects, \"go <name>\" jumps to a session or task in tmux, \"seen\" clears JUST FINISHED, \"brief\" says what changed since you last looked",
+    "argumentHint": "[show <id> | view | go <name> | seen | brief]",
+    "output": "Crew board refreshed."
+   }
+  ],
+  "tools": [
+   {
+    "name": "hq_board",
+    "description": "Read-only. The crew board as JSON: open tasks (id, short name, repo, state, age, note, decision id and question when one is open), live claude sessions (name, project, state, age, tmux target, `link`: the claude.ai URL that opens the session, when it has one), the lead session of each task (`leadGuessed` when it is only a guess by project) and its GitHub PR (number, state) when known, and the best lead per project. Call it before relaying an instruction."
+   },
+   {
+    "name": "hq_answer",
+    "description": "Records the user's answer to a held crew task or an open decision (runs crew answer). id: a decision id such as D3, or a held task; answer: the user's words verbatim. Returns the lead session to notify."
+   }
+  ],
+  "panes": [
+   {
+    "id": "hq-board",
+    "title": "Crew board"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 2,
+   "$.store.get": 2,
+   "$.state.get": 52,
+   "$.state.set": 13,
+   "$.ui.open": 2,
+   "$.clock.after": 1,
+   "$.clock.every": 1,
+   "$.ui.status": 1,
+   "$.env.get": 8,
+   "$.process.run": 3,
+   "$.fs.list": 4,
+   "$.clock.now": 5,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 1
+   },
+   {
+    "kind": "every",
+    "ms": 15000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "hq-board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "padding": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {},
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-focus",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "dimColor": false
+            },
+            "children": [
+             "Focus"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           " · "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-projects",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": false,
+             "dimColor": true
+            },
+            "children": [
+             "Projects"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           " · "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "new-lead",
+           "plain": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "cyan"
+            },
+            "children": [
+             "＋ New lead"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "marginTop": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "All clear"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Crew board"
+    }
+   }
+  },
+  "script": [
+   "$.ui.open(hq-board)",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(/plugins/hq/bin/tmux-map) → exit 0",
+   "$.process.run(/Users/dev/.claude/bin/crew ls) → exit 0",
+   "$.ui.open(hq-board)",
+   "$.process.run(gh search prs --review-requested=@me --state=open --json number,title,repository…) → exit 0",
+   "/hq → Crew board refreshed."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": false,
+  "errors": [
+   "hq.owners is not declared: the manifest's types contract must name it in interface PluginState { hq: { owners: ... } }",
+   "hq.talks is not declared: the manifest's types contract must name it in interface PluginState { hq: { talks: ... } }",
+   "hq.wake is not declared: the manifest's types contract must name it in interface PluginState { hq: { wake: ... } }"
+  ],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__hq__hq_board}",
+   "tool.call{tool=mcp__hq__hq_answer}",
+   "prompt.compose",
+   "command.run{command=hq}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=hq-board}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.env.get (via closeSession",
+   "crew",
+   "openLeadForm",
+   "readHolds",
+   "readLed",
+   "readLinks",
+   "readMetas",
+   "readRegistry",
+   "readResults",
+   "readStatus",
+   "startLead",
+   "switchClient",
+   "wakeOwner)",
+   "$.fs.list (via readLed",
+   "readLinks",
+   "readRegistry)",
+   "$.fs.read (via readCached",
+   "readHolds",
+   "readLed",
+   "readLinks",
+   "readMetas",
+   "readRegistry",
+   "readStatus)",
+   "$.fs.stat (via readCached)",
+   "$.process.run (via closeSession",
+   "crew",
+   "fetchPr",
+   "fetchReviews",
+   "liveSessions",
+   "refreshChats",
+   "startLead",
+   "switchClient",
+   "wakeOwner)",
+   "$.prompt.submit (via answerInPane)",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get",
+   "$.store.set",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast (via answerInPane",
+   "closeSession",
+   "diffInPane",
+   "jump",
+   "pollOnce",
+   "refreshPrs",
+   "startLead",
+   "wakeOwner)"
+  ],
+  "stateReads": [
+   "hq.board",
+   "hq.chats",
+   "hq.detail",
+   "hq.dismissed",
+   "hq.entered",
+   "hq.error",
+   "hq.holds",
+   "hq.last",
+   "hq.need",
+   "hq.needScroll",
+   "hq.newLead",
+   "hq.notes",
+   "hq.owners",
+   "hq.prToasted",
+   "hq.prs",
+   "hq.questions",
+   "hq.results",
+   "hq.reviews",
+   "hq.seen",
+   "hq.talks",
+   "hq.view",
+   "hq.wake"
+  ],
+  "stateWrites": [
+   "hq.board",
+   "hq.chats",
+   "hq.detail",
+   "hq.dismissed",
+   "hq.entered",
+   "hq.error",
+   "hq.holds",
+   "hq.last",
+   "hq.need",
+   "hq.needScroll",
+   "hq.newLead",
+   "hq.notes",
+   "hq.owners",
+   "hq.prToasted",
+   "hq.prs",
+   "hq.questions",
+   "hq.results",
+   "hq.reviews",
+   "hq.seen",
+   "hq.talks",
+   "hq.view",
+   "hq.wake"
+  ],
+  "envReads": [
+   "HOME",
+   "TMUX"
+  ],
+  "raw": {
+   "success": false,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ritamgh-claude-skills-hq/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ritamgh-claude-skills-hq/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: hq.board, hq.error, hq.view, hq.holds, hq.prs, hq.prToasted, hq.reviews, hq.seen, hq.chats, hq.dismissed, hq.entered, hq.last, hq.results, hq.detail, hq.questions, hq.notes, hq.need, hq.needScroll, hq.newLead"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ritamgh-claude-skills-hq/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [
+      {
+       "path": "modules../register.tsx",
+       "message": "hq.owners is not declared: the manifest's types contract must name it in interface PluginState { hq: { owners: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "hq.talks is not declared: the manifest's types contract must name it in interface PluginState { hq: { talks: ... } }",
+       "code": null
+      },
+      {
+       "path": "modules../register.tsx",
+       "message": "hq.wake is not declared: the manifest's types contract must name it in interface PluginState { hq: { wake: ... } }",
+       "code": null
+      }
+     ],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__hq__hq_board}, tool.call{tool=mcp__hq__hq_answer}, prompt.compose, command.run{command=hq}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=hq-board}",
+      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=hq}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__hq__hq_board}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__hq__hq_answer}",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.now, $.command.register, $.env.get (via closeSession, crew, openLeadForm, readHolds, readLed, readLinks, readMetas, readRegistry, readResults, readStatus, startLead, switchClient, wakeOwner), $.fs.list (via readLed, readLinks, readRegistry), $.fs.read (via readCached, readHolds, readLed, readLinks, readMetas, readRegistry, readStatus), $.fs.stat (via readCached), $.process.run (via closeSession, crew, fetchPr, fetchReviews, liveSessions, refreshChats, startLead, switchClient, wakeOwner), $.prompt.submit (via answerInPane), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast (via answerInPane, closeSession, diffInPane, jump, pollOnce, refreshPrs, startLead, wakeOwner)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, TMUX",
+      "./register.tsx state writes: hq.board, hq.chats, hq.detail, hq.dismissed, hq.entered, hq.error, hq.holds, hq.last, hq.need, hq.needScroll, hq.newLead, hq.notes, hq.owners, hq.prToasted, hq.prs, hq.questions, hq.results, hq.reviews, hq.seen, hq.talks, hq.view, hq.wake",
+      "./register.tsx state reads: hq.board, hq.chats, hq.detail, hq.dismissed, hq.entered, hq.error, hq.holds, hq.last, hq.need, hq.needScroll, hq.newLead, hq.notes, hq.owners, hq.prToasted, hq.prs, hq.questions, hq.results, hq.reviews, hq.seen, hq.talks, hq.view, hq.wake"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__hq__hq_board}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__hq__hq_answer}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "24c5a619baab6dfe"
+}

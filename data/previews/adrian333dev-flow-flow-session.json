@@ -1,11 +1,17 @@
 {
  "slug": "adrian333dev-flow-flow-session",
- "generatedAt": "2026-10-18T13:54:33.504Z",
+ "generatedAt": "2026-10-19T16:25:55.458Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "band"
+    }
    },
    {
     "event": "command.run",
@@ -47,6 +53,9 @@
     "event": "tool.call"
    },
    {
+    "event": "session.append"
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "/^mcp__flow-session__restart$/"
@@ -68,6 +77,30 @@
     }
    },
    {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "session.measure"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "classic.Stop"
+   },
+   {
+    "event": "classic.PostModelSwitch"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
     "event": "session.compact"
    }
   ],
@@ -76,12 +109,17 @@
     "name": "restart",
     "description": "Restart this session in place, from a start message the agent writes.",
     "output": "Restarting: the agent writes the start message."
+   },
+   {
+    "name": "band",
+    "description": "Switch the test band on or off: /band, /band <number>, next, list, act, off. /band clear empties the real band.",
+    "output": "The mod folder is not in CLAUDE_CODE_PLUGIN_DIRS, so band-scenarios.json cannot be found."
    }
   ],
   "tools": [
    {
     "name": "restart",
-    "description": "Restarts this session in place once the handoff is written: the conversation is replaced by `message`, and the work continues from it. Call it last. Nothing you write after the call is read."
+    "description": "Restart this session from `message`, which replaces the conversation. Call it last: nothing after it is read."
    }
   ],
   "panes": [],
@@ -90,18 +128,132 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.env.get": 31,
+   "$.state.get": 27,
+   "$.session.id": 2,
+   "$.store.get": 1,
+   "$.store.keys": 1,
+   "$.fs.read": 27,
+   "$.state.set": 14,
+   "$.clock.every": 1,
    "$.tool.register": 1,
-   "$.command.register": 1,
-   "$.env.get": 22,
-   "$.fs.read": 21,
+   "$.command.register": 2,
+   "$.process.run": 2,
+   "$.session.model": 2,
    "$.session.usage": 10,
+   "$.store.set": 1,
    "$.clock.sleep": 1,
-   "$.prompt.submit": 1
+   "$.prompt.submit": 1,
+   "$.ui.resolve": 1
   },
-  "timers": [],
-  "sites": {},
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {},
+     "children": [
+      "",
+      "",
+      {
+       "type": "Text",
+       "props": {
+        "key": "value-model-0",
+        "color": "#f2440c"
+       },
+       "children": [
+        "opus 5.5"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "bar-context",
+        "dimColor": true
+       },
+       "children": [
+        " │ "
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "label-context",
+        "dimColor": true
+       },
+       "children": [
+        "context",
+        " "
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "value-context-0",
+        "color": "#22c55e"
+       },
+       "children": [
+        "97k"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "value-context-1",
+        "color": "#22c55e",
+        "dimColor": true
+       },
+       "children": [
+        "/170k"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "bar-five",
+        "dimColor": true
+       },
+       "children": [
+        " │ "
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "label-five",
+        "dimColor": true
+       },
+       "children": [
+        "5h",
+        " "
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "key": "value-five-0",
+        "color": "#22c55e"
+       },
+       "children": [
+        "31%"
+       ]
+      }
+     ]
+    }
+   }
+  },
   "script": [
    "session.start",
+   "$.process.run(tail -c 400000 /Users/dev/.claude/projects/app/preview.jsonl) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -111,8 +263,10 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(tail -c 400000 ) → exit 0",
    "turn.complete",
-   "/restart → Restarting: the agent writes the start message."
+   "/restart → Restarting: the agent writes the start message.",
+   "/band → The mod folder is not in CLAUDE_CODE_PLUGIN_DIRS, so band-scenarios.json cannot …"
   ],
   "console": [],
   "warnings": []
@@ -125,6 +279,7 @@
   ],
   "hooks": [
    "session.start",
+   "command.run{command=band}",
    "command.run{command=restart}",
    "skill.prompt{skill=/\"(^|:)handoff$\"/}",
    "tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}",
@@ -134,36 +289,73 @@
    "prompt.edit",
    "prompt.submit",
    "tool.call",
+   "session.append",
    "tool.call{tool=?}",
    "turn.complete",
    "tool.check",
    "classic.PermissionRequest",
    "ui.render{component=AskUserQuestion}",
+   "ui.render{component=AbovePrompt}",
+   "session.measure",
+   "classic.SessionStart",
+   "classic.Stop",
+   "classic.PostModelSwitch",
+   "ui.render{component=PromptHint}",
    "session.compact"
   ],
   "calls": [
-   "$.clock.sleep",
+   "$.clock.every (via metersStart",
+   "runWave)",
+   "$.clock.sleep (via askForRestart)",
    "$.command.register",
    "$.command.run (via runRestart)",
-   "$.env.get (via flowHome)",
+   "$.env.get (via flowHome",
+   "modFolder)",
    "$.fs.exists (via mentionsFor)",
-   "$.fs.list (via readNotes)",
+   "$.fs.list (via folderOf",
+   "readNotes)",
    "$.fs.read (via readText)",
    "$.process.run (via logAsk",
+   "metersRead",
+   "openTicket",
    "removeNotes)",
-   "$.prompt.submit",
-   "$.session.id (via logAsk)",
+   "$.prompt.submit (via askForRestart",
+   "runRestart)",
+   "$.session.id (via logAsk",
+   "restore",
+   "save)",
+   "$.session.model (via metersRead)",
    "$.session.root",
    "$.session.usage",
+   "$.state.get",
+   "$.state.set",
+   "$.store.delete (via prune)",
+   "$.store.get (via prune",
+   "restore)",
+   "$.store.keys (via prune)",
+   "$.store.set (via save)",
    "$.tool.register",
    "$.turn.abort",
    "$.ui.ask (via askUser)",
    "$.ui.log",
    "$.ui.resolve"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "flow-session.band",
+   "flow-session.frame",
+   "flow-session.issues",
+   "flow-session.meters",
+   "flow-session.tracked"
+  ],
+  "stateWrites": [
+   "flow-session.band",
+   "flow-session.frame",
+   "flow-session.issues",
+   "flow-session.meters",
+   "flow-session.tracked"
+  ],
   "envReads": [
+   "CLAUDE_CODE_PLUGIN_DIRS",
    "FLOW_HOME",
    "HOME"
   ],
@@ -182,7 +374,10 @@
       "code": null
      }
     ],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: flow-session.band, flow-session.issues, flow-session.frame, flow-session.meters, flow-session.tracked"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -192,20 +387,27 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=restart}, skill.prompt{skill=/\"(^|:)handoff$\"/}, tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}, prompt.mention, turn.start, prompt.autocomplete{token=/\"^#\"/}, prompt.edit, prompt.submit, tool.call, tool.call{tool=?}, turn.complete, tool.check, classic.PermissionRequest, ui.render{component=AskUserQuestion}, session.compact",
-      "./register.ts hooks on skill.prompt, classic.PermissionRequest, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts hooks: session.start, command.run{command=band}, command.run{command=restart}, skill.prompt{skill=/\"(^|:)handoff$\"/}, tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}, prompt.mention, turn.start, prompt.autocomplete{token=/\"^#\"/}, prompt.edit, prompt.submit, tool.call, session.append, tool.call{tool=?}, turn.complete, tool.check, classic.PermissionRequest, ui.render{component=AskUserQuestion}, ui.render{component=AbovePrompt}, session.measure, classic.SessionStart, classic.Stop, classic.PostModelSwitch, ui.render{component=PromptHint}, session.compact",
+      "./register.ts hooks on skill.prompt, classic.PermissionRequest, classic.SessionStart, classic.Stop, classic.PostModelSwitch, session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts answers its own command: command.run{command=band}",
       "./register.ts gating hook with .catch: command.run{command=restart}",
       "./register.ts gating hook without .catch: tool.call{tool=/\"^(Edit|Write|MultiEdit|NotebookEdit)$\"/}",
       "./register.ts gating hook without .catch: prompt.mention",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: tool.call",
+      "./register.ts gating hook without .catch: session.append",
       "./register.ts gating hook with .catch: tool.call{tool=?}",
       "./register.ts gating hook with .catch: tool.check",
       "./register.ts gating hook with .catch: classic.PermissionRequest",
+      "./register.ts gating hook without .catch: classic.SessionStart",
+      "./register.ts gating hook without .catch: classic.Stop",
+      "./register.ts gating hook without .catch: classic.PostModelSwitch",
       "./register.ts gating hook with .catch: session.compact",
-      "./register.ts calls: $.clock.sleep, $.command.register, $.command.run (via runRestart), $.env.get (via flowHome), $.fs.exists (via mentionsFor), $.fs.list (via readNotes), $.fs.read (via readText), $.process.run (via logAsk, removeNotes), $.prompt.submit, $.session.id (via logAsk), $.session.root, $.session.usage, $.tool.register, $.turn.abort, $.ui.ask (via askUser), $.ui.log, $.ui.resolve",
+      "./register.ts calls: $.clock.every (via metersStart, runWave), $.clock.sleep (via askForRestart), $.command.register, $.command.run (via runRestart), $.env.get (via flowHome, modFolder), $.fs.exists (via mentionsFor), $.fs.list (via folderOf, readNotes), $.fs.read (via readText), $.process.run (via logAsk, metersRead, openTicket, removeNotes), $.prompt.submit (via askForRestart, runRestart), $.session.id (via logAsk, restore, save), $.session.model (via metersRead), $.session.root, $.session.usage, $.state.get, $.state.set, $.store.delete (via prune), $.store.get (via prune, restore), $.store.keys (via prune), $.store.set (via save), $.tool.register, $.turn.abort, $.ui.ask (via askUser), $.ui.log, $.ui.resolve",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: FLOW_HOME, HOME"
+      "./register.ts env reads: CLAUDE_CODE_PLUGIN_DIRS, FLOW_HOME, HOME",
+      "./register.ts state writes: flow-session.band, flow-session.frame, flow-session.issues, flow-session.meters, flow-session.tracked",
+      "./register.ts state reads: flow-session.band, flow-session.frame, flow-session.issues, flow-session.meters, flow-session.tracked"
      ],
      "gatingHooks": [
       {
@@ -240,6 +442,12 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "session.append",
+       "hook": "session.append",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=?}",
        "hasCatch": true
@@ -258,6 +466,24 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.Stop",
+       "hook": "classic.Stop",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.PostModelSwitch",
+       "hook": "classic.PostModelSwitch",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "session.compact",
        "hook": "session.compact",
        "hasCatch": true
@@ -268,5 +494,5 @@
    "advice": []
   }
  },
- "sourceHash": "c914a4944cf53011"
+ "sourceHash": "aa84921f317e375c"
 }

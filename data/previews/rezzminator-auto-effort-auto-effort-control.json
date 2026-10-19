@@ -1,0 +1,318 @@
+{
+ "slug": "rezzminator-auto-effort-auto-effort-control",
+ "generatedAt": "2026-10-19T16:28:02.251Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "session.compact"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "auto-effort-control"
+    }
+   },
+   {
+    "event": "tool.describe"
+   },
+   {
+    "event": "agent.spawn"
+   }
+  ],
+  "commands": [
+   {
+    "name": "auto-effort-control",
+    "description": "Show or change automatic reasoning effort: status, on, off, set <key> <value>, clear [model]",
+    "output": "auto-effort-control 0.3.0-dev.1 · on (this session)\nlevel: none yet · the first request of the next turn runs at the planning level\nmodel: claude-opus-5-5 · allow\nsettings (plugin options): floor=medium ceiling=xhigh planLevel=high planUpshiftPatterns=[\\bthink | \\bdesign] planUpshiftChars=1500 turnReminder=true escalateAfterFailures=2 lowerOnPass=true failurePatterns=[--- FAIL | FAIL(ED)? | (?<!\\d)[1-9]\\d* (failed|failing) | AssertionError | panic: | Traceback] failureTools=[Bash] testCommandPatterns=[\\bgo\\s+(-C\\s+\\S+\\s+)?test\\b | \\b(npm|pnpm|yarn|bun)\\s+(run\\s+)?test\\b | \\bvitest\\b | \\bjest\\b | \\bpytest\\b | \\bcargo\\s+(test|nextest)\\b | \\bmake\\b[^;&|\\n]*?\\b(test|check|verify)\\b | \\bjust\\b[^;&|\\n]*?\\b(test|check)\\b | \\b(mvn|gradle|gradlew)\\b[^;&|\\n]*?\\btest\\b | \\bdotnet\\s+test\\b | \\bdeno\\s+test\\b | \\bswift\\s+test\\b | \\bmix\\s+test\\b | \\b(rspec|phpunit|ctest|tox|nox)\\b | \\bscripts?/test[\\w.-]*\\.sh\\b] userEffortPins=true models=[claude-opus-5-5=allow | claude-fable-5-1=allow | claude-sonnet-5-5=probation | claude-haiku-5-5=probation | claude-sonnet-5=deny] unknownModels=off probationSwitches=5 canaryThreshold=0.9 cacheTtlSeconds=300 statusLine=true logFile=~/.local/state/auto-effort-control/decisions.jsonl stateFile=~/.local/state/auto-effort-control/state.json\nchange one: /auto-effort-control set <key> <value>, /config, or pluginConfigs[\"auto-effort-control@<marketplace>\"].options in settings.json (key \"auto-effort-control@inline\" when loaded with --plugin-dir)\nenvironment migration: checks known legacy names and settings.env only; this engine cannot enumerate other OS variables (AUTO_EFFORT_* / EFFORT_LIVE_CONTROL_* -> AUTO_EFFORT_CONTROL_*)."
+   }
+  ],
+  "tools": [
+   {
+    "name": "set_effort",
+    "description": "set_effort: set your reasoning effort for the requests after this call. A level you set holds across turns, over the automatic rules, until you call set_effort with auto.\nauto hands the effort back to the automatic rules: each turn starts at its planned level, and failing test runs raise it.\nMain chat only: a sub-agent never calls it.\nCall it in your first response of a user turn whose work needs another level than the one in effect, alongside your first tool calls.\n- xhigh: a decision others will build on (architecture, design trade-offs, a spec, a review verdict), or a root cause one attempt did not find; and anything heavier, which this setup caps at xhigh.\n- high: debugging a known symptom, writing non-trivial code from scratch, explaining unfamiliar code.\n- medium: edits whose every line the plan already fixes (a rename, a move, a known fix), running and reading tests; and anything lighter (lookups, status reports, formatting, one-line edits).\nRaise it the moment the work turns harder than planned: a test fails for a reason you cannot name, or a fix you were sure of did not hold. Lower it once only mechanical steps remain.\nIf the answer itself needs deep thought and there is no tool work, call this first and answer after its result."
+   },
+   {
+    "name": "effort_up",
+    "description": "Raise your own reasoning effort one step for your next replies. Use it when you are stuck: a check still fails after your fix, results do not fit your understanding of the code, a sub-task came back red for a reason you did not foresee — or right before a design decision that is hard to undo. Not for routine steps; it makes every later reply slower and costlier. The level then holds, whatever happens, until you call effort_auto."
+   },
+   {
+    "name": "effort_down",
+    "description": "Lower your own reasoning effort one step for your next replies. Use it when what is left is routine: spawning and waiting, relaying results, bookkeeping, or a fix whose every line you already know. The level then holds, whatever happens, until you call effort_auto."
+   },
+   {
+    "name": "effort_auto",
+    "description": "Hand your reasoning effort back to the automatic rules: it returns to your home level, and failing checks or red sub-tasks raise it again. Use it once the reason you called effort_up or effort_down is behind you."
+   },
+   {
+    "name": "set_effort",
+    "description": "set_effort: set your reasoning effort for the requests after this call. A level you set holds across turns, over the automatic rules, until you call set_effort with auto.\nauto hands the effort back to the automatic rules: each turn starts at its planned level, and failing test runs raise it.\nMain chat only: a sub-agent never calls it.\nCall it in your first response of a user turn whose work needs another level than the one in effect, alongside your first tool calls.\n- xhigh: a decision others will build on (architecture, design trade-offs, a spec, a review verdict), or a root cause one attempt did not find; and anything heavier, which this setup caps at xhigh.\n- high: debugging a known symptom, writing non-trivial code from scratch, explaining unfamiliar code.\n- medium: edits whose every line the plan already fixes (a rename, a move, a known fix), running and reading tests; and anything lighter (lookups, status reports, formatting, one-line edits).\nRaise it the moment the work turns harder than planned: a test fails for a reason you cannot name, or a fix you were sure of did not hold. Lower it once only mechanical steps remain.\nIf the answer itself needs deep thought and there is no tool work, call this first and answer after its result."
+   },
+   {
+    "name": "set_effort",
+    "description": "set_effort: set your reasoning effort for the requests after this call. A level you set holds across turns, over the automatic rules, until you call set_effort with auto.\nauto hands the effort back to the automatic rules: each turn starts at its planned level, and failing test runs raise it.\nMain chat only: a sub-agent never calls it.\nCall it in your first response of a user turn whose work needs another level than the one in effect, alongside your first tool calls.\n- xhigh: a decision others will build on (architecture, design trade-offs, a spec, a review verdict), or a root cause one attempt did not find; and anything heavier, which this setup caps at xhigh.\n- high: debugging a known symptom, writing non-trivial code from scratch, explaining unfamiliar code.\n- medium: edits whose every line the plan already fixes (a rename, a move, a known fix), running and reading tests; and anything lighter (lookups, status reports, formatting, one-line edits).\nRaise it the moment the work turns harder than planned: a test fails for a reason you cannot name, or a fix you were sure of did not hold. Lower it once only mechanical steps remain.\nIf the answer itself needs deep thought and there is no tool work, call this first and answer after its result."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [
+   "auto-effort-control: registering the set_effort tool failed: Cannot destructure property 'tool' from null or undefined value; the turn reminder and the planning level still apply; the next prompt tries again",
+   "auto-effort-control: registering the effort_up tool failed: Cannot destructure property 'tool' from null or undefined value; agents have no effort_up button",
+   "auto-effort-control: registering the effort_down tool failed: Cannot destructure property 'tool' from null or undefined value; agents have no effort_down button",
+   "auto-effort-control: registering the effort_auto tool failed: Cannot destructure property 'tool' from null or undefined value; agents have no effort_auto button",
+   "auto-effort-control: reading the plugin options failed: Cannot destructure property 'tool' from null or undefined value; the settings of the last prompt stay",
+   "auto-effort-control: reading the plugin options failed: Cannot destructure property 'tool' from null or undefined value; the settings of the last prompt stay"
+  ],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.session.id": 5,
+   "$.store.get": 3,
+   "$.state.get": 1,
+   "$.settings.read": 4,
+   "$.env.get": 312,
+   "$.tool.register": 6,
+   "$.ui.log": 6,
+   "$.ui.status": 1,
+   "$.process.spawn": 2,
+   "$.clock.sleep": 2,
+   "$.clock.now": 8,
+   "$.command.register": 1,
+   "$.process.run": 7,
+   "$.fs.write": 3,
+   "$.session.cwd": 1,
+   "$.fs.exists": 2,
+   "$.config.list": 2,
+   "$.session.model": 1
+  },
+  "timers": [],
+  "sites": {},
+  "script": [
+   "$.process.spawn(/bin/sh -c echo $$; while kill -0 \"$PPID\" 2>/dev/null; do sleep 2; done auto-eff…)",
+   "$.process.run(/bin/sh -c set -eu\numask 077\ndir=$1\ncase \"$dir\" in -*) dir=./$dir ;; esac\nplugin…) → exit 0",
+   "$.fs.write(/Users/dev/.local/state/auto-effort-control/state.preview-session.json)",
+   "$.process.run(/bin/sh -c set -eu\numask 077\ndir=$1\ncase \"$dir\" in -*) dir=./$dir ;; esac\nplugin…) → exit 0",
+   "$.fs.write(/Users/dev/.local/state/auto-effort-control/decisions.preview-session.subagent.jsonl)",
+   "session.start",
+   "$.process.run(/bin/sh -c set -eu\numask 077\ndir=$1\ncase \"$dir\" in -*) dir=./$dir ;; esac\nplugin…) → exit 0",
+   "$.fs.write(/Users/dev/.local/state/auto-effort-control/decisions.preview-session.subagent.jsonl)",
+   "$.process.run(/bin/sh -c set -eu\numask 077\ndir=$1\ncase \"$dir\" in -*) dir=./$dir ;; esac\nplugin…) → exit 0",
+   "$.process.run(/bin/sh -c set -eu\numask 077\ndir=$1\ncase \"$dir\" in -*) dir=./$dir ;; esac\nplugin…) → exit 0",
+   "$.process.spawn(/bin/sh -c echo $$; while kill -0 \"$PPID\" 2>/dev/null; do sleep 2; done auto-eff…)",
+   "$.process.run(/bin/sh -c set -eu\numask 077\ndir=$1\ncase \"$dir\" in -*) dir=./$dir ;; esac\nplugin…) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.process.run(/bin/sh -c set -eu\numask 077\ndir=$1\ncase \"$dir\" in -*) dir=./$dir ;; esac\nplugin…) → exit 0",
+   "/auto-effort-control → auto-effort-control 0.3.0-dev.1 · on (this session)\nlevel: none yet · the first …"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "prompt.submit",
+   "turn.step",
+   "tool.call",
+   "turn.complete",
+   "session.compact",
+   "session.end",
+   "command.run{command=?}",
+   "tool.describe",
+   "agent.spawn"
+  ],
+  "calls": [
+   "$.agent.list",
+   "$.clock.now (via SubPlog",
+   "plog",
+   "retryRetires",
+   "writeState)",
+   "$.clock.sleep (via SubAwaitPin",
+   "SubMainEffortTool",
+   "startKeeper)",
+   "$.command.register (via start)",
+   "$.config.list (via refresh",
+   "runCommand)",
+   "$.config.set (via runCommand)",
+   "$.env.get (via SubSetupPlugin",
+   "SubStart",
+   "flush",
+   "plog",
+   "readMergedOptions",
+   "writeState)",
+   "$.fs.exists (via SubRecord",
+   "SubStart",
+   "flush",
+   "newestSegment)",
+   "$.fs.list (via SubStart)",
+   "$.fs.read (via SubRecord",
+   "SubStart",
+   "newestSegment)",
+   "$.fs.write (via SubRecord",
+   "flush",
+   "retryRetires",
+   "writeState)",
+   "$.model.complete (via SubCompleteModel)",
+   "$.process.run (via SubFlushPlugin",
+   "runPluginLog)",
+   "$.process.spawn (via startKeeper)",
+   "$.session.cwd (via SubStart)",
+   "$.session.id (via SubPlog",
+   "SubRecord",
+   "flush",
+   "followSession",
+   "start",
+   "writeState)",
+   "$.session.model",
+   "$.settings.read (via readMergedOptions)",
+   "$.state.get (via SubReadPin",
+   "restoreSession)",
+   "$.state.set (via SubWritePin",
+   "saveSession)",
+   "$.store.get (via runCommand",
+   "start",
+   "syncMarks)",
+   "$.store.… [+222 chars]"
+  ],
+  "stateReads": [
+   "auto-effort-control.pin",
+   "auto-effort-control.session"
+  ],
+  "stateWrites": [
+   "auto-effort-control.pin",
+   "auto-effort-control.session"
+  ],
+  "envReads": [
+   "AUTO_EFFORT_CACHE_TTL_SECONDS",
+   "AUTO_EFFORT_CANARY_THRESHOLD",
+   "AUTO_EFFORT_CEILING",
+   "AUTO_EFFORT_CONTROL_AGENT_DIRS",
+   "AUTO_EFFORT_CONTROL_ANNOUNCE",
+   "AUTO_EFFORT_CONTROL_BUTTONS",
+   "AUTO_EFFORT_CONTROL_CACHE_TTL_SECONDS",
+   "AUTO_EFFORT_CONTROL_CANARY_THRESHOLD",
+   "AUTO_EFFORT_CONTROL_CEILING",
+   "AUTO_EFFORT_CONTROL_ESCALATE_AFTER_FAILURES",
+   "AUTO_EFFORT_CONTROL_FAILURE_PATTERNS",
+   "AUTO_EFFORT_CONTROL_FAILURE_TOOLS",
+   "AUTO_EFFORT_CONTROL_FLOOR",
+   "AUTO_EFFORT_CONTROL_GREEN_WORDS",
+   "AUTO_EFFORT_CONTROL_JUDGE",
+   "AUTO_EFFORT_CONTROL_JUDGE_EFFORT",
+   "AUTO_EFFORT_CONTROL_JUDGE_MODEL",
+   "AUTO_EFFORT_CONTROL_JUDGE_RAISE_AT",
+   "AUTO_EFFORT_CONTROL_JUDGE_TIMEOUT_MS",
+   "AUTO_EFFORT_CONTROL_LOG_FILE",
+   "AUTO_EFFORT_CONTROL_LOG_PACKETS",
+   "AUTO_EFFORT_CONTROL_LOWER_ON_PASS",
+   "AUTO_EFFORT_CONTROL_MODELS",
+   "AUTO_EFFORT_CONTROL_PARENT_TAG",
+   "AUTO_EFFORT_CONTROL_PLAN_LEVEL",
+   "AUTO_EFFORT_CONTROL_PLAN_UPSHIFT_CHARS",
+   "AUTO_EFFORT_CONTROL_PLAN_UPSHIFT_PATTERNS",
+   "AUTO_EFFORT_CONTROL_PROBATION_SWITCHES",
+   "AUTO_EFFORT_CONTROL_READ_O… [+1532 chars]"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/rezzminator-auto-effort-auto-effort-control/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/rezzminator-auto-effort-auto-effort-control/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./contract.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./contract.d.ts declares state: auto-effort-control.session, auto-effort-control.pin"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/rezzminator-auto-effort-auto-effort-control/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./auto-effort-control.ts hooks: session.start, prompt.submit, turn.step, tool.call, turn.complete, session.compact, session.end, command.run{command=?}, tool.describe, agent.spawn",
+      "./auto-effort-control.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./auto-effort-control.ts gating hook without .catch: prompt.submit",
+      "./auto-effort-control.ts gating hook without .catch: tool.call",
+      "./auto-effort-control.ts gating hook without .catch: session.compact",
+      "./auto-effort-control.ts gating hook without .catch: command.run{command=?}",
+      "./auto-effort-control.ts gating hook without .catch: agent.spawn",
+      "./auto-effort-control.ts calls: $.agent.list, $.clock.now (via SubPlog, plog, retryRetires, writeState), $.clock.sleep (via SubAwaitPin, SubMainEffortTool, startKeeper), $.command.register (via start), $.config.list (via refresh, runCommand), $.config.set (via runCommand), $.env.get (via SubSetupPlugin, SubStart, flush, plog, readMergedOptions, writeState), $.fs.exists (via SubRecord, SubStart, flush, newestSegment), $.fs.list (via SubStart), $.fs.read (via SubRecord, SubStart, newestSegment), $.fs.write (via SubRecord, flush, retryRetires, writeState), $.model.complete (via SubCompleteModel), $.process.run (via SubFlushPlugin, runPluginLog), $.process.spawn (via startKeeper), $.session.cwd (via SubStart), $.session.id (via SubPlog, SubRecord, flush, followSession, start, writeState), $.session.model, $.settings.read (via readMergedOptions), $.state.get (via SubReadPin, restoreSession), $.state.set (via SubWritePin, saveSession), $.store.get (via runCommand, start, syncMarks), $.store.… [+222 chars]",
+      "./auto-effort-control.ts env writes: nothing",
+      "./auto-effort-control.ts env reads: AUTO_EFFORT_CACHE_TTL_SECONDS, AUTO_EFFORT_CANARY_THRESHOLD, AUTO_EFFORT_CEILING, AUTO_EFFORT_CONTROL_AGENT_DIRS, AUTO_EFFORT_CONTROL_ANNOUNCE, AUTO_EFFORT_CONTROL_BUTTONS, AUTO_EFFORT_CONTROL_CACHE_TTL_SECONDS, AUTO_EFFORT_CONTROL_CANARY_THRESHOLD, AUTO_EFFORT_CONTROL_CEILING, AUTO_EFFORT_CONTROL_ESCALATE_AFTER_FAILURES, AUTO_EFFORT_CONTROL_FAILURE_PATTERNS, AUTO_EFFORT_CONTROL_FAILURE_TOOLS, AUTO_EFFORT_CONTROL_FLOOR, AUTO_EFFORT_CONTROL_GREEN_WORDS, AUTO_EFFORT_CONTROL_JUDGE, AUTO_EFFORT_CONTROL_JUDGE_EFFORT, AUTO_EFFORT_CONTROL_JUDGE_MODEL, AUTO_EFFORT_CONTROL_JUDGE_RAISE_AT, AUTO_EFFORT_CONTROL_JUDGE_TIMEOUT_MS, AUTO_EFFORT_CONTROL_LOG_FILE, AUTO_EFFORT_CONTROL_LOG_PACKETS, AUTO_EFFORT_CONTROL_LOWER_ON_PASS, AUTO_EFFORT_CONTROL_MODELS, AUTO_EFFORT_CONTROL_PARENT_TAG, AUTO_EFFORT_CONTROL_PLAN_LEVEL, AUTO_EFFORT_CONTROL_PLAN_UPSHIFT_CHARS, AUTO_EFFORT_CONTROL_PLAN_UPSHIFT_PATTERNS, AUTO_EFFORT_CONTROL_PROBATION_SWITCHES, AUTO_EFFORT_CONTROL_READ_O… [+1532 chars]",
+      "./auto-effort-control.ts state writes: auto-effort-control.pin, auto-effort-control.session",
+      "./auto-effort-control.ts state reads: auto-effort-control.pin, auto-effort-control.session"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./auto-effort-control.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./auto-effort-control.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./auto-effort-control.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./auto-effort-control.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./auto-effort-control.ts",
+       "pattern": "agent.spawn",
+       "hook": "agent.spawn",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "822771ca8c796107"
+}

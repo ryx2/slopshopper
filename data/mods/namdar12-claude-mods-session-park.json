@@ -1,0 +1,8 @@
+{
+ "slug": "namdar12-claude-mods-session-park",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst SCRIPT = '~/.local/bin/claude-park'\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    await $.command.register({\n      name: 'park-all',\n      description: 'Save and close every open Claude Code terminal session (this one last) so you can upgrade',\n    })\n    await $.command.register({\n      name: 'unpark-all',\n      description: 'Reopen every parked Claude Code session, resumed where it was',\n    })\n\n    return next(e)\n  })\n\n  on('command.run', { command: 'park-all' }, async ($, e) => {\n    const self = await $.session.id()\n    const force = e.args.includes('force') ? ' --force' : ''\n    const run = await $.process.run(['/bin/sh', '-c', `${SCRIPT} park --self ${self}${force}`])\n\n    return { text: (run.stdout + run.stderr).trim() }\n  })\n\n  on('command.run', { command: 'unpark-all' }, async $ => {\n    const run = await $.process.run(['/bin/sh', '-c', `${SCRIPT} restore`])\n\n    return { text: (run.stdout + run.stderr).trim() }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"session-park\",\n  \"version\": \"0.1.0\",\n  \"description\": \"/park-all closes every Claude Code terminal session for an upgrade; /unpark-all reopens them resumed\",\n  \"author\": {\n    \"name\": \"namdar12\",\n    \"url\": \"https://github.com/namdar12\"\n  }\n}"
+ }
+}

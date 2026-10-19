@@ -1,6 +1,6 @@
 {
  "slug": "agregdev-claude-tokensaver",
- "generatedAt": "2026-10-10T14:44:30.637Z",
+ "generatedAt": "2026-10-19T16:26:22.890Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,12 +32,29 @@
       "tokensaver:on",
       "tokensaver:off",
       "tokensaver:dry-run",
-      "tokensaver:help"
+      "tokensaver:help",
+      "tokensaver:compact",
+      "tokensaver:trim"
      ]
     }
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "response"
+    }
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "tool-result"
+    }
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "agent.spawn"
@@ -86,10 +103,10 @@
   "commands": [
    {
     "name": "tokensaver",
-    "description": "Token-saving delegation: status, on/off, dry-run, dashboard, doctor, export, reset",
-    "argumentHint": "[on|off|dry-run|dashboard|doctor|motion|export|reset|help]",
+    "description": "Clawd, your token saver: status, compact, trim, on/off, dashboard, doctor",
+    "argumentHint": "[compact|trim|pastes|autocompact|on|off|dry-run|dashboard|doctor|motion|export|reset|help]",
     "immediate": true,
-    "output": "tokensaver is on\n7.9k tokens this session (haiku 0, sonnet 0, opus 7.9k)\n~0 saved by routing (estimate), 0 kept out of the main context\n0 logged outcomes, 100% clean, 0 escalations"
+    "output": "Clawd ate 0 tokens of noise this session (0 trims; 0 all-time)\n~0 tokens not re-sent on later requests; 0 freed by 0 compaction(s)\ncontext 49% (97.4k of 200.0k)\ntrim on (full, cap 300 lines) · pastes on · auto-compact off · cache coach 5 min\ntokensaver is on\n7.9k tokens this session (haiku 0, sonnet 0, opus 7.9k)\n~0 saved by routing (estimate), 0 kept out of the main context\n0 logged outcomes, 100% clean, 0 escalations"
    }
   ],
   "tools": [],
@@ -99,18 +116,24 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.store.get": 4,
+   "$.store.get": 6,
    "$.env.get": 1,
-   "$.ui.status": 4,
-   "$.state.get": 11,
+   "$.ui.status": 5,
+   "$.state.get": 13,
    "$.command.register": 1,
-   "$.state.set": 8,
+   "$.state.set": 10,
    "$.session.model": 2,
    "$.fs.list": 1,
    "$.session.surfaces": 2,
+   "$.clock.after": 1,
    "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 301000
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
@@ -137,19 +160,17 @@
          {
           "type": "Text",
           "props": {
-           "bold": true
+           "color": "claude"
           },
           "children": [
-           "tokensaver "
+           " ▐▛███▜▌ "
           ]
          },
          {
           "type": "Text",
-          "props": {
-           "color": "success"
-          },
+          "props": {},
           "children": [
-           "● on"
+           "    Hi! I trim noisy output before it"
           ]
          }
         ]
@@ -160,27 +181,18 @@
         "children": [
          {
           "type": "Text",
+          "props": {
+           "color": "claude"
+          },
+          "children": [
+           "▝▜█████▛▘"
+          ]
+         },
+         {
+          "type": "Text",
           "props": {},
           "children": [
-           "Context  "
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "color": "success"
-          },
-          "children": [
-           "████████████░░░░░░░░░░░░"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "  97.4k / 200.0k  49%"
+           "  ◀ fills your context, and tell you when"
           ]
          }
         ]
@@ -191,67 +203,63 @@
         "children": [
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "color": "claude"
+          },
           "children": [
-           "Session  "
+           "  ▘▘ ▝▝  "
           ]
          },
          {
           "type": "Text",
           "props": {},
           "children": [
-           "7.9k tokens"
+           "    to compact."
           ]
          }
         ]
        },
        {
-        "type": "Box",
+        "type": "Text",
         "props": {},
         "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           "Saved    "
-          ]
-         },
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "weight": "semibold"
+        },
+        "children": [
+         "Context"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "color": "claude"
+        },
+        "children": [
+         "█████████████░░░░░░░░░░░░░ 49%  97.4k/200.0k"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
          {
           "type": "Text",
           "props": {
            "color": "success",
-           "bold": true
-          },
-          "children": [
-           "~0"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           " est. by routing"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           "Kept out "
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "color": "success"
+           "weight": "semibold"
           },
           "children": [
            "0"
@@ -263,20 +271,17 @@
            "dimColor": true
           },
           "children": [
-           " of main context"
+           " eaten  "
           ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
+         },
          {
           "type": "Text",
-          "props": {},
+          "props": {
+           "color": "suggestion",
+           "weight": "semibold"
+          },
           "children": [
-           "Trend    "
+           "0"
           ]
          },
          {
@@ -285,44 +290,17 @@
            "dimColor": true
           },
           "children": [
-           "builds up over turns"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Per tier"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           "  haiku  "
+           " re-sends avoided  "
           ]
          },
          {
           "type": "Text",
           "props": {
-           "color": "success"
+           "color": "claude",
+           "weight": "semibold"
           },
           "children": [
-           "░░░░░░░░░░░░░░░░░░░░░░░░"
+           "0"
           ]
          },
          {
@@ -331,29 +309,17 @@
            "dimColor": true
           },
           "children": [
-           "       0"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           "  sonnet "
+           " freed  "
           ]
          },
          {
           "type": "Text",
           "props": {
-           "color": "suggestion"
+           "color": "warning",
+           "weight": "semibold"
           },
           "children": [
-           "░░░░░░░░░░░░░░░░░░░░░░░░"
+           "0"
           ]
          },
          {
@@ -362,100 +328,53 @@
            "dimColor": true
           },
           "children": [
-           "       0"
+           " routing"
           ]
          }
         ]
        },
        {
-        "type": "Box",
+        "type": "Text",
         "props": {},
         "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           "  opus   "
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "color": "claude"
-          },
-          "children": [
-           "████████████████████████"
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "    7.9k"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Delegation"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "  no sub-agents yet"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {},
-        "children": [
-         {
-          "type": "Text",
-          "props": {},
-          "children": [
-           "Learning "
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "no outcomes logged yet"
-          ]
-         }
+         " "
         ]
        },
        {
         "type": "Box",
         "props": {
-         "gap": 2
+         "gap": 1,
+         "flexWrap": "wrap"
         },
         "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "compact",
+           "variant": "primary",
+           "label": "Compact now",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "trim",
+           "label": "Trimming: on",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "pastes",
+           "label": "Paste tidy: on",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
          {
           "type": "Button",
           "props": {
@@ -464,16 +383,32 @@
            "onPress": "[fn]"
           },
           "children": []
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "dry-run",
-           "label": "Dry-run",
-           "onPress": "[fn]"
-          },
-          "children": []
          }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "weight": "semibold"
+        },
+        "children": [
+         "Activity"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Nothing yet."
         ]
        }
       ]
@@ -494,10 +429,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "/tokensaver → tokensaver is on\n7.9k tokens this session (haiku 0, sonnet 0, opus 7.9k)\n~0 save…"
+   "/tokensaver → Clawd ate 0 tokens of noise this session (0 trims; 0 all-time)\n~0 tokens not re-…"
   ],
   "console": [],
-  "status": "● tokensaver 7.9k tok · saved ~0 · H 0 S 0 O 7.9k",
+  "status": "● tokensaver 7.9k tok · Clawd ate 0 · ~0 re-sends avoided · ctx ███░░░ 49%",
   "warnings": []
  },
  "validate": {
@@ -509,8 +444,11 @@
    "session.attach",
    "ui.close{id=tokensaver}",
    "command.run{command=tokensaver}",
-   "command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help}",
+   "command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help|tokensaver:compact|tokensaver:trim}",
    "prompt.submit",
+   "session.append{door=response}",
+   "session.append{door=tool-result}",
+   "session.compact",
    "agent.spawn",
    "tool.call{tool=Agent}",
    "turn.step",
@@ -522,23 +460,32 @@
    "ui.render{component=Pane, requestId=tokensaver}"
   ],
   "calls": [
+   "$.clock.after (via armIdleCheck",
+   "assistantCommand)",
    "$.clock.every (via refresh)",
    "$.command.register",
    "$.env.get",
    "$.fs.list (via countFiles)",
    "$.fs.write (via run)",
+   "$.session.compact (via compactNow)",
    "$.session.model",
    "$.session.surfaces (via sync)",
    "$.state.get",
    "$.state.set",
    "$.store.delete (via run)",
    "$.store.get",
-   "$.store.set (via run)",
+   "$.store.set (via commitAssistant",
+   "run",
+   "saveLifetime)",
    "$.ui.log (via run)",
    "$.ui.open (via openPane)",
    "$.ui.resolve",
    "$.ui.status (via refresh)",
-   "$.ui.toast (via run)"
+   "$.ui.toast (via armIdleCheck",
+   "commitAssistant",
+   "compactNow",
+   "press",
+   "run)"
   ],
   "stateReads": [
    "tokensaver.revision"
@@ -571,14 +518,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.attach, ui.close{id=tokensaver}, command.run{command=tokensaver}, command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help}, prompt.submit, agent.spawn, tool.call{tool=Agent}, turn.step, turn.complete, session.measure, ui.render{component=AbovePrompt}, ui.render{component=Spinner}, ui.render{component=ToolUse}, ui.render{component=Pane, requestId=tokensaver}",
+      "./register.tsx hooks: session.start, session.attach, ui.close{id=tokensaver}, command.run{command=tokensaver}, command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help|tokensaver:compact|tokensaver:trim}, prompt.submit, session.append{door=response}, session.append{door=tool-result}, session.compact, agent.spawn, tool.call{tool=Agent}, turn.step, turn.complete, session.measure, ui.render{component=AbovePrompt}, ui.render{component=Spinner}, ui.render{component=ToolUse}, ui.render{component=Pane, requestId=tokensaver}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=tokensaver}",
       "./register.tsx gating hook with .catch: ui.close{id=tokensaver}",
-      "./register.tsx gating hook with .catch: command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help}",
+      "./register.tsx gating hook with .catch: command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help|tokensaver:compact|tokensaver:trim}",
       "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: session.append{door=response}",
+      "./register.tsx gating hook with .catch: session.append{door=tool-result}",
+      "./register.tsx gating hook with .catch: session.compact",
       "./register.tsx gating hook with .catch: agent.spawn",
       "./register.tsx gating hook with .catch: tool.call{tool=Agent}",
-      "./register.tsx calls: $.clock.every (via refresh), $.command.register, $.env.get, $.fs.list (via countFiles), $.fs.write (via run), $.session.model, $.session.surfaces (via sync), $.state.get, $.state.set, $.store.delete (via run), $.store.get, $.store.set (via run), $.ui.log (via run), $.ui.open (via openPane), $.ui.resolve, $.ui.status (via refresh), $.ui.toast (via run)",
+      "./register.tsx calls: $.clock.after (via armIdleCheck, assistantCommand), $.clock.every (via refresh), $.command.register, $.env.get, $.fs.list (via countFiles), $.fs.write (via run), $.session.compact (via compactNow), $.session.model, $.session.surfaces (via sync), $.state.get, $.state.set, $.store.delete (via run), $.store.get, $.store.set (via commitAssistant, run, saveLifetime), $.ui.log (via run), $.ui.open (via openPane), $.ui.resolve, $.ui.status (via refresh), $.ui.toast (via armIdleCheck, commitAssistant, compactNow, press, run)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: NO_COLOR",
       "./register.tsx state writes: tokensaver.revision",
@@ -594,13 +545,31 @@
       {
        "module": "./register.tsx",
        "pattern": "command.run",
-       "hook": "command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help}",
+       "hook": "command.run{command=tokensaver:status|tokensaver:dashboard|tokensaver:doctor|tokensaver:on|tokensaver:off|tokensaver:dry-run|tokensaver:help|tokensaver:compact|tokensaver:trim}",
        "hasCatch": true
       },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=response}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=tool-result}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
        "hasCatch": true
       },
       {
@@ -621,5 +590,5 @@
    "advice": []
   }
  },
- "sourceHash": "1d5e8b732c137fa3"
+ "sourceHash": "ae7a7de34b2f4d70"
 }

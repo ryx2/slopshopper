@@ -1,6 +1,6 @@
 {
  "slug": "comertial-claude-pending-changes",
- "generatedAt": "2026-10-17T13:05:11.981Z",
+ "generatedAt": "2026-10-19T16:26:17.166Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "session.end"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "__pending-changes-reload"
+    }
    },
    {
     "event": "command.run",
@@ -52,11 +58,12 @@
    "$.command.register": 1,
    "$.clock.every": 1,
    "$.session.cwd": 1,
-   "$.state.get": 25,
+   "$.session.id": 11,
    "$.env.get": 4,
-   "$.session.id": 1,
-   "$.process.run": 5,
+   "$.process.run": 6,
    "$.fs.exists": 13,
+   "$.state.get": 32,
+   "$.clock.now": 7,
    "$.fs.read": 2,
    "$.state.set": 3,
    "$.ui.open": 4,
@@ -94,6 +101,7 @@
    }
   },
   "script": [
+   "$.process.run(git rev-parse --path-format=absolute --show-toplevel --git-dir --git-common-dir …) → exit 0",
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "session.start",
    "tool.call Read",
@@ -126,6 +134,7 @@
   "hooks": [
    "session.start",
    "session.end",
+   "command.run{command=__pending-changes-reload}",
    "command.run{command=changes}",
    "tool.call",
    "prompt.submit",
@@ -133,49 +142,92 @@
   ],
   "calls": [
    "$.clock.every (via ensurePolling)",
-   "$.clock.now (via sweepStale)",
+   "$.clock.now",
    "$.command.register",
-   "$.env.get (via ctx)",
-   "$.fs.exists (via missingDirs",
+   "$.env.get",
+   "$.fs.exists (via beat",
+   "checkFirstWindow",
+   "load",
+   "missingDirs",
    "openReview",
+   "readBranch",
    "readOrNull",
+   "reconcile",
    "removeEmptyDirs",
    "removePath",
+   "sweepStale",
+   "syncPeers)",
+   "$.fs.list (via load",
+   "reconcile",
+   "removeEmptyDirs",
+   "sweepStale",
+   "syncPeers)",
+   "$.fs.read (via load",
+   "readBranch",
+   "readOrNull",
+   "readQuiet)",
+   "$.fs.stat (via beat",
+   "checkFirstWindow",
+   "rememberOwn",
+   "removePath",
    "sweepStale)",
-   "$.fs.list (via removeEmptyDirs",
-   "sweepStale)",
-   "$.fs.read (via readOrNull)",
-   "$.fs.stat (via removePath",
-   "sweepStale)",
-   "$.fs.write (via openReview",
-   "reject)",
-   "$.process.run (via findGitRoot",
+   "$.fs.write (via beat",
+   "hashTexts",
+   "openReview",
+   "reject",
+   "writeShard)",
+   "$.process.run (via findGit",
+   "git",
    "gitDirty",
    "headContent",
    "openInVsCode",
    "removePath",
    "shellCreatedDirs)",
    "$.session.cwd (via ctx)",
-   "$.session.id (via ctx)",
+   "$.session.id",
    "$.state.get",
    "$.state.set",
    "$.ui.open",
+   "$.ui.panes (via paneVisible)",
    "$.ui.resolve",
-   "$.ui.toast (via openInVsCode",
-   "openUnasked)"
+   "$.ui.toast (via act",
+   "applyMerged",
+   "foreignWriter",
+   "openInVsCode",
+   "openUnasked",
+   "startDecision)"
   ],
   "stateReads": [
+   "pending-changes.branchNow",
    "pending-changes.collapsed",
    "pending-changes.files",
-   "pending-changes.notices"
+   "pending-changes.instance",
+   "pending-changes.knows",
+   "pending-changes.loadedFor",
+   "pending-changes.notices",
+   "pending-changes.outside",
+   "pending-changes.resolvedWhileOff",
+   "pending-changes.resumeNoted",
+   "pending-changes.secondWindow",
+   "pending-changes.sessions"
   ],
   "stateWrites": [
+   "pending-changes.branchNow",
    "pending-changes.collapsed",
    "pending-changes.files",
-   "pending-changes.notices"
+   "pending-changes.instance",
+   "pending-changes.knows",
+   "pending-changes.loadedFor",
+   "pending-changes.notices",
+   "pending-changes.outside",
+   "pending-changes.resolvedWhileOff",
+   "pending-changes.resumeNoted",
+   "pending-changes.secondWindow",
+   "pending-changes.sessions"
   ],
   "envReads": [
    "OS",
+   "PENDING_CHANGES_TEST",
    "TEMP",
    "TMP",
    "TMPDIR"
@@ -191,7 +243,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: pending-changes.files, pending-changes.collapsed, pending-changes.notices"
+     "types ./types/index.d.ts declares state: pending-changes.files, pending-changes.collapsed, pending-changes.notices, pending-changes.outside, pending-changes.sessions, pending-changes.loadedFor, pending-changes.resumeNoted, pending-changes.knows, pending-changes.resolvedWhileOff, pending-changes.instance, pending-changes.branchNow, pending-changes.secondWindow"
     ],
     "gatingHooks": []
    },
@@ -202,17 +254,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, command.run{command=changes}, tool.call, prompt.submit, ui.render{component=Pane, requestId=pending-changes}",
+      "./register.tsx hooks: session.start, session.end, command.run{command=__pending-changes-reload}, command.run{command=changes}, tool.call, prompt.submit, ui.render{component=Pane, requestId=pending-changes}",
       "./register.tsx answers its own command: command.run{command=changes}",
+      "./register.tsx gating hook without .catch: command.run{command=__pending-changes-reload}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: prompt.submit",
-      "./register.tsx calls: $.clock.every (via ensurePolling), $.clock.now (via sweepStale), $.command.register, $.env.get (via ctx), $.fs.exists (via missingDirs, openReview, readOrNull, removeEmptyDirs, removePath, sweepStale), $.fs.list (via removeEmptyDirs, sweepStale), $.fs.read (via readOrNull), $.fs.stat (via removePath, sweepStale), $.fs.write (via openReview, reject), $.process.run (via findGitRoot, gitDirty, headContent, openInVsCode, removePath, shellCreatedDirs), $.session.cwd (via ctx), $.session.id (via ctx), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast (via openInVsCode, openUnasked)",
+      "./register.tsx calls: $.clock.every (via ensurePolling), $.clock.now, $.command.register, $.env.get, $.fs.exists (via beat, checkFirstWindow, load, missingDirs, openReview, readBranch, readOrNull, reconcile, removeEmptyDirs, removePath, sweepStale, syncPeers), $.fs.list (via load, reconcile, removeEmptyDirs, sweepStale, syncPeers), $.fs.read (via load, readBranch, readOrNull, readQuiet), $.fs.stat (via beat, checkFirstWindow, rememberOwn, removePath, sweepStale), $.fs.write (via beat, hashTexts, openReview, reject, writeShard), $.process.run (via findGit, git, gitDirty, headContent, openInVsCode, removePath, shellCreatedDirs), $.session.cwd (via ctx), $.session.id, $.state.get, $.state.set, $.ui.open, $.ui.panes (via paneVisible), $.ui.resolve, $.ui.toast (via act, applyMerged, foreignWriter, openInVsCode, openUnasked, startDecision)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: OS, TEMP, TMP, TMPDIR",
-      "./register.tsx state writes: pending-changes.collapsed, pending-changes.files, pending-changes.notices",
-      "./register.tsx state reads: pending-changes.collapsed, pending-changes.files, pending-changes.notices"
+      "./register.tsx env reads: OS, PENDING_CHANGES_TEST, TEMP, TMP, TMPDIR",
+      "./register.tsx state writes: pending-changes.branchNow, pending-changes.collapsed, pending-changes.files, pending-changes.instance, pending-changes.knows, pending-changes.loadedFor, pending-changes.notices, pending-changes.outside, pending-changes.resolvedWhileOff, pending-changes.resumeNoted, pending-changes.secondWindow, pending-changes.sessions",
+      "./register.tsx state reads: pending-changes.branchNow, pending-changes.collapsed, pending-changes.files, pending-changes.instance, pending-changes.knows, pending-changes.loadedFor, pending-changes.notices, pending-changes.outside, pending-changes.resolvedWhileOff, pending-changes.resumeNoted, pending-changes.secondWindow, pending-changes.sessions"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=__pending-changes-reload}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -231,5 +290,5 @@
    "advice": []
   }
  },
- "sourceHash": "508b8c5799b3e504"
+ "sourceHash": "6b0bed4dbf2c9083"
 }

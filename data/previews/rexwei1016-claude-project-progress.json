@@ -1,11 +1,17 @@
 {
  "slug": "rexwei1016-claude-project-progress",
- "generatedAt": "2026-10-17T13:06:46.453Z",
+ "generatedAt": "2026-10-19T16:28:01.134Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__project-progress__memo"
+    }
    },
    {
     "event": "command.run",
@@ -29,7 +35,12 @@
     "output": "專案進度面板已開啟，正在更新資料。"
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "memo",
+    "description": "讀取或新增目前專案（工作目錄）的本機備忘錄，顯示在 /project-progress 面板的「備忘錄」區塊。只存在使用者這台電腦，不寫進 repo 也不上 GitHub。add 傳入要新增的待辦（每筆一句、可直接行動），不傳 add 則只列出目前備忘。已存在的相同文字不會重複新增。"
+   }
+  ],
   "panes": [
    {
     "id": "project-progress",
@@ -41,13 +52,14 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.store.get": 3,
    "$.command.register": 1,
-   "$.store.get": 2,
+   "$.tool.register": 1,
    "$.clock.every": 1,
    "$.ui.open": 1,
    "$.process.run": 5,
    "$.ui.invalidate": 2,
-   "$.ui.resolve": 2,
+   "$.ui.resolve": 4,
    "$.clock.now": 1,
    "$.store.set": 1
   },
@@ -91,6 +103,16 @@
            "key": "toggle",
            "label": "全部",
            "hotkey": "a",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "memo-new",
+           "label": "新增備忘",
+           "hotkey": "n",
            "onPress": "[fn]"
           },
           "children": []
@@ -257,6 +279,30 @@
               ]
              }
             ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "備忘 "
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "bold": true
+              },
+              "children": [
+               "0"
+              ]
+             }
+            ]
            }
           ]
          }
@@ -279,6 +325,96 @@
           },
           "children": [
            "GitHub：JSON Parse error: Unexpected EOF"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "marginTop": 1,
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "sec-memos",
+           "plain": true,
+           "hotkey": "0",
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "claude"
+            },
+            "children": [
+             "▾ ",
+             "備忘錄"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             " ",
+             "0"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "paddingLeft": 2,
+           "marginTop": 1,
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Input",
+            "props": {
+             "key": "memo-input-0",
+             "label": "＋",
+             "placeholder": "新增備忘，按 Enter 加入（按 n 直接輸入）",
+             "value": "",
+             "submitLabel": "加入",
+             "onSubmit": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "paddingLeft": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "italic": true
+            },
+            "children": [
+             "還沒有備忘。記下待辦、提醒或要跟同事確認的事，只存在這台電腦。"
+            ]
+           }
           ]
          }
         ]
@@ -559,7 +695,7 @@
            "dimColor": true
           },
           "children": [
-           "r 重新整理 · a 全部/精簡 · 1-5 展開/收合 · 面板開著時每 10 分鐘自動更新"
+           "r 重新整理 · n 新增備忘 · u 復原刪除 · a 全部/精簡 · 0-5 展開/收合 · Esc 離開輸入框 · 面板開著時每 10 分鐘自動更新"
           ]
          }
         ]
@@ -599,6 +735,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "tool.call{tool=mcp__project-progress__memo}",
    "command.run{command=project-progress}",
    "ui.render{component=Pane, requestId=project-progress}"
   ],
@@ -612,7 +749,10 @@
    "run)",
    "$.store.delete (via save)",
    "$.store.get",
-   "$.store.set (via save)",
+   "$.store.set (via save",
+   "saveMemos)",
+   "$.tool.register",
+   "$.ui.focus (via focusMemoInput)",
    "$.ui.invalidate",
    "$.ui.open",
    "$.ui.panes",
@@ -642,11 +782,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=project-progress}, ui.render{component=Pane, requestId=project-progress}",
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__project-progress__memo}, command.run{command=project-progress}, ui.render{component=Pane, requestId=project-progress}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__project-progress__memo}",
       "./register.tsx gating hook without .catch: command.run{command=project-progress}",
-      "./register.tsx calls: $.clock.every, $.clock.now (via fetchSnapshot), $.command.register, $.fs.exists (via detectWorkspace), $.fs.list (via detectWorkspace), $.process.run (via detectWorkspace, run), $.store.delete (via save), $.store.get, $.store.set (via save), $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve"
+      "./register.tsx calls: $.clock.every, $.clock.now (via fetchSnapshot), $.command.register, $.fs.exists (via detectWorkspace), $.fs.list (via detectWorkspace), $.process.run (via detectWorkspace, run), $.store.delete (via save), $.store.get, $.store.set (via save, saveMemos), $.tool.register, $.ui.focus (via focusMemoInput), $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__project-progress__memo}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "command.run",
@@ -659,5 +806,5 @@
    "advice": []
   }
  },
- "sourceHash": "aa6a9adae347b761"
+ "sourceHash": "e3a9387e1d6103bd"
 }

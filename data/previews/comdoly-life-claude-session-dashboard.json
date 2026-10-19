@@ -1,6 +1,6 @@
 {
  "slug": "comdoly-life-claude-session-dashboard",
- "generatedAt": "2026-10-18T13:55:13.002Z",
+ "generatedAt": "2026-10-19T16:27:09.357Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,12 @@
     "event": "command.run",
     "matcher": {
      "command": "dash"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "dash-send"
     }
    },
    {
@@ -105,6 +111,11 @@
     "name": "dash",
     "description": "세션 대시보드(서브에이전트·팀·워크플로·토큰)를 열거나 닫습니다",
     "output": "대시보드를 열었습니다."
+   },
+   {
+    "name": "dash-send",
+    "description": "다른 Claude Code 세션에 메시지를 보냅니다: /dash-send <세션 이름 또는 ID> <메시지>",
+    "output": "사용법: /dash-send <세션 이름 또는 ID> <메시지>"
    }
   ],
   "tools": [],
@@ -119,23 +130,24 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
+   "$.command.register": 2,
+   "$.session.id": 2,
+   "$.session.cwd": 2,
+   "$.env.get": 6,
+   "$.fs.exists": 2,
+   "$.process.run": 1,
+   "$.state.get": 41,
+   "$.clock.now": 34,
+   "$.state.set": 25,
    "$.session.usage": 1,
-   "$.clock.now": 33,
-   "$.state.get": 37,
    "$.store.get": 1,
-   "$.state.set": 24,
    "$.store.set": 2,
    "$.session.model": 2,
    "$.config.list": 1,
-   "$.env.get": 3,
    "$.settings.read": 1,
    "$.clock.every": 1,
-   "$.session.id": 1,
    "$.ui.open": 2,
    "$.session.root": 1,
-   "$.session.cwd": 1,
-   "$.fs.exists": 1,
    "$.ui.panes": 1,
    "$.ui.resolve": 2,
    "$.agent.list": 1
@@ -547,34 +559,89 @@
        {
         "type": "Box",
         "props": {
+         "flexDirection": "row",
+         "flexWrap": "wrap",
+         "marginBottom": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "top:all",
+           "label": "모든 세션",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "모든 세션"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           " "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "top:mine",
+           "label": "현재 세션",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": [
+           "현재 세션"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
          "flexDirection": "column"
         },
         "children": [
          {
           "type": "Box",
           "props": {
-           "flexDirection": "row",
-           "justifyContent": "space-between"
+           "flexDirection": "row"
           },
           "children": [
            {
-            "type": "Text",
+            "type": "Box",
             "props": {
-             "weight": "bold",
-             "color": "claude"
+             "flexGrow": 1,
+             "flexShrink": 1
             },
             "children": [
-             "대시보드",
-             ""
-            ]
-           },
-           {
-            "type": "Text",
-            "props": {
-             "dimColor": true
-            },
-            "children": [
-             "↑입력 ↓출력 · 시간"
+             {
+              "type": "Text",
+              "props": {
+               "wrap": "truncate-end"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "weight": "bold",
+                 "color": "#5fd7ff"
+                },
+                "children": [
+                 "/work/app"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " · 세션 1개"
+                ]
+               }
+              ]
+             }
             ]
            }
           ]
@@ -582,77 +649,54 @@
          {
           "type": "Box",
           "props": {
-           "flexDirection": "column"
+           "flexDirection": "row"
           },
           "children": [
            {
             "type": "Box",
             "props": {
+             "flexGrow": 1,
+             "flexShrink": 1,
              "flexDirection": "row"
             },
             "children": [
              {
-              "type": "Box",
+              "type": "Button",
               "props": {
-               "flexGrow": 1,
-               "flexShrink": 1,
-               "flexDirection": "row"
-              },
-              "children": [
-               {
-                "type": "Button",
-                "props": {
-                 "key": "open:main",
-                 "plain": true,
-                 "label": "메인 세션",
-                 "onPress": "[fn]"
-                },
-                "children": [
-                 {
-                  "type": "Text",
-                  "props": {
-                   "color": "inactive"
-                  },
-                  "children": [
-                   "☐"
-                  ]
-                 },
-                 " ",
-                 {
-                  "type": "Text",
-                  "props": {
-                   "weight": "bold"
-                  },
-                  "children": [
-                   "메인 세션"
-                  ]
-                 },
-                 {
-                  "type": "Text",
-                  "props": {
-                   "dimColor": true
-                  },
-                  "children": [
-                   ""
-                  ]
-                 }
-                ]
-               }
-              ]
-             },
-             {
-              "type": "Box",
-              "props": {
-               "flexShrink": 0
+               "key": "peer:0",
+               "plain": true,
+               "label": "app · preview-",
+               "onPress": "[fn]"
               },
               "children": [
                {
                 "type": "Text",
                 "props": {
-                 "dimColor": true
+                 "color": "inactive"
                 },
                 "children": [
-                 " ↑97.4k ↓1.5k"
+                 "●"
+                ]
+               },
+               " ",
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#5fd7ff",
+                 "weight": "bold"
+                },
+                "children": [
+                 "app · preview-"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "color": "#5fd7ff",
+                 "weight": "bold"
+                },
+                "children": [
+                 " [작업 세션]"
                 ]
                }
               ]
@@ -660,24 +704,22 @@
             ]
            },
            {
-            "type": "Text",
+            "type": "Box",
             "props": {
-             "dimColor": true,
-             "wrap": "truncate-end"
+             "flexShrink": 0
             },
             "children": [
-             "    대기 중"
+             {
+              "type": "Text",
+              "props": {
+               "color": "#5fd7ff"
+              },
+              "children": [
+               " 대기 중"
+              ]
+             }
             ]
            }
-          ]
-         },
-         {
-          "type": "Text",
-          "props": {
-           "dimColor": true
-          },
-          "children": [
-           "  실행 중인 서브 작업 없음"
           ]
          },
          {
@@ -687,13 +729,159 @@
           },
           "children": [
            {
-            "type": "Text",
+            "type": "Box",
             "props": {
-             "dimColor": true,
-             "wrap": "truncate-end"
+             "flexDirection": "column"
             },
             "children": [
-             "합계 ↑97.4k ↓1.5k · $0.42 · 컨텍스트 49%"
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "row",
+               "justifyContent": "space-between"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "weight": "bold",
+                 "color": "claude"
+                },
+                "children": [
+                 "이 세션의 작업",
+                 ""
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "↑입력 ↓출력 · 시간"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexDirection": "column"
+              },
+              "children": [
+               {
+                "type": "Box",
+                "props": {
+                 "flexDirection": "row"
+                },
+                "children": [
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexGrow": 1,
+                   "flexShrink": 1,
+                   "flexDirection": "row"
+                  },
+                  "children": [
+                   {
+                    "type": "Button",
+                    "props": {
+                     "key": "open:main",
+                     "plain": true,
+                     "label": "메인 세션",
+                     "onPress": "[fn]"
+                    },
+                    "children": [
+                     {
+                      "type": "Text",
+                      "props": {
+                       "color": "inactive"
+                      },
+                      "children": [
+                       "☐"
+                      ]
+                     },
+                     " ",
+                     {
+                      "type": "Text",
+                      "props": {
+                       "weight": "bold"
+                      },
+                      "children": [
+                       "메인 세션"
+                      ]
+                     },
+                     {
+                      "type": "Text",
+                      "props": {
+                       "dimColor": true
+                      },
+                      "children": [
+                       ""
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Box",
+                  "props": {
+                   "flexShrink": 0
+                  },
+                  "children": [
+                   {
+                    "type": "Text",
+                    "props": {
+                     "dimColor": true
+                    },
+                    "children": [
+                     " ↑97.4k ↓1.5k"
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "    대기 중"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "  실행 중인 서브 작업 없음"
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "marginTop": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true,
+                 "wrap": "truncate-end"
+                },
+                "children": [
+                 "합계 ↑97.4k ↓1.5k · $0.42 · 컨텍스트 49%"
+                ]
+               }
+              ]
+             }
             ]
            }
           ]
@@ -707,6 +895,7 @@
    }
   },
   "script": [
+   "$.process.run(sh -c p=$PPID; for i in 1 2 3 4 5 6; do echo $p; p=$(ps -o ppid= -p $p | tr -d \"…) → exit 0",
    "$.ui.open(session-dashboard)",
    "session.start",
    "tool.call Read",
@@ -720,7 +909,8 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(session-dashboard)",
-   "/dash → 대시보드를 열었습니다."
+   "/dash → 대시보드를 열었습니다.",
+   "/dash-send → 사용법: /dash-send <세션 이름 또는 ID> <메시지>"
   ],
   "console": [],
   "warnings": []
@@ -732,6 +922,7 @@
   "hooks": [
    "session.start",
    "command.run{command=dash}",
+   "command.run{command=dash-send}",
    "command.run{command=/\"^(?:model|effort)$\"/}",
    "config.set{key=/\"^(?:model|workflows)$\"/}",
    "classic.SessionStart",
@@ -764,19 +955,31 @@
    "$.config.set (via chooseModel",
    "toggleUltracode",
    "toggleWorkflows)",
-   "$.env.get (via sessionDir",
-   "startingEffort)",
+   "$.env.get (via configDir",
+   "startingEffort",
+   "syncPeers)",
    "$.fs.exists (via sessionDir",
+   "syncPeers",
    "syncRuns)",
-   "$.fs.list (via syncRuns)",
+   "$.fs.list (via syncPeers",
+   "syncRuns)",
    "$.fs.read (via scriptFile",
+   "syncPeers",
    "syncRuns)",
    "$.fs.stat (via syncRuns)",
-   "$.session.cwd (via sessionDir)",
-   "$.session.id (via sessionDir)",
+   "$.process.run (via endPeer",
+   "isClaude",
+   "ownPid",
+   "syncPeers)",
+   "$.prompt.fill",
+   "$.session.cwd (via sessionDir",
+   "syncPeers)",
+   "$.session.id (via sessionDir",
+   "syncPeers)",
    "$.session.model (via noteModel",
    "readControls)",
    "$.session.root (via sessionDir)",
+   "$.session.send",
    "$.session.usage",
    "$.settings.read (via startingEffort)",
    "$.state.get",
@@ -788,7 +991,7 @@
    "$.ui.open",
    "$.ui.panes",
    "$.ui.resolve",
-   "$.ui.toast (via act)"
+   "$.ui.toast"
   ],
   "stateReads": [
    "session-dashboard.activity",
@@ -796,6 +999,8 @@
    "session-dashboard.controls",
    "session-dashboard.faults",
    "session-dashboard.meter",
+   "session-dashboard.peers",
+   "session-dashboard.scope",
    "session-dashboard.tabs",
    "session-dashboard.tasks",
    "session-dashboard.tick",
@@ -807,6 +1012,8 @@
    "session-dashboard.controls",
    "session-dashboard.faults",
    "session-dashboard.meter",
+   "session-dashboard.peers",
+   "session-dashboard.scope",
    "session-dashboard.tabs",
    "session-dashboard.tasks",
    "session-dashboard.tick",
@@ -828,7 +1035,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-dashboard.activity, session-dashboard.meter, session-dashboard.tick, session-dashboard.calls, session-dashboard.workflows, session-dashboard.tasks, session-dashboard.tabs, session-dashboard.faults, session-dashboard.controls"
+     "types ./types/index.d.ts declares state: session-dashboard.peers, session-dashboard.scope, session-dashboard.activity, session-dashboard.meter, session-dashboard.tick, session-dashboard.calls, session-dashboard.workflows, session-dashboard.tasks, session-dashboard.tabs, session-dashboard.faults, session-dashboard.controls"
     ],
     "gatingHooks": []
    },
@@ -839,9 +1046,10 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=dash}, command.run{command=/\"^(?:model|effort)$\"/}, config.set{key=/\"^(?:model|workflows)$\"/}, classic.SessionStart, session.measure, turn.start, turn.step, turn.complete, classic.SubagentStart, classic.SubagentStop, classic.TaskCreated, classic.TaskCompleted, tool.check{tool=Workflow}, agent.spawn, prompt.submit, agent.spawn{workflow has {runId=/\"^wf_\"/}}, session.append{origin has {kind=task-notification}}, tool.call{tool=/\"^(?!(?:Agent|Task|Workflow)$)\"/}, ui.render{component=Pane, requestId=session-dashboard}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=dash}, command.run{command=dash-send}, command.run{command=/\"^(?:model|effort)$\"/}, config.set{key=/\"^(?:model|workflows)$\"/}, classic.SessionStart, session.measure, turn.start, turn.step, turn.complete, classic.SubagentStart, classic.SubagentStop, classic.TaskCreated, classic.TaskCompleted, tool.check{tool=Workflow}, agent.spawn, prompt.submit, agent.spawn{workflow has {runId=/\"^wf_\"/}}, session.append{origin has {kind=task-notification}}, tool.call{tool=/\"^(?!(?:Agent|Task|Workflow)$)\"/}, ui.render{component=Pane, requestId=session-dashboard}, ui.render{component=AbovePrompt}",
       "./register.tsx hooks on classic.SessionStart, classic.SubagentStart, classic.SubagentStop, classic.TaskCreated, classic.TaskCompleted do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=dash}",
+      "./register.tsx answers its own command: command.run{command=dash-send}",
       "./register.tsx gating hook without .catch: command.run{command=/\"^(?:model|effort)$\"/}",
       "./register.tsx gating hook without .catch: config.set{key=/\"^(?:model|workflows)$\"/}",
       "./register.tsx gating hook without .catch: classic.SessionStart",
@@ -855,11 +1063,11 @@
       "./register.tsx gating hook without .catch: agent.spawn{workflow has {runId=/\"^wf_\"/}}",
       "./register.tsx gating hook without .catch: session.append{origin has {kind=task-notification}}",
       "./register.tsx gating hook without .catch: tool.call{tool=/\"^(?!(?:Agent|Task|Workflow)$)\"/}",
-      "./register.tsx calls: $.agent.list, $.clock.every, $.clock.now, $.command.register, $.command.run (via chooseEffort, chooseModel, toggleUltracode), $.config.list (via readControls), $.config.set (via chooseModel, toggleUltracode, toggleWorkflows), $.env.get (via sessionDir, startingEffort), $.fs.exists (via sessionDir, syncRuns), $.fs.list (via syncRuns), $.fs.read (via scriptFile, syncRuns), $.fs.stat (via syncRuns), $.session.cwd (via sessionDir), $.session.id (via sessionDir), $.session.model (via noteModel, readControls), $.session.root (via sessionDir), $.session.usage, $.settings.read (via startingEffort), $.state.get, $.state.set, $.store.get (via loadSaved), $.store.set, $.ui.close, $.ui.log (via fault), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast (via act)",
+      "./register.tsx calls: $.agent.list, $.clock.every, $.clock.now, $.command.register, $.command.run (via chooseEffort, chooseModel, toggleUltracode), $.config.list (via readControls), $.config.set (via chooseModel, toggleUltracode, toggleWorkflows), $.env.get (via configDir, startingEffort, syncPeers), $.fs.exists (via sessionDir, syncPeers, syncRuns), $.fs.list (via syncPeers, syncRuns), $.fs.read (via scriptFile, syncPeers, syncRuns), $.fs.stat (via syncRuns), $.process.run (via endPeer, isClaude, ownPid, syncPeers), $.prompt.fill, $.session.cwd (via sessionDir, syncPeers), $.session.id (via sessionDir, syncPeers), $.session.model (via noteModel, readControls), $.session.root (via sessionDir), $.session.send, $.session.usage, $.settings.read (via startingEffort), $.state.get, $.state.set, $.store.get (via loadSaved), $.store.set, $.ui.close, $.ui.log (via fault), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_EFFORT_LEVEL, CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: session-dashboard.activity, session-dashboard.calls, session-dashboard.controls, session-dashboard.faults, session-dashboard.meter, session-dashboard.tabs, session-dashboard.tasks, session-dashboard.tick, session-dashboard.workflows",
-      "./register.tsx state reads: session-dashboard.activity, session-dashboard.calls, session-dashboard.controls, session-dashboard.faults, session-dashboard.meter, session-dashboard.tabs, session-dashboard.tasks, session-dashboard.tick, session-dashboard.workflows"
+      "./register.tsx state writes: session-dashboard.activity, session-dashboard.calls, session-dashboard.controls, session-dashboard.faults, session-dashboard.meter, session-dashboard.peers, session-dashboard.scope, session-dashboard.tabs, session-dashboard.tasks, session-dashboard.tick, session-dashboard.workflows",
+      "./register.tsx state reads: session-dashboard.activity, session-dashboard.calls, session-dashboard.controls, session-dashboard.faults, session-dashboard.meter, session-dashboard.peers, session-dashboard.scope, session-dashboard.tabs, session-dashboard.tasks, session-dashboard.tick, session-dashboard.workflows"
      ],
      "gatingHooks": [
       {
@@ -946,5 +1154,5 @@
    "advice": []
   }
  },
- "sourceHash": "adeb1edb66fc78c7"
+ "sourceHash": "f063bebe30b92d0f"
 }

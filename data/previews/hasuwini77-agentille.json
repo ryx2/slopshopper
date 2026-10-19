@@ -1,6 +1,6 @@
 {
  "slug": "hasuwini77-agentille",
- "generatedAt": "2026-10-18T13:54:54.633Z",
+ "generatedAt": "2026-10-19T16:26:41.098Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -41,6 +41,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__agentille__close_pane"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agt-clean"
     }
    },
    {
@@ -183,7 +189,13 @@
     "description": "Highlight replies: on (/agt only) · all · off. Saved as display.highlight in profile.json; goes away in v4",
     "argumentHint": "[on|all|off]",
     "immediate": true,
-    "output": "Highlight: on — /agt replies get an essentials card and a dim body with paths, versions, refs and numbers lit. /agt-highlight all covers plain prompts too.\nmoved: display.highlight in ~/.agentille/profile.json — this command goes away in v4"
+    "output": "Highlight: on — /agt replies get an essentials card and a dim body with paths, versions, refs and numbers lit, and the final answer is framed. /agt-highlight all shapes every answer.\nmoved: display.highlight in ~/.agentille/profile.json — this command goes away in v4"
+   },
+   {
+    "name": "agt-clean",
+    "description": "Tidy up now: close finished agt panes, remove merged agt/* worktrees and branches. Anything still working or unmerged stays",
+    "immediate": true,
+    "output": "agt clean · workspace already clean"
    },
    {
     "name": "agt-focus",
@@ -208,12 +220,14 @@
    "$.env.get": 5,
    "$.fs.read": 4,
    "$.session.id": 1,
-   "$.command.register": 6,
+   "$.command.register": 7,
    "$.store.get": 4,
    "$.clock.now": 2,
    "$.agent.list": 1,
    "$.ui.status": 1,
    "$.ui.open": 1,
+   "$.session.cwd": 1,
+   "$.process.run": 4,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -316,6 +330,11 @@
    "/agt-spawn → Usage: /agt-spawn \"task\" [--model sonnet|opus|haiku|fable]",
    "/agt-info → display (profile.json → display):\n  deck      off   default\n  focus     true  de…",
    "/agt-highlight → Highlight: on — /agt replies get an essentials card and a dim body with paths, v…",
+   "$.process.run(git -C /work/app worktree list --porcelain) → exit 0",
+   "$.process.run(git -C /work/app symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
+   "$.process.run(git -C /work/app branch --merged HEAD --format=%(refname:short) --list agt/*) → exit 0",
+   "$.process.run(git -C /work/app branch --format=%(refname:short) --list agt/*) → exit 0",
+   "/agt-clean → agt clean · workspace already clean",
    "/agt-focus → focus: on (agent flags show above the prompt)\nNothing to flag right now.\nmoved: …"
   ],
   "console": [],
@@ -333,6 +352,7 @@
    "command.run{command=agt-spawn}",
    "tool.call{tool=mcp__agentille__spawn_pane}",
    "tool.call{tool=mcp__agentille__close_pane}",
+   "command.run{command=agt-clean}",
    "command.run{command=agt-focus}",
    "command.run{command=agt-highlight}",
    "prompt.submit",
@@ -368,11 +388,13 @@
    "openPane)",
    "$.command.register",
    "$.env.get",
-   "$.fs.exists (via installedSkew",
+   "$.fs.exists (via cleanWorkspace",
+   "installedSkew",
    "loadSquads",
    "saveDisplay",
    "tipOnce)",
-   "$.fs.list (via completeReport",
+   "$.fs.list (via cleanWorkspace",
+   "completeReport",
    "installedSkew)",
    "$.fs.read",
    "$.fs.stat",
@@ -429,12 +451,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, command.run{command=agt-deck}, command.run{command=agt-tell}, command.run{command=agt-info}, command.run{command=agt-spawn}, tool.call{tool=mcp__agentille__spawn_pane}, tool.call{tool=mcp__agentille__close_pane}, command.run{command=agt-focus}, command.run{command=agt-highlight}, prompt.submit, skill.prompt, session.receive, tool.call{tool=Write}, tool.call, session.measure, agent.spawn, turn.step, turn.start, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agt-deck}, ui.render{component=AssistantMessage}, ui.render{component=Spinner}, agent.spawn{subagentType=/\".\"/}, ui.render{component=ToolUse, props has {tool=Agent}}, ui.render{component=ToolUse, props has {tool=Workflow}}, session.measure{context has {}}, prompt.autocomplete{text=/\"^\\\\s*\\\\/(agentille:)?agt(\\\\s|$)\"/}",
+      "./register.js hooks: session.start, command.run{command=agt-deck}, command.run{command=agt-tell}, command.run{command=agt-info}, command.run{command=agt-spawn}, tool.call{tool=mcp__agentille__spawn_pane}, tool.call{tool=mcp__agentille__close_pane}, command.run{command=agt-clean}, command.run{command=agt-focus}, command.run{command=agt-highlight}, prompt.submit, skill.prompt, session.receive, tool.call{tool=Write}, tool.call, session.measure, agent.spawn, turn.step, turn.start, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agt-deck}, ui.render{component=AssistantMessage}, ui.render{component=Spinner}, agent.spawn{subagentType=/\".\"/}, ui.render{component=ToolUse, props has {tool=Agent}}, ui.render{component=ToolUse, props has {tool=Workflow}}, session.measure{context has {}}, prompt.autocomplete{text=/\"^\\\\s*\\\\/(agentille:)?agt(\\\\s|$)\"/}",
       "./register.js hooks on skill.prompt do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.js answers its own command: command.run{command=agt-deck}",
       "./register.js answers its own command: command.run{command=agt-tell}",
       "./register.js answers its own command: command.run{command=agt-info}",
       "./register.js answers its own command: command.run{command=agt-spawn}",
+      "./register.js answers its own command: command.run{command=agt-clean}",
       "./register.js answers its own command: command.run{command=agt-focus}",
       "./register.js answers its own command: command.run{command=agt-highlight}",
       "./register.js gating hook without .catch: tool.call{tool=mcp__agentille__spawn_pane}",
@@ -445,7 +468,7 @@
       "./register.js gating hook without .catch: tool.call",
       "./register.js gating hook without .catch: agent.spawn",
       "./register.js gating hook without .catch: agent.spawn{subagentType=/\".\"/}",
-      "./register.js calls: $.agent.list (via refreshAgents), $.clock.after (via ioOf, tickModules), $.clock.every (via ensurePolling, ensureTicker), $.clock.now, $.clock.sleep (via clearDialogs, openPane), $.command.register, $.env.get, $.fs.exists (via installedSkew, loadSquads, saveDisplay, tipOnce), $.fs.list (via completeReport, installedSkew), $.fs.read, $.fs.stat, $.fs.write (via completeReport, saveDisplay, saveTabs, tipOnce, writeRunFile), $.process.run, $.session.cwd, $.session.id, $.session.send, $.session.surfaces, $.store.get, $.store.set, $.tool.register, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status (via ioOf, tickModules), $.ui.toast",
+      "./register.js calls: $.agent.list (via refreshAgents), $.clock.after (via ioOf, tickModules), $.clock.every (via ensurePolling, ensureTicker), $.clock.now, $.clock.sleep (via clearDialogs, openPane), $.command.register, $.env.get, $.fs.exists (via cleanWorkspace, installedSkew, loadSquads, saveDisplay, tipOnce), $.fs.list (via cleanWorkspace, completeReport, installedSkew), $.fs.read, $.fs.stat, $.fs.write (via completeReport, saveDisplay, saveTabs, tipOnce, writeRunFile), $.process.run, $.session.cwd, $.session.id, $.session.send, $.session.surfaces, $.store.get, $.store.set, $.tool.register, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status (via ioOf, tickModules), $.ui.toast",
       "./register.js env writes: nothing",
       "./register.js env reads: AGENTILLE_LEAD, AGENTILLE_NAME, AGENTILLE_WORKER, HERDR_ENV, HERDR_PANE_ID, HERDR_WORKSPACE_ID, HOME, SHELL, TMUX, TMUX_PANE"
      ],
@@ -504,5 +527,5 @@
    "advice": []
   }
  },
- "sourceHash": "9ebd9082564aaf47"
+ "sourceHash": "5ece1690829c0744"
 }

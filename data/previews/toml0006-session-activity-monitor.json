@@ -1,11 +1,17 @@
 {
  "slug": "toml0006-session-activity-monitor",
- "generatedAt": "2026-10-18T13:55:56.433Z",
+ "generatedAt": "2026-10-19T16:28:16.404Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "command.run",
@@ -36,8 +42,8 @@
   "commands": [
    {
     "name": "session-stats",
-    "description": "Show live CPU, RAM and processes of this session; \"bar\" toggles the strip above the prompt, \"stop\" shuts everything off",
-    "argumentHint": "[bar [on|off] | stop]",
+    "description": "Show live CPU, RAM and processes of this session; \"bar\" toggles the strip above the prompt, \"mode\" sets how much the monitor itself costs, \"stop\" shuts everything off",
+    "argumentHint": "[bar [on|off|prompt [on|off]] | mode [lite|normal|full] | stop]",
     "output": "Session stats pane opened."
    }
   ],
@@ -54,16 +60,21 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.store.get": 1,
-   "$.state.get": 5,
-   "$.state.set": 2,
+   "$.store.get": 3,
+   "$.state.get": 19,
+   "$.state.set": 10,
+   "$.process.run": 5,
    "$.ui.panes": 1,
+   "$.clock.now": 6,
+   "$.clock.every": 2,
    "$.ui.open": 1,
-   "$.process.run": 1,
-   "$.clock.every": 1,
    "$.ui.resolve": 1
   },
   "timers": [
+   {
+    "kind": "every",
+    "ms": 10000
+   },
    {
     "kind": "every",
     "ms": 2000
@@ -90,7 +101,10 @@
    }
   },
   "script": [
+   "$.process.run(/usr/sbin/ioreg -rn AppleSmartBattery) → exit 0",
    "session.start",
+   "$.process.run(/usr/bin/pmset -g batt) → exit 0",
+   "$.process.run(/bin/sh -c echo $PPID; sysctl -n hw.ncpu hw.memsize vm.loadavg; ps -axo pid=,ppi…) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -100,6 +114,7 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(/bin/sh -c echo $PPID; sysctl -n hw.ncpu hw.memsize vm.loadavg; ps -axo pid=,ppi…) → exit 0",
    "turn.complete",
    "$.ui.open(session-stats)",
    "$.process.run(/bin/sh -c echo $PPID; sysctl -n hw.ncpu hw.memsize vm.loadavg; ps -axo pid=,ppi…) → exit 0",
@@ -114,6 +129,8 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "prompt.submit",
+   "turn.complete",
    "command.run{command=session-stats}",
    "ui.close{id=session-stats}",
    "ui.render{component=AbovePrompt}",
@@ -121,11 +138,9 @@
   ],
   "calls": [
    "$.clock.every (via syncSampler)",
-   "$.clock.now (via sample",
-   "sampleNet)",
+   "$.clock.now",
    "$.command.register",
-   "$.process.run (via sample",
-   "sampleNet)",
+   "$.process.run",
    "$.state.get",
    "$.state.set",
    "$.store.get",
@@ -133,14 +148,19 @@
    "$.ui.close (via stopAll)",
    "$.ui.open (via openPane)",
    "$.ui.panes",
-   "$.ui.resolve"
+   "$.ui.resolve",
+   "$.ui.toast"
   ],
   "stateReads": [
    "session-stats.isBarOn",
+   "session-stats.isBarPromptOn",
+   "session-stats.mode",
    "session-stats.stats"
   ],
   "stateWrites": [
    "session-stats.isBarOn",
+   "session-stats.isBarPromptOn",
+   "session-stats.mode",
    "session-stats.stats"
   ],
   "envReads": [],
@@ -155,7 +175,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-stats.stats, session-stats.isBarOn"
+     "types ./types/index.d.ts declares state: session-stats.stats, session-stats.isBarOn, session-stats.mode, session-stats.isBarPromptOn"
     ],
     "gatingHooks": []
    },
@@ -166,14 +186,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=session-stats}, ui.close{id=session-stats}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=session-stats}",
+      "./register.tsx hooks: session.start, prompt.submit, turn.complete, command.run{command=session-stats}, ui.close{id=session-stats}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=session-stats}",
       "./register.tsx answers its own command: command.run{command=session-stats}",
+      "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: ui.close{id=session-stats}",
-      "./register.tsx calls: $.clock.every (via syncSampler), $.clock.now (via sample, sampleNet), $.command.register, $.process.run (via sample, sampleNet), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close (via stopAll), $.ui.open (via openPane), $.ui.panes, $.ui.resolve",
-      "./register.tsx state writes: session-stats.isBarOn, session-stats.stats",
-      "./register.tsx state reads: session-stats.isBarOn, session-stats.stats"
+      "./register.tsx calls: $.clock.every (via syncSampler), $.clock.now, $.command.register, $.process.run, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close (via stopAll), $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: session-stats.isBarOn, session-stats.isBarPromptOn, session-stats.mode, session-stats.stats",
+      "./register.tsx state reads: session-stats.isBarOn, session-stats.isBarPromptOn, session-stats.mode, session-stats.stats"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "ui.close",
@@ -186,5 +213,5 @@
    "advice": []
   }
  },
- "sourceHash": "7256cfbcbacb2fd5"
+ "sourceHash": "8c1080cc3104e828"
 }

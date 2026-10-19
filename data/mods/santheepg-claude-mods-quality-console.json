@@ -1,0 +1,8 @@
+{
+ "slug": "santheepg-claude-mods-quality-console",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const register: Register = on => {\n  on('session.start', async ($, event, next) => {\n    await $.command.register({\n      name: 'mod-check',\n      description: 'Validate a local Claude Code mod',\n      argumentHint: '[directory]',\n    })\n    return next(event)\n  })\n\n  on('command.run', { command: 'mod-check' }, async ($, event) => {\n    const target = event.args.trim() || '.'\n    $.ui.status(`Validating ${target}`)\n\n    try {\n      const result = await $.process.run(['claude', 'plugin', 'validate', target], {\n        timeoutMs: 30_000,\n      })\n      const output = [result.stdout.trim(), result.stderr.trim()].filter(Boolean).join('\\n')\n\n      return {\n        text: result.exitCode === 0\n          ? `PASS ${target}\\n\\n${output}`\n          : `FAIL ${target}\\n\\n${output}`,\n      }\n    } catch (error) {\n      return {\n        text: `ERROR ${target}\\n\\n${error instanceof Error ? error.message : String(error)}`,\n      }\n    } finally {\n      $.ui.status(undefined)\n    }\n  })\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"Quality Console hooks\",\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"quality-console\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Adds a slash command that validates any local Claude Code mod\",\n  \"author\": {\n    \"name\": \"Brad Traversy\"\n  }\n}"
+ }
+}

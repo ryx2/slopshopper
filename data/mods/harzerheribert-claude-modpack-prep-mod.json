@@ -1,0 +1,8 @@
+{
+ "slug": "harzerheribert-claude-modpack-prep-mod",
+ "files": {
+  "hooks/register.ts": "// Bench only (compact_bench.py, arm PREP): answers a compaction of the main conversation as smart-compact answers its\n// own with a summary written ahead. PREP_SUMMARY_FILE holds the first message as smart-compact builds it (SUMMARY_HEAD\n// and the summary); the messages after the last one on the person's side, which the summary's fork does not read in a\n// session, stay as they are. Without the variable it stands aside.\n\nimport type { Register } from 'claude-code'\n\nexport const register: Register = on => {\n  on('session.compact', async ($, e, next) => {\n    const path = await $.env.get('PREP_SUMMARY_FILE')\n    if (path === undefined || path === '' || e.agentId !== undefined || e.trigger === 'precompute') return next(e)\n    const text = await $.fs.read(path)\n    let last = e.messages.length - 1\n    while (last >= 0 && e.messages[last]?.role !== 'user') last -= 1\n    if (typeof text !== 'string' || last < 0 || last + 1 >= e.messages.length) return next(e)\n    return { messages: [{ role: 'user' as const, text, toolUses: [] }, ...e.messages.slice(last + 1)] }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"prep-mod\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Bench only (compact_bench.py, arm PREP): answers a compaction as smart-compact answers its own with a summary written ahead.\"\n}"
+ }
+}

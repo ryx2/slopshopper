@@ -1,6 +1,6 @@
 {
  "slug": "afterever-claude-mods-ctx",
- "generatedAt": "2026-10-06T05:28:29.971Z",
+ "generatedAt": "2026-10-19T16:26:58.455Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -27,6 +27,15 @@
    },
    {
     "event": "session.compact"
+   },
+   {
+    "event": "config.set",
+    "matcher": {
+     "key": [
+      "agent-pulse.palette",
+      "agent-pulse.animation"
+     ]
+    }
    },
    {
     "event": "command.run",
@@ -60,8 +69,8 @@
   "commands": [
    {
     "name": "ctx",
-    "description": "Context window details (/ctx opens the pane; /ctx show|hide|toggle|exact|quick|compact [focus]|autokeep [on|off]|cost [on|off])",
-    "argumentHint": "[show|hide|toggle|exact|quick|compact [focus]|autokeep [on|off]|cost [on|off]]",
+    "description": "Context window details (/ctx opens the pane; /ctx show|hide|toggle|exact|quick|compact [focus]|autokeep [on|off]|cost [on|off]|footer [on|off])",
+    "argumentHint": "[show|hide|toggle|exact|quick|compact [focus]|autokeep [on|off]|cost [on|off]|footer [on|off]]",
     "immediate": true
    }
   ],
@@ -69,7 +78,7 @@
   "panes": [
    {
     "id": "ctx",
-    "title": "Context window"
+    "title": "Context"
    }
   ],
   "toasts": [],
@@ -77,20 +86,25 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.config.list": 1,
    "$.command.register": 1,
-   "$.state.get": 51,
+   "$.state.get": 61,
    "$.session.usage": 4,
    "$.session.cwd": 1,
-   "$.store.get": 5,
+   "$.store.get": 6,
    "$.session.id": 1,
-   "$.state.set": 15,
+   "$.state.set": 20,
+   "$.clock.every": 2,
    "$.store.set": 1,
    "$.ui.open": 1,
-   "$.clock.every": 1,
    "$.ui.resolve": 2,
-   "$.clock.now": 1
+   "$.clock.now": 3
   },
   "timers": [
+   {
+    "kind": "every",
+    "ms": 60000
+   },
    {
     "kind": "every",
     "ms": 15000
@@ -120,20 +134,58 @@
           "dimColor": true
          },
          "children": [
-          "Context window"
+          "Context"
          ]
         },
         {
-         "type": "Button",
+         "type": "Box",
          "props": {
-          "key": "ctx-toggle",
-          "label": "📊▾",
-          "hotkey": "x",
-          "plain": true,
-          "dimColor": false,
-          "onPress": "[fn]"
+          "flexDirection": "row",
+          "columnGap": 2,
+          "flexShrink": 0
          },
-         "children": []
+         "children": [
+          {
+           "type": "Box",
+           "props": {
+            "key": "ctx-pace",
+            "flexDirection": "row",
+            "flexShrink": 0
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              "🐾 "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success"
+             },
+             "children": [
+              "31%"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "ctx-toggle",
+            "label": "📊▾",
+            "hotkey": "x",
+            "plain": true,
+            "dimColor": false,
+            "onPress": "[fn]"
+           },
+           "children": []
+          }
+         ]
         }
        ]
       },
@@ -170,7 +222,7 @@
        "No context data yet. It fills in after the first response."
       ]
      },
-     "title": "Context window"
+     "title": "Context"
     }
    }
   },
@@ -205,6 +257,7 @@
    "turn.complete",
    "prompt.submit",
    "session.compact",
+   "config.set{key=\"agent-pulse.palette\"|\"agent-pulse.animation\"}",
    "command.run{command=ctx}",
    "ui.close",
    "ui.render{component=AbovePrompt}",
@@ -212,9 +265,12 @@
    "ui.render{component=Pane, requestId=ctx}"
   ],
   "calls": [
-   "$.clock.every (via startTicker)",
+   "$.clock.every (via playFx",
+   "setLimits",
+   "startTicker)",
    "$.clock.now",
    "$.command.register",
+   "$.config.list (via refreshLook)",
    "$.env.get (via openFile)",
    "$.process.run (via openFile)",
    "$.session.compact (via compactNow)",
@@ -227,6 +283,7 @@
    "$.store.get",
    "$.store.set",
    "$.ui.close (via setVisible)",
+   "$.ui.invalidate (via refreshLook)",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
@@ -239,15 +296,21 @@
    "ctx.cpt",
    "ctx.eaters",
    "ctx.edited",
+   "ctx.footerOn",
+   "ctx.fx",
+   "ctx.fxTick",
    "ctx.history",
    "ctx.isVisible",
+   "ctx.limits",
    "ctx.mode",
    "ctx.opened",
+   "ctx.paceTick",
    "ctx.project",
    "ctx.snap",
    "ctx.spend",
    "ctx.stale",
    "ctx.tick",
+   "ctx.turnRunning",
    "ctx.usage",
    "ctx.warned"
   ],
@@ -259,15 +322,21 @@
    "ctx.cpt",
    "ctx.eaters",
    "ctx.edited",
+   "ctx.footerOn",
+   "ctx.fx",
+   "ctx.fxTick",
    "ctx.history",
    "ctx.isVisible",
+   "ctx.limits",
    "ctx.mode",
    "ctx.opened",
+   "ctx.paceTick",
    "ctx.project",
    "ctx.snap",
    "ctx.spend",
    "ctx.stale",
    "ctx.tick",
+   "ctx.turnRunning",
    "ctx.usage",
    "ctx.warned"
   ],
@@ -278,34 +347,76 @@
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/afterever-claude-mods-ctx/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/afterever-claude-mods-ctx/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/afterever-claude-mods-ctx/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/afterever-claude-mods-ctx/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: ctx.snap, ctx.isVisible, ctx.opened, ctx.mode, ctx.stale, ctx.tick, ctx.history, ctx.eaters, ctx.cpt, ctx.usage, ctx.project, ctx.compacted, ctx.edited, ctx.asks, ctx.autokeep, ctx.warned, ctx.spend, ctx.costOn"
-    ]
+     "types ./types/index.d.ts declares state: ctx.snap, ctx.isVisible, ctx.opened, ctx.mode, ctx.stale, ctx.tick, ctx.history, ctx.eaters, ctx.cpt, ctx.usage, ctx.project, ctx.compacted, ctx.edited, ctx.asks, ctx.autokeep, ctx.warned, ctx.spend, ctx.costOn, ctx.footerOn, ctx.limits, ctx.paceTick, ctx.fx, ctx.turnRunning, ctx.fxTick"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/afterever-claude-mods-ctx/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/afterever-claude-mods-ctx/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.measure, tool.call, turn.start, turn.step, turn.complete, prompt.submit, session.compact, command.run{command=ctx}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=SessionMode}, ui.render{component=Pane, requestId=ctx}",
-      "./register.tsx calls: $.clock.every (via startTicker), $.clock.now, $.command.register, $.env.get (via openFile), $.process.run (via openFile), $.session.compact (via compactNow), $.session.cwd (via projectKey), $.session.id, $.session.turns, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close (via setVisible), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx hooks: session.start, session.measure, tool.call, turn.start, turn.step, turn.complete, prompt.submit, session.compact, config.set{key=\"agent-pulse.palette\"|\"agent-pulse.animation\"}, command.run{command=ctx}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=SessionMode}, ui.render{component=Pane, requestId=ctx}",
+      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx answers its own command: command.run{command=ctx}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx gating hook without .catch: config.set{key=\"agent-pulse.palette\"|\"agent-pulse.animation\"}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.clock.every (via playFx, setLimits, startTicker), $.clock.now, $.command.register, $.config.list (via refreshLook), $.env.get (via openFile), $.process.run (via openFile), $.session.compact (via compactNow), $.session.cwd (via projectKey), $.session.id, $.session.turns, $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close (via setVisible), $.ui.invalidate (via refreshLook), $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, OS",
-      "./register.tsx state writes: ctx.asks, ctx.autokeep, ctx.compacted, ctx.costOn, ctx.cpt, ctx.eaters, ctx.edited, ctx.history, ctx.isVisible, ctx.mode, ctx.opened, ctx.project, ctx.snap, ctx.spend, ctx.stale, ctx.tick, ctx.usage, ctx.warned",
-      "./register.tsx state reads: ctx.asks, ctx.autokeep, ctx.compacted, ctx.costOn, ctx.cpt, ctx.eaters, ctx.edited, ctx.history, ctx.isVisible, ctx.mode, ctx.opened, ctx.project, ctx.snap, ctx.spend, ctx.stale, ctx.tick, ctx.usage, ctx.warned"
+      "./register.tsx state writes: ctx.asks, ctx.autokeep, ctx.compacted, ctx.costOn, ctx.cpt, ctx.eaters, ctx.edited, ctx.footerOn, ctx.fx, ctx.fxTick, ctx.history, ctx.isVisible, ctx.limits, ctx.mode, ctx.opened, ctx.paceTick, ctx.project, ctx.snap, ctx.spend, ctx.stale, ctx.tick, ctx.turnRunning, ctx.usage, ctx.warned",
+      "./register.tsx state reads: ctx.asks, ctx.autokeep, ctx.compacted, ctx.costOn, ctx.cpt, ctx.eaters, ctx.edited, ctx.footerOn, ctx.fx, ctx.fxTick, ctx.history, ctx.isVisible, ctx.limits, ctx.mode, ctx.opened, ctx.paceTick, ctx.project, ctx.snap, ctx.spend, ctx.stale, ctx.tick, ctx.turnRunning, ctx.usage, ctx.warned",
+      "./register.tsx surface modules: hooks/tide.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "config.set",
+       "hook": "config.set{key=\"agent-pulse.palette\"|\"agent-pulse.animation\"}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "d6cc8c5866c43615"
+ "sourceHash": "6b45319676bfe1de"
 }

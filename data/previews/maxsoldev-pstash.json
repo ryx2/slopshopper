@@ -1,11 +1,17 @@
 {
  "slug": "maxsoldev-pstash",
- "generatedAt": "2026-10-16T14:17:48.492Z",
+ "generatedAt": "2026-10-19T16:26:47.090Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart",
+    "matcher": {
+     "source": "clear"
+    }
    },
    {
     "event": "turn.start"
@@ -58,7 +64,7 @@
    {
     "name": "stash",
     "description": "Stash a prompt for later; bare /stash picks one to paste back",
-    "argumentHint": "[text | pop]",
+    "argumentHint": "[text | pop | yank]",
     "immediate": true,
     "output": "nothing stashed · /stash <text> to add"
    }
@@ -72,11 +78,12 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.ui.status": 1,
-   "$.state.get": 8,
+   "$.state.get": 9,
    "$.state.set": 5,
    "$.env.get": 4,
    "$.session.root": 2,
    "$.fs.exists": 2,
+   "$.fs.read": 1,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -126,6 +133,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "classic.SessionStart{source=clear}",
    "turn.start",
    "turn.complete",
    "prompt.submit",
@@ -137,12 +145,13 @@
    "ui.render{component=Pane, requestId=pstash}"
   ],
   "calls": [
-   "$.clock.after (via deleteFocused)",
+   "$.clock.after (via ring)",
    "$.clock.now (via stash)",
    "$.command.register",
    "$.env.get (via location)",
    "$.fs.exists (via load)",
-   "$.fs.read (via load)",
+   "$.fs.read (via load",
+   "versionLabel)",
    "$.fs.write (via change)",
    "$.prompt.fill (via pop)",
    "$.session.root (via location)",
@@ -150,22 +159,25 @@
    "$.state.set",
    "$.ui.close (via deleteFocused",
    "pop)",
-   "$.ui.focus (via deleteFocused)",
+   "$.ui.focus (via ring)",
    "$.ui.open (via openPicker)",
    "$.ui.panes (via pop)",
    "$.ui.resolve",
    "$.ui.status",
-   "$.ui.toast"
+   "$.ui.toast (via failed",
+   "reportPop)"
   ],
   "stateReads": [
    "pstash.focused",
    "pstash.isRunning",
-   "pstash.items"
+   "pstash.items",
+   "pstash.label"
   ],
   "stateWrites": [
    "pstash.focused",
    "pstash.isRunning",
-   "pstash.items"
+   "pstash.items",
+   "pstash.label"
   ],
   "envReads": [
    "HOME",
@@ -182,7 +194,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: pstash.items, pstash.isRunning, pstash.focused"
+     "types ./types/index.d.ts declares state: pstash.items, pstash.isRunning, pstash.focused, pstash.label"
     ],
     "gatingHooks": []
    },
@@ -193,18 +205,26 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.start, turn.complete, prompt.submit, command.run{command=stash}, ui.render{component=Spinner}, session.append{door=command}, ui.render{component=SessionMode}, ui.focus{requestId=pstash}, ui.render{component=Pane, requestId=pstash}",
+      "./register.tsx hooks: session.start, classic.SessionStart{source=clear}, turn.start, turn.complete, prompt.submit, command.run{command=stash}, ui.render{component=Spinner}, session.append{door=command}, ui.render{component=SessionMode}, ui.focus{requestId=pstash}, ui.render{component=Pane, requestId=pstash}",
+      "./register.tsx hooks on classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=stash}",
+      "./register.tsx gating hook without .catch: classic.SessionStart{source=clear}",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.append{door=command}",
       "./register.tsx gating hook without .catch: ui.focus{requestId=pstash}",
-      "./register.tsx calls: $.clock.after (via deleteFocused), $.clock.now (via stash), $.command.register, $.env.get (via location), $.fs.exists (via load), $.fs.read (via load), $.fs.write (via change), $.prompt.fill (via pop), $.session.root (via location), $.state.get, $.state.set, $.ui.close (via deleteFocused, pop), $.ui.focus (via deleteFocused), $.ui.open (via openPicker), $.ui.panes (via pop), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx calls: $.clock.after (via ring), $.clock.now (via stash), $.command.register, $.env.get (via location), $.fs.exists (via load), $.fs.read (via load, versionLabel), $.fs.write (via change), $.prompt.fill (via pop), $.session.root (via location), $.state.get, $.state.set, $.ui.close (via deleteFocused, pop), $.ui.focus (via ring), $.ui.open (via openPicker), $.ui.panes (via pop), $.ui.resolve, $.ui.status, $.ui.toast (via failed, reportPop)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, PSTASH_DIR",
-      "./register.tsx state writes: pstash.focused, pstash.isRunning, pstash.items",
-      "./register.tsx state reads: pstash.focused, pstash.isRunning, pstash.items"
+      "./register.tsx state writes: pstash.focused, pstash.isRunning, pstash.items, pstash.label",
+      "./register.tsx state reads: pstash.focused, pstash.isRunning, pstash.items, pstash.label"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart{source=clear}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
@@ -229,5 +249,5 @@
    "advice": []
   }
  },
- "sourceHash": "2de890dcf152cbd3"
+ "sourceHash": "7beb54004a2681f3"
 }

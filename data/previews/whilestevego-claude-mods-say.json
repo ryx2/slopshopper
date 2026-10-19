@@ -1,6 +1,6 @@
 {
  "slug": "whilestevego-claude-mods-say",
- "generatedAt": "2026-10-16T14:22:07.698Z",
+ "generatedAt": "2026-10-19T16:28:21.552Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,12 +9,6 @@
    },
    {
     "event": "prompt.submit"
-   },
-   {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "TodoWrite"
-    }
    },
    {
     "event": "tool.call",
@@ -35,6 +29,9 @@
     "event": "session.measure"
    },
    {
+    "event": "session.end"
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "say"
@@ -51,7 +48,7 @@
   "commands": [
    {
     "name": "say",
-    "description": "Spoken updates: /say to pick a voice, /say <name>, /say read, /say tldr, /say hush, /say help",
+    "description": "Spoken updates: /say to hear this session's voice, /say pick [<name>|random], /say read, /say tldr, /say hush, /say help",
     "output": "Couldn't list murmur's voices. Is murmur installed?"
    }
   ],
@@ -62,10 +59,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.env.get": 2,
    "$.process.run": 4,
    "$.session.id": 1,
    "$.command.register": 1,
    "$.clock.every": 1,
+   "$.state.get": 2,
    "$.config.list": 1,
    "$.model.complete": 1,
    "$.fs.read": 1,
@@ -93,7 +92,7 @@
          "dimColor": true
         },
         "children": [
-         "✓ installed · Enter to speak with it · Esc to close"
+         "✓ installed · A–F: Kokoro's grade · Enter to speak with it · Esc to close"
         ]
        }
       ]
@@ -103,7 +102,7 @@
    }
   },
   "script": [
-   "$.process.run(sh -c echo \"$TERM_PROGRAM\"\necho \"$HOME\"\np=$$\nfirst=\nwhile [ \"$p\" -gt 1 ]; do\n  t…) → exit 0",
+   "$.process.run(sh -c p=$$\nfirst=\nwhile [ \"$p\" -gt 1 ]; do\n  t=$(ps -o tty= -p \"$p\" | tr -d ' ')…) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -126,18 +125,16 @@
  "validate": {
   "ok": true,
   "errors": [],
-  "warnings": [
-   "No author information provided. Consider adding author details for plugin attribution"
-  ],
+  "warnings": [],
   "hooks": [
    "session.start",
    "prompt.submit",
-   "tool.call{tool=TodoWrite}",
    "tool.call{tool=AskUserQuestion}",
    "tool.check",
    "tool.call",
    "turn.complete",
    "session.measure",
+   "session.end",
    "command.run{command=say}",
    "ui.render{component=Pane, requestId=claude-say-picker}"
   ],
@@ -147,32 +144,41 @@
    "watchForDialog)",
    "$.command.register",
    "$.config.list (via tldrLine)",
+   "$.env.get (via locate)",
    "$.fs.read",
-   "$.fs.write (via choose",
-   "claimSessionVoice)",
+   "$.fs.write (via claimSessionVoice",
+   "saveChosen)",
    "$.model.complete (via summarize)",
    "$.model.fork (via tldrAloud)",
-   "$.process.run (via choose",
-   "claimSessionVoice",
+   "$.process.run (via claimSessionVoice",
    "hush",
    "isAway",
    "loadPicker",
    "locate",
+   "saveChosen",
    "say)",
    "$.session.id (via chosenFile)",
-   "$.state.get (via tldrLine)",
+   "$.state.get (via isMuted",
+   "tldrLine)",
+   "$.state.set (via hush)",
+   "$.store.get",
+   "$.store.set",
    "$.ui.close",
    "$.ui.open (via pickVoice)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
+   "say.muted",
    "tldr.line"
   ],
   "stateWrites": [
-   "nothing"
+   "say.muted"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME",
+   "TERM_PROGRAM"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -181,14 +187,11 @@
     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/whilestevego-claude-mods-say/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
-    "warnings": [
-     {
-      "path": "author",
-      "message": "No author information provided. Consider adding author details for plugin attribution",
-      "code": null
-     }
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: say.muted"
     ],
-    "notes": [],
     "gatingHooks": []
    },
    "contents": [
@@ -198,16 +201,17 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, tool.call{tool=TodoWrite}, tool.call{tool=AskUserQuestion}, tool.check, tool.call, turn.complete, session.measure, command.run{command=say}, ui.render{component=Pane, requestId=claude-say-picker}",
+      "./register.tsx hooks: session.start, prompt.submit, tool.call{tool=AskUserQuestion}, tool.check, tool.call, turn.complete, session.measure, session.end, command.run{command=say}, ui.render{component=Pane, requestId=claude-say-picker}",
       "./register.tsx answers its own command: command.run{command=say}",
       "./register.tsx gating hook with .catch: prompt.submit",
-      "./register.tsx gating hook with .catch: tool.call{tool=TodoWrite}",
       "./register.tsx gating hook with .catch: tool.call{tool=AskUserQuestion}",
       "./register.tsx gating hook with .catch: tool.check",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.clock.every, $.clock.sleep (via tldrLine, watchForDialog), $.command.register, $.config.list (via tldrLine), $.fs.read, $.fs.write (via choose, claimSessionVoice), $.model.complete (via summarize), $.model.fork (via tldrAloud), $.process.run (via choose, claimSessionVoice, hush, isAway, loadPicker, locate, say), $.session.id (via chosenFile), $.state.get (via tldrLine), $.ui.close, $.ui.open (via pickVoice), $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: nothing",
-      "./register.tsx state reads: tldr.line",
+      "./register.tsx calls: $.clock.every, $.clock.sleep (via tldrLine, watchForDialog), $.command.register, $.config.list (via tldrLine), $.env.get (via locate), $.fs.read, $.fs.write (via claimSessionVoice, saveChosen), $.model.complete (via summarize), $.model.fork (via tldrAloud), $.process.run (via claimSessionVoice, hush, isAway, loadPicker, locate, saveChosen, say), $.session.id (via chosenFile), $.state.get (via isMuted, tldrLine), $.state.set (via hush), $.store.get, $.store.set, $.ui.close, $.ui.open (via pickVoice), $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, TERM_PROGRAM",
+      "./register.tsx state writes: say.muted",
+      "./register.tsx state reads: say.muted, tldr.line",
       "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): tldr.line"
      ],
      "gatingHooks": [
@@ -215,12 +219,6 @@
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
-       "hasCatch": true
-      },
-      {
-       "module": "./register.tsx",
-       "pattern": "tool.call",
-       "hook": "tool.call{tool=TodoWrite}",
        "hasCatch": true
       },
       {
@@ -247,5 +245,5 @@
    "advice": []
   }
  },
- "sourceHash": "4dff57103bc76baa"
+ "sourceHash": "45bb5210e2221c9e"
 }

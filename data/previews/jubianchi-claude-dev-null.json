@@ -1,6 +1,6 @@
 {
  "slug": "jubianchi-claude-dev-null",
- "generatedAt": "2026-10-18T13:54:56.336Z",
+ "generatedAt": "2026-10-19T16:26:43.441Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -18,6 +18,9 @@
    },
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "ui.scroll",
@@ -51,13 +54,21 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 23,
-   "$.state.set": 2,
-   "$.store.get": 6,
+   "$.state.get": 25,
+   "$.state.set": 1,
+   "$.session.id": 6,
+   "$.ui.panes": 1,
+   "$.store.get": 12,
    "$.ui.resolve": 1,
-   "$.clock.now": 1
+   "$.clock.now": 1,
+   "$.clock.after": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "after",
+    "ms": 250
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
@@ -202,6 +213,19 @@
            "onInput": "[fn]",
            "onSubmit": "[fn]",
            "submitLabel": "commit"
+          },
+          "children": []
+         },
+         {
+          "type": "Input",
+          "props": {
+           "key": "image",
+           "label": "Image ",
+           "value": "",
+           "placeholder": "path of a JPEG, PNG or WebP (optional)",
+           "onInput": "[fn]",
+           "onSubmit": "[fn]",
+           "submitLabel": "add"
           },
           "children": []
          },
@@ -414,45 +438,67 @@
    "command.run{command=dev-null:compose}",
    "command.run{command=dev-null:log}",
    "session.start",
+   "session.end",
    "ui.scroll{component=Pane, requestId=dev-null-log}",
    "ui.close",
    "ui.render{component=Pane, requestId=dev-null-log}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.clock.after (via armRefreshInSession",
+   "askForPictures",
+   "writeProbe)",
    "$.clock.every (via armRefresh",
+   "loadPictures",
    "spinning)",
    "$.clock.now",
    "$.http.fetch (via app)",
-   "$.process.run (via send)",
+   "$.process.run (via runOf",
+   "sendDraft)",
+   "$.session.id (via armRefresh",
+   "armRefreshInSession",
+   "knownIn",
+   "loadPictures)",
    "$.state.get",
    "$.state.set",
-   "$.store.delete (via signOut)",
+   "$.store.delete (via keep",
+   "readKept",
+   "signOut",
+   "writeKept)",
    "$.store.get (via currentMode",
    "isAutoRefresh",
+   "readKept",
    "sessionCookie",
    "signedInAs)",
    "$.store.set (via setAutoRefresh",
    "setMode",
-   "signInWith)",
+   "signInWith",
+   "writeKept)",
+   "$.ui.blit (via askForPictures)",
    "$.ui.close",
+   "$.ui.invalidate (via askForPictures",
+   "loadNext",
+   "writeProbe)",
    "$.ui.open",
+   "$.ui.panes (via isLogShown)",
    "$.ui.resolve",
-   "$.ui.toast (via send)"
+   "$.ui.toast (via sendDraft)"
   ],
   "stateReads": [
    "dev-null.accountError",
    "dev-null.autoRefresh",
    "dev-null.cookieDraft",
+   "dev-null.image",
+   "dev-null.images",
    "dev-null.isAccountLoaded",
    "dev-null.isLogOpen",
    "dev-null.isOpen",
+   "dev-null.isSending",
    "dev-null.listOffset",
    "dev-null.loadingLogs",
    "dev-null.logTab",
    "dev-null.message",
    "dev-null.mode",
-   "dev-null.nextRefreshAt",
    "dev-null.refreshTick",
    "dev-null.reply",
    "dev-null.spinnerTick",
@@ -463,15 +509,17 @@
    "dev-null.accountError",
    "dev-null.autoRefresh",
    "dev-null.cookieDraft",
+   "dev-null.image",
+   "dev-null.images",
    "dev-null.isAccountLoaded",
    "dev-null.isLogOpen",
    "dev-null.isOpen",
+   "dev-null.isSending",
    "dev-null.listOffset",
    "dev-null.loadingLogs",
    "dev-null.logTab",
    "dev-null.message",
    "dev-null.mode",
-   "dev-null.nextRefreshAt",
    "dev-null.refreshTick",
    "dev-null.reply",
    "dev-null.spinnerTick",
@@ -490,7 +538,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: dev-null.isOpen, dev-null.isLogOpen, dev-null.logTab, dev-null.cookieDraft, dev-null.accountError, dev-null.isAccountLoaded, dev-null.username, dev-null.webLogs, dev-null.loadingLogs, dev-null.listOffset, dev-null.autoRefresh, dev-null.nextRefreshAt, dev-null.refreshTick, dev-null.spinnerTick, dev-null.mode, dev-null.message, dev-null.reply"
+     "types ./types/index.d.ts declares state: dev-null.isOpen, dev-null.isLogOpen, dev-null.logTab, dev-null.cookieDraft, dev-null.accountError, dev-null.isAccountLoaded, dev-null.username, dev-null.webLogs, dev-null.loadingLogs, dev-null.listOffset, dev-null.autoRefresh, dev-null.refreshTick, dev-null.spinnerTick, dev-null.mode, dev-null.message, dev-null.reply, dev-null.image, dev-null.images, dev-null.isSending"
     ],
     "gatingHooks": []
    },
@@ -501,14 +549,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: command.run{command=dev-null:compose}, command.run{command=dev-null:log}, session.start, ui.scroll{component=Pane, requestId=dev-null-log}, ui.close, ui.render{component=Pane, requestId=dev-null-log}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: command.run{command=dev-null:compose}, command.run{command=dev-null:log}, session.start, session.end, ui.scroll{component=Pane, requestId=dev-null-log}, ui.close, ui.render{component=Pane, requestId=dev-null-log}, ui.render{component=AbovePrompt}",
       "./register.tsx gating hook without .catch: command.run{command=dev-null:compose}",
       "./register.tsx gating hook without .catch: command.run{command=dev-null:log}",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=dev-null-log}",
       "./register.tsx gating hook without .catch: ui.close",
-      "./register.tsx calls: $.clock.every (via armRefresh, spinning), $.clock.now, $.http.fetch (via app), $.process.run (via send), $.state.get, $.state.set, $.store.delete (via signOut), $.store.get (via currentMode, isAutoRefresh, sessionCookie, signedInAs), $.store.set (via setAutoRefresh, setMode, signInWith), $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast (via send)",
-      "./register.tsx state writes: dev-null.accountError, dev-null.autoRefresh, dev-null.cookieDraft, dev-null.isAccountLoaded, dev-null.isLogOpen, dev-null.isOpen, dev-null.listOffset, dev-null.loadingLogs, dev-null.logTab, dev-null.message, dev-null.mode, dev-null.nextRefreshAt, dev-null.refreshTick, dev-null.reply, dev-null.spinnerTick, dev-null.username, dev-null.webLogs",
-      "./register.tsx state reads: dev-null.accountError, dev-null.autoRefresh, dev-null.cookieDraft, dev-null.isAccountLoaded, dev-null.isLogOpen, dev-null.isOpen, dev-null.listOffset, dev-null.loadingLogs, dev-null.logTab, dev-null.message, dev-null.mode, dev-null.nextRefreshAt, dev-null.refreshTick, dev-null.reply, dev-null.spinnerTick, dev-null.username, dev-null.webLogs"
+      "./register.tsx calls: $.clock.after (via armRefreshInSession, askForPictures, writeProbe), $.clock.every (via armRefresh, loadPictures, spinning), $.clock.now, $.http.fetch (via app), $.process.run (via runOf, sendDraft), $.session.id (via armRefresh, armRefreshInSession, knownIn, loadPictures), $.state.get, $.state.set, $.store.delete (via keep, readKept, signOut, writeKept), $.store.get (via currentMode, isAutoRefresh, readKept, sessionCookie, signedInAs), $.store.set (via setAutoRefresh, setMode, signInWith, writeKept), $.ui.blit (via askForPictures), $.ui.close, $.ui.invalidate (via askForPictures, loadNext, writeProbe), $.ui.open, $.ui.panes (via isLogShown), $.ui.resolve, $.ui.toast (via sendDraft)",
+      "./register.tsx state writes: dev-null.accountError, dev-null.autoRefresh, dev-null.cookieDraft, dev-null.image, dev-null.images, dev-null.isAccountLoaded, dev-null.isLogOpen, dev-null.isOpen, dev-null.isSending, dev-null.listOffset, dev-null.loadingLogs, dev-null.logTab, dev-null.message, dev-null.mode, dev-null.refreshTick, dev-null.reply, dev-null.spinnerTick, dev-null.username, dev-null.webLogs",
+      "./register.tsx state reads: dev-null.accountError, dev-null.autoRefresh, dev-null.cookieDraft, dev-null.image, dev-null.images, dev-null.isAccountLoaded, dev-null.isLogOpen, dev-null.isOpen, dev-null.isSending, dev-null.listOffset, dev-null.loadingLogs, dev-null.logTab, dev-null.message, dev-null.mode, dev-null.refreshTick, dev-null.reply, dev-null.spinnerTick, dev-null.username, dev-null.webLogs"
      ],
      "gatingHooks": [
       {
@@ -541,5 +589,5 @@
    "advice": []
   }
  },
- "sourceHash": "875b2d2ddd2266d"
+ "sourceHash": "c13bb1ed6cb75be0"
 }

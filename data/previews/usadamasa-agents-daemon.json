@@ -1,0 +1,315 @@
+{
+ "slug": "usadamasa-agents-daemon",
+ "generatedAt": "2026-10-19T16:28:18.502Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "board"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "agents-daemon-board"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__agents-daemon__park"
+    }
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "TaskUpdate"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "board",
+    "description": "agents-daemon の依存のボードを会話の横に開き、選んだタスクのセッションへ指示を送る",
+    "output": "agents-daemon のボードを開きました。"
+   }
+  ],
+  "tools": [
+   {
+    "name": "park",
+    "description": "作業の途中で見つけた脇のことを、ユーザーに聞かずにメモとしてパーキングロットへ置き、今の作業を続けるための tool。\n置いたメモはセッションが終わっても残り、後でボードから取り出される。\n\n置けるのは次の 3 種類だけ (kind):\n- aside: 脇で見つけたもの。例「関係ないが、ここにバグがある」\n- scope: 範囲の相談。例「ついでに X も直すか」。既定は「やらない」で進める\n- preference: 好みの確認。例「命名は A と B のどちらか」。仮に決めて進め、確認だけを置く\n\n次のものは置かずに、ユーザーに聞く:\n- 進めるのに要る判断。例「この API の仕様がわからない」。答えが無いと今の作業が正しく終わらないもの\n- 危ない操作の確認。例「削除してよいか」「force push してよいか」\n\ndefault_taken には、置いたメモについて今どうしたか (「やらない」、仮に決めた内容) を書く。"
+   }
+  ],
+  "panes": [
+   {
+    "id": "agents-daemon-board",
+    "title": "Tasks"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.env.get": 14,
+   "$.session.id": 8,
+   "$.session.cwd": 7,
+   "$.process.run": 7,
+   "$.state.get": 19,
+   "$.state.set": 5,
+   "$.clock.every": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 10000
+   },
+   {
+    "kind": "every",
+    "ms": 3000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "agents-daemon-board": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "color": "red"
+        },
+        "children": [
+         "ボードを読めません: ",
+         "status --board の JSON を読めない"
+        ]
+       }
+      ]
+     },
+     "title": "Tasks"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(/Users/dev/.cache/agents-daemon/bin/agents-daemon park list --here --status open…) → exit 0",
+   "$.process.run(/Users/dev/.cache/agents-daemon/bin/agents-daemon board-log --session preview-se…) → exit 0",
+   "$.process.run(/Users/dev/.cache/agents-daemon/bin/agents-daemon status --board --session previ…) → exit 0",
+   "$.process.run(/Users/dev/.cache/agents-daemon/bin/agents-daemon board-log --session preview-se…) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "$.process.run(/Users/dev/.cache/agents-daemon/bin/agents-daemon park list --here --status open…) → exit 0",
+   "turn.complete",
+   "$.process.run(/Users/dev/.cache/agents-daemon/bin/agents-daemon status --board --session previ…) → exit 0",
+   "$.process.run(/Users/dev/.cache/agents-daemon/bin/agents-daemon board-log --session preview-se…) → exit 0",
+   "$.ui.open(agents-daemon-board)",
+   "/board → agents-daemon のボードを開きました。"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": false,
+  "errors": [
+   "Path is a file; skills entries must be directories containing SKILL.md: ./skills/agents-daemon",
+   "Path is a file; skills entries must be directories containing SKILL.md: ./skills/setup",
+   "Path is a file; skills entries must be directories containing SKILL.md: ./skills/peer-sessions",
+   "Path is a file; skills entries must be directories containing SKILL.md: ./skills/dream"
+  ],
+  "warnings": [
+   "stood in for ./skills/agents-daemon, ./skills/setup, ./skills/peer-sessions, ./skills/dream: the capture holds the mod's own files, not the rest of its plugin"
+  ],
+  "hooks": [
+   "session.start",
+   "command.run{command=board}",
+   "ui.close",
+   "ui.render{component=Pane, requestId=agents-daemon-board}",
+   "tool.call{tool=mcp__agents-daemon__park}",
+   "turn.complete",
+   "ui.render{component=PromptHint}",
+   "tool.call{tool=TaskUpdate}",
+   "ui.render{component=AbovePrompt}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.command.register (via startBoard)",
+   "$.env.get (via daemonBin)",
+   "$.process.run (via bringForward",
+   "edge",
+   "loadBoard",
+   "logEvent",
+   "park",
+   "place",
+   "refreshStatus)",
+   "$.session.cwd (via bringForward",
+   "loadBoard",
+   "logEvent",
+   "park",
+   "place",
+   "refreshStatus)",
+   "$.session.id",
+   "$.session.send (via deliver",
+   "handOff)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register (via startPark)",
+   "$.ui.close",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "agents-daemon.board",
+   "agents-daemon.error",
+   "agents-daemon.front",
+   "agents-daemon.logged",
+   "agents-daemon.notice",
+   "agents-daemon.parked",
+   "agents-daemon.picking",
+   "agents-daemon.showCompleted",
+   "agents-daemon.target",
+   "agents-daemon.unfolded"
+  ],
+  "stateWrites": [
+   "agents-daemon.board",
+   "agents-daemon.error",
+   "agents-daemon.front",
+   "agents-daemon.logged",
+   "agents-daemon.notice",
+   "agents-daemon.parked",
+   "agents-daemon.picking",
+   "agents-daemon.showCompleted",
+   "agents-daemon.target",
+   "agents-daemon.unfolded"
+  ],
+  "envReads": [
+   "HOME",
+   "XDG_CACHE_HOME"
+  ],
+  "raw": {
+   "success": false,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/usadamasa-agents-daemon/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/usadamasa-agents-daemon/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [
+     {
+      "path": "skills[0]",
+      "message": "Path is a file; skills entries must be directories containing SKILL.md: ./skills/agents-daemon",
+      "code": null
+     },
+     {
+      "path": "skills[1]",
+      "message": "Path is a file; skills entries must be directories containing SKILL.md: ./skills/setup",
+      "code": null
+     },
+     {
+      "path": "skills[2]",
+      "message": "Path is a file; skills entries must be directories containing SKILL.md: ./skills/peer-sessions",
+      "code": null
+     },
+     {
+      "path": "skills[3]",
+      "message": "Path is a file; skills entries must be directories containing SKILL.md: ./skills/dream",
+      "code": null
+     }
+    ],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: agents-daemon.board, agents-daemon.error, agents-daemon.target, agents-daemon.unfolded, agents-daemon.picking, agents-daemon.notice, agents-daemon.parked, agents-daemon.front, agents-daemon.showCompleted, agents-daemon.logged"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/usadamasa-agents-daemon/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.ts hooks: session.start, command.run{command=board}, ui.close, ui.render{component=Pane, requestId=agents-daemon-board}, tool.call{tool=mcp__agents-daemon__park}, turn.complete, ui.render{component=PromptHint}, tool.call{tool=TaskUpdate}, ui.render{component=AbovePrompt}",
+      "./register.ts answers its own command: command.run{command=board}",
+      "./register.ts gating hook without .catch: ui.close",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__agents-daemon__park}",
+      "./register.ts gating hook without .catch: tool.call{tool=TaskUpdate}",
+      "./register.ts calls: $.clock.every, $.command.register (via startBoard), $.env.get (via daemonBin), $.process.run (via bringForward, edge, loadBoard, logEvent, park, place, refreshStatus), $.session.cwd (via bringForward, loadBoard, logEvent, park, place, refreshStatus), $.session.id, $.session.send (via deliver, handOff), $.state.get, $.state.set, $.tool.register (via startPark), $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.ts env writes: nothing",
+      "./register.ts env reads: HOME, XDG_CACHE_HOME",
+      "./register.ts state writes: agents-daemon.board, agents-daemon.error, agents-daemon.front, agents-daemon.logged, agents-daemon.notice, agents-daemon.parked, agents-daemon.picking, agents-daemon.showCompleted, agents-daemon.target, agents-daemon.unfolded",
+      "./register.ts state reads: agents-daemon.board, agents-daemon.error, agents-daemon.front, agents-daemon.logged, agents-daemon.notice, agents-daemon.parked, agents-daemon.picking, agents-daemon.showCompleted, agents-daemon.target, agents-daemon.unfolded"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__agents-daemon__park}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=TaskUpdate}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "e0b3c72dd803d605"
+}

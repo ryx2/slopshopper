@@ -1,19 +1,94 @@
 {
  "slug": "numikel-cc-over-cc-over",
- "generatedAt": "2026-10-18T13:55:46.263Z",
+ "generatedAt": "2026-10-19T16:27:52.466Z",
  "harness": {
   "ok": true,
-  "hooks": [],
-  "commands": [],
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "over"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "over"
+    }
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "notice"
+    }
+   },
+   {
+    "event": "ui.close"
+   }
+  ],
+  "commands": [
+   {
+    "name": "over",
+    "description": "Hand the work over to another local session: /over <intent> previews and sends a bundle; --list, --send <session>, --no-fork",
+    "argumentHint": "<intent> | --list | --send <session> | --no-fork <intent>"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
-  "logs": [],
+  "logs": [
+   "Usage: /over <intent> · /over --no-fork <intent> · /over --list · /over --send <session>"
+  ],
   "denies": [],
   "rewrites": [],
-  "apiCalls": {},
+  "apiCalls": {
+   "$.clock.now": 2,
+   "$.command.register": 1,
+   "$.ui.log": 1,
+   "$.ui.resolve": 1
+  },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "Pane": {
+    "over": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No hand-off in progress. Type /over <intent>."
+        ]
+       },
+       {
+        "type": "Button",
+        "props": {
+         "key": "close",
+         "label": "Close",
+         "onPress": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "over"
+    }
+   }
+  },
   "script": [
    "session.start",
    "tool.call Read",
@@ -25,7 +100,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/over → "
   ],
   "console": [],
   "warnings": []
@@ -35,10 +111,36 @@
   "errors": [],
   "warnings": [],
   "hooks": [
-   "nothing"
+   "session.start",
+   "classic.SessionStart",
+   "command.run{command=over}",
+   "ui.render{component=Pane, requestId=over}",
+   "session.append{door=notice}",
+   "ui.close"
   ],
   "calls": [
-   "nothing on $"
+   "$.clock.now",
+   "$.command.register (via registerCommand)",
+   "$.config.list (via configuredMode)",
+   "$.model.fork (via composeContent)",
+   "$.process.run (via runGit)",
+   "$.session.id (via composeBundle)",
+   "$.session.root (via composeBundle)",
+   "$.session.send (via deliver)",
+   "$.session.surfaces (via openPane)",
+   "$.tool.call (via listTargets)",
+   "$.ui.close (via paneAction)",
+   "$.ui.invalidate (via observeNotice",
+   "paneAction",
+   "runCompose",
+   "sendDraft)",
+   "$.ui.log",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve (via renderPane)",
+   "$.ui.toast (via observeNotice",
+   "panePress",
+   "registerCommand",
+   "sendDraft)"
   ],
   "stateReads": [],
   "stateWrites": [],
@@ -62,14 +164,44 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: nothing",
-      "./register.ts calls: nothing on $"
+      "./register.ts hooks: session.start, classic.SessionStart, command.run{command=over}, ui.render{component=Pane, requestId=over}, session.append{door=notice}, ui.close",
+      "./register.ts hooks on classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook with .catch: classic.SessionStart",
+      "./register.ts gating hook with .catch: command.run{command=over}",
+      "./register.ts gating hook with .catch: session.append{door=notice}",
+      "./register.ts gating hook with .catch: ui.close",
+      "./register.ts calls: $.clock.now, $.command.register (via registerCommand), $.config.list (via configuredMode), $.model.fork (via composeContent), $.process.run (via runGit), $.session.id (via composeBundle), $.session.root (via composeBundle), $.session.send (via deliver), $.session.surfaces (via openPane), $.tool.call (via listTargets), $.ui.close (via paneAction), $.ui.invalidate (via observeNotice, paneAction, runCompose, sendDraft), $.ui.log, $.ui.open (via openPane), $.ui.resolve (via renderPane), $.ui.toast (via observeNotice, panePress, registerCommand, sendDraft)"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=over}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.append",
+       "hook": "session.append{door=notice}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": true
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "c268fbadeaff7d3c"
+ "sourceHash": "302ab729e3a16807"
 }

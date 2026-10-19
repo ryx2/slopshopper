@@ -1,0 +1,8 @@
+{
+ "slug": "santheepg-claude-mods-safe-shell",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nconst DEMO_MARKER = '__SAFE_SHELL_DEMO__'\n\nexport const register: Register = on => {\n  on('tool.check', { tool: 'Bash' }, ($, event, next) => {\n    const input = event.input as { command?: unknown }\n    if (typeof input.command !== 'string' || !input.command.includes(DEMO_MARKER)) {\n      return next(event)\n    }\n\n    return {\n      decision: 'ask',\n      reason: 'Safe Shell demo caught this harmless marked command. Review it before it runs.',\n    }\n  }).catch(() => ({\n    decision: 'deny',\n    reason: 'Safe Shell could not inspect the demo command.',\n  }))\n}\n",
+  "hooks/hooks.json": "{\n  \"description\": \"Safe Shell demonstration hooks\",\n  \"modules\": [\"./register.ts\"]\n}\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"safe-shell\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Demonstrates a shell-command confirmation gate with a harmless marker\",\n  \"author\": {\n    \"name\": \"Brad Traversy\"\n  }\n}"
+ }
+}

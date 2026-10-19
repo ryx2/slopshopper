@@ -1,33 +1,60 @@
 {
  "slug": "funnyq-cc-plugins-guard",
- "generatedAt": "2026-10-06T05:27:52.287Z",
+ "generatedAt": "2026-10-19T16:26:39.187Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
+    "event": "session.start"
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "guard:comment-reviewer"
+    }
+   },
+   {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Agent"
+    }
+   },
+   {
     "event": "tool.call",
     "matcher": {
-     "tool": [
-      "Edit",
-      "Write"
-     ]
+     "tool": "SubagentHandback"
     }
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
    }
   ],
   "commands": [],
   "tools": [],
   "panes": [],
-  "toasts": [],
+  "toasts": [
+   "🔎 comment-reviewer: no reviewer, cannot read /plugins/guard/agents/comments-reaper.md: Error: ENOENT: no such file /plugins/guard/agents/comments-reaper.md"
+  ],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.fs.read": 3
+   "$.fs.read": 1,
+   "$.ui.toast": 1,
+   "$.state.get": 3,
+   "$.session.id": 1,
+   "$.session.cwd": 1,
+   "$.process.run": 1,
+   "$.state.set": 1
   },
   "timers": [],
   "sites": {},
   "script": [
    "session.start",
+   "turn.start: hook threw undefined is not an object (evaluating 'e.text.includes')",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -37,6 +64,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.process.run(bun /plugins/guard/hooks/comment-sweep.ts sweep --json) → exit 0",
+   "turn.complete: hook threw JSON Parse error: Unexpected identifier \"dev\" (after next)",
    "turn.complete"
   ],
   "console": [],
@@ -47,50 +76,93 @@
   "errors": [],
   "warnings": [],
   "hooks": [
-   "tool.call{tool=Edit|Write}"
+   "session.start",
+   "agent.offer{agent=?}",
+   "tool.check{tool=Agent}",
+   "tool.call{tool=SubagentHandback}",
+   "turn.start",
+   "turn.complete"
   ],
   "calls": [
-   "$.clock.after",
-   "$.env.get",
-   "$.fs.exists",
+   "$.agent.list",
+   "$.agent.register",
+   "$.agent.spawn",
+   "$.clock.now",
    "$.fs.read",
-   "$.fs.write",
-   "$.http.fetch",
-   "$.session.id",
+   "$.process.run (via runSweep)",
+   "$.prompt.submit",
+   "$.session.cwd (via runSweep)",
+   "$.session.id (via runSweep)",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.status",
    "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
-  "envReads": [
-   "GUARD_STATE_DIR",
-   "TYPESAFE_API_KEY"
+  "stateReads": [
+   "guard.carry",
+   "guard.ownTurn",
+   "guard.review"
   ],
+  "stateWrites": [
+   "guard.carry",
+   "guard.ownTurn",
+   "guard.review"
+  ],
+  "envReads": [],
   "raw": {
    "success": true,
    "strict": false,
-   "target": "/Users/raymondxu/slopshopper-mods/.cache/src/funnyq-cc-plugins-guard/.claude-plugin/plugin.json",
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/funnyq-cc-plugins-guard/.claude-plugin/plugin.json",
    "manifest": {
-    "file": "/Users/raymondxu/slopshopper-mods/.cache/src/funnyq-cc-plugins-guard/.claude-plugin/plugin.json",
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/funnyq-cc-plugins-guard/.claude-plugin/plugin.json",
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": []
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: guard.review, guard.carry, guard.ownTurn"
+    ],
+    "gatingHooks": []
    },
    "contents": [
     {
-     "file": "/Users/raymondxu/slopshopper-mods/.cache/src/funnyq-cc-plugins-guard/hooks/hooks.json",
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/funnyq-cc-plugins-guard/hooks/hooks.json",
      "type": "hooks",
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: tool.call{tool=Edit|Write}",
-      "./register.ts calls: $.clock.after, $.env.get, $.fs.exists, $.fs.read, $.fs.write, $.http.fetch, $.session.id, $.ui.toast",
-      "./register.ts env writes: nothing",
-      "./register.ts env reads: GUARD_STATE_DIR, TYPESAFE_API_KEY"
+      "./register.ts hooks: session.start, agent.offer{agent=?}, tool.check{tool=Agent}, tool.call{tool=SubagentHandback}, turn.start, turn.complete",
+      "./register.ts gating hook with .catch: agent.offer{agent=?}",
+      "./register.ts gating hook without .catch: tool.check{tool=Agent}",
+      "./register.ts gating hook without .catch: tool.call{tool=SubagentHandback}",
+      "./register.ts calls: $.agent.list, $.agent.register, $.agent.spawn, $.clock.now, $.fs.read, $.process.run (via runSweep), $.prompt.submit, $.session.cwd (via runSweep), $.session.id (via runSweep), $.state.get, $.state.set, $.ui.status, $.ui.toast",
+      "./register.ts state writes: guard.carry, guard.ownTurn, guard.review",
+      "./register.ts state reads: guard.carry, guard.ownTurn, guard.review"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "agent.offer",
+       "hook": "agent.offer{agent=?}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Agent}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=SubagentHandback}",
+       "hasCatch": false
+      }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "10d466b539458c71"
+ "sourceHash": "e83d4d3d49b394cb"
 }

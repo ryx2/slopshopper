@@ -1,6 +1,6 @@
 {
  "slug": "bharath-gp-ai-harness-guardrails",
- "generatedAt": "2026-10-18T13:55:09.278Z",
+ "generatedAt": "2026-10-19T16:27:06.860Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -86,6 +86,19 @@
      "component": "Pane",
      "requestId": "critique"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "sharpen"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "coach"
+    }
    }
   ],
   "commands": [
@@ -108,10 +121,19 @@
     "name": "critique",
     "description": "Critique the last answer: /critique [auto|opus|sonnet|haiku|session]",
     "output": "Critiquing with session."
+   },
+   {
+    "name": "sharpen",
+    "description": "Interview you to turn a prompt into a better one: /sharpen <prompt>",
+    "output": "Usage: /sharpen <prompt>"
    }
   ],
   "tools": [],
   "panes": [
+   {
+    "id": "coach",
+    "title": "Prompt coach"
+   },
    {
     "id": "critique",
     "title": "Critique"
@@ -125,18 +147,30 @@
     "reason": "guardrails: user cancelled (delete)."
    }
   ],
-  "rewrites": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "dropped: prompt-coach: answer the interview, then pick Use or Dismiss."
+   }
+  ],
   "apiCalls": {
-   "$.command.register": 4,
-   "$.model.complete": 3,
+   "$.command.register": 5,
+   "$.model.complete": 4,
+   "$.session.id": 1,
+   "$.state.get": 1,
+   "$.state.set": 1,
+   "$.ui.open": 2,
+   "$.session.root": 1,
+   "$.fs.exists": 1,
+   "$.fs.read": 1,
+   "$.fs.list": 1,
+   "$.ui.invalidate": 5,
+   "$.ui.resolve": 7,
+   "$.session.model": 2,
    "$.session.cwd": 1,
    "$.fs.stat": 1,
    "$.process.run": 1,
-   "$.ui.ask": 1,
-   "$.ui.invalidate": 3,
-   "$.ui.open": 1,
-   "$.ui.resolve": 3,
-   "$.session.model": 1
+   "$.ui.ask": 1
   },
   "timers": [],
   "sites": {
@@ -144,6 +178,116 @@
     "ok": "engine"
    },
    "Pane": {
+    "coach": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#c084fc"
+          },
+          "children": [
+           "Prompt coach"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "#8b8f98"
+          },
+          "children": [
+           "Question 1 of 10"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "err",
+         "flexDirection": "row",
+         "borderStyle": "round",
+         "borderColor": "#30343c",
+         "backgroundColor": "#212226"
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "width": 1,
+           "backgroundColor": "#e06c75"
+          },
+          "children": []
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column",
+           "paddingX": 1,
+           "flexGrow": 1,
+           "flexShrink": 1
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "wrap"
+            },
+            "children": [
+             "Could not get a question (unparseable reply)"
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "",
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "retry",
+           "label": "Retry",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "dismiss",
+           "label": "Dismiss (send original)",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Prompt coach"
+    },
     "critique": {
      "ok": true,
      "tree": {
@@ -276,6 +420,7 @@
   },
   "script": [
    "session.start",
+   "$.ui.open(coach)",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -292,7 +437,8 @@
    "/reflect-pause → reflect paused.",
    "/assumptions → No assumptions recorded for the last turn.",
    "$.ui.open(critique)",
-   "/critique → Critiquing with session."
+   "/critique → Critiquing with session.",
+   "/sharpen → Usage: /sharpen <prompt>"
   ],
   "console": [],
   "warnings": []
@@ -318,38 +464,56 @@
    "turn.complete",
    "ui.render{component=Pane, requestId=assumptions}",
    "command.run{command=critique}",
-   "ui.render{component=Pane, requestId=critique}"
+   "ui.render{component=Pane, requestId=critique}",
+   "command.run{command=sharpen}",
+   "ui.render{component=Pane, requestId=coach}"
   ],
   "calls": [
    "$.command.register (via assumptionTrackerSessionStart",
+   "promptCoachSessionStart",
    "reflectSessionStart",
    "selfCritiqueSessionStart)",
    "$.env.get (via save)",
-   "$.fs.exists (via save)",
-   "$.fs.list (via collect)",
-   "$.fs.read (via save)",
+   "$.fs.exists (via coachContext",
+   "save)",
+   "$.fs.list (via coachContext",
+   "collect)",
+   "$.fs.read (via coachContext",
+   "save)",
    "$.fs.stat (via assess",
    "collect)",
    "$.fs.write (via save)",
    "$.model.complete (via assumptionTrackerTurnComplete",
+   "coachAsk",
+   "coachDraft",
    "reflectPromptSubmit",
    "run)",
    "$.process.run (via assess)",
    "$.prompt.submit",
    "$.session.cwd (via assess)",
-   "$.session.model (via run)",
-   "$.session.root (via save)",
+   "$.session.id (via promptCoachPromptSubmit)",
+   "$.session.model (via coachAsk",
+   "coachDraft",
+   "run)",
+   "$.session.root (via coachContext",
+   "save)",
+   "$.state.get (via promptCoachPromptSubmit)",
+   "$.state.set (via promptCoachPromptSubmit)",
    "$.ui.ask",
    "$.ui.close",
+   "$.ui.copy",
    "$.ui.invalidate",
    "$.ui.open",
    "$.ui.resolve",
    "$.ui.status (via guard)",
-   "$.ui.toast (via guard",
-   "save)"
+   "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "guardrails.coached"
+  ],
+  "stateWrites": [
+   "guardrails.coached"
+  ],
   "envReads": [
    "HOME"
   ],
@@ -368,7 +532,10 @@
       "code": null
      }
     ],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: guardrails.coached"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -378,19 +545,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.call{tool=Bash}, ui.render{component=AskUserQuestion}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}, session.start, command.run{command=reflect-queue}, command.run{command=reflect-pause}, prompt.submit, ui.render{component=AbovePrompt}, command.run{command=assumptions}, turn.complete, ui.render{component=Pane, requestId=assumptions}, command.run{command=critique}, ui.render{component=Pane, requestId=critique}",
+      "./register.tsx hooks: tool.call{tool=Bash}, ui.render{component=AskUserQuestion}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}, session.start, command.run{command=reflect-queue}, command.run{command=reflect-pause}, prompt.submit, ui.render{component=AbovePrompt}, command.run{command=assumptions}, turn.complete, ui.render{component=Pane, requestId=assumptions}, command.run{command=critique}, ui.render{component=Pane, requestId=critique}, command.run{command=sharpen}, ui.render{component=Pane, requestId=coach}",
       "./register.tsx answers its own command: command.run{command=reflect-queue}",
       "./register.tsx answers its own command: command.run{command=reflect-pause}",
       "./register.tsx answers its own command: command.run{command=assumptions}",
       "./register.tsx answers its own command: command.run{command=critique}",
+      "./register.tsx answers its own command: command.run{command=sharpen}",
       "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
       "./register.tsx gating hook with .catch: tool.call{tool=Write}",
       "./register.tsx gating hook with .catch: tool.call{tool=Edit}",
       "./register.tsx gating hook with .catch: tool.call{tool=NotebookEdit}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.command.register (via assumptionTrackerSessionStart, reflectSessionStart, selfCritiqueSessionStart), $.env.get (via save), $.fs.exists (via save), $.fs.list (via collect), $.fs.read (via save), $.fs.stat (via assess, collect), $.fs.write (via save), $.model.complete (via assumptionTrackerTurnComplete, reflectPromptSubmit, run), $.process.run (via assess), $.prompt.submit, $.session.cwd (via assess), $.session.model (via run), $.session.root (via save), $.ui.ask, $.ui.close, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status (via guard), $.ui.toast (via guard, save)",
+      "./register.tsx calls: $.command.register (via assumptionTrackerSessionStart, promptCoachSessionStart, reflectSessionStart, selfCritiqueSessionStart), $.env.get (via save), $.fs.exists (via coachContext, save), $.fs.list (via coachContext, collect), $.fs.read (via coachContext, save), $.fs.stat (via assess, collect), $.fs.write (via save), $.model.complete (via assumptionTrackerTurnComplete, coachAsk, coachDraft, reflectPromptSubmit, run), $.process.run (via assess), $.prompt.submit, $.session.cwd (via assess), $.session.id (via promptCoachPromptSubmit), $.session.model (via coachAsk, coachDraft, run), $.session.root (via coachContext, save), $.state.get (via promptCoachPromptSubmit), $.state.set (via promptCoachPromptSubmit), $.ui.ask, $.ui.close, $.ui.copy, $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.status (via guard), $.ui.toast",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME"
+      "./register.tsx env reads: HOME",
+      "./register.tsx state writes: guardrails.coached",
+      "./register.tsx state reads: guardrails.coached"
      ],
      "gatingHooks": [
       {
@@ -429,5 +599,5 @@
    "advice": []
   }
  },
- "sourceHash": "ea5fae2eb9a079e5"
+ "sourceHash": "eb31d1b8f3518ecf"
 }

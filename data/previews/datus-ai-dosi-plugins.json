@@ -1,6 +1,6 @@
 {
  "slug": "datus-ai-dosi-plugins",
- "generatedAt": "2026-10-16T14:19:12.385Z",
+ "generatedAt": "2026-10-19T16:27:13.124Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,17 +14,40 @@
     }
    },
    {
+    "event": "tool.call"
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "dosi"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "dosi-lineage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult"
     }
    }
   ],
   "commands": [
    {
     "name": "dosi",
-    "description": "Dosi: where this project stands and the next step",
-    "output": "dosi · ready (stage S0)\nnext: ask me a data question"
+    "description": "Dosi: connection, model, metrics and the next step; /dosi lineage opens the lineage pane",
+    "argumentHint": "[lineage [metric] | metrics | refresh]",
+    "output": "dosi · stage S0\nconnection  none yet · found .env\nmodel       none yet\nontology    —\nnext        ask a data question\nmore        /dosi lineage [metric] · /dosi metrics · /dosi refresh"
    }
   ],
   "tools": [],
@@ -35,13 +58,130 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.process.run": 3,
-   "$.ui.status": 1
+   "$.session.root": 7,
+   "$.fs.stat": 6,
+   "$.process.run": 5,
+   "$.state.get": 11,
+   "$.state.set": 3,
+   "$.fs.exists": 2,
+   "$.fs.list": 1,
+   "$.ui.status": 2,
+   "$.ui.resolve": 2
   },
   "timers": [],
-  "sites": {},
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "row",
+      "gap": 1
+     },
+     "children": [
+      {
+       "type": "Text",
+       "props": {
+        "color": "claude"
+       },
+       "children": [
+        "dosi"
+       ]
+      },
+      {
+       "type": "Text",
+       "props": {
+        "wrap": "truncate-end"
+       },
+       "children": [
+        "found ",
+        ".env"
+       ]
+      },
+      {
+       "type": "Button",
+       "props": {
+        "key": "connect",
+        "label": "Connect",
+        "hotkey": "c",
+        "variant": "primary",
+        "onPress": "[fn]"
+       },
+       "children": []
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "dosi-lineage": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "tabs",
+         "flexDirection": "row",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-lineage",
+           "label": "Lineage",
+           "hotkey": "l",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-metrics",
+           "label": "Metrics",
+           "hotkey": "m",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-issues",
+           "label": "Issues",
+           "hotkey": "i",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No semantic model yet. Ask a data question, or say \"build a semantic model\"."
+        ]
+       }
+      ]
+     },
+     "title": "dosi-lineage"
+    }
+   }
+  },
   "script": [
    "$.process.run(sh /plugins/dosi/bin/dosi-progress stage) → exit 0",
+   "$.process.run(sh /plugins/dosi/bin/dosi-progress peek) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -55,10 +195,11 @@
    "turn.complete",
    "$.process.run(sh /plugins/dosi/bin/dosi-progress stage) → exit 0",
    "$.process.run(sh /plugins/dosi/bin/dosi-progress peek) → exit 0",
-   "/dosi → dosi · ready (stage S0)\nnext: ask me a data question"
+   "$.process.run(sh /plugins/dosi/bin/dosi-progress peek) → exit 0",
+   "/dosi → dosi · stage S0\nconnection  none yet · found .env\nmodel       none yet\nontology …"
   ],
   "console": [],
-  "status": "dosi",
+  "status": "dosi · not connected",
   "warnings": []
  },
  "validate": {
@@ -70,15 +211,46 @@
   "hooks": [
    "session.start",
    "tool.call{tool=Bash}",
-   "command.run{command=dosi}"
+   "tool.call",
+   "command.run{command=dosi}",
+   "ui.render{component=Pane, requestId=dosi-lineage}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=ToolResult}"
   ],
   "calls": [
    "$.command.register",
-   "$.process.run (via progress)",
-   "$.ui.status"
+   "$.fs.exists (via sources)",
+   "$.fs.list (via sources)",
+   "$.fs.read (via refresh)",
+   "$.fs.stat (via mtime)",
+   "$.process.run",
+   "$.prompt.submit",
+   "$.session.root",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.status (via sync)",
+   "$.ui.toast"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "dosi.calls",
+   "dosi.facts",
+   "dosi.focus",
+   "dosi.graph",
+   "dosi.htmlPath",
+   "dosi.isSqlOpen",
+   "dosi.tab"
+  ],
+  "stateWrites": [
+   "dosi.calls",
+   "dosi.facts",
+   "dosi.focus",
+   "dosi.graph",
+   "dosi.htmlPath",
+   "dosi.isSqlOpen",
+   "dosi.tab"
+  ],
   "envReads": [],
   "raw": {
    "success": true,
@@ -95,7 +267,10 @@
       "code": null
      }
     ],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: dosi.facts, dosi.graph, dosi.calls, dosi.tab, dosi.focus, dosi.htmlPath, dosi.isSqlOpen"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -105,16 +280,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, tool.call{tool=Bash}, command.run{command=dosi}",
-      "./register.ts answers its own command: command.run{command=dosi}",
-      "./register.ts gating hook with .catch: tool.call{tool=Bash}",
-      "./register.ts calls: $.command.register, $.process.run (via progress), $.ui.status"
+      "./register.tsx hooks: session.start, tool.call{tool=Bash}, tool.call, command.run{command=dosi}, ui.render{component=Pane, requestId=dosi-lineage}, ui.render{component=AbovePrompt}, ui.render{component=ToolResult}",
+      "./register.tsx answers its own command: command.run{command=dosi}",
+      "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx calls: $.command.register, $.fs.exists (via sources), $.fs.list (via sources), $.fs.read (via refresh), $.fs.stat (via mtime), $.process.run, $.prompt.submit, $.session.root, $.state.get, $.state.set, $.ui.open (via openPane), $.ui.resolve, $.ui.status (via sync), $.ui.toast",
+      "./register.tsx state writes: dosi.calls, dosi.facts, dosi.focus, dosi.graph, dosi.htmlPath, dosi.isSqlOpen, dosi.tab",
+      "./register.tsx state reads: dosi.calls, dosi.facts, dosi.focus, dosi.graph, dosi.htmlPath, dosi.isSqlOpen, dosi.tab"
      ],
      "gatingHooks": [
       {
-       "module": "./register.ts",
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
        "hasCatch": true
       }
      ]
@@ -123,5 +307,5 @@
    "advice": []
   }
  },
- "sourceHash": "4dc2c954e1b2d655"
+ "sourceHash": "ba7a9a3d4a6f5755"
 }

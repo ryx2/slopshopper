@@ -1,6 +1,6 @@
 {
  "slug": "rube-de-cc-skills-mods-toolbox",
- "generatedAt": "2026-10-16T14:15:57.102Z",
+ "generatedAt": "2026-10-19T16:26:05.530Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -52,6 +52,30 @@
     "event": "ui.render",
     "matcher": {
      "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "command.run"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Skill"
+    }
+   },
+   {
+    "event": "skill.prompt"
+   },
+   {
+    "event": "turn.complete",
+    "matcher": {
+     "reason": "/^/"
+    }
+   },
+   {
+    "event": "session.end",
+    "matcher": {
+     "reason": "/^/"
     }
    },
    {
@@ -299,8 +323,8 @@
    "$.env.get": 10,
    "$.session.root": 3,
    "$.settings.read": 4,
-   "$.fs.exists": 16,
-   "$.state.get": 104,
+   "$.fs.exists": 17,
+   "$.state.get": 106,
    "$.state.set": 38,
    "$.config.list": 1,
    "$.session.model": 1,
@@ -598,6 +622,7 @@
            "props": {
             "key": "sl-block-folder",
             "plain": true,
+            "autoFocus": true,
             "dimColor": false,
             "label": " Folder ",
             "onPress": "[fn]"
@@ -777,6 +802,28 @@
             "onPress": "[fn]"
            },
            "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-cache",
+            "plain": true,
+            "dimColor": true,
+            "label": " Prompt cache ",
+            "onPress": "[fn]"
+           },
+           "children": []
+          },
+          {
+           "type": "Button",
+           "props": {
+            "key": "sl-block-skill",
+            "plain": true,
+            "dimColor": true,
+            "label": " Skill ",
+            "onPress": "[fn]"
+           },
+           "children": []
           }
          ]
         },
@@ -931,7 +978,7 @@
             "color": "#8B90A0"
            },
            "children": [
-            "ctrl+x tab, then the keys"
+            "click the Dock, then the keys · other keys go to the prompt"
            ]
           }
          ]
@@ -1515,6 +1562,11 @@
    "command.run{command=status-dock}",
    "ui.press{plugin=mods-toolbox, component=AbovePrompt, element=toolbox-status-line}",
    "ui.render{component=AbovePrompt}",
+   "command.run",
+   "tool.call{tool=Skill}",
+   "skill.prompt",
+   "turn.complete{reason=/\"^\"/}",
+   "session.end{reason=/\"^\"/}",
    "session.start{isInteractive=true}",
    "classic.Stop{cwd=/\"^\"/}",
    "command.run{command=model}",
@@ -1533,9 +1585,8 @@
    "session.end",
    "ui.close{id=agent-dock}",
    "ui.render{component=Pane, requestId=agent-dock}",
-   "ui.press{plugin=mods-toolbox, component=AbovePrompt, element=/\"^(size-|model-|big-|custom-|toolbox-dock$)\"/}",
-   "ui.input{plugin=mods-toolbox",
-   "componen… [+492 chars]"
+   "ui.press{plugin=mods-toolbox",
+   "component=Ab… [+598 chars]"
   ],
   "calls": [
    "$.agent.list (via activeAgents",
@@ -1555,8 +1606,9 @@
    "readCountFolder",
    "readLimits)",
    "$.fs.exists (via readText",
-   "sweepCaptures",
-   "sweepCountFiles)",
+   "sweepCountFiles",
+   "sweepDayOld",
+   "writeSkill)",
    "$.fs.read (via keepRendererCurrent",
    "readText)",
    "$.fs.write (via apply",
@@ -1564,18 +1616,20 @@
    "keepRendererCurrent",
    "retireAgentDockLine",
    "uninstall",
-   "writeCount)",
+   "writeCount",
+   "writeSkill)",
    "$.model.complete (via askForTitle)",
    "$.process.run (via isGitIgnored",
    "remove",
    "removeFile",
    "runPreview",
-   "sweepCaptures",
    "sweepCountFiles",
+   "sweepDayOld",
    "waitForSlot)",
    "$.session.cwd (via runPreview)",
    "$.session.id (via runPreview",
-   "writeCount)",
+   "writeCount",
+   "writeSkill)",
    "$.session.model (via drawPopup",
    "refreshModel",
    "runPreview",
@@ -1583,8 +1637,7 @@
    "$.session.root (via currentPaths)",
    "$.session.usage (via runPreview)",
    "$.session.version (via runPreview)",
-   "$.settings.read (via followModel",
-   "loadPic… [+331 chars]"
+   "$.setting… [+363 chars]"
   ],
   "stateReads": [
    "mods-toolbox.bandView",
@@ -1610,6 +1663,7 @@
    "mods-toolbox.statusLineScope",
    "mods-toolbox.statusLineSelected",
    "mods-toolbox.statusLineSetup",
+   "mods-toolbox.statusLineSkill",
    "mods-toolbox.tick"
   ],
   "stateWrites": [
@@ -1636,6 +1690,7 @@
    "mods-toolbox.statusLineScope",
    "mods-toolbox.statusLineSelected",
    "mods-toolbox.statusLineSetup",
+   "mods-toolbox.statusLineSkill",
    "mods-toolbox.tick"
   ],
   "envReads": [
@@ -1661,7 +1716,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: mods-toolbox.cleanViewEnabled, mods-toolbox.checklist, mods-toolbox.tick, mods-toolbox.dockTeamSize, mods-toolbox.dockHelperModel, mods-toolbox.dockPendingSize, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockTick, mods-toolbox.bandView, mods-toolbox.statusLineSetup, mods-toolbox.statusLineScope, mods-toolbox.statusLineDrafts, mods-toolbox.statusLineSelected, mods-toolbox.statusLineConfirm, mods-toolbox.statusLinePreview, mods-toolbox.chatModelOptions, mods-toolbox.chatModel, mods-toolbox.chatEffort, mods-toolbox.chatModelPending, mods-toolbox.chatEffortPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending"
+     "types ./types/index.d.ts declares state: mods-toolbox.cleanViewEnabled, mods-toolbox.checklist, mods-toolbox.tick, mods-toolbox.dockTeamSize, mods-toolbox.dockHelperModel, mods-toolbox.dockPendingSize, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockTick, mods-toolbox.bandView, mods-toolbox.statusLineSetup, mods-toolbox.statusLineScope, mods-toolbox.statusLineDrafts, mods-toolbox.statusLineSelected, mods-toolbox.statusLineConfirm, mods-toolbox.statusLinePreview, mods-toolbox.statusLineSkill, mods-toolbox.chatModelOptions, mods-toolbox.chatModel, mods-toolbox.chatEffort, mods-toolbox.chatModelPending, mods-toolbox.chatEffortPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending"
     ],
     "gatingHooks": []
    },
@@ -1672,12 +1727,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start{surface=/\"^\"/}, command.run{command=toolbox}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, session.start{cwd=/\"\\\\/\"/}, command.run{command=status-dock}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=toolbox-status-line}, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, classic.Stop{cwd=/\"^\"/}, command.run{command=model}, config.set{key=model}, command.run{command=effort}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=?}, session.start{cwd=/\"^\"/}, command.run{command=dock}, prompt.submit, session.append{door=response}, tool.call{tool=Agent}, tool.call{tool=/\"__(report_progress|plan_steps)$\"/}, agent.spawn, turn.complete{turnId=/\"^\"/}, classic.Stop, session.end, ui.close{id=agent-dock}, ui.render{component=Pane, requestId=agent-dock}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=/\"^(size-|model-|big-|custom-|toolbox-dock$)\"/}, ui.input{plugin=mods-toolbox, componen… [+492 chars]",
-      "./register.tsx hooks on classic.Stop, prompt.compose, classic.UserPromptExpansion, classic.Notification, classic.PermissionRequest, classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start{surface=/\"^\"/}, command.run{command=toolbox}, ui.render{component=SessionMode}, ui.render{component=AbovePrompt}, session.start{cwd=/\"\\\\/\"/}, command.run{command=status-dock}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=toolbox-status-line}, ui.render{component=AbovePrompt}, command.run, tool.call{tool=Skill}, skill.prompt, turn.complete{reason=/\"^\"/}, session.end{reason=/\"^\"/}, session.start{isInteractive=true}, classic.Stop{cwd=/\"^\"/}, command.run{command=model}, config.set{key=model}, command.run{command=effort}, ui.press{plugin=mods-toolbox, component=AbovePrompt, element=?}, session.start{cwd=/\"^\"/}, command.run{command=dock}, prompt.submit, session.append{door=response}, tool.call{tool=Agent}, tool.call{tool=/\"__(report_progress|plan_steps)$\"/}, agent.spawn, turn.complete{turnId=/\"^\"/}, classic.Stop, session.end, ui.close{id=agent-dock}, ui.render{component=Pane, requestId=agent-dock}, ui.press{plugin=mods-toolbox, component=Ab… [+598 chars]",
+      "./register.tsx hooks on skill.prompt, classic.Stop, prompt.compose, classic.UserPromptExpansion, classic.Notification, classic.PermissionRequest, classic.StopFailure do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=toolbox}",
       "./register.tsx answers its own command: command.run{command=status-dock}",
       "./register.tsx answers its own command: command.run{command=dock}",
       "./register.tsx answers its own command: command.run{command=simple}",
+      "./register.tsx gating hook without .catch: command.run",
+      "./register.tsx gating hook without .catch: tool.call{tool=Skill}",
       "./register.tsx gating hook without .catch: classic.Stop{cwd=/\"^\"/}",
       "./register.tsx gating hook without .catch: command.run{command=model}",
       "./register.tsx gating hook without .catch: config.set{key=model}",
@@ -1694,13 +1751,25 @@
       "./register.tsx gating hook without .catch: classic.Notification",
       "./register.tsx gating hook without .catch: classic.PermissionRequest",
       "./register.tsx gating hook without .catch: classic.StopFailure",
-      "./register.tsx calls: $.agent.list (via activeAgents, agentStatuses, runningHelpers), $.clock.after, $.clock.every (via syncHelperWatch, syncPreviewTimer, syncTicker), $.clock.now, $.command.register, $.command.run (via switchEffort, switchModel, switchUltracode), $.config.list (via loadPicks), $.env.get (via currentPaths, readCountFolder, readLimits), $.fs.exists (via readText, sweepCaptures, sweepCountFiles), $.fs.read (via keepRendererCurrent, readText), $.fs.write (via apply, install, keepRendererCurrent, retireAgentDockLine, uninstall, writeCount), $.model.complete (via askForTitle), $.process.run (via isGitIgnored, remove, removeFile, runPreview, sweepCaptures, sweepCountFiles, waitForSlot), $.session.cwd (via runPreview), $.session.id (via runPreview, writeCount), $.session.model (via drawPopup, refreshModel, runPreview, switchModel), $.session.root (via currentPaths), $.session.usage (via runPreview), $.session.version (via runPreview), $.settings.read (via followModel, loadPic… [+331 chars]",
+      "./register.tsx calls: $.agent.list (via activeAgents, agentStatuses, runningHelpers), $.clock.after, $.clock.every (via syncHelperWatch, syncPreviewTimer, syncTicker), $.clock.now, $.command.register, $.command.run (via switchEffort, switchModel, switchUltracode), $.config.list (via loadPicks), $.env.get (via currentPaths, readCountFolder, readLimits), $.fs.exists (via readText, sweepCountFiles, sweepDayOld, writeSkill), $.fs.read (via keepRendererCurrent, readText), $.fs.write (via apply, install, keepRendererCurrent, retireAgentDockLine, uninstall, writeCount, writeSkill), $.model.complete (via askForTitle), $.process.run (via isGitIgnored, remove, removeFile, runPreview, sweepCountFiles, sweepDayOld, waitForSlot), $.session.cwd (via runPreview), $.session.id (via runPreview, writeCount, writeSkill), $.session.model (via drawPopup, refreshModel, runPreview, switchModel), $.session.root (via currentPaths), $.session.usage (via runPreview), $.session.version (via runPreview), $.setting… [+363 chars]",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY, CLAUDE_CONFIG_DIR, HOME",
-      "./register.tsx state writes: mods-toolbox.bandView, mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.statusLineConfirm, mods-toolbox.statusLineDrafts, mods-toolbox.statusLinePreview, mods-toolbox.statusLineScope, mods-toolbox.statusLineSelected, mods-toolbox.statusLineSetup, mods-toolbox.tick",
-      "./register.tsx state reads: mods-toolbox.bandView, mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.statusLineConfirm, mods-toolbox.statusLineDrafts, mods-toolbox.statusLinePreview, mods-toolbox.statusLineScope, mods-toolbox.statusLineSelected, mods-toolbox.statusLineSetup, mods-toolbox.tick"
+      "./register.tsx state writes: mods-toolbox.bandView, mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.statusLineConfirm, mods-toolbox.statusLineDrafts, mods-toolbox.statusLinePreview, mods-toolbox.statusLineScope, mods-toolbox.statusLineSelected, mods-toolbox.statusLineSetup, mods-toolbox.statusLineSkill, mods-toolbox.tick",
+      "./register.tsx state reads: mods-toolbox.bandView, mods-toolbox.chatEffort, mods-toolbox.chatEffortPending, mods-toolbox.chatModel, mods-toolbox.chatModelOptions, mods-toolbox.chatModelPending, mods-toolbox.chatUltracode, mods-toolbox.chatUltracodePending, mods-toolbox.checklist, mods-toolbox.cleanViewEnabled, mods-toolbox.dockHelperModel, mods-toolbox.dockIsCustomOpen, mods-toolbox.dockIsFolded, mods-toolbox.dockMission, mods-toolbox.dockPendingSize, mods-toolbox.dockTeamSize, mods-toolbox.dockTick, mods-toolbox.statusLineConfirm, mods-toolbox.statusLineDrafts, mods-toolbox.statusLinePreview, mods-toolbox.statusLineScope, mods-toolbox.statusLineSelected, mods-toolbox.statusLineSetup, mods-toolbox.statusLineSkill, mods-toolbox.tick"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Skill}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "classic.Stop",
@@ -1803,5 +1872,5 @@
    "advice": []
   }
  },
- "sourceHash": "63b963103938d31a"
+ "sourceHash": "1f008e72a157080a"
 }

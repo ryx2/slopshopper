@@ -1,6 +1,6 @@
 {
  "slug": "vaitar-claude-code-limits",
- "generatedAt": "2026-10-16T14:18:18.486Z",
+ "generatedAt": "2026-10-19T16:26:55.877Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -50,14 +50,23 @@
   "rewrites": [],
   "apiCalls": {
    "$.session.usage": 4,
-   "$.clock.now": 4,
-   "$.state.get": 15,
+   "$.clock.now": 6,
+   "$.state.get": 18,
    "$.state.set": 5,
    "$.session.id": 1,
    "$.process.run": 1,
+   "$.env.get": 4,
+   "$.clock.every": 1,
+   "$.fs.read": 2,
+   "$.fs.write": 2,
    "$.ui.resolve": 1
   },
-  "timers": [],
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 30000
+   }
+  ],
   "sites": {
    "AbovePrompt": {
     "ok": true,
@@ -290,7 +299,7 @@
           "position": "absolute",
           "top": 0,
           "left": 0,
-          "width": 23,
+          "width": 36,
           "display": "none",
           "hover": {
            "scope": "limits-quota-five_hour",
@@ -305,7 +314,7 @@
             "wrap": "truncate"
            },
            "children": [
-            "5h · 31% used, 69% left"
+            "5h · 31% used, 69% left · read 08:53"
            ]
           }
          ]
@@ -427,6 +436,7 @@
   "script": [
    "$.process.run(sh -c tail -c 400000 \"$HOME\"/.claude/projects/*/\"$1\".jsonl 2>/dev/null sh previe…) → exit 0",
    "session.start",
+   "$.fs.write(/Users/dev/.claude/state/limits/quota.json)",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -436,7 +446,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.fs.write(/Users/dev/.claude/state/limits/quota.json)"
   ],
   "console": [],
   "warnings": []
@@ -459,7 +470,11 @@
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
+   "$.clock.every",
    "$.clock.now",
+   "$.env.get (via quotaPath)",
+   "$.fs.read (via syncQuota)",
+   "$.fs.write (via syncQuota)",
    "$.process.run (via refreshSplit",
    "seedFromTranscript)",
    "$.session.id (via refreshSplit",
@@ -487,7 +502,10 @@
    "limits.split",
    "limits.usage"
   ],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -516,7 +534,9 @@
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: session.compact",
       "./register.tsx gating hook without .catch: agent.spawn",
-      "./register.tsx calls: $.clock.now, $.process.run (via refreshSplit, seedFromTranscript), $.session.id (via refreshSplit, seedFromTranscript), $.session.usage, $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.env.get (via quotaPath), $.fs.read (via syncQuota), $.fs.write (via syncQuota), $.process.run (via refreshSplit, seedFromTranscript), $.session.id (via refreshSplit, seedFromTranscript), $.session.usage, $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME",
       "./register.tsx state writes: limits.cacheAt, limits.costAtStart, limits.lastPrompt, limits.lastTurnUsd, limits.running, limits.split, limits.usage",
       "./register.tsx state reads: limits.cacheAt, limits.costAtStart, limits.lastPrompt, limits.lastTurnUsd, limits.running, limits.split, limits.usage",
       "./register.tsx surface modules: hooks/countdown.tsx"
@@ -552,5 +572,5 @@
    "advice": []
   }
  },
- "sourceHash": "4758021c22246001"
+ "sourceHash": "445e92ceed90d8f4"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "retogo-claude-media-view",
- "generatedAt": "2026-10-16T14:21:26.332Z",
+ "generatedAt": "2026-10-19T16:28:01.083Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -34,8 +34,21 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "AssistantMessage"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "Pane",
      "requestId": "media-view"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "media-view-settings"
     }
    },
    {
@@ -54,23 +67,23 @@
     }
    },
    {
+    "event": "tool.call"
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__media-view__frames"
     }
    },
    {
-    "event": "tool.call",
-    "matcher": {
-     "tool": "Read"
-    }
+    "event": "prompt.submit"
    }
   ],
   "commands": [
    {
     "name": "media-view",
-    "description": "Open the gallery of this session’s images; `still` or `animate` sets GIFs in the transcript",
-    "argumentHint": "[still|animate]",
+    "description": "Open the gallery of this session’s images; `settings` chooses what is drawn; `still` or `animate` sets GIFs",
+    "argumentHint": "[settings|still|animate]",
     "output": "Opened the media gallery."
    }
   ],
@@ -84,6 +97,10 @@
    {
     "id": "media-view",
     "title": "Media"
+   },
+   {
+    "id": "media-view-settings",
+    "title": "Media settings"
    }
   ],
   "toasts": [],
@@ -91,16 +108,17 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.store.get": 1,
+   "$.state.get": 13,
    "$.clock.every": 1,
    "$.tool.register": 1,
    "$.command.register": 1,
-   "$.ui.open": 1,
-   "$.state.get": 2,
+   "$.ui.open": 3,
    "$.session.id": 1,
    "$.env.get": 2,
    "$.process.run": 2,
    "$.fs.list": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -115,19 +133,169 @@
    "UserMessage": {
     "ok": "engine"
    },
+   "AssistantMessage": {
+    "ok": "engine"
+   },
    "Pane": {
     "media-view": {
      "ok": true,
      "tree": {
-      "type": "Text",
+      "type": "Box",
       "props": {
-       "dimColor": true
+       "paddingTop": 1,
+       "paddingX": 1
       },
       "children": [
-       "No images in this session yet."
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "No images in this session yet."
+        ]
+       }
       ]
      },
      "title": "Media"
+    },
+    "media-view-settings": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1,
+       "paddingTop": 1,
+       "paddingX": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "What media-view draws, kept for every session:"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Show media"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setting-abovePrompt",
+           "label": "[x] Above the prompt",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setting-userMessages",
+           "label": "[x] Under prompts you sent",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setting-toolCalls",
+           "label": "[x] Under Claude’s tool calls",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setting-assistantMessages",
+           "label": "[x] Under Claude’s replies",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "GIFs"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setting-animateGifs",
+           "label": "[x] Animate GIFs",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Formats"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setting-convertFormats",
+           "label": "[x] Convert WebP, HEIC and TIFF through the OS",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "setting-preferFfmpeg",
+           "label": "[x] Convert with ffmpeg instead, where installed",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Media settings"
     }
    }
   },
@@ -143,6 +311,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.ui.open(media-view)",
+   "$.ui.open(media-view-settings)",
    "$.ui.open(media-view)",
    "/media-view → Opened the media gallery.",
    "$.process.run(uname -s) → exit 0",
@@ -161,17 +331,23 @@
    "ui.render{component=ToolGroup}",
    "ui.render{component=ToolResult}",
    "ui.render{component=UserMessage}",
+   "ui.render{component=AssistantMessage}",
+   "ui.render{component=Pane, requestId=?}",
    "ui.render{component=Pane, requestId=?}",
    "ui.scroll{requestId=?}",
    "ui.close",
    "command.run{command=media-view}",
+   "tool.call",
    "tool.call{tool=mcp__media-view__frames}",
-   "tool.call{tool=Read}"
+   "prompt.submit"
   ],
   "calls": [
-   "$.clock.after (via animate",
+   "$.clock.after (via afterDrawing",
+   "animate",
    "enginePorts)",
    "$.clock.every",
+   "$.clock.now (via enginePorts",
+   "recordShown)",
    "$.command.register",
    "$.env.get (via resolveHost)",
    "$.fs.exists (via enginePorts)",
@@ -180,15 +356,19 @@
    "$.fs.stat (via readWhole)",
    "$.process.run (via enginePorts",
    "readWhole",
-   "resolveHost)",
+   "resolveHost",
+   "sessionFfmpeg)",
    "$.prompt.read",
    "$.session.id (via enginePorts)",
    "$.state.get",
    "$.state.set",
+   "$.store.get",
+   "$.store.set (via saveSettings)",
    "$.tool.call (via enginePorts)",
    "$.tool.check (via enginePorts)",
    "$.tool.register",
    "$.ui.blit (via animate)",
+   "$.ui.close",
    "$.ui.copy",
    "$.ui.invalidate (via enginePorts)",
    "$.ui.log (via reportDeny)",
@@ -198,13 +378,19 @@
   ],
   "stateReads": [
    "media-view.draftImageNumbers",
-   "media-view.isTranscriptAnimated",
-   "media-view.mediaViewScrollOffset"
+   "media-view.imageTagRows",
+   "media-view.mediaViewScrollOffset",
+   "media-view.seenImages",
+   "media-view.settings",
+   "media-view.shownAt"
   ],
   "stateWrites": [
    "media-view.draftImageNumbers",
-   "media-view.isTranscriptAnimated",
-   "media-view.mediaViewScrollOffset"
+   "media-view.imageTagRows",
+   "media-view.mediaViewScrollOffset",
+   "media-view.seenImages",
+   "media-view.settings",
+   "media-view.shownAt"
   ],
   "envReads": [
    "CLAUDE_CODE_TMPDIR",
@@ -222,7 +408,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: media-view.isTranscriptAnimated, media-view.draftImageNumbers, media-view.mediaViewScrollOffset"
+     "types ./types/index.d.ts declares state: media-view.settings, media-view.draftImageNumbers, media-view.mediaViewScrollOffset, media-view.shownAt, media-view.seenImages, media-view.imageTagRows"
     ],
     "gatingHooks": []
    },
@@ -233,17 +419,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, ui.render{component=AbovePrompt}, ui.render{component=ToolGroup}, ui.render{component=ToolResult}, ui.render{component=UserMessage}, ui.render{component=Pane, requestId=?}, ui.scroll{requestId=?}, ui.close, command.run{command=media-view}, tool.call{tool=mcp__media-view__frames}, tool.call{tool=Read}",
+      "./register.tsx hooks: session.start, ui.render{component=AbovePrompt}, ui.render{component=ToolGroup}, ui.render{component=ToolResult}, ui.render{component=UserMessage}, ui.render{component=AssistantMessage}, ui.render{component=Pane, requestId=?}, ui.render{component=Pane, requestId=?}, ui.scroll{requestId=?}, ui.close, command.run{command=media-view}, tool.call, tool.call{tool=mcp__media-view__frames}, prompt.submit",
       "./register.tsx gating hook without .catch: ui.scroll{requestId=?}",
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: command.run{command=media-view}",
+      "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__media-view__frames}",
-      "./register.tsx gating hook without .catch: tool.call{tool=Read}",
-      "./register.tsx calls: $.clock.after (via animate, enginePorts), $.clock.every, $.command.register, $.env.get (via resolveHost), $.fs.exists (via enginePorts), $.fs.list (via enginePorts), $.fs.read (via readWhole), $.fs.stat (via readWhole), $.process.run (via enginePorts, readWhole, resolveHost), $.prompt.read, $.session.id (via enginePorts), $.state.get, $.state.set, $.tool.call (via enginePorts), $.tool.check (via enginePorts), $.tool.register, $.ui.blit (via animate), $.ui.copy, $.ui.invalidate (via enginePorts), $.ui.log (via reportDeny), $.ui.open, $.ui.resolve, $.ui.scroll",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx calls: $.clock.after (via afterDrawing, animate, enginePorts), $.clock.every, $.clock.now (via enginePorts, recordShown), $.command.register, $.env.get (via resolveHost), $.fs.exists (via enginePorts), $.fs.list (via enginePorts), $.fs.read (via readWhole), $.fs.stat (via readWhole), $.process.run (via enginePorts, readWhole, resolveHost, sessionFfmpeg), $.prompt.read, $.session.id (via enginePorts), $.state.get, $.state.set, $.store.get, $.store.set (via saveSettings), $.tool.call (via enginePorts), $.tool.check (via enginePorts), $.tool.register, $.ui.blit (via animate), $.ui.close, $.ui.copy, $.ui.invalidate (via enginePorts), $.ui.log (via reportDeny), $.ui.open, $.ui.resolve, $.ui.scroll",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CODE_TMPDIR, OS, TEMP",
-      "./register.tsx state writes: media-view.draftImageNumbers, media-view.isTranscriptAnimated, media-view.mediaViewScrollOffset",
-      "./register.tsx state reads: media-view.draftImageNumbers, media-view.isTranscriptAnimated, media-view.mediaViewScrollOffset"
+      "./register.tsx state writes: media-view.draftImageNumbers, media-view.imageTagRows, media-view.mediaViewScrollOffset, media-view.seenImages, media-view.settings, media-view.shownAt",
+      "./register.tsx state reads: media-view.draftImageNumbers, media-view.imageTagRows, media-view.mediaViewScrollOffset, media-view.seenImages, media-view.settings, media-view.shownAt"
      ],
      "gatingHooks": [
       {
@@ -267,13 +454,19 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
-       "hook": "tool.call{tool=mcp__media-view__frames}",
+       "hook": "tool.call",
        "hasCatch": false
       },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
-       "hook": "tool.call{tool=Read}",
+       "hook": "tool.call{tool=mcp__media-view__frames}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
        "hasCatch": false
       }
      ]
@@ -282,5 +475,5 @@
    "advice": []
   }
  },
- "sourceHash": "a8849936b4c21765"
+ "sourceHash": "aed3511709e779da"
 }

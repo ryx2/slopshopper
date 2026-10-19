@@ -1,6 +1,6 @@
 {
  "slug": "sandipchitale-claude-code-image-preview",
- "generatedAt": "2026-10-07T15:23:51.783Z",
+ "generatedAt": "2026-10-19T16:28:05.502Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -36,8 +36,8 @@
   "commands": [
    {
     "name": "image-preview",
-    "description": "Preview a pasted image in a pane: /image-preview [n]",
-    "output": "Images pane opened."
+    "description": "Browse this session's images in a window: /image-preview [n | pane]",
+    "output": "image-preview: starting the window… (if it cannot start, the Images pane opens instead)"
    }
   ],
   "tools": [],
@@ -53,37 +53,18 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.state.get": 8,
+   "$.state.get": 9,
    "$.state.set": 3,
-   "$.session.id": 2,
+   "$.session.id": 3,
    "$.process.run": 2,
-   "$.ui.open": 1,
-   "$.ui.resolve": 2
+   "$.process.spawn": 1,
+   "$.ui.resolve": 2,
+   "$.ui.open": 1
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
-    "ok": true,
-    "tree": {
-     "type": "Box",
-     "props": {
-      "flexDirection": "row",
-      "gap": 1
-     },
-     "children": [
-      {
-       "type": "Button",
-       "props": {
-        "key": "toggle-pane",
-        "plain": true,
-        "onPress": "[fn]"
-       },
-       "children": [
-        "📷 Images"
-       ]
-      }
-     ]
-    }
+    "ok": "engine"
    },
    "Pane": {
     "image-preview": {
@@ -197,9 +178,10 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.process.spawn(node /plugins/image-preview/server/server.mjs)",
    "$.process.run(find /private/tmp /tmp -maxdepth 5 -path */preview-session/images/*) → exit 0",
-   "$.ui.open(image-preview)",
-   "/image-preview → Images pane opened."
+   "/image-preview → image-preview: starting the window… (if it cannot start, the Images pane opens i…",
+   "$.ui.open(image-preview)"
   ],
   "console": [],
   "warnings": []
@@ -217,18 +199,20 @@
    "ui.render{component=Pane, requestId=image-preview}"
   ],
   "calls": [
+   "$.clock.every (via startServer)",
    "$.command.register",
+   "$.http.fetch (via post)",
    "$.process.run",
-   "$.session.id (via locate",
-   "scan)",
+   "$.process.spawn (via startServer)",
+   "$.session.id",
    "$.state.get",
    "$.state.set",
-   "$.ui.close (via toggle)",
    "$.ui.copy",
+   "$.ui.log (via startServer)",
    "$.ui.open",
-   "$.ui.panes (via toggle)",
    "$.ui.resolve",
-   "$.ui.toast (via show)"
+   "$.ui.toast (via show",
+   "showInWindow)"
   ],
   "stateReads": [
    "image-preview.cleared",
@@ -268,7 +252,7 @@
       "./register.tsx hooks: session.start, command.run{command=image-preview}, prompt.edit, prompt.submit, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=image-preview}",
       "./register.tsx answers its own command: command.run{command=image-preview}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.command.register, $.process.run, $.session.id (via locate, scan), $.state.get, $.state.set, $.ui.close (via toggle), $.ui.copy, $.ui.open, $.ui.panes (via toggle), $.ui.resolve, $.ui.toast (via show)",
+      "./register.tsx calls: $.clock.every (via startServer), $.command.register, $.http.fetch (via post), $.process.run, $.process.spawn (via startServer), $.session.id, $.state.get, $.state.set, $.ui.copy, $.ui.log (via startServer), $.ui.open, $.ui.resolve, $.ui.toast (via show, showInWindow)",
       "./register.tsx state writes: image-preview.cleared, image-preview.draft, image-preview.files, image-preview.origins",
       "./register.tsx state reads: image-preview.cleared, image-preview.draft, image-preview.files, image-preview.origins"
      ],
@@ -281,8 +265,9 @@
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "4805265616397783"
+ "sourceHash": "35e58d80b9743154"
 }

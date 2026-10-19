@@ -1,6 +1,6 @@
 {
  "slug": "dumorro-token-meter",
- "generatedAt": "2026-10-08T15:53:59.573Z",
+ "generatedAt": "2026-10-19T16:27:19.255Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -51,18 +51,18 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.session.id": 4,
-   "$.store.get": 2,
+   "$.store.get": 3,
    "$.session.usage": 1,
-   "$.state.get": 14,
+   "$.state.get": 15,
    "$.state.set": 7,
+   "$.clock.every": 2,
    "$.clock.now": 2,
-   "$.clock.every": 1,
    "$.ui.open": 2,
-   "$.env.get": 3,
+   "$.env.get": 4,
    "$.session.root": 2,
    "$.session.cwd": 2,
    "$.fs.exists": 4,
-   "$.process.run": 1,
+   "$.process.run": 2,
    "$.fs.list": 2,
    "$.store.set": 1,
    "$.store.keys": 1,
@@ -72,6 +72,10 @@
    {
     "kind": "every",
     "ms": 600000
+   },
+   {
+    "kind": "every",
+    "ms": 1800000
    }
   ],
   "sites": {
@@ -170,6 +174,15 @@
            "dimColor": true
           },
           "children": [
+           "    opus        $0.08 · 98.9k tok · 1 resp"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
            "  ",
            "1",
            " API responses · ",
@@ -192,6 +205,32 @@
         },
         "children": [
          "Weekly",
+         ""
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "  calculating…"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         " "
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "bold": true
+        },
+        "children": [
+         "Account total",
          ""
         ]
        },
@@ -262,19 +301,60 @@
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "color": "green"
+         "flexDirection": "column"
         },
         "children": [
-         "  ",
-         "5h window",
-         ": ",
-         "69",
-         "% free (",
-         "31",
-         "% used)",
-         ""
+         {
+          "type": "Text",
+          "props": {
+           "color": "green"
+          },
+          "children": [
+           "  ",
+           "5h window",
+           ": ",
+           "69",
+           "% free (",
+           "31",
+           "% used)",
+           ""
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "  "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "green"
+            },
+            "children": [
+             "████████████"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+            ]
+           }
+          ]
+         }
         ]
        }
       ]
@@ -287,6 +367,7 @@
    "$.ui.open(token-meter)",
    "session.start",
    "$.process.run(sh -c find \"$1\" -name \"*.jsonl\" -mmin \"-$2\" -print0 | xargs -0 grep -h -F '\"type…) → exit 0",
+   "$.process.run(sh -c oldest=$(find \"$1\" -name \"*.jsonl\" -exec stat -f %m {} + | sort -n | head …) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -322,7 +403,8 @@
    "$.env.get (via projectsDir)",
    "$.fs.exists (via transcriptFiles)",
    "$.fs.list (via transcriptFiles)",
-   "$.process.run (via scanSession",
+   "$.process.run (via scanAccount",
+   "scanSession",
    "scanWeek)",
    "$.session.cwd (via transcriptFiles)",
    "$.session.id",
@@ -333,12 +415,14 @@
    "$.store.delete (via saveSession)",
    "$.store.get",
    "$.store.keys (via saveSession)",
-   "$.store.set (via refreshWeek",
+   "$.store.set (via refreshAccount",
+   "refreshWeek",
    "saveSession)",
    "$.ui.open",
    "$.ui.resolve"
   ],
   "stateReads": [
+   "token-meter.account",
    "token-meter.limits",
    "token-meter.source",
    "token-meter.totals",
@@ -347,6 +431,7 @@
    "token-meter.window"
   ],
   "stateWrites": [
+   "token-meter.account",
    "token-meter.limits",
    "token-meter.source",
    "token-meter.totals",
@@ -368,7 +453,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: token-meter.totals, token-meter.week, token-meter.source, token-meter.window, token-meter.usd, token-meter.limits"
+     "types ./types/index.d.ts declares state: token-meter.totals, token-meter.week, token-meter.account, token-meter.source, token-meter.window, token-meter.usd, token-meter.limits"
     ],
     "gatingHooks": []
    },
@@ -381,16 +466,17 @@
      "notes": [
       "./register.tsx hooks: session.start, command.run{command=tokens}, turn.complete, session.measure, session.end, ui.render{component=Pane, requestId=token-meter}",
       "./register.tsx answers its own command: command.run{command=tokens}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via projectsDir), $.fs.exists (via transcriptFiles), $.fs.list (via transcriptFiles), $.process.run (via scanSession, scanWeek), $.session.cwd (via transcriptFiles), $.session.id, $.session.root (via transcriptFiles), $.session.usage, $.state.get, $.state.set, $.store.delete (via saveSession), $.store.get, $.store.keys (via saveSession), $.store.set (via refreshWeek, saveSession), $.ui.open, $.ui.resolve",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get (via projectsDir), $.fs.exists (via transcriptFiles), $.fs.list (via transcriptFiles), $.process.run (via scanAccount, scanSession, scanWeek), $.session.cwd (via transcriptFiles), $.session.id, $.session.root (via transcriptFiles), $.session.usage, $.state.get, $.state.set, $.store.delete (via saveSession), $.store.get, $.store.keys (via saveSession), $.store.set (via refreshAccount, refreshWeek, saveSession), $.ui.open, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: token-meter.limits, token-meter.source, token-meter.totals, token-meter.usd, token-meter.week, token-meter.window",
-      "./register.tsx state reads: token-meter.limits, token-meter.source, token-meter.totals, token-meter.usd, token-meter.week, token-meter.window"
+      "./register.tsx state writes: token-meter.account, token-meter.limits, token-meter.source, token-meter.totals, token-meter.usd, token-meter.week, token-meter.window",
+      "./register.tsx state reads: token-meter.account, token-meter.limits, token-meter.source, token-meter.totals, token-meter.usd, token-meter.week, token-meter.window"
      ],
      "gatingHooks": []
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "c744b996f4930079"
+ "sourceHash": "66b541650789f6e5"
 }

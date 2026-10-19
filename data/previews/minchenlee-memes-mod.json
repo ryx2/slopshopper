@@ -1,6 +1,6 @@
 {
  "slug": "minchenlee-memes-mod",
- "generatedAt": "2026-10-18T13:55:41.866Z",
+ "generatedAt": "2026-10-19T16:27:47.347Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,9 +11,27 @@
     "event": "prompt.compose"
    },
    {
+    "event": "turn.complete"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "memes:help"
+    }
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__memes__meme"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolGroup"
     }
    },
    {
@@ -27,20 +45,27 @@
   "tools": [
    {
     "name": "meme",
-    "description": "Post a reaction meme. You are the person's slightly unhinged coding buddy: reach for a meme whenever a moment is meme-worthy — you broke something, a fix finally works, a bug turns out to be a typo, tests pass on the fifth try, CI takes forever, the person picks the obviously worse option, a choice between two things, a hot take. Roughly once every few turns when something happens; at most once per turn. Write the caption about the actual situation, short and specific, in English only (the picture's font has no other script), even when the person writes another language; ' / ' between panels in the order the template's hint gives. Roasting yourself beats roasting the person. Skip it when the person is upset or something serious broke (data loss, production down). After posting, do not describe or explain the meme; carry on as if it were a reaction GIF. The caption is drawn on the picture; the person sees it (braille art where the screen cannot draw images), and you see it too."
+    "description": "Post a reaction meme. You are the person's slightly unhinged coding buddy: reach for a meme whenever a moment is meme-worthy — you broke something, a fix finally works, a bug turns out to be a typo, tests pass on the fifth try, CI takes forever, the person picks the obviously worse option, a choice between two things, a hot take. At most once per turn; how often is set beside each prompt. Write the caption about the actual situation, short and specific, in English only (the picture's font has no other script), even when the person writes another language; ' / ' between panels in the order the template's hint gives. Roasting yourself beats roasting the person. Skip it when the person is upset or something serious broke (data loss, production down). After posting, do not describe or explain the meme; carry on as if it were a reaction GIF. The caption is drawn on the picture; the person sees it (braille art where the screen cannot draw images), and you see it too."
    }
   ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
-  "rewrites": [],
+  "rewrites": [
+   {
+    "event": "prompt.submit",
+    "summary": "context added: [\"Meme frequency: normal. Post one when a moment is meme-worthy: a fix finally works, a bug was a typo, tests pass after several tries, a bu…"
+   }
+  ],
   "apiCalls": {
    "$.fs.exists": 1,
    "$.tool.register": 1,
    "$.process.run": 59,
+   "$.session.id": 2,
+   "$.fs.read": 2,
    "$.env.get": 1,
-   "$.fs.write": 1
+   "$.fs.write": 2
   },
   "timers": [],
   "sites": {},
@@ -104,9 +129,9 @@
    "$.process.run(curl -fsSL --retry 2 --create-dirs -o /plugins/memes/assets/orig/we-are-not-the-…) → exit 0",
    "$.process.run(curl -fsSL --retry 2 --create-dirs -o /plugins/memes/assets/orig/mother-ignoring…) → exit 0",
    "$.process.run(curl -fsSL --retry 2 --create-dirs -o /plugins/memes/assets/orig/boardroom-sugge…) → exit 0",
-   "tool.call Read",
    "$.process.run(uname -sm) → exit 0",
    "$.fs.write(/plugins/memes/assets/ready.json)",
+   "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
    "tool.call Write",
@@ -115,6 +140,7 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
+   "$.fs.write(/plugins/memes/assets/counts/preview-session.json)",
    "turn.complete"
   ],
   "console": [],
@@ -127,19 +153,23 @@
   "hooks": [
    "session.start",
    "prompt.compose",
+   "turn.complete",
+   "prompt.submit",
+   "command.run{command=memes:help}",
    "tool.call{tool=mcp__memes__meme}",
+   "ui.render{component=ToolGroup}",
    "ui.render{component=ToolResult}"
   ],
   "calls": [
    "$.env.get (via platformOf)",
    "$.fs.exists (via readReady)",
    "$.fs.read",
-   "$.fs.write (via install",
-   "runResvg)",
+   "$.fs.write",
    "$.process.run (via fetchTo",
    "install",
    "platformOf",
    "runResvg)",
+   "$.session.id",
    "$.tool.register",
    "$.ui.log",
    "$.ui.resolve"
@@ -168,14 +198,28 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.compose, tool.call{tool=mcp__memes__meme}, ui.render{component=ToolResult}",
+      "./register.tsx hooks: session.start, prompt.compose, turn.complete, prompt.submit, command.run{command=memes:help}, tool.call{tool=mcp__memes__meme}, ui.render{component=ToolGroup}, ui.render{component=ToolResult}",
       "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook without .catch: command.run{command=memes:help}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__memes__meme}",
-      "./register.tsx calls: $.env.get (via platformOf), $.fs.exists (via readReady), $.fs.read, $.fs.write (via install, runResvg), $.process.run (via fetchTo, install, platformOf, runResvg), $.tool.register, $.ui.log, $.ui.resolve",
+      "./register.tsx calls: $.env.get (via platformOf), $.fs.exists (via readReady), $.fs.read, $.fs.write, $.process.run (via fetchTo, install, platformOf, runResvg), $.session.id, $.tool.register, $.ui.log, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: OS"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=memes:help}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -188,5 +232,5 @@
    "advice": []
   }
  },
- "sourceHash": "faf04aa0fef39ed5"
+ "sourceHash": "b5cc5f7a64608265"
 }

@@ -1,11 +1,17 @@
 {
  "slug": "ianwilson97-claude-mods-cheap-worker",
- "generatedAt": "2026-10-17T13:06:17.375Z",
+ "generatedAt": "2026-10-19T16:27:26.477Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__cheap-worker__workers"
+    }
    },
    {
     "event": "command.run",
@@ -55,7 +61,12 @@
     "output": "Workers view open."
    }
   ],
-  "tools": [],
+  "tools": [
+   {
+    "name": "workers",
+    "description": "Run Claude Code worker sessions (cheap-worker), the same as the /worker picker.\nlaunch: start one; task (what to do), optional model (OpenRouter slug, or sonnet/opus/haiku on Bedrock), mode (edits | auto | ask), team (true: knows its teammates and reports to this session by message), name (e.g. \"auth-fix\" → cw-auth-fix).\nlist: running workers (name, model, mode, busy, last output lines).\nsend: message a worker by name (to, text); its reply arrives here as a new message.\nclose: stop a worker by name."
+   }
+  ],
   "panes": [
    {
     "id": "cheap-worker",
@@ -73,11 +84,12 @@
   "apiCalls": {
    "$.command.register": 2,
    "$.store.get": 1,
-   "$.state.get": 10,
+   "$.state.get": 11,
    "$.state.set": 3,
    "$.env.get": 2,
-   "$.clock.every": 1,
+   "$.tool.register": 1,
    "$.fs.read": 2,
+   "$.clock.every": 1,
    "$.ui.open": 2,
    "$.http.fetch": 1,
    "$.process.run": 1,
@@ -651,6 +663,7 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "tool.call{tool=mcp__cheap-worker__workers}",
    "command.run{command=worker}",
    "session.receive",
    "command.run{command=workers}",
@@ -663,25 +676,36 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.env.get (via installCrew",
+   "$.env.get (via deliver",
+   "installCrew",
+   "launchRemote",
    "openTab",
    "refreshStats)",
    "$.fs.read",
-   "$.fs.write (via installCrew)",
+   "$.fs.write (via deliver",
+   "installCrew",
+   "launchRemote)",
    "$.http.fetch (via loadModels)",
    "$.process.run (via closeWorker",
+   "deliver",
    "installCrew",
    "launch",
+   "launchRemote",
+   "listRemote",
    "openTab",
+   "refreshRemote",
    "refreshStats",
    "tmux)",
-   "$.session.cwd (via launch)",
-   "$.session.send (via sendTo)",
+   "$.session.cwd (via launch",
+   "launchRemote",
+   "refreshRemote)",
+   "$.session.send (via deliver)",
    "$.state.get",
    "$.state.set",
    "$.store.get",
    "$.store.set (via togglePin)",
    "$.tool.call (via leadName)",
+   "$.tool.register",
    "$.ui.open (via openPane",
    "openView)",
    "$.ui.resolve",
@@ -699,7 +723,8 @@
    "CMUX_WORKSPACE_ID",
    "HERDR_BIN_PATH",
    "HERDR_WORKSPACE_ID",
-   "HOME"
+   "HOME",
+   "TMPDIR"
   ],
   "raw": {
    "success": true,
@@ -723,17 +748,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=worker}, session.receive, command.run{command=workers}, ui.render{component=PromptHint}, ui.render{component=Pane, requestId=cheap-worker}, ui.render{component=Pane, requestId=cheap-workers}",
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__cheap-worker__workers}, command.run{command=worker}, session.receive, command.run{command=workers}, ui.render{component=PromptHint}, ui.render{component=Pane, requestId=cheap-worker}, ui.render{component=Pane, requestId=cheap-workers}",
       "./register.tsx answers its own command: command.run{command=worker}",
       "./register.tsx answers its own command: command.run{command=workers}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__cheap-worker__workers}",
       "./register.tsx gating hook without .catch: session.receive",
-      "./register.tsx calls: $.clock.after (via closeWorker), $.clock.every, $.clock.now, $.command.register, $.env.get (via installCrew, openTab, refreshStats), $.fs.read, $.fs.write (via installCrew), $.http.fetch (via loadModels), $.process.run (via closeWorker, installCrew, launch, openTab, refreshStats, tmux), $.session.cwd (via launch), $.session.send (via sendTo), $.state.get, $.state.set, $.store.get, $.store.set (via togglePin), $.tool.call (via leadName), $.ui.open (via openPane, openView), $.ui.resolve, $.ui.status (via refreshLive), $.ui.toast",
+      "./register.tsx calls: $.clock.after (via closeWorker), $.clock.every, $.clock.now, $.command.register, $.env.get (via deliver, installCrew, launchRemote, openTab, refreshStats), $.fs.read, $.fs.write (via deliver, installCrew, launchRemote), $.http.fetch (via loadModels), $.process.run (via closeWorker, deliver, installCrew, launch, launchRemote, listRemote, openTab, refreshRemote, refreshStats, tmux), $.session.cwd (via launch, launchRemote, refreshRemote), $.session.send (via deliver), $.state.get, $.state.set, $.store.get, $.store.set (via togglePin), $.tool.call (via leadName), $.tool.register, $.ui.open (via openPane, openView), $.ui.resolve, $.ui.status (via refreshLive), $.ui.toast",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: CMUX_BUNDLED_CLI_PATH, CMUX_WORKSPACE_ID, HERDR_BIN_PATH, HERDR_WORKSPACE_ID, HOME",
+      "./register.tsx env reads: CMUX_BUNDLED_CLI_PATH, CMUX_WORKSPACE_ID, HERDR_BIN_PATH, HERDR_WORKSPACE_ID, HOME, TMPDIR",
       "./register.tsx state writes: cheap-worker.picker",
       "./register.tsx state reads: cheap-worker.picker"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__cheap-worker__workers}",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "session.receive",
@@ -746,5 +778,5 @@
    "advice": []
   }
  },
- "sourceHash": "1f84a44a8e470603"
+ "sourceHash": "f4dc0fe8181c12b1"
 }

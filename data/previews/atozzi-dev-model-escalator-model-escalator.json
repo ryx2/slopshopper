@@ -1,6 +1,6 @@
 {
  "slug": "atozzi-dev-model-escalator-model-escalator",
- "generatedAt": "2026-10-17T13:05:16.912Z",
+ "generatedAt": "2026-10-19T16:26:24.699Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -56,8 +56,8 @@
    {
     "name": "escalator",
     "description": "Model escalator: savings report, stats panel and the live agent network",
-    "argumentHint": "[report|stats|config|history [n]|export [session|learned|history|all]|map|panel [close]|consult <id>|swap <id>|reset [history|recordings]|replay [option=value ...]|resume <id>|all|help]",
-    "output": "Mode: active\nSession cost: $0.00 (senior consults: 0, $0.00)\nSame work all on opus: $0.00 (prudent) to $0.00 (same tokens)\nEstimated savings: $0.00 to $0.00 (0% to 0%)\nBy model:\nInterventions: none\nEstimate at API list prices. On a subscription plan read the percentage as share of usage limits saved.\n\nPlan usage (as Claude Code reports it):\n  five_hour: 31% used\nNo saving estimated for this session yet.\n\nMore: /escalator stats, /escalator map (live agent network), /escalator history, /escalator config, /escalator help"
+    "argumentHint": "[report|stats|config|history [n]|export [session|learned|history|all]|map|panel [close]|consult <id>|swap <id>|reset [history|recordings]|replay [option=value ...]|replay sweep option=values ...|resume <id>|all|help]",
+    "output": "Mode: active\nSession cost: $0.00 (senior consults: 0, $0.00)\nSame work all on opus: $0.00 (prudent) to $0.00 (same tokens)\nEstimated savings: $0.00 to $0.00 (0% to 0%)\nBy model:\nInterventions: none\nEstimate at API list prices. On a subscription plan read the percentage as share of usage limits saved.\nClaude Code reports $0.42 for this session; the mod metered $0.00 (requests Claude Code makes on its own, such as prompt suggestions, do not pass through the mod)\n\nPlan usage (as Claude Code reports it):\n  five_hour: 31% used\nNo saving estimated for this session yet.\n\nMore: /escalator stats, /escalator map (live agent network), /escalator history, /escalator config, /escalator help"
    }
   ],
   "tools": [
@@ -72,16 +72,16 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.state.get": 1,
+   "$.state.get": 2,
    "$.env.get": 4,
    "$.state.set": 2,
    "$.clock.every": 1,
    "$.tool.register": 1,
    "$.command.register": 1,
-   "$.clock.now": 21,
-   "$.session.usage": 2,
-   "$.ui.resolve": 2,
-   "$.store.get": 2
+   "$.clock.now": 25,
+   "$.session.usage": 5,
+   "$.store.get": 9,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -211,7 +211,7 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "active (baseline opus)   "
+             "active (baseline opus)               "
             ]
            }
           ]
@@ -239,7 +239,7 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "$0.00 (consults 0, $0.00)"
+             "$0.00 (consults 0, $0.00)            "
             ]
            }
           ]
@@ -267,7 +267,7 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "$0.00 to $0.00           "
+             "$0.00 to $0.00                       "
             ]
            }
           ]
@@ -295,7 +295,35 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "$0.00 to $0.00 (0% to 0%)"
+             "$0.00 to $0.00 (0% to 0%)            "
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 2
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "Claude Code  "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "wrap": "truncate-end"
+            },
+            "children": [
+             "$0.42 reported, the mod metered $0.00"
             ]
            }
           ]
@@ -323,7 +351,7 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "none                     "
+             "none                                 "
             ]
            }
           ]
@@ -351,7 +379,7 @@
              "wrap": "truncate-end"
             },
             "children": [
-             "none                     "
+             "none                                 "
             ]
            }
           ]
@@ -525,7 +553,8 @@
   ],
   "calls": [
    "$.clock.after (via flushRecordingSoon",
-   "saveSoon)",
+   "saveSoon",
+   "settleLabel)",
    "$.clock.every",
    "$.clock.now",
    "$.clock.sleep",
@@ -540,10 +569,12 @@
    "verifyAndRecord)",
    "$.session.append (via notifyLead)",
    "$.session.surfaces (via surfacesOf)",
-   "$.session.usage (via readPlan",
+   "$.session.usage (via readClaudeCost",
+   "readPlan",
    "usageLimitReached)",
    "$.state.get",
-   "$.state.set (via save)",
+   "$.state.set (via adviceHint",
+   "save)",
    "$.store.delete",
    "$.store.get",
    "$.store.set",
@@ -565,9 +596,11 @@
    "verifyAndRecord)"
   ],
   "stateReads": [
+   "model-escalator.advice-hinted",
    "model-escalator.session"
   ],
   "stateWrites": [
+   "model-escalator.advice-hinted",
    "model-escalator.session"
   ],
   "envReads": [
@@ -587,7 +620,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: model-escalator.session"
+     "types ./types/index.d.ts declares state: model-escalator.session, model-escalator.advice-hinted"
     ],
     "gatingHooks": []
    },
@@ -604,11 +637,11 @@
       "./register.ts gating hook with .catch: agent.spawn",
       "./register.ts gating hook with .catch: tool.call{tool=mcp__model-escalator__ask_for_help}",
       "./register.ts gating hook with .catch: tool.call",
-      "./register.ts calls: $.clock.after (via flushRecordingSoon, saveSoon), $.clock.every, $.clock.now, $.clock.sleep, $.command.register, $.env.get, $.model.classify (via taskCategory), $.model.complete (via askSenior, probeModel, reviewRun), $.process.run (via gitDiffStat, reviewDiff, verifyAndRecord), $.session.append (via notifyLead), $.session.surfaces (via surfacesOf), $.session.usage (via readPlan, usageLimitReached), $.state.get, $.state.set (via save), $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.close (via closeStatsPanel), $.ui.invalidate (via mapTick, statsTick), $.ui.log, $.ui.open (via openMap, openStatsPanel), $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast (via act, checkStalls, refuseSwapTarget, reviewRun, runAction, verifyAndRecord)",
+      "./register.ts calls: $.clock.after (via flushRecordingSoon, saveSoon, settleLabel), $.clock.every, $.clock.now, $.clock.sleep, $.command.register, $.env.get, $.model.classify (via taskCategory), $.model.complete (via askSenior, probeModel, reviewRun), $.process.run (via gitDiffStat, reviewDiff, verifyAndRecord), $.session.append (via notifyLead), $.session.surfaces (via surfacesOf), $.session.usage (via readClaudeCost, readPlan, usageLimitReached), $.state.get, $.state.set (via adviceHint, save), $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.close (via closeStatsPanel), $.ui.invalidate (via mapTick, statsTick), $.ui.log, $.ui.open (via openMap, openStatsPanel), $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast (via act, checkStalls, refuseSwapTarget, reviewRun, runAction, verifyAndRecord)",
       "./register.ts env writes: nothing",
       "./register.ts env reads: EVAL_MODEL_ESCALATOR_BASELINE, EVAL_MODEL_ESCALATOR_MODE, MODEL_ESCALATOR_BASELINE, MODEL_ESCALATOR_MODE",
-      "./register.ts state writes: model-escalator.session",
-      "./register.ts state reads: model-escalator.session"
+      "./register.ts state writes: model-escalator.advice-hinted, model-escalator.session",
+      "./register.ts state reads: model-escalator.advice-hinted, model-escalator.session"
      ],
      "gatingHooks": [
       {
@@ -641,5 +674,5 @@
    "advice": []
   }
  },
- "sourceHash": "a7b61223209365a1"
+ "sourceHash": "ed4a52044019ee94"
 }

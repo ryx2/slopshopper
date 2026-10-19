@@ -1,6 +1,6 @@
 {
  "slug": "hex-claude-council",
- "generatedAt": "2026-10-18T13:54:30.618Z",
+ "generatedAt": "2026-10-19T16:25:48.448Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,12 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "prompt.submit"
    },
    {
     "event": "tool.call",
@@ -34,7 +40,19 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "heads-up"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "council-pane"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
     }
    },
    {
@@ -102,6 +120,13 @@
     "description": "Add, edit or remove specialists",
     "immediate": true,
     "output": "Specialists: esc closes the screen."
+   },
+   {
+    "name": "heads-up",
+    "description": "Heads-up side-check: set it up in a few questions, switch it on for this project naming the seat, or off, or show its state and counts",
+    "argumentHint": "[setup | on [seat] | off | status]",
+    "immediate": true,
+    "output": "Heads-up side-check: off\n  by       the /config row is off, no .claude/council-heads-up.json here\n  turn on  /heads-up on [seat] for this project, the /config row \"Heads-up side-check\" for every project\n  checks   checks 0 · none 0 · notes 0 · repeats 0 · failed 0\n  presses  learn 0 · tell 0 · knew 0 · dismiss 0 · turned off 0 · typed past 0"
    }
   ],
   "tools": [
@@ -127,24 +152,36 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 2,
+   "$.command.register": 3,
    "$.tool.register": 2,
    "$.clock.now": 1,
-   "$.store.set": 5,
+   "$.store.set": 6,
    "$.session.id": 1,
-   "$.store.get": 4,
-   "$.ui.invalidate": 4,
+   "$.store.get": 6,
+   "$.ui.invalidate": 5,
+   "$.state.get": 6,
    "$.process.run": 2,
+   "$.session.cwd": 2,
+   "$.fs.exists": 6,
    "$.ui.log": 1,
+   "$.state.set": 1,
    "$.ui.open": 1,
    "$.env.get": 1,
-   "$.fs.exists": 4,
    "$.ui.resolve": 2
   },
   "timers": [],
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
+   },
+   "PromptHint": {
+    "ok": "engine",
+    "props": {
+     "isDraft": false,
+     "isWorking": false,
+     "hint": "? for shortcuts",
+     "tail": "Tip: /heads-up on lets another model watch long turns and flag what Claude missed"
+    }
    },
    "Pane": {
     "specialist-setup": {
@@ -895,7 +932,8 @@
    "/council-pane → No council run in this session yet. Start one with /claude-council:ask.",
    "$.ui.open(specialist-setup)",
    "$.process.run(codex debug models) → exit 0",
-   "/specialists → Specialists: esc closes the screen."
+   "/specialists → Specialists: esc closes the screen.",
+   "/heads-up → Heads-up side-check: off\n  by       the /config row is off, no .claude/council-h…"
   ],
   "console": [],
   "warnings": []
@@ -909,11 +947,15 @@
   "hooks": [
    "session.start",
    "turn.complete",
+   "turn.step",
+   "prompt.submit",
    "tool.call{tool=Bash}",
    "config.describe",
    "tool.call{tool=/\"^mcp__claude-council__ask$\"/}",
    "tool.call{tool=/\"^mcp__claude-council__specialist$\"/}",
+   "command.run{command=?}",
    "command.run{command=council-pane}",
+   "ui.render{component=PromptHint}",
    "ui.render{component=AbovePrompt}",
    "config.set{key=?}",
    "command.run{command=specialists}",
@@ -928,25 +970,27 @@
    "$.clock.every",
    "$.clock.now",
    "$.command.register",
-   "$.config.set (via writeEntries)",
+   "$.config.set (via setupHeadsUp",
+   "writeEntries)",
    "$.env.get (via findSkills",
    "paneHost",
-   "startWatching)",
+   "watchRoot)",
    "$.env.set (via aimRun)",
    "$.fs.exists",
    "$.fs.list (via files",
    "findSkills",
+   "notASeat",
    "poll)",
    "$.fs.read",
-   "$.fs.write (via cancelSeat",
-   "poll",
-   "retryPresses",
-   "startWatching)",
+   "$.fs.write",
    "$.process.run",
+   "$.prompt.fill (via pressHeadsUp)",
    "$.prompt.submit (via finishRound",
    "wakeWhenFetchable)",
    "$.session.cwd",
    "$.session.id",
+   "$.state.get (via stepHeadsUp)",
+   "$.state.set (via stepHeadsUp)",
    "$.store.delete",
    "$.store.get",
    "$.store.set",
@@ -959,8 +1003,12 @@
    "$.ui.resolve",
    "$.ui.scroll"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "claude-council.headsUp"
+  ],
+  "stateWrites": [
+   "claude-council.headsUp"
+  ],
   "envReads": [
    "HOME",
    "TMPDIR",
@@ -981,7 +1029,10 @@
      }
     ],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./mods/council-pane/types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./mods/council-pane/types/index.d.ts declares state: claude-council.headsUp"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -991,20 +1042,30 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "../mods/council-pane/hooks/pane.tsx hooks: session.start, turn.complete, tool.call{tool=Bash}, config.describe, tool.call{tool=/\"^mcp__claude-council__ask$\"/}, tool.call{tool=/\"^mcp__claude-council__specialist$\"/}, command.run{command=council-pane}, ui.render{component=AbovePrompt}, config.set{key=?}, command.run{command=specialists}, session.end, ui.close{id=specialist-setup}, ui.render{component=Pane}, ui.scroll{requestId=specialist}, ui.render{component=Pane}, ui.render{component=Pane}",
+      "../mods/council-pane/hooks/pane.tsx hooks: session.start, turn.complete, turn.step, prompt.submit, tool.call{tool=Bash}, config.describe, tool.call{tool=/\"^mcp__claude-council__ask$\"/}, tool.call{tool=/\"^mcp__claude-council__specialist$\"/}, command.run{command=?}, command.run{command=council-pane}, ui.render{component=PromptHint}, ui.render{component=AbovePrompt}, config.set{key=?}, command.run{command=specialists}, session.end, ui.close{id=specialist-setup}, ui.render{component=Pane}, ui.scroll{requestId=specialist}, ui.render{component=Pane}, ui.render{component=Pane}",
+      "../mods/council-pane/hooks/pane.tsx gating hook without .catch: prompt.submit",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: tool.call{tool=Bash}",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: tool.call{tool=/\"^mcp__claude-council__ask$\"/}",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: tool.call{tool=/\"^mcp__claude-council__specialist$\"/}",
+      "../mods/council-pane/hooks/pane.tsx gating hook without .catch: command.run{command=?}",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: command.run{command=council-pane}",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: config.set{key=?}",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: command.run{command=specialists}",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: ui.close{id=specialist-setup}",
       "../mods/council-pane/hooks/pane.tsx gating hook without .catch: ui.scroll{requestId=specialist}",
-      "../mods/council-pane/hooks/pane.tsx calls: $.clock.every, $.clock.now, $.command.register, $.config.set (via writeEntries), $.env.get (via findSkills, paneHost, startWatching), $.env.set (via aimRun), $.fs.exists, $.fs.list (via files, findSkills, poll), $.fs.read, $.fs.write (via cancelSeat, poll, retryPresses, startWatching), $.process.run, $.prompt.submit (via finishRound, wakeWhenFetchable), $.session.cwd, $.session.id, $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.ask, $.ui.focus (via submitField), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.scroll",
+      "../mods/council-pane/hooks/pane.tsx calls: $.clock.every, $.clock.now, $.command.register, $.config.set (via setupHeadsUp, writeEntries), $.env.get (via findSkills, paneHost, watchRoot), $.env.set (via aimRun), $.fs.exists, $.fs.list (via files, findSkills, notASeat, poll), $.fs.read, $.fs.write, $.process.run, $.prompt.fill (via pressHeadsUp), $.prompt.submit (via finishRound, wakeWhenFetchable), $.session.cwd, $.session.id, $.state.get (via stepHeadsUp), $.state.set (via stepHeadsUp), $.store.delete, $.store.get, $.store.set, $.tool.register, $.ui.ask, $.ui.focus (via submitField), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.scroll",
       "../mods/council-pane/hooks/pane.tsx env writes: COUNCIL_MOD_PANE_DIR",
-      "../mods/council-pane/hooks/pane.tsx env reads: HOME, TMPDIR, TMUX"
+      "../mods/council-pane/hooks/pane.tsx env reads: HOME, TMPDIR, TMUX",
+      "../mods/council-pane/hooks/pane.tsx state writes: claude-council.headsUp",
+      "../mods/council-pane/hooks/pane.tsx state reads: claude-council.headsUp"
      ],
      "gatingHooks": [
+      {
+       "module": "../mods/council-pane/hooks/pane.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "../mods/council-pane/hooks/pane.tsx",
        "pattern": "tool.call",
@@ -1021,6 +1082,12 @@
        "module": "../mods/council-pane/hooks/pane.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=/\"^mcp__claude-council__specialist$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/council-pane/hooks/pane.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=?}",
        "hasCatch": false
       },
       {
@@ -1059,5 +1126,5 @@
    "advice": []
   }
  },
- "sourceHash": "38a6d2031f313eb5"
+ "sourceHash": "cccf29f305254ff6"
 }

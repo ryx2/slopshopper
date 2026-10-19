@@ -1,6 +1,6 @@
 {
  "slug": "sabasayer-crew-crew-board",
- "generatedAt": "2026-10-17T13:06:47.636Z",
+ "generatedAt": "2026-10-19T16:28:03.782Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -30,15 +30,15 @@
   "commands": [
    {
     "name": "crew-board",
-    "description": "Show the live board of /crew agents. Add a ticket name to show only that ticket. Use \"style\" to switch between full and simple, or \"style full\" or \"style simple\" to pick one",
-    "argumentHint": "[ticket | style [full|simple]]",
+    "description": "Show the live board of /crew agents. Add a ticket name to show only that ticket. Use \"style\" to switch between full and simple, or \"style full\" or \"style simple\" to pick one. Use \"clean\" to list runs older than 30 days",
+    "argumentHint": "[ticket | style [full|simple] | clean [yes]]",
     "output": "Crew board opened."
    }
   ],
   "tools": [
    {
     "name": "crew_board_open",
-    "description": "Open the crew board pane for one ticket. Call it once when a /crew run starts. The ticket is the folder name under /tmp/crew."
+    "description": "Open the crew board pane for one ticket. Call it once when a /crew run starts. The ticket is the folder name under /Users/dev/.crew."
    }
   ],
   "panes": [
@@ -52,10 +52,12 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.env.get": 2,
+   "$.process.run": 1,
    "$.command.register": 1,
    "$.tool.register": 1,
    "$.store.get": 1,
-   "$.fs.list": 1,
+   "$.fs.list": 2,
    "$.state.get": 6,
    "$.state.set": 2,
    "$.clock.every": 2,
@@ -82,7 +84,7 @@
        "dimColor": true
       },
       "children": [
-       "No crew run found in /tmp/crew."
+       "No crew run found in /Users/dev/.crew."
       ]
      },
      "title": "Crew"
@@ -90,6 +92,7 @@
    }
   },
   "script": [
+   "$.process.run(mkdir -p /Users/dev/.crew) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -120,8 +123,11 @@
   "calls": [
    "$.clock.every",
    "$.command.register",
-   "$.fs.list (via scan)",
-   "$.fs.read (via scan)",
+   "$.env.get (via getRoot)",
+   "$.fs.list (via cleanRuns",
+   "scanRoot)",
+   "$.fs.read (via scanRoot)",
+   "$.process.run",
    "$.state.get",
    "$.state.set",
    "$.store.get",
@@ -142,7 +148,10 @@
    "crew-board.frame",
    "crew-board.style"
   ],
-  "envReads": [],
+  "envReads": [
+   "CREW_BOARD_ROOT",
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -168,7 +177,9 @@
       "./register.tsx hooks: session.start, command.run{command=crew-board}, tool.call{tool=mcp__crew-board__crew_board_open}, ui.render{component=Pane, requestId=crew-board}",
       "./register.tsx answers its own command: command.run{command=crew-board}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew-board__crew_board_open}",
-      "./register.tsx calls: $.clock.every, $.command.register, $.fs.list (via scan), $.fs.read (via scan), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.open (via show), $.ui.resolve",
+      "./register.tsx calls: $.clock.every, $.command.register, $.env.get (via getRoot), $.fs.list (via cleanRuns, scanRoot), $.fs.read (via scanRoot), $.process.run, $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.open (via show), $.ui.resolve",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CREW_BOARD_ROOT, HOME",
       "./register.tsx state writes: crew-board.board, crew-board.focus, crew-board.frame, crew-board.style",
       "./register.tsx state reads: crew-board.board, crew-board.focus, crew-board.frame, crew-board.style"
      ],
@@ -185,5 +196,5 @@
    "advice": []
   }
  },
- "sourceHash": "9867addb1d10df97"
+ "sourceHash": "2c0c134c1a3a3a0f"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "alonbaron-claude-skills-workflow-watch",
- "generatedAt": "2026-10-18T13:54:37.491Z",
+ "generatedAt": "2026-10-19T16:26:02.595Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,12 @@
     "event": "command.run",
     "matcher": {
      "command": "workflow-watch"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tracker"
     }
    },
    {
@@ -30,30 +36,39 @@
   "commands": [
    {
     "name": "workflow-watch",
-    "description": "Live view of the running Workflow: each stage, its model, effort and tokens, what it is doing, its result",
-    "output": "No workflow run found for this session yet; run one with the Workflow tool, then type /workflow-watch again."
+    "description": "Live session & workflow tracker: turns, skills, subagents, commits and stages with models, effort, tokens and timeline",
+    "output": "No session or workflow activity recorded yet; send a prompt or start a Workflow, then type /tracker again."
+   },
+   {
+    "name": "tracker",
+    "description": "Live session & workflow tracker: turns, skills, subagents, commits and stages with models, effort, tokens and timeline",
+    "output": "No session or workflow activity recorded yet; send a prompt or start a Workflow, then type /tracker again."
    }
   ],
   "tools": [],
   "panes": [
    {
     "id": "workflow-watch",
-    "title": "Workflow"
+    "title": "Tracker"
    }
   ],
   "toasts": [],
   "logs": [
-   "workflow-watch: pane open"
+   "workflow-watch: tracker pane open"
   ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 1,
+   "$.command.register": 2,
    "$.clock.every": 1,
    "$.ui.panes": 1,
-   "$.ui.open": 2,
+   "$.env.get": 3,
+   "$.ui.open": 3,
+   "$.session.id": 3,
    "$.ui.log": 1,
-   "$.state.get": 3,
+   "$.fs.list": 3,
+   "$.fs.exists": 3,
+   "$.state.get": 6,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -79,15 +94,15 @@
        {
         "type": "Text",
         "props": {
-         "dimColor": true
+         "color": "subtle"
         },
         "children": [
-         "No workflow run yet. Start one with the Workflow tool; this pane follows the newest run of this session."
+         "Waiting for session activity. Turns, skills, subagents, commits and Workflow stages appear here live."
         ]
        }
       ]
      },
-     "title": "Workflow"
+     "title": "Tracker"
     }
    }
   },
@@ -105,7 +120,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(workflow-watch)",
-   "/workflow-watch → No workflow run found for this session yet; run one with the Workflow tool, then…"
+   "/workflow-watch → No session or workflow activity recorded yet; send a prompt or start a Workflow,…",
+   "$.ui.open(workflow-watch)",
+   "/tracker → No session or workflow activity recorded yet; send a prompt or start a Workflow,…"
   ],
   "console": [],
   "warnings": []
@@ -117,6 +134,7 @@
   "hooks": [
    "session.start",
    "command.run{command=workflow-watch}",
+   "command.run{command=tracker}",
    "ui.render{component=Pane, requestId=workflow-watch}",
    "ui.render{component=AbovePrompt}"
   ],
@@ -124,16 +142,21 @@
    "$.clock.every",
    "$.clock.now (via tick)",
    "$.command.register",
-   "$.env.get (via findJournal)",
-   "$.fs.exists (via findJournal)",
+   "$.env.get (via findTarget)",
+   "$.fs.exists (via enrich",
+   "findTarget",
+   "readTranscriptText)",
    "$.fs.list (via listOr)",
    "$.fs.read (via enrich",
+   "linkSessionAgents",
+   "readTranscriptText",
    "tick)",
-   "$.session.id (via findJournal)",
+   "$.session.id (via findTarget)",
    "$.state.get",
    "$.state.set",
    "$.ui.log (via openPane)",
-   "$.ui.open",
+   "$.ui.open (via openPane",
+   "runCommand)",
    "$.ui.panes (via openPane)",
    "$.ui.resolve",
    "$.ui.status (via tick)",
@@ -146,7 +169,8 @@
    "workflow-watch.watch"
   ],
   "envReads": [
-   "HOME"
+   "HOME",
+   "USERPROFILE"
   ],
   "raw": {
    "success": true,
@@ -170,11 +194,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=workflow-watch}, ui.render{component=Pane, requestId=workflow-watch}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=workflow-watch}, command.run{command=tracker}, ui.render{component=Pane, requestId=workflow-watch}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=workflow-watch}",
-      "./register.tsx calls: $.clock.every, $.clock.now (via tick), $.command.register, $.env.get (via findJournal), $.fs.exists (via findJournal), $.fs.list (via listOr), $.fs.read (via enrich, tick), $.session.id (via findJournal), $.state.get, $.state.set, $.ui.log (via openPane), $.ui.open, $.ui.panes (via openPane), $.ui.resolve, $.ui.status (via tick), $.ui.toast (via tick)",
+      "./register.tsx answers its own command: command.run{command=tracker}",
+      "./register.tsx calls: $.clock.every, $.clock.now (via tick), $.command.register, $.env.get (via findTarget), $.fs.exists (via enrich, findTarget, readTranscriptText), $.fs.list (via listOr), $.fs.read (via enrich, linkSessionAgents, readTranscriptText, tick), $.session.id (via findTarget), $.state.get, $.state.set, $.ui.log (via openPane), $.ui.open (via openPane, runCommand), $.ui.panes (via openPane), $.ui.resolve, $.ui.status (via tick), $.ui.toast (via tick)",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME",
+      "./register.tsx env reads: HOME, USERPROFILE",
       "./register.tsx state writes: workflow-watch.watch",
       "./register.tsx state reads: workflow-watch.watch"
      ],
@@ -184,5 +209,5 @@
    "advice": []
   }
  },
- "sourceHash": "eaae98ca7f657d81"
+ "sourceHash": "abfbe96f559ab6b5"
 }

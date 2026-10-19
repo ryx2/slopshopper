@@ -1,6 +1,6 @@
 {
  "slug": "cookys-autopilot",
- "generatedAt": "2026-10-18T13:54:38.106Z",
+ "generatedAt": "2026-10-19T16:26:04.192Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -25,6 +25,26 @@
     "matcher": {
      "component": "Pane",
      "requestId": "autopilot-live"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "rt-room"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "autopilot-roundtable"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "autopilot-roundtable"
     }
    },
    {
@@ -59,6 +79,11 @@
   ],
   "commands": [
    {
+    "name": "rt-room",
+    "description": "Open the roundtable room pane",
+    "argumentHint": "[room-id]"
+   },
+   {
     "name": "show",
     "description": "Show a file or a git diff in a window (the text does not go to the model)",
     "argumentHint": "<path[:line]> | diff <git diff arguments>"
@@ -70,7 +95,12 @@
     "description": "Show a file or a git diff to the USER in a window on their screen. Use it when the user asks to see, open or look at a file or a diff, instead of reading it and retyping it. The content is displayed to the user only and is NOT returned to you: you get one line saying what was shown. If you need to analyze the content yourself, read the file or run the diff separately. Give exactly one of: path (optionally start and end, 1-based inclusive line numbers), or diff (the arguments after \"git diff\", one string each, e.g. [\"HEAD~1\"] or [\"HEAD~1\", \"--\", \"src/a.ts\"])."
    }
   ],
-  "panes": [],
+  "panes": [
+   {
+    "id": "autopilot-roundtable",
+    "title": "roundtable"
+   }
+  ],
   "toasts": [
    "Nothing to show yet. Type /show <path> or /show diff <arguments>."
   ],
@@ -78,11 +108,11 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.clock.every": 1,
+   "$.clock.every": 2,
    "$.clock.now": 1,
-   "$.env.get": 8,
-   "$.fs.read": 4,
-   "$.config.list": 1,
+   "$.env.get": 14,
+   "$.fs.read": 5,
+   "$.config.list": 2,
    "$.session.usage": 1,
    "$.fs.stat": 1,
    "$.fs.exists": 1,
@@ -90,16 +120,22 @@
    "$.session.messages": 1,
    "$.agent.list": 1,
    "$.state.get": 2,
-   "$.ui.invalidate": 1,
-   "$.ui.resolve": 4,
+   "$.ui.invalidate": 2,
+   "$.ui.resolve": 7,
+   "$.command.register": 2,
    "$.tool.register": 1,
-   "$.command.register": 1,
+   "$.fs.list": 1,
+   "$.ui.open": 1,
    "$.ui.toast": 1
   },
   "timers": [
    {
     "kind": "every",
     "ms": 5000
+   },
+   {
+    "kind": "every",
+    "ms": 1000
    }
   ],
   "sites": {
@@ -135,6 +171,102 @@
     }
    },
    "Pane": {
+    "autopilot-roundtable": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "key": "frame",
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "fixed",
+         "flexDirection": "column",
+         "height": 30,
+         "overflow": "hidden"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "key": "name",
+           "wrap": "truncate-end"
+          },
+          "children": [
+           "No room yet. Type /rt-room <id>."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "note"
+          },
+          "children": [
+           "No room yet. Type /rt-room <id>."
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "content",
+           "flexDirection": "row",
+           "flexGrow": 1,
+           "overflow": "hidden"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "key": "rows",
+             "flexDirection": "column",
+             "flexGrow": 1,
+             "overflow": "hidden"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "rule",
+           "color": "subtle"
+          },
+          "children": [
+           "────────────────────────────────────────────────────────"
+          ]
+         },
+         {
+          "type": "Input",
+          "props": {
+           "key": "say",
+           "autoFocus": true,
+           "label": "Say",
+           "submitLabel": "send",
+           "value": "",
+           "onInput": "[fn]",
+           "onSubmit": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "spare"
+        },
+        "children": [
+         " "
+        ]
+       }
+      ]
+     },
+     "title": "roundtable"
+    },
     "autopilot-live": {
      "ok": true,
      "tree": {
@@ -534,6 +666,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
+   "$.ui.open(autopilot-roundtable)",
+   "/rt-room → ",
    "/show → "
   ],
   "console": [],
@@ -588,6 +722,9 @@
    "ui.render{component=AbovePrompt}",
    "ui.render{component=Pane, requestId=autopilot-live}",
    "ui.scroll{component=Pane, requestId=autopilot-live}",
+   "command.run{command=rt-room}",
+   "ui.render{component=Pane, requestId=autopilot-roundtable}",
+   "ui.scroll{component=Pane, requestId=autopilot-roundtable}",
    "tool.call{tool=?}",
    "command.run{command=show}",
    "ui.render{component=Pane, requestId=?}",
@@ -596,10 +733,12 @@
   ],
   "calls": [
    "$.agent.list (via readActivity)",
-   "$.clock.every (via startLive)",
+   "$.clock.every (via ensureTimer",
+   "startLive)",
    "$.clock.now (via refresh",
    "sendDecide)",
-   "$.command.register (via startViewer)",
+   "$.command.register (via startRoundtable",
+   "startViewer)",
    "$.config.list (via claudeLanguage",
    "localeOf)",
    "$.env.get (via buildSnapshot",
@@ -607,14 +746,17 @@
    "localeOf",
    "pollAdvisories",
    "readAccountQuota",
-   "resolveT)",
+   "resolveT",
+   "roomsDirectory)",
    "$.fs.exists (via cleanPress",
    "cleanWorktrees",
    "readAccountQuota)",
    "$.fs.list (via findJobDate",
+   "newestRoom",
    "receiptStart",
    "resolveScope)",
    "$.fs.read (via localeOf",
+   "pollRoundtable",
    "readText",
    "show)",
    "$.fs.stat (via readAccountQuota",
@@ -623,7 +765,8 @@
    "show)",
    "$.model.complete (via runAi)",
    "$.process.run (via cleanPress",
-   "show)",
+   "show",
+   "submitSay)",
    "$.prompt.fill (via sendToChat)",
    "$.prompt.read (via sendToChat)",
    "$.prompt.submit (via sendDecide)",
@@ -635,11 +778,7 @@
    "pollAdvisories",
    "refresh)",
    "$.session.messages (via refresh)",
-   "$.session.usage (via readAccountQuota)",
-   "$.state.get",
-   "$.state.set",
-   "$.tool.register (via startViewer)",
-   "$.ui.close (via sho… [+103 chars]"
+   "$.session.usage (via readAccountQuo… [+188 chars]"
   ],
   "stateReads": [
    "autopilot.decide"
@@ -650,6 +789,7 @@
   "envReads": [
    "AUTOPILOT_COST_FUSE_MODE",
    "AUTOPILOT_LOCALE",
+   "AUTOPILOT_ROOMS_DIR",
    "CLAUDE_CONFIG_DIR",
    "HOME",
    "LANG",
@@ -873,14 +1013,16 @@
       }
      ],
      "notes": [
-      "../mods/register.ts hooks: session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=autopilot-live}, ui.scroll{component=Pane, requestId=autopilot-live}, tool.call{tool=?}, command.run{command=show}, ui.render{component=Pane, requestId=?}, ui.scroll{component=Pane, requestId=?}, session.start",
+      "../mods/register.ts hooks: session.end, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=autopilot-live}, ui.scroll{component=Pane, requestId=autopilot-live}, command.run{command=rt-room}, ui.render{component=Pane, requestId=autopilot-roundtable}, ui.scroll{component=Pane, requestId=autopilot-roundtable}, tool.call{tool=?}, command.run{command=show}, ui.render{component=Pane, requestId=?}, ui.scroll{component=Pane, requestId=?}, session.start",
+      "../mods/register.ts answers its own command: command.run{command=rt-room}",
       "../mods/register.ts answers its own command: command.run{command=show}",
       "../mods/register.ts gating hook without .catch: ui.scroll{component=Pane, requestId=autopilot-live}",
+      "../mods/register.ts gating hook without .catch: ui.scroll{component=Pane, requestId=autopilot-roundtable}",
       "../mods/register.ts gating hook without .catch: tool.call{tool=?}",
       "../mods/register.ts gating hook without .catch: ui.scroll{component=Pane, requestId=?}",
-      "../mods/register.ts calls: $.agent.list (via readActivity), $.clock.every (via startLive), $.clock.now (via refresh, sendDecide), $.command.register (via startViewer), $.config.list (via claudeLanguage, localeOf), $.env.get (via buildSnapshot, fuseModeOf, localeOf, pollAdvisories, readAccountQuota, resolveT), $.fs.exists (via cleanPress, cleanWorktrees, readAccountQuota), $.fs.list (via findJobDate, receiptStart, resolveScope), $.fs.read (via localeOf, readText, show), $.fs.stat (via readAccountQuota, readActivity, resolveScope, show), $.model.complete (via runAi), $.process.run (via cleanPress, show), $.prompt.fill (via sendToChat), $.prompt.read (via sendToChat), $.prompt.submit (via sendDecide), $.session.cwd (via cleanWorktrees, cwdPath, orphanResidueCount, resolveScope), $.session.id (via buildSnapshot, pollAdvisories, refresh), $.session.messages (via refresh), $.session.usage (via readAccountQuota), $.state.get, $.state.set, $.tool.register (via startViewer), $.ui.close (via sho… [+103 chars]",
+      "../mods/register.ts calls: $.agent.list (via readActivity), $.clock.every (via ensureTimer, startLive), $.clock.now (via refresh, sendDecide), $.command.register (via startRoundtable, startViewer), $.config.list (via claudeLanguage, localeOf), $.env.get (via buildSnapshot, fuseModeOf, localeOf, pollAdvisories, readAccountQuota, resolveT, roomsDirectory), $.fs.exists (via cleanPress, cleanWorktrees, readAccountQuota), $.fs.list (via findJobDate, newestRoom, receiptStart, resolveScope), $.fs.read (via localeOf, pollRoundtable, readText, show), $.fs.stat (via readAccountQuota, readActivity, resolveScope, show), $.model.complete (via runAi), $.process.run (via cleanPress, show, submitSay), $.prompt.fill (via sendToChat), $.prompt.read (via sendToChat), $.prompt.submit (via sendDecide), $.session.cwd (via cleanWorktrees, cwdPath, orphanResidueCount, resolveScope), $.session.id (via buildSnapshot, pollAdvisories, refresh), $.session.messages (via refresh), $.session.usage (via readAccountQuo… [+188 chars]",
       "../mods/register.ts env writes: nothing",
-      "../mods/register.ts env reads: AUTOPILOT_COST_FUSE_MODE, AUTOPILOT_LOCALE, CLAUDE_CONFIG_DIR, HOME, LANG, LC_ALL",
+      "../mods/register.ts env reads: AUTOPILOT_COST_FUSE_MODE, AUTOPILOT_LOCALE, AUTOPILOT_ROOMS_DIR, CLAUDE_CONFIG_DIR, HOME, LANG, LC_ALL",
       "../mods/register.ts state writes: autopilot.decide",
       "../mods/register.ts state reads: autopilot.decide"
      ],
@@ -889,6 +1031,12 @@
        "module": "../mods/register.ts",
        "pattern": "ui.scroll",
        "hook": "ui.scroll{component=Pane, requestId=autopilot-live}",
+       "hasCatch": false
+      },
+      {
+       "module": "../mods/register.ts",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{component=Pane, requestId=autopilot-roundtable}",
        "hasCatch": false
       },
       {
@@ -909,5 +1057,5 @@
    "advice": []
   }
  },
- "sourceHash": "4c6c0292cdf00599"
+ "sourceHash": "a2934477efed5660"
 }

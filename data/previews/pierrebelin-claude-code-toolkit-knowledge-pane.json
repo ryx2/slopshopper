@@ -1,6 +1,6 @@
 {
  "slug": "pierrebelin-claude-code-toolkit-knowledge-pane",
- "generatedAt": "2026-10-17T13:05:04.465Z",
+ "generatedAt": "2026-10-19T16:26:08.099Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -23,10 +23,22 @@
     }
    },
    {
+    "event": "command.run",
+    "matcher": {
+     "command": "spec-pane"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
     "event": "tool.call",
     "matcher": {
      "tool": "Bash"
     }
+   },
+   {
+    "event": "tool.call"
    },
    {
     "event": "ui.render",
@@ -41,6 +53,11 @@
     "name": "knowledge-pane",
     "description": "Browse the knowledge base: a context, an id or words to search; demo shows the kit example",
     "output": "Knowledge pane opened — no knowledge base under docs/business."
+   },
+   {
+    "name": "spec-pane",
+    "description": "Open the /business-spec view of the knowledge pane (a SPEC path follows that spec, clear forgets it)",
+    "output": "Spec pane opened."
    }
   ],
   "tools": [],
@@ -56,14 +73,14 @@
   "rewrites": [],
   "apiCalls": {
    "$.ui.panes": 1,
-   "$.state.get": 14,
-   "$.state.set": 8,
-   "$.command.register": 1,
+   "$.state.get": 19,
+   "$.state.set": 10,
+   "$.command.register": 2,
    "$.clock.every": 1,
    "$.fs.read": 2,
    "$.fs.stat": 2,
    "$.clock.now": 2,
-   "$.ui.open": 1,
+   "$.ui.open": 2,
    "$.ui.resolve": 1
   },
   "timers": [
@@ -121,7 +138,7 @@
                "bold": true
               },
               "children": [
-               "Knowledge"
+               "Spec"
               ]
              }
             ]
@@ -149,28 +166,92 @@
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
          "key": "location",
-         "color": "inactive",
-         "wrap": "truncate-start"
+         "height": 1
         },
         "children": [
-         "  ⎿  ",
-         "docs/business",
-         ""
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "  "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "color": "inactive",
+           "wrap": "truncate-start"
+          },
+          "children": [
+           "No /business-spec in this session yet."
+          ]
+         }
         ]
        },
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "key": "blank",
-         "color": "inactive",
-         "wrap": "wrap"
+         "key": "keys",
+         "height": 1
         },
         "children": [
-         "  ⎿  ",
-         "No knowledge base under docs/business — /cctoolkit:knowledge-sync builds it. /knowledge-pane demo shows the kit example."
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "  "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "back",
+           "hotkey": "b",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "back"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "keys-gap-1"
+          },
+          "children": [
+           "   "
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "home",
+           "hotkey": "h",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "home"
+            ]
+           }
+          ]
+         }
         ]
        }
       ]
@@ -192,7 +273,9 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(knowledge-pane)",
-   "/knowledge-pane → Knowledge pane opened — no knowledge base under docs/business."
+   "/knowledge-pane → Knowledge pane opened — no knowledge base under docs/business.",
+   "$.ui.open(knowledge-pane)",
+   "/spec-pane → Spec pane opened."
   ],
   "console": [],
   "warnings": []
@@ -206,19 +289,23 @@
    "ui.close",
    "session.start",
    "command.run{command=knowledge-pane}",
+   "command.run{command=spec-pane}",
+   "prompt.submit",
    "tool.call{tool=Bash}",
+   "tool.call",
    "ui.render{component=Pane, requestId=knowledge-pane}"
   ],
   "calls": [
    "$.clock.every",
-   "$.clock.now (via loadBase",
-   "tick)",
+   "$.clock.now",
    "$.command.register",
    "$.fs.list (via listOf)",
    "$.fs.read (via readText)",
    "$.fs.stat (via baseFiles",
    "mtimeOf",
-   "signatureOf)",
+   "reloadSpec",
+   "signatureOf",
+   "tick)",
    "$.state.get",
    "$.state.set",
    "$.ui.close (via closePane)",
@@ -229,17 +316,21 @@
   ],
   "stateReads": [
    "knowledge-pane.base",
+   "knowledge-pane.decisions",
    "knowledge-pane.full",
    "knowledge-pane.isShown",
    "knowledge-pane.nav",
-   "knowledge-pane.now"
+   "knowledge-pane.now",
+   "knowledge-pane.tracked"
   ],
   "stateWrites": [
    "knowledge-pane.base",
+   "knowledge-pane.decisions",
    "knowledge-pane.full",
    "knowledge-pane.isShown",
    "knowledge-pane.nav",
-   "knowledge-pane.now"
+   "knowledge-pane.now",
+   "knowledge-pane.tracked"
   ],
   "envReads": [],
   "raw": {
@@ -253,7 +344,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: knowledge-pane.base, knowledge-pane.nav, knowledge-pane.full, knowledge-pane.now, knowledge-pane.isShown"
+     "types ./types/index.d.ts declares state: knowledge-pane.base, knowledge-pane.nav, knowledge-pane.full, knowledge-pane.now, knowledge-pane.isShown, knowledge-pane.tracked, knowledge-pane.decisions"
     ],
     "gatingHooks": []
    },
@@ -264,13 +355,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: ui.render{component=AbovePrompt}, ui.close, session.start, command.run{command=knowledge-pane}, tool.call{tool=Bash}, ui.render{component=Pane, requestId=knowledge-pane}",
+      "./register.tsx hooks: ui.render{component=AbovePrompt}, ui.close, session.start, command.run{command=knowledge-pane}, command.run{command=spec-pane}, prompt.submit, tool.call{tool=Bash}, tool.call, ui.render{component=Pane, requestId=knowledge-pane}",
       "./register.tsx answers its own command: command.run{command=knowledge-pane}",
+      "./register.tsx answers its own command: command.run{command=spec-pane}",
       "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call{tool=Bash}",
-      "./register.tsx calls: $.clock.every, $.clock.now (via loadBase, tick), $.command.register, $.fs.list (via listOf), $.fs.read (via readText), $.fs.stat (via baseFiles, mtimeOf, signatureOf), $.state.get, $.state.set, $.ui.close (via closePane), $.ui.focus, $.ui.open (via openPane), $.ui.panes, $.ui.resolve",
-      "./register.tsx state writes: knowledge-pane.base, knowledge-pane.full, knowledge-pane.isShown, knowledge-pane.nav, knowledge-pane.now",
-      "./register.tsx state reads: knowledge-pane.base, knowledge-pane.full, knowledge-pane.isShown, knowledge-pane.nav, knowledge-pane.now"
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.fs.list (via listOf), $.fs.read (via readText), $.fs.stat (via baseFiles, mtimeOf, reloadSpec, signatureOf, tick), $.state.get, $.state.set, $.ui.close (via closePane), $.ui.focus, $.ui.open (via openPane), $.ui.panes, $.ui.resolve",
+      "./register.tsx state writes: knowledge-pane.base, knowledge-pane.decisions, knowledge-pane.full, knowledge-pane.isShown, knowledge-pane.nav, knowledge-pane.now, knowledge-pane.tracked",
+      "./register.tsx state reads: knowledge-pane.base, knowledge-pane.decisions, knowledge-pane.full, knowledge-pane.isShown, knowledge-pane.nav, knowledge-pane.now, knowledge-pane.tracked"
      ],
      "gatingHooks": [
       {
@@ -281,8 +375,20 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=Bash}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
        "hasCatch": true
       }
      ]
@@ -291,5 +397,5 @@
    "advice": []
   }
  },
- "sourceHash": "3d4c15a9dac2a45a"
+ "sourceHash": "31cb2f08fa45cb9c"
 }

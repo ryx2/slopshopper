@@ -1,9 +1,12 @@
 {
  "slug": "land-o-clusters-sleight-sleight",
- "generatedAt": "2026-10-16T14:16:21.855Z",
+ "generatedAt": "2026-10-19T16:26:19.256Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "classic.PreToolUse"
+   },
    {
     "event": "tool.check"
    },
@@ -26,6 +29,30 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__plugin_sleight_computer__replay"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__plugin_sleight_computer__browser_open"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__plugin_sleight_computer__browser_read"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__plugin_sleight_computer__browser_act"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__plugin_sleight_computer__browser_fill"
     }
    },
    {
@@ -75,6 +102,7 @@
    "$.command.register": 1,
    "$.state.get": 9,
    "$.state.set": 1,
+   "$.process.run": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -198,6 +226,7 @@
   },
   "script": [
    "session.start",
+   "$.process.run(/plugins/sleight/bin/sleight-mcp turbo-state) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -219,12 +248,14 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "classic.PreToolUse",
    "tool.check",
    "session.start",
    "prompt.submit",
    "turn.start",
    "tool.call{tool=mcp__plugin_sleight_computer__js}",
    "tool.call{tool=mcp__plugin_sleight_computer__replay}",
+   "tool.call{tool=?}",
    "tool.call{tool=mcp__plugin_sleight_computer__turn_ended}",
    "turn.complete",
    "command.run{command=sleight}",
@@ -233,13 +264,17 @@
   "calls": [
    "$.clock.after",
    "$.command.register",
+   "$.env.get",
    "$.fs.exists (via recordCurrent)",
-   "$.fs.read (via replayCurrent)",
+   "$.fs.read (via recordCurrent",
+   "replayCurrent)",
+   "$.fs.stat",
    "$.fs.write (via recordCurrent)",
    "$.mcp.call (via call",
    "replayCurrent)",
    "$.mcp.connect",
-   "$.process.run (via recordCurrent)",
+   "$.process.run (via beginTurboTurn",
+   "recordCurrent)",
    "$.prompt.submit",
    "$.session.id (via recordCurrent)",
    "$.state.get",
@@ -269,7 +304,9 @@
    "sleight.stopped",
    "sleight.view"
   ],
-  "envReads": [],
+  "envReads": [
+   "HOME"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -292,18 +329,29 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: tool.check, session.start, prompt.submit, turn.start, tool.call{tool=mcp__plugin_sleight_computer__js}, tool.call{tool=mcp__plugin_sleight_computer__replay}, tool.call{tool=mcp__plugin_sleight_computer__turn_ended}, turn.complete, command.run{command=sleight}, ui.render{component=Pane, requestId=sleight}",
+      "./register.tsx hooks: classic.PreToolUse, tool.check, session.start, prompt.submit, turn.start, tool.call{tool=mcp__plugin_sleight_computer__js}, tool.call{tool=mcp__plugin_sleight_computer__replay}, tool.call{tool=?}, tool.call{tool=mcp__plugin_sleight_computer__turn_ended}, turn.complete, command.run{command=sleight}, ui.render{component=Pane, requestId=sleight}",
+      "./register.tsx hooks on classic.PreToolUse do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=sleight}",
+      "./register.tsx gating hook without .catch: classic.PreToolUse",
       "./register.tsx gating hook with .catch: tool.check",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__plugin_sleight_computer__js}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__plugin_sleight_computer__replay}",
+      "./register.tsx gating hook without .catch: tool.call{tool=?}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__plugin_sleight_computer__turn_ended}",
-      "./register.tsx calls: $.clock.after, $.command.register, $.fs.exists (via recordCurrent), $.fs.read (via replayCurrent), $.fs.write (via recordCurrent), $.mcp.call (via call, replayCurrent), $.mcp.connect, $.process.run (via recordCurrent), $.prompt.submit, $.session.id (via recordCurrent), $.state.get, $.state.set, $.ui.log (via endEngineTurn), $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.command.register, $.env.get, $.fs.exists (via recordCurrent), $.fs.read (via recordCurrent, replayCurrent), $.fs.stat, $.fs.write (via recordCurrent), $.mcp.call (via call, replayCurrent), $.mcp.connect, $.process.run (via beginTurboTurn, recordCurrent), $.prompt.submit, $.session.id (via recordCurrent), $.state.get, $.state.set, $.ui.log (via endEngineTurn), $.ui.open, $.ui.panes (via isPaneOpen), $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME",
       "./register.tsx state writes: sleight.frame, sleight.log, sleight.receipt, sleight.replayFile, sleight.replaying, sleight.stopped, sleight.view",
       "./register.tsx state reads: sleight.frame, sleight.log, sleight.receipt, sleight.replayFile, sleight.replaying, sleight.stopped, sleight.view"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.PreToolUse",
+       "hook": "classic.PreToolUse",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.check",
@@ -331,6 +379,12 @@
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__plugin_sleight_computer__turn_ended}",
        "hasCatch": false
       }
@@ -340,5 +394,5 @@
    "advice": []
   }
  },
- "sourceHash": "3f047b3c1a27bc7f"
+ "sourceHash": "dde472d04ad16693"
 }

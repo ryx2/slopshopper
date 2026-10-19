@@ -1,6 +1,6 @@
 {
  "slug": "bengous-claude-code-plugins-todos",
- "generatedAt": "2026-10-07T15:21:43.064Z",
+ "generatedAt": "2026-10-19T16:26:10.699Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -36,6 +36,18 @@
     }
    },
    {
+    "event": "tool.check",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
+   },
+   {
     "event": "ui.scroll",
     "matcher": {
      "component": "AbovePrompt"
@@ -65,9 +77,9 @@
    "$.command.register": 1,
    "$.state.get": 12,
    "$.state.set": 9,
-   "$.process.run": 12,
+   "$.process.run": 14,
    "$.clock.now": 2,
-   "$.fs.exists": 4,
+   "$.fs.exists": 6,
    "$.fs.read": 2,
    "$.session.cwd": 1
   },
@@ -80,6 +92,7 @@
   "script": [
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "$.process.run(git grep --no-recurse-submodules --untracked --no-color -z -n -I -F -e TODO -e F…) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
    "$.process.run(git config user.email) → exit 0",
    "$.process.run(git remote get-url origin) → exit 0",
    "$.process.run(getconf _NPROCESSORS_ONLN) → exit 0",
@@ -100,6 +113,7 @@
    "turn.complete",
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
    "$.process.run(git grep --no-recurse-submodules --untracked --no-color -z -n -I -F -e TODO -e F…) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
    "$.process.run(git config user.email) → exit 0",
    "$.process.run(git remote get-url origin) → exit 0",
    "$.process.run(getconf _NPROCESSORS_ONLN) → exit 0",
@@ -118,6 +132,8 @@
    "prompt.submit",
    "command.run{command=todos}",
    "tool.call{tool=Edit|Write}",
+   "tool.check{tool=Bash}",
+   "tool.call{tool=Bash}",
    "ui.scroll{component=AbovePrompt}",
    "ui.render{component=AbovePrompt}"
   ],
@@ -125,10 +141,11 @@
    "$.clock.now (via refresh)",
    "$.command.register",
    "$.fs.exists",
+   "$.fs.list (via hostOf)",
    "$.fs.read",
    "$.process.run (via hostOf)",
-   "$.prompt.fill (via showClaude)",
-   "$.prompt.read (via showClaude)",
+   "$.prompt.fill (via fillPrompt)",
+   "$.prompt.read (via fillPrompt)",
    "$.session.cwd",
    "$.state.get",
    "$.state.set",
@@ -172,13 +189,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, prompt.submit, command.run{command=todos}, tool.call{tool=Edit|Write}, ui.scroll{component=AbovePrompt}, ui.render{component=AbovePrompt}",
+      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, prompt.submit, command.run{command=todos}, tool.call{tool=Edit|Write}, tool.check{tool=Bash}, tool.call{tool=Bash}, ui.scroll{component=AbovePrompt}, ui.render{component=AbovePrompt}",
+      "./register.ts hooks on classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts gating hook without .catch: classic.SessionStart{source=clear|resume|fork}",
       "./register.ts gating hook without .catch: prompt.submit",
       "./register.ts gating hook without .catch: command.run{command=todos}",
       "./register.ts gating hook without .catch: tool.call{tool=Edit|Write}",
+      "./register.ts gating hook without .catch: tool.check{tool=Bash}",
+      "./register.ts gating hook without .catch: tool.call{tool=Bash}",
       "./register.ts gating hook without .catch: ui.scroll{component=AbovePrompt}",
-      "./register.ts calls: $.clock.now (via refresh), $.command.register, $.fs.exists, $.fs.read, $.process.run (via hostOf), $.prompt.fill (via showClaude), $.prompt.read (via showClaude), $.session.cwd, $.state.get, $.state.set, $.ui.resolve, $.ui.toast",
+      "./register.ts calls: $.clock.now (via refresh), $.command.register, $.fs.exists, $.fs.list (via hostOf), $.fs.read, $.process.run (via hostOf), $.prompt.fill (via fillPrompt), $.prompt.read (via fillPrompt), $.session.cwd, $.state.get, $.state.set, $.ui.resolve, $.ui.toast",
       "./register.ts state writes: todos.mineOnly, todos.offset, todos.picked, todos.scan, todos.visible",
       "./register.ts state reads: todos.mineOnly, todos.offset, todos.picked, todos.scan, todos.visible"
      ],
@@ -209,14 +229,27 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "tool.check",
+       "hook": "tool.check{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
        "pattern": "ui.scroll",
        "hook": "ui.scroll{component=AbovePrompt}",
        "hasCatch": false
       }
      ]
     }
-   ]
+   ],
+   "advice": []
   }
  },
- "sourceHash": "966e97a77afdd218"
+ "sourceHash": "6c9d94c8cda8ae6b"
 }

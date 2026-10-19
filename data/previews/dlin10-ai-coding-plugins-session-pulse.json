@@ -1,6 +1,6 @@
 {
  "slug": "dlin10-ai-coding-plugins-session-pulse",
- "generatedAt": "2026-10-18T13:54:53.719Z",
+ "generatedAt": "2026-10-19T16:26:37.628Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -34,6 +34,13 @@
    {
     "event": "ui.render",
     "matcher": {
+     "component": "Pane",
+     "requestId": "session-pulse-auto"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
      "component": "AbovePrompt"
     }
    }
@@ -54,11 +61,13 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.session.usage": 1,
-   "$.state.get": 6,
+   "$.clock.now": 2,
+   "$.state.get": 7,
    "$.state.set": 5,
+   "$.store.set": 1,
    "$.store.get": 1,
-   "$.clock.now": 1,
-   "$.clock.every": 1
+   "$.clock.every": 1,
+   "$.ui.resolve": 1
   },
   "timers": [
    {
@@ -69,6 +78,96 @@
   "sites": {
    "AbovePrompt": {
     "ok": "engine"
+   },
+   "Pane": {
+    "session-pulse-auto": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {},
+        "children": [
+         "How long should auto-warming keep the cache warm?"
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "flexWrap": "wrap"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "auto-1",
+           "label": "1 h (1 warm-up)",
+           "autoFocus": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "auto-2",
+           "label": "2 h (2 warm-ups)",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "auto-4",
+           "label": "4 h (4 warm-ups)",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "auto-8",
+           "label": "8 h (8 warm-ups)",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "auto-cancel",
+           "label": "Cancel",
+           "role": "dismiss",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "auto-hours",
+         "label": "Other",
+         "placeholder": "hours, up to 24",
+         "submitLabel": "Start",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "session-pulse-auto"
+    }
    }
   },
   "script": [
@@ -100,6 +199,7 @@
    "turn.complete",
    "turn.step",
    "session.end{reason=clear}",
+   "ui.render{component=Pane, requestId=session-pulse-auto}",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
@@ -107,13 +207,13 @@
    "$.clock.now",
    "$.command.register",
    "$.model.fork (via warm)",
-   "$.session.compact (via compact)",
    "$.session.usage",
    "$.state.get",
    "$.state.set",
    "$.store.get",
    "$.store.set",
-   "$.ui.ask (via chooseAuto)",
+   "$.ui.close",
+   "$.ui.open (via chooseAuto)",
    "$.ui.resolve",
    "$.ui.toast"
   ],
@@ -125,8 +225,7 @@
    "session-pulse.isWarming",
    "session-pulse.limits",
    "session-pulse.now",
-   "session-pulse.ttlMs",
-   "session-pulse.warnHiddenAt"
+   "session-pulse.ttlMs"
   ],
   "stateWrites": [
    "session-pulse.auto",
@@ -136,8 +235,7 @@
    "session-pulse.isWarming",
    "session-pulse.limits",
    "session-pulse.now",
-   "session-pulse.ttlMs",
-   "session-pulse.warnHiddenAt"
+   "session-pulse.ttlMs"
   ],
   "envReads": [],
   "raw": {
@@ -151,7 +249,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-pulse.limits, session-pulse.cache, session-pulse.ttlMs, session-pulse.isTtlLearned, session-pulse.now, session-pulse.isHidden, session-pulse.warnHiddenAt, session-pulse.isWarming, session-pulse.auto"
+     "types ./types/index.d.ts declares state: session-pulse.limits, session-pulse.cache, session-pulse.ttlMs, session-pulse.isTtlLearned, session-pulse.now, session-pulse.isHidden, session-pulse.isWarming, session-pulse.auto"
     ],
     "gatingHooks": []
    },
@@ -162,11 +260,11 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=session-pulse}, session.measure, turn.start, turn.complete, turn.step, session.end{reason=clear}, ui.render{component=AbovePrompt}",
+      "./register.tsx hooks: session.start, command.run{command=session-pulse}, session.measure, turn.start, turn.complete, turn.step, session.end{reason=clear}, ui.render{component=Pane, requestId=session-pulse-auto}, ui.render{component=AbovePrompt}",
       "./register.tsx gating hook without .catch: command.run{command=session-pulse}",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.model.fork (via warm), $.session.compact (via compact), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.ask (via chooseAuto), $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: session-pulse.auto, session-pulse.cache, session-pulse.isHidden, session-pulse.isTtlLearned, session-pulse.isWarming, session-pulse.limits, session-pulse.now, session-pulse.ttlMs, session-pulse.warnHiddenAt",
-      "./register.tsx state reads: session-pulse.auto, session-pulse.cache, session-pulse.isHidden, session-pulse.isTtlLearned, session-pulse.isWarming, session-pulse.limits, session-pulse.now, session-pulse.ttlMs, session-pulse.warnHiddenAt"
+      "./register.tsx calls: $.clock.every, $.clock.now, $.command.register, $.model.fork (via warm), $.session.usage, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.open (via chooseAuto), $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: session-pulse.auto, session-pulse.cache, session-pulse.isHidden, session-pulse.isTtlLearned, session-pulse.isWarming, session-pulse.limits, session-pulse.now, session-pulse.ttlMs",
+      "./register.tsx state reads: session-pulse.auto, session-pulse.cache, session-pulse.isHidden, session-pulse.isTtlLearned, session-pulse.isWarming, session-pulse.limits, session-pulse.now, session-pulse.ttlMs"
      ],
      "gatingHooks": [
       {
@@ -181,5 +279,5 @@
    "advice": []
   }
  },
- "sourceHash": "f3242a9cc450bdc2"
+ "sourceHash": "932d5bd088f4c7bb"
 }

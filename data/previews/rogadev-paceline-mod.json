@@ -1,11 +1,23 @@
 {
  "slug": "rogadev-paceline-mod",
- "generatedAt": "2026-10-17T13:06:47.126Z",
+ "generatedAt": "2026-10-19T16:28:02.947Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__paceline__get_forecast_debug"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "paceline-debug"
+    }
    },
    {
     "event": "session.measure"
@@ -29,28 +41,41 @@
     }
    }
   ],
-  "commands": [],
-  "tools": [],
+  "commands": [
+   {
+    "name": "paceline-debug",
+    "description": "Prints the figures behind paceline's forecast.",
+    "output": "{\n  \"now\": \"2025-10-09T08:53:20.080Z\",\n  \"utcOffsetMinutes\": 0,\n  \"limitsMode\": \"auto\",\n  \"readings\": {\n    \"session\": {\n      \"usedPercentage\": 31\n    }\n  },\n  \"daySnapshot\": {\n    \"source\": \"none\",\n    \"value\": null\n  },\n  \"activity\": {\n    \"days\": {\n      \"20251009\": {\n        \"seen\": 256,\n        \"active\": 0\n      }\n    },\n    \"last\": {\n      \"session\": 31\n    }\n  },\n  \"pick\": null,\n  \"forecast\": null,\n  \"note\": \"No forecast: the config limits mode is not auto, or the session or week reading is missing.\"\n}"
+   }
+  ],
+  "tools": [
+   {
+    "name": "get_forecast_debug",
+    "description": "Returns, as JSON, every figure behind paceline's forecast and its 'out ~time' warning: the usage readings, the day snapshot, the stored activity history, the burn rates and where they came from, and each limit's projection. Call it when asked why the line shows what it shows. Read-only."
+   }
+  ],
   "panes": [],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.session.usage": 3,
-   "$.session.model": 3,
-   "$.session.cwd": 3,
-   "$.session.root": 3,
-   "$.session.id": 3,
-   "$.clock.now": 3,
-   "$.settings.read": 3,
-   "$.env.get": 9,
-   "$.fs.stat": 15,
-   "$.store.get": 6,
+   "$.session.usage": 4,
+   "$.session.model": 4,
+   "$.session.cwd": 4,
+   "$.session.root": 4,
+   "$.session.id": 4,
+   "$.clock.now": 4,
+   "$.settings.read": 4,
+   "$.env.get": 12,
+   "$.fs.stat": 20,
+   "$.store.get": 8,
    "$.store.set": 1,
-   "$.ui.invalidate": 2,
-   "$.ui.resolve": 3,
-   "$.clock.every": 1
+   "$.ui.invalidate": 4,
+   "$.ui.resolve": 5,
+   "$.clock.every": 1,
+   "$.tool.register": 1,
+   "$.command.register": 1
   },
   "timers": [
    {
@@ -178,7 +203,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/paceline-debug → {\n  \"now\": \"2025-10-09T08:53:20.080Z\",\n  \"utcOffsetMinutes\": 0,\n  \"limitsMode\": …"
   ],
   "console": [],
   "warnings": []
@@ -189,6 +215,8 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "tool.call{tool=mcp__paceline__get_forecast_debug}",
+   "command.run{command=paceline-debug}",
    "session.measure",
    "classic.SessionStart",
    "classic.PostToolUse",
@@ -199,6 +227,7 @@
   "calls": [
    "$.clock.every",
    "$.clock.now (via liveLine)",
+   "$.command.register",
    "$.env.get (via liveLine)",
    "$.fs.read (via readSmall",
    "readText)",
@@ -212,6 +241,7 @@
    "$.settings.read (via liveLine)",
    "$.store.get (via liveLine)",
    "$.store.set (via liveLine)",
+   "$.tool.register",
    "$.ui.invalidate (via refreshLoop)",
    "$.ui.log (via refreshLoop)",
    "$.ui.resolve"
@@ -242,17 +272,31 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.measure, classic.SessionStart, classic.PostToolUse, classic.Stop, tool.call, ui.render{component=AbovePrompt}",
+      "./register.ts hooks: session.start, tool.call{tool=mcp__paceline__get_forecast_debug}, command.run{command=paceline-debug}, session.measure, classic.SessionStart, classic.PostToolUse, classic.Stop, tool.call, ui.render{component=AbovePrompt}",
       "./register.ts hooks on classic.SessionStart, classic.PostToolUse, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__paceline__get_forecast_debug}",
+      "./register.ts gating hook without .catch: command.run{command=paceline-debug}",
       "./register.ts gating hook with .catch: classic.SessionStart",
       "./register.ts gating hook with .catch: classic.PostToolUse",
       "./register.ts gating hook with .catch: classic.Stop",
       "./register.ts gating hook with .catch: tool.call",
-      "./register.ts calls: $.clock.every, $.clock.now (via liveLine), $.env.get (via liveLine), $.fs.read (via readSmall, readText), $.fs.stat (via kindOf, readSmall), $.session.cwd (via liveLine), $.session.id (via liveLine), $.session.model (via liveLine), $.session.root (via liveLine), $.session.usage (via liveLine), $.settings.read (via liveLine), $.store.get (via liveLine), $.store.set (via liveLine), $.ui.invalidate (via refreshLoop), $.ui.log (via refreshLoop), $.ui.resolve",
+      "./register.ts calls: $.clock.every, $.clock.now (via liveLine), $.command.register, $.env.get (via liveLine), $.fs.read (via readSmall, readText), $.fs.stat (via kindOf, readSmall), $.session.cwd (via liveLine), $.session.id (via liveLine), $.session.model (via liveLine), $.session.root (via liveLine), $.session.usage (via liveLine), $.settings.read (via liveLine), $.store.get (via liveLine), $.store.set (via liveLine), $.tool.register, $.ui.invalidate (via refreshLoop), $.ui.log (via refreshLoop), $.ui.resolve",
       "./register.ts env writes: nothing",
       "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__paceline__get_forecast_debug}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=paceline-debug}",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "classic.SessionStart",
@@ -283,5 +327,5 @@
    "advice": []
   }
  },
- "sourceHash": "70e5bfa32a7ae670"
+ "sourceHash": "94b70e23d005045a"
 }

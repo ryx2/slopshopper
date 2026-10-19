@@ -1,6 +1,6 @@
 {
  "slug": "myedo-game-harnais",
- "generatedAt": "2026-10-16T14:20:59.391Z",
+ "generatedAt": "2026-10-19T16:27:50.313Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -27,6 +27,39 @@
     "matcher": {
      "isInteractive": true
     }
+   },
+   {
+    "event": "session.start",
+    "matcher": {
+     "isInteractive": [
+      true,
+      false
+     ]
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__harnais__codex_envoyer"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__harnais__codex_attendre"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__harnais__codex_etat"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
    }
   ],
   "commands": [],
@@ -36,16 +69,17 @@
   "logs": [
    "harnais, suivi.mjs --session preview-session --json : sortie JSON illisible",
    "harnais, suivi.mjs --outil --json : sortie JSON illisible",
-   "harnais, vigie.mjs --json --arbre /work/app : sortie JSON illisible"
+   "harnais, vigie.mjs --json --arbre /work/app : sortie JSON illisible",
+   "harnais, outils Codex : sortie JSON illisible"
   ],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.process.run": 5,
-   "$.state.get": 4,
-   "$.state.set": 1,
+   "$.process.run": 6,
+   "$.state.get": 6,
+   "$.state.set": 2,
    "$.session.id": 1,
-   "$.ui.log": 3,
+   "$.ui.log": 4,
    "$.clock.every": 2,
    "$.session.root": 1
   },
@@ -70,6 +104,7 @@
    "$.process.run(node /plugins/harnais/../../../scripts/ops/suivi.mjs --session preview-session -…) → exit 0",
    "$.process.run(node /plugins/harnais/../../../scripts/ops/suivi.mjs --outil --json) → exit 0",
    "$.process.run(node /plugins/harnais/../../../scripts/ops/vigie.mjs --json --arbre /work/app) → exit 0",
+   "$.process.run(node /plugins/harnais/../../../scripts/ops/session.mjs outils --json) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -94,30 +129,35 @@
    "tool.call{tool=mcp__harnais__suivi}",
    "prompt.context",
    "ui.render{component=AbovePrompt}",
-   "session.start{isInteractive=true}"
+   "session.start{isInteractive=true}",
+   "session.start{isInteractive=true|false}",
+   "tool.call{tool=mcp__harnais__codex_envoyer}",
+   "tool.call{tool=mcp__harnais__codex_attendre}",
+   "tool.call{tool=mcp__harnais__codex_etat}",
+   "ui.render{component=AbovePrompt}"
   ],
   "calls": [
    "$.clock.every",
-   "$.process.run (via mesurer",
-   "suiviMjs",
-   "synchroniserMjs)",
+   "$.process.run",
    "$.session.id",
    "$.session.root (via mesurer)",
    "$.state.get",
    "$.state.set",
    "$.tool.register",
-   "$.ui.log (via mesurer",
-   "suiviMjs)",
+   "$.ui.log",
    "$.ui.resolve",
-   "$.ui.status (via mesurer)",
-   "$.ui.toast (via mesurer)"
+   "$.ui.status (via executer",
+   "mesurer)",
+   "$.ui.toast"
   ],
   "stateReads": [
+   "harnais.codex",
    "harnais.suivi",
    "harnais.synchro",
    "harnais.vigie"
   ],
   "stateWrites": [
+   "harnais.codex",
    "harnais.suivi",
    "harnais.synchro",
    "harnais.vigie"
@@ -134,7 +174,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: harnais.suivi, harnais.vigie, harnais.synchro"
+     "types ./types/index.d.ts declares state: harnais.codex, harnais.suivi, harnais.vigie, harnais.synchro"
     ],
     "gatingHooks": []
    },
@@ -145,18 +185,39 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, tool.call{tool=mcp__harnais__suivi}, prompt.context, ui.render{component=AbovePrompt}, session.start{isInteractive=true}",
+      "./register.ts hooks: session.start, tool.call{tool=mcp__harnais__suivi}, prompt.context, ui.render{component=AbovePrompt}, session.start{isInteractive=true}, session.start{isInteractive=true|false}, tool.call{tool=mcp__harnais__codex_envoyer}, tool.call{tool=mcp__harnais__codex_attendre}, tool.call{tool=mcp__harnais__codex_etat}, ui.render{component=AbovePrompt}",
       "./register.ts hooks on prompt.context do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__harnais__suivi}",
-      "./register.ts calls: $.clock.every, $.process.run (via mesurer, suiviMjs, synchroniserMjs), $.session.id, $.session.root (via mesurer), $.state.get, $.state.set, $.tool.register, $.ui.log (via mesurer, suiviMjs), $.ui.resolve, $.ui.status (via mesurer), $.ui.toast (via mesurer)",
-      "./register.ts state writes: harnais.suivi, harnais.synchro, harnais.vigie",
-      "./register.ts state reads: harnais.suivi, harnais.synchro, harnais.vigie"
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__harnais__codex_envoyer}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__harnais__codex_attendre}",
+      "./register.ts gating hook without .catch: tool.call{tool=mcp__harnais__codex_etat}",
+      "./register.ts calls: $.clock.every, $.process.run, $.session.id, $.session.root (via mesurer), $.state.get, $.state.set, $.tool.register, $.ui.log, $.ui.resolve, $.ui.status (via executer, mesurer), $.ui.toast",
+      "./register.ts state writes: harnais.codex, harnais.suivi, harnais.synchro, harnais.vigie",
+      "./register.ts state reads: harnais.codex, harnais.suivi, harnais.synchro, harnais.vigie"
      ],
      "gatingHooks": [
       {
        "module": "./register.ts",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__harnais__suivi}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__harnais__codex_envoyer}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__harnais__codex_attendre}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__harnais__codex_etat}",
        "hasCatch": false
       }
      ]
@@ -165,5 +226,5 @@
    "advice": []
   }
  },
- "sourceHash": "b09f83ad2978f6e3"
+ "sourceHash": "81bf8d2d0587a4fd"
 }

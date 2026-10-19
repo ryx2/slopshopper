@@ -1,6 +1,6 @@
 {
  "slug": "chrfalch-agent-config-ledger",
- "generatedAt": "2026-10-16T14:19:02.184Z",
+ "generatedAt": "2026-10-19T16:27:08.550Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,18 @@
     "matcher": {
      "command": "ledger"
     }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": [
+      "ledger:close",
+      "ledger:next"
+     ]
+    }
+   },
+   {
+    "event": "turn.complete"
    }
   ],
   "commands": [
@@ -29,6 +41,7 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.state.get": 1,
    "$.session.cwd": 1,
    "$.process.run": 1
   },
@@ -58,17 +71,28 @@
   "warnings": [],
   "hooks": [
    "session.start",
-   "command.run{command=ledger}"
+   "command.run{command=ledger}",
+   "command.run{command=ledger:close|ledger:next}",
+   "turn.complete"
   ],
   "calls": [
    "$.command.register",
+   "$.command.run",
    "$.fs.read",
    "$.fs.stat (via findLedgers)",
    "$.process.run (via findLedgers)",
-   "$.session.cwd (via findLedgers)"
+   "$.prompt.submit",
+   "$.session.cwd",
+   "$.state.get",
+   "$.state.set",
+   "$.ui.log"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "ledger.armed"
+  ],
+  "stateWrites": [
+   "ledger.armed"
+  ],
   "envReads": [],
   "raw": {
    "success": true,
@@ -79,7 +103,10 @@
     "type": "plugin",
     "errors": [],
     "warnings": [],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: ledger.armed"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -89,15 +116,25 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=ledger}",
+      "./register.ts hooks: session.start, command.run{command=ledger}, command.run{command=ledger:close|ledger:next}, turn.complete",
       "./register.ts answers its own command: command.run{command=ledger}",
-      "./register.ts calls: $.command.register, $.fs.read, $.fs.stat (via findLedgers), $.process.run (via findLedgers), $.session.cwd (via findLedgers)"
+      "./register.ts gating hook with .catch: command.run{command=ledger:close|ledger:next}",
+      "./register.ts calls: $.command.register, $.command.run, $.fs.read, $.fs.stat (via findLedgers), $.process.run (via findLedgers), $.prompt.submit, $.session.cwd, $.state.get, $.state.set, $.ui.log",
+      "./register.ts state writes: ledger.armed",
+      "./register.ts state reads: ledger.armed"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=ledger:close|ledger:next}",
+       "hasCatch": true
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "9b70e0f544469f70"
+ "sourceHash": "e1f86873371814e0"
 }

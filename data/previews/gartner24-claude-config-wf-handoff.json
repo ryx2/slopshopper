@@ -1,11 +1,26 @@
 {
  "slug": "gartner24-claude-config-wf-handoff",
- "generatedAt": "2026-10-18T13:55:26.203Z",
+ "generatedAt": "2026-10-19T16:27:22.302Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "command.run",
@@ -29,13 +44,15 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.env.get": 1,
+   "$.env.get": 5,
+   "$.fs.read": 2,
    "$.session.cwd": 1,
    "$.process.run": 1
   },
   "timers": [],
   "sites": {},
   "script": [
+   "session.start: hook threw ENOENT: no such file /plugins/wf-handoff/templates/sections.md (after next)",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -61,20 +78,50 @@
   ],
   "hooks": [
    "session.start",
+   "session.end",
+   "prompt.submit",
+   "tool.call",
+   "turn.step",
+   "turn.complete",
    "command.run{command=handoff}"
   ],
   "calls": [
    "$.clock.after",
+   "$.clock.now (via log",
+   "startHandoff",
+   "writePanel)",
+   "$.clock.sleep (via finishRollover)",
    "$.command.register",
    "$.command.run",
    "$.env.get",
-   "$.process.run",
-   "$.session.cwd"
+   "$.fs.read",
+   "$.fs.stat (via finishRollover)",
+   "$.fs.write",
+   "$.process.run (via slotCmd",
+   "startServer)",
+   "$.process.spawn (via startServer)",
+   "$.prompt.submit (via resendHeld)",
+   "$.session.cwd (via slotCmd)",
+   "$.session.id",
+   "$.session.messages (via finishRollover)",
+   "$.session.surfaces (via notify)",
+   "$.session.usage",
+   "$.state.get (via notify)",
+   "$.ui.status",
+   "$.ui.toast (via notify)"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "wf-dash.facts"
+  ],
+  "stateWrites": [
+   "nothing"
+  ],
   "envReads": [
-   "HOME"
+   "AUTO_HANDOFF_DISABLE",
+   "AUTO_HANDOFF_TOKENS",
+   "HOME",
+   "TM_WORKER_NAME",
+   "WF_RUN"
   ],
   "raw": {
    "success": true,
@@ -101,17 +148,35 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=handoff}",
+      "./register.ts hooks: session.start, session.end, prompt.submit, tool.call, turn.step, turn.complete, command.run{command=handoff}",
       "./register.ts answers its own command: command.run{command=handoff}",
-      "./register.ts calls: $.clock.after, $.command.register, $.command.run, $.env.get, $.process.run, $.session.cwd",
+      "./register.ts gating hook without .catch: prompt.submit",
+      "./register.ts gating hook without .catch: tool.call",
+      "./register.ts calls: $.clock.after, $.clock.now (via log, startHandoff, writePanel), $.clock.sleep (via finishRollover), $.command.register, $.command.run, $.env.get, $.fs.read, $.fs.stat (via finishRollover), $.fs.write, $.process.run (via slotCmd, startServer), $.process.spawn (via startServer), $.prompt.submit (via resendHeld), $.session.cwd (via slotCmd), $.session.id, $.session.messages (via finishRollover), $.session.surfaces (via notify), $.session.usage, $.state.get (via notify), $.ui.status, $.ui.toast (via notify)",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: HOME"
+      "./register.ts env reads: AUTO_HANDOFF_DISABLE, AUTO_HANDOFF_TOKENS, HOME, TM_WORKER_NAME, WF_RUN",
+      "./register.ts state writes: nothing",
+      "./register.ts state reads: wf-dash.facts",
+      "./register.ts state of other plugins, not checked (run validate in a session with them enabled): wf-dash.facts"
      ],
-     "gatingHooks": []
+     "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
+     ]
     }
    ],
    "advice": []
   }
  },
- "sourceHash": "eddd22fd5447b267"
+ "sourceHash": "ee2b3c759018f4d2"
 }

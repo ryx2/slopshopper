@@ -1,6 +1,6 @@
 {
  "slug": "rbinar-cli-dispatch-cli-dispatch",
- "generatedAt": "2026-10-18T13:54:38.299Z",
+ "generatedAt": "2026-10-19T16:26:04.998Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,12 @@
     "event": "command.run",
     "matcher": {
      "command": "cli-dispatch-runs"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "cli-dispatch-runs"
     }
    },
    {
@@ -65,7 +71,7 @@
   "tools": [
    {
     "name": "dispatch",
-    "description": "Delegate a coding task to an external worker CLI through cli-dispatch's deterministic runner and wait for its verdict. The worker runs in a git worktree of `cwd`; your `verify` commands decide pass/fail; a failing verify is retried once. Returns the runner summary verbatim (session id, verify result, diff, stranded worktree, patch path). It does not apply the patch."
+    "description": "Delegate a coding task to an external worker CLI through cli-dispatch's deterministic runner and wait for its verdict. The worker runs in a git worktree of `cwd`; your `verify` commands decide pass/fail; a failing verify is retried once. Returns the runner summary verbatim (session id, verify result, diff, stranded worktree, patch path). It does not apply the patch. The worker can ask the user mid-run (its ask_user tool opens a dialog here) and reads messages the user sends from /cli-dispatch-runs, so leave a decision that is the user's to the worker; do not ask it yourself first."
    }
   ],
   "panes": [
@@ -133,7 +139,7 @@
            "dimColor": true
           },
           "children": [
-           "   BACKEND     REPO            STATE    VERIFY    SÜRE"
+           "   BACKEND     REPO            STATE    VERIFY    TIME"
           ]
          },
          {
@@ -151,7 +157,7 @@
          "dimColor": true
         },
         "children": [
-         "↑↓ / tık: run seç · satır: tam metin · b: geri · Esc: kapat"
+         "↑↓ / click: select run · click line: full text · b: back · p: prompt · i: info · Esc: close"
         ]
        }
       ]
@@ -486,6 +492,65 @@
           },
           "children": [
            {
+            "type": "Text",
+            "props": {
+             "bold": true
+            },
+            "children": [
+             "Ollama      "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "claude ✗"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {},
+            "children": [
+             "ol-agent ✗"
+            ]
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "install:ol",
+             "variant": "secondary",
+             "onPress": "[fn]"
+            },
+            "children": [
+             "install"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "  key: – none (local)"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "marginTop": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row",
+           "gap": 2
+          },
+          "children": [
+           {
             "type": "Button",
             "props": {
              "key": "install",
@@ -559,6 +624,7 @@
    "session.start",
    "command.run{command=cli-dispatch-config}",
    "command.run{command=cli-dispatch-runs}",
+   "ui.scroll{requestId=cli-dispatch-runs}",
    "ui.close",
    "tool.call{tool=mcp__cli-dispatch__dispatch}",
    "tool.call",
@@ -569,10 +635,13 @@
   "calls": [
    "$.clock.every",
    "$.clock.now",
+   "$.clock.sleep (via forkAnswer)",
    "$.command.register",
    "$.env.get",
-   "$.fs.exists (via sessionsRoot)",
-   "$.fs.list (via checkVerifying",
+   "$.fs.exists (via refreshMessages",
+   "sessionsRoot)",
+   "$.fs.list (via checkQuestions",
+   "checkVerifying",
    "refreshList",
    "reresolve",
    "scan)",
@@ -580,14 +649,17 @@
    "mainRepoOf",
    "readJson",
    "readText)",
-   "$.fs.stat (via followTab",
-   "openTab",
+   "$.fs.stat (via followFlow",
+   "openFlow",
    "realPath",
    "renderRuns",
    "scan",
    "sync)",
    "$.fs.write (via dispatch)",
-   "$.process.run (via checkVerifying",
+   "$.model.fork (via forkAnswer)",
+   "$.process.run (via askerAlive",
+   "checkQuestions",
+   "checkVerifying",
    "computeSetup",
    "dispatch",
    "helper",
@@ -595,19 +667,24 @@
    "isRunAlive",
    "liveRepos",
    "runner",
-   "saveModel)",
-   "$.session.id (via dispatchRun",
+   "saveModel",
+   "sendMessage)",
+   "$.session.id (via checkQuestions",
+   "dispatchRun",
    "refresh",
    "refreshList)",
    "$.state.get",
    "$.state.set",
    "$.tool.register",
-   "$.ui.invalidate (via renderRuns",
-   "tick)",
+   "$.ui.ask (via checkQuestions)",
+   "$.ui.invalidate",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.toast (via installSelected",
-   "saveModel)"
+   "$.ui.scroll (via renderRuns)",
+   "$.ui.toast (via checkQuestions",
+   "installSelected",
+   "saveModel",
+   "sendMessage)"
   ],
   "stateReads": [
    "cli-dispatch.setup",
@@ -646,13 +723,14 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./cli-dispatch-mod.tsx hooks: session.start, command.run{command=cli-dispatch-config}, command.run{command=cli-dispatch-runs}, ui.close, tool.call{tool=mcp__cli-dispatch__dispatch}, tool.call, ui.render{component=Pane}, ui.render{component=Pane}, ui.render{component=AbovePrompt}",
+      "./cli-dispatch-mod.tsx hooks: session.start, command.run{command=cli-dispatch-config}, command.run{command=cli-dispatch-runs}, ui.scroll{requestId=cli-dispatch-runs}, ui.close, tool.call{tool=mcp__cli-dispatch__dispatch}, tool.call, ui.render{component=Pane}, ui.render{component=Pane}, ui.render{component=AbovePrompt}",
       "./cli-dispatch-mod.tsx answers its own command: command.run{command=cli-dispatch-config}",
       "./cli-dispatch-mod.tsx gating hook without .catch: command.run{command=cli-dispatch-runs}",
+      "./cli-dispatch-mod.tsx gating hook without .catch: ui.scroll{requestId=cli-dispatch-runs}",
       "./cli-dispatch-mod.tsx gating hook without .catch: ui.close",
       "./cli-dispatch-mod.tsx gating hook with .catch: tool.call{tool=mcp__cli-dispatch__dispatch}",
       "./cli-dispatch-mod.tsx gating hook with .catch: tool.call",
-      "./cli-dispatch-mod.tsx calls: $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via sessionsRoot), $.fs.list (via checkVerifying, refreshList, reresolve, scan), $.fs.read (via isRunAlive, mainRepoOf, readJson, readText), $.fs.stat (via followTab, openTab, realPath, renderRuns, scan, sync), $.fs.write (via dispatch), $.process.run (via checkVerifying, computeSetup, dispatch, helper, installSelected, isRunAlive, liveRepos, runner, saveModel), $.session.id (via dispatchRun, refresh, refreshList), $.state.get, $.state.set, $.tool.register, $.ui.invalidate (via renderRuns, tick), $.ui.open, $.ui.resolve, $.ui.toast (via installSelected, saveModel)",
+      "./cli-dispatch-mod.tsx calls: $.clock.every, $.clock.now, $.clock.sleep (via forkAnswer), $.command.register, $.env.get, $.fs.exists (via refreshMessages, sessionsRoot), $.fs.list (via checkQuestions, checkVerifying, refreshList, reresolve, scan), $.fs.read (via isRunAlive, mainRepoOf, readJson, readText), $.fs.stat (via followFlow, openFlow, realPath, renderRuns, scan, sync), $.fs.write (via dispatch), $.model.fork (via forkAnswer), $.process.run (via askerAlive, checkQuestions, checkVerifying, computeSetup, dispatch, helper, installSelected, isRunAlive, liveRepos, runner, saveModel, sendMessage), $.session.id (via checkQuestions, dispatchRun, refresh, refreshList), $.state.get, $.state.set, $.tool.register, $.ui.ask (via checkQuestions), $.ui.invalidate, $.ui.open, $.ui.resolve, $.ui.scroll (via renderRuns), $.ui.toast (via checkQuestions, installSelected, saveModel, sendMessage)",
       "./cli-dispatch-mod.tsx env writes: nothing",
       "./cli-dispatch-mod.tsx env reads: CLI_DISPATCH_SESSIONS_DIR, CLI_DISPATCH_WORKER, HOME, TMPDIR, XDG_CACHE_HOME",
       "./cli-dispatch-mod.tsx state writes: cli-dispatch.setup, cli-dispatch.workers",
@@ -663,6 +741,12 @@
        "module": "./cli-dispatch-mod.tsx",
        "pattern": "command.run",
        "hook": "command.run{command=cli-dispatch-runs}",
+       "hasCatch": false
+      },
+      {
+       "module": "./cli-dispatch-mod.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{requestId=cli-dispatch-runs}",
        "hasCatch": false
       },
       {
@@ -689,5 +773,5 @@
    "advice": []
   }
  },
- "sourceHash": "55cccaa85715e401"
+ "sourceHash": "fd14977ddf39ac55"
 }
