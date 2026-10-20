@@ -1,6 +1,6 @@
 {
  "slug": "peterting-claude-mod-crew",
- "generatedAt": "2026-10-19T16:27:56.155Z",
+ "generatedAt": "2026-10-20T14:23:42.679Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -17,6 +17,12 @@
     "event": "agent.offer",
     "matcher": {
      "agent": "crew:qa"
+    }
+   },
+   {
+    "event": "agent.offer",
+    "matcher": {
+     "agent": "crew:uiux"
     }
    },
    {
@@ -53,6 +59,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__crew__thread_post"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__crew__review_submit"
     }
    },
    {
@@ -120,7 +132,7 @@
   "commands": [
    {
     "name": "crew",
-    "description": "crew 產品團隊：/crew start <PRD>、answer <Q-編號> <回答>、ask <pm|qa|techlead> <問題>、recall、remember、resume、status",
+    "description": "crew 產品團隊：/crew start <PRD>、answer <Q-編號> <回答>、ask <pm|qa|uiux|techlead|fullstack> <問題>、design、approve、reject、test-command、test、recall、remember、resume、status",
     "output": "crew 面板已開啟。/crew start <PRD 檔案> 開始一份 PRD。"
    }
   ],
@@ -131,7 +143,7 @@
    },
    {
     "name": "board_write",
-    "description": "寫 crew 看板，一次送出多筆操作，全部成功或全部不生效。PM：add_feature(title, summary, sources)、add_criterion(feature, text)、drop_criterion(id, reason)、drop_feature(id, reason)、link_requirements(feature, requirements)、drop_requirement(id, reason)。QA：add_test_case(criteria, title, steps, expected)。Tech lead：add_task(feature, criteria, title, detail, size)、drop_task(id, reason)。"
+    "description": "寫 crew 看板，一次送出多筆操作，全部成功或全部不生效。PM：add_feature(title, summary, sources)、add_criterion(feature, text)、drop_criterion(id, reason)、drop_feature(id, reason)、link_requirements(feature, requirements)、drop_requirement(id, reason)。QA：add_test_case(criteria, title, steps, expected)。UI/UX：add_design(feature, title, kind, body)、drop_design(id, reason)。Tech lead：add_task(feature, criteria, title, detail, size)、drop_task(id, reason)。"
    },
    {
     "name": "thread_post",
@@ -146,6 +158,10 @@
     "description": "把需要使用者決定的問題交給使用者，答案之後會轉給你。"
    },
    {
+    "name": "review_submit",
+    "description": "Tech lead 送出 review 結論：crew 把它釘在你 review 的那個 commit 上。之後又有新的 commit，就要重新 review。"
+   },
+   {
     "name": "memory_save",
     "description": "存一條長期記憶，換新 context 之後還找得到。DEC 決定、MEM 事實或限制、LES 教訓。新的取代舊的時填 supersedes。"
    },
@@ -155,7 +171,7 @@
    },
    {
     "name": "crew",
-    "description": "指揮 crew 產品團隊（PM、QA、Tech lead、全端），使用者要團隊做事時用。start：開始拆一份 PRD；ask：問 PM、QA、Tech lead 或全端；answer：把使用者對 Q-編號問題的回答轉給團隊；status：進度；remember：記下使用者的偏好；recall：查團隊記憶；rotate：讓角色下次換新 context；resume：接續中斷的工作。角色的回覆和要使用者決定的事會再通知你。"
+    "description": "指揮 crew 產品團隊（PM、QA、UI/UX、Tech lead、全端），使用者要團隊做事時用。start：開始拆一份 PRD；ask：問 PM、QA、UI/UX、Tech lead 或全端；answer：把使用者對 Q-編號問題的回答轉給團隊；status：進度；remember：記下使用者的偏好；recall：查團隊記憶；rotate：讓角色下次換新 context；resume：接續中斷的工作；test：用使用者設定的測試指令重跑測試（指令只能由使用者自己用 /crew test-command 設定）；design：讀一份設計稿（設計稿只能由使用者自己用 /crew approve、/crew reject 核准或退回）。角色的回覆和要使用者決定的事會再通知你。"
    }
   ],
   "panes": [
@@ -174,9 +190,9 @@
    "$.store.get": 1,
    "$.fs.exists": 2,
    "$.clock.now": 1,
-   "$.agent.register": 4,
+   "$.agent.register": 5,
    "$.command.register": 1,
-   "$.tool.register": 8,
+   "$.tool.register": 9,
    "$.clock.every": 2,
    "$.ui.open": 1,
    "$.ui.resolve": 2,
@@ -241,6 +257,7 @@
    "tool.call{tool=mcp__crew__board_read}",
    "tool.call{tool=mcp__crew__board_write}",
    "tool.call{tool=mcp__crew__thread_post}",
+   "tool.call{tool=mcp__crew__review_submit}",
    "tool.call{tool=mcp__crew__thread_read}",
    "tool.call{tool=mcp__crew__ask_person}",
    "tool.call{tool=mcp__crew__crew}",
@@ -260,21 +277,27 @@
    "startRole)",
    "$.agent.register",
    "$.agent.spawn (via startRole)",
+   "$.clock.after (via laterTests)",
    "$.clock.every",
    "$.clock.now",
+   "$.clock.sleep (via laterTests)",
    "$.command.register",
    "$.fs.exists (via consolidateDue",
    "ensureWorkdir",
+   "ownFileNow",
    "readCrew",
-   "restore)",
+   "restore",
+   "runOnce)",
    "$.fs.list (via consolidateDue",
    "restore)",
    "$.fs.read (via boardState",
    "crewVerb",
+   "ownFileNow",
    "readCrew",
    "readPrd",
    "resumeFlow)",
    "$.fs.stat (via crewVerb",
+   "ownFileNow",
    "prdFile",
    "realRoot",
    "staysIn",
@@ -282,14 +305,20 @@
    "$.fs.write (via saveBoard",
    "writeCrew)",
    "$.model.complete (via consolidate)",
-   "$.process.run (via gitIn)",
+   "$.process.run (via gitIn",
+   "runOnce)",
    "$.prompt.submit (via flushBrain)",
    "$.session.send (via deliver)",
    "$.state.get",
    "$.state.set",
-   "$.store.get (via loadWork",
+   "$.store.delete (via crewVerb)",
+   "$.store.get (via loadDecided",
+   "loadTestCommand",
+   "loadWork",
    "restore)",
-   "$.store.set (via saveState",
+   "$.store.set (via crewVerb",
+   "decide",
+   "saveState",
    "saveWork)",
    "$.tool.register",
    "$.ui.close (via crewVerb)",
@@ -337,13 +366,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, agent.offer{agent=?}, command.run{command=crew}, tool.call{tool=mcp__crew__board_read}, tool.call{tool=mcp__crew__board_write}, tool.call{tool=mcp__crew__thread_post}, tool.call{tool=mcp__crew__thread_read}, tool.call{tool=mcp__crew__ask_person}, tool.call{tool=mcp__crew__crew}, tool.call{tool=mcp__crew__memory_save}, tool.call{tool=mcp__crew__memory_search}, session.receive, prompt.submit, session.compact, turn.start, turn.step, turn.complete, ui.render{component=Pane, requestId=crew}, ui.render{component=AbovePrompt}",
-      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, agent.offer{agent=?}, command.run{command=crew}, tool.call{tool=mcp__crew__board_read}, tool.call{tool=mcp__crew__board_write}, tool.call{tool=mcp__crew__thread_post}, tool.call{tool=mcp__crew__review_submit}, tool.call{tool=mcp__crew__thread_read}, tool.call{tool=mcp__crew__ask_person}, tool.call{tool=mcp__crew__crew}, tool.call{tool=mcp__crew__memory_save}, tool.call{tool=mcp__crew__memory_search}, session.receive, prompt.submit, session.compact, turn.start, turn.step, turn.complete, ui.render{component=Pane, requestId=crew}, ui.render{component=AbovePrompt}",
       "./register.tsx answers its own command: command.run{command=crew}",
       "./register.tsx gating hook without .catch: agent.offer{agent=?}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__board_read}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__board_write}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__thread_post}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__review_submit}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__thread_read}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__ask_person}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__crew__crew}",
@@ -352,7 +381,7 @@
       "./register.tsx gating hook without .catch: session.receive",
       "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.agent.list (via resumeFlow, startRole), $.agent.register, $.agent.spawn (via startRole), $.clock.every, $.clock.now, $.command.register, $.fs.exists (via consolidateDue, ensureWorkdir, readCrew, restore), $.fs.list (via consolidateDue, restore), $.fs.read (via boardState, crewVerb, readCrew, readPrd, resumeFlow), $.fs.stat (via crewVerb, prdFile, realRoot, staysIn, versionOf), $.fs.write (via saveBoard, writeCrew), $.model.complete (via consolidate), $.process.run (via gitIn), $.prompt.submit (via flushBrain), $.session.send (via deliver), $.state.get, $.state.set, $.store.get (via loadWork, restore), $.store.set (via saveState, saveWork), $.tool.register, $.ui.close (via crewVerb), $.ui.log, $.ui.open (via crewVerb), $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.agent.list (via resumeFlow, startRole), $.agent.register, $.agent.spawn (via startRole), $.clock.after (via laterTests), $.clock.every, $.clock.now, $.clock.sleep (via laterTests), $.command.register, $.fs.exists (via consolidateDue, ensureWorkdir, ownFileNow, readCrew, restore, runOnce), $.fs.list (via consolidateDue, restore), $.fs.read (via boardState, crewVerb, ownFileNow, readCrew, readPrd, resumeFlow), $.fs.stat (via crewVerb, ownFileNow, prdFile, realRoot, staysIn, versionOf), $.fs.write (via saveBoard, writeCrew), $.model.complete (via consolidate), $.process.run (via gitIn, runOnce), $.prompt.submit (via flushBrain), $.session.send (via deliver), $.state.get, $.state.set, $.store.delete (via crewVerb), $.store.get (via loadDecided, loadTestCommand, loadWork, restore), $.store.set (via crewVerb, decide, saveState, saveWork), $.tool.register, $.ui.close (via crewVerb), $.ui.log, $.ui.open (via crewVerb), $.ui.resolve, $.ui.toast",
       "./register.tsx state writes: crew.gate, crew.isDemo, crew.live, crew.scenario, crew.tab, crew.thread",
       "./register.tsx state reads: crew.gate, crew.isDemo, crew.live, crew.scenario, crew.tab, crew.thread"
      ],
@@ -379,6 +408,12 @@
        "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__crew__thread_post}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__crew__review_submit}",
        "hasCatch": false
       },
       {
@@ -435,5 +470,5 @@
    "advice": []
   }
  },
- "sourceHash": "4a386132fabecce0"
+ "sourceHash": "fc9799576dc16861"
 }

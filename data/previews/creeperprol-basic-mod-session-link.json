@@ -1,6 +1,6 @@
 {
  "slug": "creeperprol-basic-mod-session-link",
- "generatedAt": "2026-10-19T16:27:10.549Z",
+ "generatedAt": "2026-10-20T14:22:47.862Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -28,6 +28,12 @@
    {
     "event": "command.run",
     "matcher": {
+     "command": "run"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
      "command": "board"
     }
    },
@@ -41,6 +47,12 @@
     "event": "tool.call",
     "matcher": {
      "tool": "mcp__session-link__assign"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-link__command"
     }
    },
    {
@@ -175,6 +187,11 @@
     "output": "Usage: /setname <session> <new name>"
    },
    {
+    "name": "run",
+    "description": "Host: run a slash command in a worker: /run <session|all> /cost",
+    "output": "Usage: /run <session|all> /cost"
+   },
+   {
     "name": "usage-bar",
     "description": "Open the usage meters in a side pane",
     "output": "Usage pane opened."
@@ -188,6 +205,10 @@
    {
     "name": "report",
     "description": "Worker only. Send the result of a task the host assigned back to the host."
+   },
+   {
+    "name": "command",
+    "description": "Host only. Run a slash command in a worker session, e.g. \"/cost\" or \"/effort high\". Allowed: compact, clear, cost. Use worker \"all\" for every worker."
    },
    {
     "name": "rename",
@@ -215,13 +236,13 @@
   "apiCalls": {
    "$.session.id": 8,
    "$.session.cwd": 2,
-   "$.store.get": 18,
-   "$.state.get": 93,
+   "$.store.get": 19,
+   "$.state.get": 94,
    "$.state.set": 13,
    "$.clock.now": 22,
    "$.store.set": 3,
-   "$.command.register": 9,
-   "$.tool.register": 4,
+   "$.command.register": 10,
+   "$.tool.register": 5,
    "$.ui.open": 5,
    "$.session.usage": 11,
    "$.ui.invalidate": 21,
@@ -1052,6 +1073,7 @@
    "/assign → Usage: /assign <session name|auto|all> <task> (auto = the least-loaded worker)",
    "/board → No tasks yet.",
    "/setname → Usage: /setname <session> <new name>",
+   "/run → Usage: /run <session|all> /cost",
    "$.ui.open(usage-bar)",
    "/usage-bar → Usage pane opened."
   ],
@@ -1069,9 +1091,11 @@
    "command.run{command=host}",
    "command.run{command=assign}",
    "command.run{command=setname}",
+   "command.run{command=run}",
    "command.run{command=board}",
    "tool.call{tool=mcp__session-link__peers}",
    "tool.call{tool=mcp__session-link__assign}",
+   "tool.call{tool=mcp__session-link__command}",
    "tool.call{tool=mcp__session-link__rename}",
    "tool.call{tool=mcp__session-link__report}",
    "command.run{command=link}",
@@ -1168,15 +1192,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=host}, command.run{command=assign}, command.run{command=setname}, command.run{command=board}, tool.call{tool=mcp__session-link__peers}, tool.call{tool=mcp__session-link__assign}, tool.call{tool=mcp__session-link__rename}, tool.call{tool=mcp__session-link__report}, command.run{command=link}, command.run{command=sessions}, command.run{command=tell}, command.run{command=tellall}, prompt.compose, session.receive, command.run{command=rename}, classic.UserPromptSubmit, turn.complete, session.end, ui.render{component=Pane, requestId=session-link}, command.run{command=usage-bar}, classic.SessionStart, prompt.submit, session.measure, tool.call, ui.render{component=Pane, requestId=usage-bar}",
-      "./register.tsx hooks on prompt.compose, classic.UserPromptSubmit, classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, command.run{command=host}, command.run{command=assign}, command.run{command=setname}, command.run{command=run}, command.run{command=board}, tool.call{tool=mcp__session-link__peers}, tool.call{tool=mcp__session-link__assign}, tool.call{tool=mcp__session-link__command}, tool.call{tool=mcp__session-link__rename}, tool.call{tool=mcp__session-link__report}, command.run{command=link}, command.run{command=sessions}, command.run{command=tell}, command.run{command=tellall}, prompt.compose, session.receive, command.run{command=rename}, classic.UserPromptSubmit, turn.complete, session.end, ui.render{component=Pane, requestId=session-link}, command.run{command=usage-bar}, classic.SessionStart, prompt.submit, session.measure, tool.call, ui.render{component=Pane, requestId=usage-bar}",
       "./register.tsx answers its own command: command.run{command=usage-bar}",
       "./register.tsx gating hook without .catch: command.run{command=host}",
       "./register.tsx gating hook without .catch: command.run{command=assign}",
       "./register.tsx gating hook without .catch: command.run{command=setname}",
+      "./register.tsx gating hook without .catch: command.run{command=run}",
       "./register.tsx gating hook without .catch: command.run{command=board}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-link__peers}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-link__assign}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-link__command}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-link__rename}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-link__report}",
       "./register.tsx gating hook without .catch: command.run{command=link}",
@@ -1215,6 +1240,12 @@
       {
        "module": "./register.tsx",
        "pattern": "command.run",
+       "hook": "command.run{command=run}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
        "hook": "command.run{command=board}",
        "hasCatch": false
       },
@@ -1228,6 +1259,12 @@
        "module": "./register.tsx",
        "pattern": "tool.call",
        "hook": "tool.call{tool=mcp__session-link__assign}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-link__command}",
        "hasCatch": false
       },
       {
@@ -1308,5 +1345,5 @@
    "advice": []
   }
  },
- "sourceHash": "d1902087db984649"
+ "sourceHash": "4f69e65ec23372c4"
 }

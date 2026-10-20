@@ -1,6 +1,6 @@
 {
  "slug": "ioctllr-claude-needs-times-too",
- "generatedAt": "2026-10-16T14:19:56.026Z",
+ "generatedAt": "2026-10-20T14:23:07.128Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -14,13 +14,13 @@
     }
    },
    {
-    "event": "tool.call"
-   },
-   {
     "event": "command.run",
     "matcher": {
      "command": "timestamps"
     }
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "session.append",
@@ -33,6 +33,9 @@
     "matcher": {
      "door": "prompt"
     }
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "prompt.compose"
@@ -48,7 +51,7 @@
   "tools": [
    {
     "name": "timestamps",
-    "description": "Turn harness timestamps on or off. When on, each tool result ends with its local time and each user prompt is followed by the current time. Off by default; turn on when the time matters, off when it does not."
+    "description": "Turn harness timestamps on or off. When on, the current local time follows each user prompt and each batch of tool results. Off by default; turn on when the time matters, off when it does not."
    }
   ],
   "panes": [],
@@ -59,7 +62,7 @@
   "apiCalls": {
    "$.tool.register": 1,
    "$.command.register": 1,
-   "$.state.get": 19,
+   "$.state.get": 1,
    "$.state.set": 1
   },
   "timers": [],
@@ -90,16 +93,17 @@
   "hooks": [
    "session.start",
    "tool.call{tool=mcp__date-time__timestamps}",
-   "tool.call",
    "command.run{command=timestamps}",
+   "turn.step",
    "session.append{door=tool-result}",
    "session.append{door=prompt}",
+   "session.compact",
    "prompt.compose"
   ],
   "calls": [
-   "$.clock.now",
+   "$.clock.now (via stamp)",
    "$.command.register",
-   "$.session.append",
+   "$.session.append (via remind)",
    "$.state.get (via read)",
    "$.state.set",
    "$.tool.register"
@@ -139,14 +143,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, tool.call{tool=mcp__date-time__timestamps}, tool.call, command.run{command=timestamps}, session.append{door=tool-result}, session.append{door=prompt}, prompt.compose",
-      "./register.ts hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts hooks: session.start, tool.call{tool=mcp__date-time__timestamps}, command.run{command=timestamps}, turn.step, session.append{door=tool-result}, session.append{door=prompt}, session.compact, prompt.compose",
       "./register.ts gating hook without .catch: tool.call{tool=mcp__date-time__timestamps}",
-      "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook without .catch: command.run{command=timestamps}",
-      "./register.ts gating hook with .catch: session.append{door=tool-result}",
-      "./register.ts gating hook with .catch: session.append{door=prompt}",
-      "./register.ts calls: $.clock.now, $.command.register, $.session.append, $.state.get (via read), $.state.set, $.tool.register",
+      "./register.ts gating hook without .catch: session.append{door=tool-result}",
+      "./register.ts gating hook without .catch: session.append{door=prompt}",
+      "./register.ts gating hook without .catch: session.compact",
+      "./register.ts calls: $.clock.now (via stamp), $.command.register, $.session.append (via remind), $.state.get (via read), $.state.set, $.tool.register",
       "./register.ts state writes: date-time.timestamps",
       "./register.ts state reads: date-time.timestamps"
      ],
@@ -159,12 +162,6 @@
       },
       {
        "module": "./register.ts",
-       "pattern": "tool.call",
-       "hook": "tool.call",
-       "hasCatch": true
-      },
-      {
-       "module": "./register.ts",
        "pattern": "command.run",
        "hook": "command.run{command=timestamps}",
        "hasCatch": false
@@ -173,13 +170,19 @@
        "module": "./register.ts",
        "pattern": "session.append",
        "hook": "session.append{door=tool-result}",
-       "hasCatch": true
+       "hasCatch": false
       },
       {
        "module": "./register.ts",
        "pattern": "session.append",
        "hook": "session.append{door=prompt}",
-       "hasCatch": true
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.compact",
+       "hook": "session.compact",
+       "hasCatch": false
       }
      ]
     }
@@ -187,5 +190,5 @@
    "advice": []
   }
  },
- "sourceHash": "11da25e969e39f1e"
+ "sourceHash": "cd04c70c6168988"
 }

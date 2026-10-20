@@ -1,0 +1,9 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-kbv-v10",
+ "files": {
+  "hooks/register.ts": "import type { EngineInterface, Register } from 'claude-code'\nimport { GhTool } from './tools'\nimport type { Run } from './tools'\nfunction runnerOf($: EngineInterface): Run { return (argv) => $.process.run(argv) }\nexport const register: Register = (on) => {\n  on('session.start', async ($, e, next) => { await new GhTool(runnerOf($)).probe(); return next(e) })\n}\n",
+  "hooks/tools.ts": "export type RunResult = { exitCode: number; stdout: string; stderr: string; isStdoutTruncated: boolean; isStderrTruncated: boolean }\nexport type Run = (argv: readonly string[]) => Promise<RunResult>\nexport abstract class Tool {\n  constructor(protected readonly run: Run) {}\n  abstract probe(): Promise<boolean>\n}\nexport class GhTool extends Tool {\n  async probe(): Promise<boolean> {\n    try { return (await this.run(['gh', '--version'])).exitCode === 0 } catch { return false }\n  }\n}\nexport abstract class TrackedItem {\n  constructor(readonly id: string) {}\n  abstract canRefresh(): boolean\n  abstract refresh(): Promise<void>\n}\nexport class GhItem extends TrackedItem {\n  constructor(id: string, private readonly tool: GhTool) { super(id) }\n  canRefresh() { return true }\n  async refresh() { await this.tool.probe() }\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"kbv-v10\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  }\n}"
+ }
+}

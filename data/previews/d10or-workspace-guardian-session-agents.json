@@ -1,0 +1,992 @@
+{
+ "slug": "d10or-workspace-guardian-session-agents",
+ "generatedAt": "2026-10-20T14:22:48.571Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "sessions"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "agents"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "note"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "tell"
+    }
+   },
+   {
+    "event": "session.receive"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "claim"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "release"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-agents__claim_files"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-agents__release_claims"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-agents__message_peer"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "task"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-agents__list_tasks"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__session-agents__list_peers"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "session-agents"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "tell",
+    "description": "Message a parallel session: /tell <name-or-id-prefix> <text>",
+    "output": "Usage: /tell <name-or-session-id-prefix> <message>"
+   },
+   {
+    "name": "note",
+    "description": "Save a note: /note <text>",
+    "output": "Usage: /note <text>"
+   },
+   {
+    "name": "claim",
+    "description": "Claim files for a while: /claim [minutes] <path[,path...]> [note]",
+    "output": "Usage: /claim [minutes] <path[,path...]> [note]"
+   },
+   {
+    "name": "release",
+    "description": "Release your claims: /release [path|all]",
+    "output": "You have no active claims."
+   },
+   {
+    "name": "sessions",
+    "description": "Open the sessions + worktrees control pane",
+    "output": "Control tower opened."
+   },
+   {
+    "name": "task",
+    "description": "Declare task ownership: /task add <ID> <paths> [--branch <name>] [note] | /task done <ID> | /task list",
+    "output": "No tasks declared. /task add <ID> <paths> [--branch <name>] [note]"
+   }
+  ],
+  "tools": [
+   {
+    "name": "message_peer",
+    "description": "Send a short plain-text message to another live Claude session on this machine (call list_peers first for names). Use sparingly, only to coordinate on shared files or hand off one fact. The user can see every message; exchanges are hop-limited and the receiver may not answer. Never include secrets."
+   },
+   {
+    "name": "claim_files",
+    "description": "Announce that you are working on specific files or folders so other Claude sessions stay out. Other sessions are paused on their first edit to a claimed path and told to message you. Paths are relative to the repo root; a folder claims everything under it and * / ** patterns work. Claims expire (default 60 minutes, max 480) or end when you call release_claims. Use it for real multi-edit work, not for a single small change."
+   },
+   {
+    "name": "release_claims",
+    "description": "Release claims you made with claim_files. Pass paths to release just those, or nothing to release all of yours."
+   },
+   {
+    "name": "list_tasks",
+    "description": "List declared task ownership for this repository: which task owns which paths on which branch, and any declared overlaps. Check it before editing outside your own task."
+   },
+   {
+    "name": "list_peers",
+    "description": "List the other live Claude sessions on this machine: name, status, git branch, directory and files they are editing."
+   }
+  ],
+  "panes": [
+   {
+    "id": "session-agents",
+    "title": "Control tower"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.process.run": 25,
+   "$.session.id": 1,
+   "$.session.root": 1,
+   "$.command.register": 6,
+   "$.fs.read": 20,
+   "$.state.get": 54,
+   "$.state.set": 22,
+   "$.tool.register": 5,
+   "$.clock.every": 2,
+   "$.clock.now": 8,
+   "$.session.usage": 1,
+   "$.fs.write": 3,
+   "$.fs.list": 9,
+   "$.agent.list": 2,
+   "$.ui.status": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 5000
+   },
+   {
+    "kind": "every",
+    "ms": 30000
+   }
+  ],
+  "sites": {
+   "AbovePrompt": {
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {},
+     "children": [
+      {
+       "type": "Text",
+       "props": {},
+       "children": [
+        {
+         "type": "Text",
+         "props": {
+          "color": "cyan",
+          "bold": true
+         },
+         "children": [
+          "⎇ ",
+          "feat/auth-refresh"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "yellow"
+         },
+         "children": [
+          " ±",
+          "2"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "  │  "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "white"
+         },
+         "children": [
+          "0",
+          " session",
+          "s",
+          ""
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "  │  "
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "color": "blue"
+         },
+         "children": [
+          "0",
+          " worktree",
+          "s"
+         ]
+        },
+        {
+         "type": "Text",
+         "props": {
+          "dimColor": true
+         },
+         "children": [
+          "  │  /sessions"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "Pane": {
+    "session-agents": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1,
+       "backgroundColor": "#ffffff",
+       "width": 56,
+       "minHeight": 40,
+       "paddingX": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-overview",
+           "label": "● Overview",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-sessions",
+           "label": "○ Sessions 0",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-git",
+           "label": "○ Git",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-history",
+           "label": "○ History",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-messages",
+           "label": "○ Messages",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-usage",
+           "label": "○ Usage",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-actions",
+           "label": "○ Actions",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-notes",
+           "label": "○ Notes",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "task",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#6b7280",
+         "paddingX": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#6b7280",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "Tasks  0"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "none",
+           "dimColor": true,
+           "color": "#1f2937",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "none. /task add ",
+           "<ID> <paths>",
+           " [--branch ",
+           "<name>",
+           "] [note]"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "claim",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#a16207",
+         "paddingX": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#a16207",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "Claims  0"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "none",
+           "dimColor": true,
+           "color": "#1f2937",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "none. /claim ",
+           "<paths>",
+           " [note], or sessions can use claim_files"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "me",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#0e7490",
+         "paddingX": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#0e7490",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "This session"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "me1",
+           "color": "#1f2937",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "⎇ ",
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "#1f2937",
+             "backgroundColor": "#ffffff"
+            },
+            "children": [
+             "feat/auth-refresh"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "color": "#a16207",
+             "backgroundColor": "#ffffff"
+            },
+            "children": [
+             "  ±",
+             "2",
+             " dirty"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "me2",
+           "dimColor": true,
+           "color": "#1f2937",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "0",
+           " other sessions · ",
+           "0",
+           " busy · ",
+           "0",
+           " subagents · ",
+           "0",
+           " worktrees"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "att",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#15803d",
+         "paddingX": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#15803d",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "Needs attention  0"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "ok",
+           "color": "#15803d",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "all quiet"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "busy",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#15803d",
+         "paddingX": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#15803d",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "Working now  0"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "none",
+           "dimColor": true,
+           "color": "#1f2937",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "nothing busy"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "sub",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#a21caf",
+         "paddingX": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#a21caf",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "Subagents  0"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "key": "none",
+           "dimColor": true,
+           "color": "#1f2937",
+           "backgroundColor": "#ffffff"
+          },
+          "children": [
+           "none running"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "gap": 1,
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "refresh",
+           "label": "Refresh",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "fetch",
+           "label": "Fetch origin",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "color": "#1f2937",
+         "backgroundColor": "#ffffff"
+        },
+        "children": [
+         "session-agents v",
+         "0.15.0",
+         "  ·  ",
+         "preview-"
+        ]
+       }
+      ]
+     },
+     "title": "Control tower"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
+   "$.process.run(git rev-parse --path-format=absolute --git-common-dir) → exit 0",
+   "$.process.run(git symbolic-ref --short refs/remotes/origin/HEAD) → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(python3 -c import sys, json\npath, off = sys.argv[1], int(sys.argv[2])\ntry:\n    f…) → exit 0",
+   "$.fs.write(/preview-session.json)",
+   "$.process.run(git rev-list --left-right --count feat/auth-refresh...HEAD) → exit 0",
+   "$.process.run(git worktree list --porcelain) → exit 0",
+   "$.process.run(git branch --merged feat/auth-refresh --format=%(refname:short)) → exit 0",
+   "$.process.run(git status --porcelain) → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "/tell → Usage: /tell <name-or-session-id-prefix> <message>",
+   "/note → Usage: /note <text>",
+   "/claim → Usage: /claim [minutes] <path[,path...]> [note]",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.fs.write(/preview-session.json)",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "/release → You have no active claims.",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.fs.write(/preview-session.json)",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.process.run(sh -c printf \"%s\n%s\n%s\" \"$HOME\" \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\" \"$(uname)\") → exit 0",
+   "$.ui.open(session-agents)",
+   "/sessions → Control tower opened.",
+   "/task → No tasks declared. /task add <ID> <paths> [--branch <name>] [note]"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "prompt.submit",
+   "tool.call",
+   "prompt.compose",
+   "command.run{command=sessions}",
+   "command.run{command=agents}",
+   "command.run{command=note}",
+   "command.run{command=tell}",
+   "session.receive",
+   "command.run{command=claim}",
+   "command.run{command=release}",
+   "tool.call{tool=mcp__session-agents__claim_files}",
+   "tool.call{tool=mcp__session-agents__release_claims}",
+   "tool.call{tool=mcp__session-agents__message_peer}",
+   "command.run{command=task}",
+   "tool.call{tool=mcp__session-agents__list_tasks}",
+   "tool.call{tool=mcp__session-agents__list_peers}",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=session-agents}"
+  ],
+  "calls": [
+   "$.agent.list (via tick)",
+   "$.clock.every",
+   "$.clock.now",
+   "$.command.register",
+   "$.fs.list (via loadClaims",
+   "loadMsgs",
+   "readSubagents",
+   "tick)",
+   "$.fs.read (via loadHistory",
+   "loadNotes",
+   "loadPins",
+   "loadPrefs",
+   "loadTasks",
+   "readClaimFile",
+   "readMsgFile",
+   "readSubagents",
+   "tick)",
+   "$.fs.write (via clearHistory",
+   "clearMsgs",
+   "recordFinish",
+   "recordMsg",
+   "saveClaims",
+   "saveNotes",
+   "savePrefs",
+   "saveTasks",
+   "tick",
+   "togglePin)",
+   "$.process.run (via appRunning",
+   "doFetch",
+   "ensurePaths",
+   "git",
+   "osa",
+   "readActivity",
+   "runAction",
+   "scanTranscript",
+   "tick)",
+   "$.prompt.fill (via fillTell",
+   "noteFromPrompt)",
+   "$.prompt.read (via noteFromPrompt)",
+   "$.session.id (via init)",
+   "$.session.root (via init)",
+   "$.session.send (via sendToPeer)",
+   "$.session.usage (via usageTick)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.ask",
+   "$.ui.copy (via copyText",
+   "jumpTo)",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status (via tick)",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "session-agents.agents",
+   "session-agents.claims",
+   "session-agents.git",
+   "session-agents.history",
+   "session-agents.me",
+   "session-agents.messages",
+   "session-agents.notes",
+   "session-agents.peers",
+   "session-agents.pins",
+   "session-agents.tasks",
+   "session-agents.ui",
+   "session-agents.usage"
+  ],
+  "stateWrites": [
+   "session-agents.agents",
+   "session-agents.claims",
+   "session-agents.git",
+   "session-agents.history",
+   "session-agents.me",
+   "session-agents.messages",
+   "session-agents.notes",
+   "session-agents.peers",
+   "session-agents.pins",
+   "session-agents.tasks",
+   "session-agents.ui",
+   "session-agents.usage"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/d10or-workspace-guardian-session-agents/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/d10or-workspace-guardian-session-agents/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: session-agents.agents, session-agents.peers, session-agents.me, session-agents.git, session-agents.ui, session-agents.notes, session-agents.history, session-agents.pins, session-agents.messages, session-agents.claims, session-agents.tasks, session-agents.usage"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/d10or-workspace-guardian-session-agents/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, prompt.submit, tool.call, prompt.compose, command.run{command=sessions}, command.run{command=agents}, command.run{command=note}, command.run{command=tell}, session.receive, command.run{command=claim}, command.run{command=release}, tool.call{tool=mcp__session-agents__claim_files}, tool.call{tool=mcp__session-agents__release_claims}, tool.call{tool=mcp__session-agents__message_peer}, command.run{command=task}, tool.call{tool=mcp__session-agents__list_tasks}, tool.call{tool=mcp__session-agents__list_peers}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=session-agents}",
+      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: tool.call",
+      "./register.tsx gating hook without .catch: command.run{command=sessions}",
+      "./register.tsx gating hook without .catch: command.run{command=agents}",
+      "./register.tsx gating hook without .catch: command.run{command=note}",
+      "./register.tsx gating hook without .catch: command.run{command=tell}",
+      "./register.tsx gating hook without .catch: session.receive",
+      "./register.tsx gating hook without .catch: command.run{command=claim}",
+      "./register.tsx gating hook without .catch: command.run{command=release}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-agents__claim_files}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-agents__release_claims}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-agents__message_peer}",
+      "./register.tsx gating hook without .catch: command.run{command=task}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-agents__list_tasks}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-agents__list_peers}",
+      "./register.tsx calls: $.agent.list (via tick), $.clock.every, $.clock.now, $.command.register, $.fs.list (via loadClaims, loadMsgs, readSubagents, tick), $.fs.read (via loadHistory, loadNotes, loadPins, loadPrefs, loadTasks, readClaimFile, readMsgFile, readSubagents, tick), $.fs.write (via clearHistory, clearMsgs, recordFinish, recordMsg, saveClaims, saveNotes, savePrefs, saveTasks, tick, togglePin), $.process.run (via appRunning, doFetch, ensurePaths, git, osa, readActivity, runAction, scanTranscript, tick), $.prompt.fill (via fillTell, noteFromPrompt), $.prompt.read (via noteFromPrompt), $.session.id (via init), $.session.root (via init), $.session.send (via sendToPeer), $.session.usage (via usageTick), $.state.get, $.state.set, $.tool.register, $.ui.ask, $.ui.copy (via copyText, jumpTo), $.ui.open, $.ui.resolve, $.ui.status (via tick), $.ui.toast",
+      "./register.tsx state writes: session-agents.agents, session-agents.claims, session-agents.git, session-agents.history, session-agents.me, session-agents.messages, session-agents.notes, session-agents.peers, session-agents.pins, session-agents.tasks, session-agents.ui, session-agents.usage",
+      "./register.tsx state reads: session-agents.agents, session-agents.claims, session-agents.git, session-agents.history, session-agents.me, session-agents.messages, session-agents.notes, session-agents.peers, session-agents.pins, session-agents.tasks, session-agents.ui, session-agents.usage"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=sessions}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=agents}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=note}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=tell}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.receive",
+       "hook": "session.receive",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=claim}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=release}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-agents__claim_files}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-agents__release_claims}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-agents__message_peer}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=task}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-agents__list_tasks}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__session-agents__list_peers}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "69f52ac708b1b285"
+}

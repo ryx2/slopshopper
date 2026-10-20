@@ -1,6 +1,6 @@
 {
  "slug": "branch8-claude-plugins-branch8-jira-mod",
- "generatedAt": "2026-10-19T16:27:07.866Z",
+ "generatedAt": "2026-10-20T14:22:41.874Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -117,9 +117,11 @@
    "$.process.run": 3,
    "$.env.get": 12,
    "$.fs.exists": 11,
-   "$.state.get": 42,
+   "$.state.get": 44,
    "$.state.set": 11,
    "$.store.get": 4,
+   "$.fs.read": 1,
+   "$.http.fetch": 1,
    "$.settings.read": 1,
    "$.ui.open": 1,
    "$.mcp.call": 2,
@@ -257,6 +259,7 @@
   },
   "script": [
    "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "$.http.fetch(https://raw.githubusercontent.com/branch8/claude-plugins/main/plugins/branch8-jira-mod/.claude-plugi…) → blocked in preview",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -300,6 +303,7 @@
    "$.clock.after",
    "$.clock.now",
    "$.command.register",
+   "$.command.run (via runUpdate)",
    "$.env.get (via applyLang",
    "folderForProject",
    "homeDir",
@@ -308,12 +312,13 @@
    "$.fs.exists (via onOrgAccount",
    "resolveFolder)",
    "$.fs.list (via folderForProject)",
-   "$.fs.read (via folderForProject",
-   "onOrgAccount",
-   "resolveFolder)",
+   "$.fs.read",
+   "$.http.fetch (via checkLatest)",
    "$.mcp.call",
    "$.process.run (via openUrl",
-   "resolveFolder)",
+   "resolveFolder",
+   "runUpdate)",
+   "$.session.append (via tellClaude)",
    "$.session.cwd (via resolveFolder)",
    "$.settings.read (via applyLang)",
    "$.state.get",
@@ -335,6 +340,7 @@
    "branch8-jira-mod.isOrg",
    "branch8-jira-mod.lang",
    "branch8-jira-mod.langPref",
+   "branch8-jira-mod.latest",
    "branch8-jira-mod.menu",
    "branch8-jira-mod.range",
    "branch8-jira-mod.refreshedAt",
@@ -345,7 +351,8 @@
    "branch8-jira-mod.ticket",
    "branch8-jira-mod.todoFolded",
    "branch8-jira-mod.todoOpen",
-   "branch8-jira-mod.todos"
+   "branch8-jira-mod.todos",
+   "branch8-jira-mod.version"
   ],
   "stateWrites": [
    "branch8-jira-mod.asked",
@@ -355,6 +362,7 @@
    "branch8-jira-mod.isOrg",
    "branch8-jira-mod.lang",
    "branch8-jira-mod.langPref",
+   "branch8-jira-mod.latest",
    "branch8-jira-mod.menu",
    "branch8-jira-mod.range",
    "branch8-jira-mod.refreshedAt",
@@ -365,7 +373,8 @@
    "branch8-jira-mod.ticket",
    "branch8-jira-mod.todoFolded",
    "branch8-jira-mod.todoOpen",
-   "branch8-jira-mod.todos"
+   "branch8-jira-mod.todos",
+   "branch8-jira-mod.version"
   ],
   "envReads": [
    "ANTHROPIC_API_KEY",
@@ -393,7 +402,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: branch8-jira-mod.ticket, branch8-jira-mod.asked, branch8-jira-mod.refreshedAt, branch8-jira-mod.todos, branch8-jira-mod.todoOpen, branch8-jira-mod.todoFolded, branch8-jira-mod.langPref, branch8-jira-mod.lang, branch8-jira-mod.statusFolded, branch8-jira-mod.scopePref, branch8-jira-mod.folder, branch8-jira-mod.menu, branch8-jira-mod.focusedKey, branch8-jira-mod.ring, branch8-jira-mod.settings, branch8-jira-mod.autoOpen, branch8-jira-mod.range, branch8-jira-mod.isOrg"
+     "types ./types/index.d.ts declares state: branch8-jira-mod.ticket, branch8-jira-mod.asked, branch8-jira-mod.refreshedAt, branch8-jira-mod.todos, branch8-jira-mod.todoOpen, branch8-jira-mod.todoFolded, branch8-jira-mod.langPref, branch8-jira-mod.lang, branch8-jira-mod.statusFolded, branch8-jira-mod.scopePref, branch8-jira-mod.folder, branch8-jira-mod.menu, branch8-jira-mod.focusedKey, branch8-jira-mod.ring, branch8-jira-mod.settings, branch8-jira-mod.autoOpen, branch8-jira-mod.range, branch8-jira-mod.isOrg, branch8-jira-mod.version, branch8-jira-mod.latest"
     ],
     "gatingHooks": []
    },
@@ -405,7 +414,6 @@
      "warnings": [],
      "notes": [
       "./register.tsx hooks: session.start, command.run{command=jira-todo}, ui.close, ui.focus{requestId=branch8-jira-todo}, ui.scroll{requestId=branch8-jira-todo}, ui.render{component=Pane, requestId=branch8-jira-todo}, tool.call{tool=mcp__branch8-jira-mod__set_ticket}, tool.call{tool=mcp__branch8-jira-mod__clear_ticket}, tool.call{tool=mcp__branch8-jira-mod__get_ticket}, tool.call{tool=mcp__branch8-jira-mod__mark_asked}, tool.call, prompt.compose, ui.render{component=AbovePrompt}, turn.complete",
-      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "./register.tsx answers its own command: command.run{command=jira-todo}",
       "./register.tsx gating hook without .catch: ui.close",
       "./register.tsx gating hook without .catch: ui.focus{requestId=branch8-jira-todo}",
@@ -415,11 +423,11 @@
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__branch8-jira-mod__get_ticket}",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__branch8-jira-mod__mark_asked}",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.env.get (via applyLang, folderForProject, homeDir, onOrgAccount, openUrl), $.fs.exists (via onOrgAccount, resolveFolder), $.fs.list (via folderForProject), $.fs.read (via folderForProject, onOrgAccount, resolveFolder), $.mcp.call, $.process.run (via openUrl, resolveFolder), $.session.cwd (via resolveFolder), $.settings.read (via applyLang), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.close, $.ui.focus (via focusOn), $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.clock.now, $.command.register, $.command.run (via runUpdate), $.env.get (via applyLang, folderForProject, homeDir, onOrgAccount, openUrl), $.fs.exists (via onOrgAccount, resolveFolder), $.fs.list (via folderForProject), $.fs.read, $.http.fetch (via checkLatest), $.mcp.call, $.process.run (via openUrl, resolveFolder, runUpdate), $.session.append (via tellClaude), $.session.cwd (via resolveFolder), $.settings.read (via applyLang), $.state.get, $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.close, $.ui.focus (via focusOn), $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, BRANCH8_ORG_ID, BRANCH8_WORKSPACE_ROOT, CLAUDE_CODE_OAUTH_TOKEN, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_FOUNDRY, CLAUDE_CODE_USE_VERTEX, CLAUDE_CONFIG_DIR, HOME, LANG, USERPROFILE, WSL_DISTRO_NAME",
-      "./register.tsx state writes: branch8-jira-mod.asked, branch8-jira-mod.autoOpen, branch8-jira-mod.focusedKey, branch8-jira-mod.folder, branch8-jira-mod.isOrg, branch8-jira-mod.lang, branch8-jira-mod.langPref, branch8-jira-mod.menu, branch8-jira-mod.range, branch8-jira-mod.refreshedAt, branch8-jira-mod.ring, branch8-jira-mod.scopePref, branch8-jira-mod.settings, branch8-jira-mod.statusFolded, branch8-jira-mod.ticket, branch8-jira-mod.todoFolded, branch8-jira-mod.todoOpen, branch8-jira-mod.todos",
-      "./register.tsx state reads: branch8-jira-mod.asked, branch8-jira-mod.autoOpen, branch8-jira-mod.focusedKey, branch8-jira-mod.folder, branch8-jira-mod.isOrg, branch8-jira-mod.lang, branch8-jira-mod.langPref, branch8-jira-mod.menu, branch8-jira-mod.range, branch8-jira-mod.refreshedAt, branch8-jira-mod.ring, branch8-jira-mod.scopePref, branch8-jira-mod.settings, branch8-jira-mod.statusFolded, branch8-jira-mod.ticket, branch8-jira-mod.todoFolded, branch8-jira-mod.todoOpen, branch8-jira-mod.todos"
+      "./register.tsx state writes: branch8-jira-mod.asked, branch8-jira-mod.autoOpen, branch8-jira-mod.focusedKey, branch8-jira-mod.folder, branch8-jira-mod.isOrg, branch8-jira-mod.lang, branch8-jira-mod.langPref, branch8-jira-mod.latest, branch8-jira-mod.menu, branch8-jira-mod.range, branch8-jira-mod.refreshedAt, branch8-jira-mod.ring, branch8-jira-mod.scopePref, branch8-jira-mod.settings, branch8-jira-mod.statusFolded, branch8-jira-mod.ticket, branch8-jira-mod.todoFolded, branch8-jira-mod.todoOpen, branch8-jira-mod.todos, branch8-jira-mod.version",
+      "./register.tsx state reads: branch8-jira-mod.asked, branch8-jira-mod.autoOpen, branch8-jira-mod.focusedKey, branch8-jira-mod.folder, branch8-jira-mod.isOrg, branch8-jira-mod.lang, branch8-jira-mod.langPref, branch8-jira-mod.latest, branch8-jira-mod.menu, branch8-jira-mod.range, branch8-jira-mod.refreshedAt, branch8-jira-mod.ring, branch8-jira-mod.scopePref, branch8-jira-mod.settings, branch8-jira-mod.statusFolded, branch8-jira-mod.ticket, branch8-jira-mod.todoFolded, branch8-jira-mod.todoOpen, branch8-jira-mod.todos, branch8-jira-mod.version"
      ],
      "gatingHooks": [
       {
@@ -476,5 +484,5 @@
    "advice": []
   }
  },
- "sourceHash": "57c4150b20155e72"
+ "sourceHash": "e2dcfc97573fcf9c"
 }

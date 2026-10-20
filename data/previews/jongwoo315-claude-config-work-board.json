@@ -1,6 +1,6 @@
 {
  "slug": "jongwoo315-claude-config-work-board",
- "generatedAt": "2026-10-19T16:27:32.765Z",
+ "generatedAt": "2026-10-20T14:23:12.468Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -39,12 +39,21 @@
     "matcher": {
      "component": "Pane"
     }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "work-board",
+     "plugin": "work-board"
+    }
    }
   ],
   "commands": [
    {
     "name": "board",
-    "description": "Open the work board",
+    "description": "Open the work board, or pick its colors",
+    "argumentHint": "[theme [name]]",
     "immediate": true
    }
   ],
@@ -61,6 +70,7 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
+   "$.store.get": 1,
    "$.session.cwd": 12,
    "$.fs.exists": 4,
    "$.session.id": 2,
@@ -85,39 +95,62 @@
     "tree": {
      "type": "Box",
      "props": {
-      "flexDirection": "row",
-      "columnGap": 2,
-      "marginTop": 1,
-      "width": 100
+      "flexDirection": "column",
+      "marginTop": 1
      },
      "children": [
       {
        "type": "Box",
        "props": {
-        "flexShrink": 1
+        "flexDirection": "row",
+        "columnGap": 2,
+        "width": 100
        },
        "children": [
         {
-         "type": "Text",
+         "type": "Box",
          "props": {
-          "dimColor": true,
-          "wrap": "truncate-end"
+          "flexShrink": 1
          },
          "children": [
-          "✧ 작업 기록 없음"
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true,
+            "wrap": "truncate-end"
+           },
+           "children": [
+            "✧ 작업 기록 없음"
+           ]
+          }
          ]
+        },
+        {
+         "type": "Button",
+         "props": {
+          "key": "open-pane",
+          "label": "열기",
+          "plain": true,
+          "onPress": "[fn]"
+         },
+         "children": []
         }
        ]
       },
       {
-       "type": "Button",
+       "type": "engine",
+       "ref": 1,
        "props": {
-        "key": "open-pane",
-        "label": "열기",
-        "plain": true,
-        "onPress": "[fn]"
-       },
-       "children": []
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 8,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
       }
      ]
     }
@@ -138,7 +171,7 @@
         "type": "Box",
         "props": {
          "flexDirection": "row",
-         "columnGap": 3
+         "columnGap": 1
         },
         "children": [
          {
@@ -147,8 +180,19 @@
            "key": "tab-work",
            "label": "작업",
            "hotkey": "1",
-           "plain": true,
+           "variant": "primary",
            "dimColor": false,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-plan",
+           "label": "계획",
+           "hotkey": "2",
+           "dimColor": true,
            "onPress": "[fn]"
           },
           "children": []
@@ -158,8 +202,7 @@
           "props": {
            "key": "tab-agents",
            "label": "에이전트",
-           "hotkey": "2",
-           "plain": true,
+           "hotkey": "3",
            "dimColor": true,
            "onPress": "[fn]"
           },
@@ -168,10 +211,20 @@
          {
           "type": "Button",
           "props": {
-           "key": "tab-files",
-           "label": "파일",
-           "hotkey": "3",
-           "plain": true,
+           "key": "tab-changes",
+           "label": "변경",
+           "hotkey": "4",
+           "dimColor": true,
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "tab-diff",
+           "label": "diff",
+           "hotkey": "5",
            "dimColor": true,
            "onPress": "[fn]"
           },
@@ -182,8 +235,7 @@
           "props": {
            "key": "tab-flow",
            "label": "흐름",
-           "hotkey": "4",
-           "plain": true,
+           "hotkey": "6",
            "dimColor": true,
            "onPress": "[fn]"
           },
@@ -255,7 +307,8 @@
    "agent.spawn",
    "classic.SubagentStop",
    "ui.render{component=AbovePrompt}",
-   "ui.render{component=Pane}"
+   "ui.render{component=Pane}",
+   "ui.focus{component=Pane, requestId=work-board, plugin=work-board}"
   ],
   "calls": [
    "$.agent.list",
@@ -267,11 +320,16 @@
    "loadPlan)",
    "$.fs.list (via loadFlow",
    "loadPlan)",
-   "$.fs.read (via loadFlow",
+   "$.fs.read (via loadChanges",
+   "loadFlow",
    "loadPlan)",
+   "$.process.run (via loadChanges",
+   "loadDiff)",
    "$.session.cwd",
    "$.session.id (via loadFlow)",
    "$.session.messages",
+   "$.store.get",
+   "$.store.set",
    "$.ui.invalidate",
    "$.ui.open (via openPane)",
    "$.ui.resolve"
@@ -300,13 +358,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.js hooks: session.start, command.run{command=board}, turn.start, tool.call, turn.complete, agent.spawn, classic.SubagentStop, ui.render{component=AbovePrompt}, ui.render{component=Pane}",
-      "./register.js hooks on classic.SubagentStop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.js hooks: session.start, command.run{command=board}, turn.start, tool.call, turn.complete, agent.spawn, classic.SubagentStop, ui.render{component=AbovePrompt}, ui.render{component=Pane}, ui.focus{component=Pane, requestId=work-board, plugin=work-board}",
       "./register.js answers its own command: command.run{command=board}",
       "./register.js gating hook without .catch: tool.call",
       "./register.js gating hook without .catch: agent.spawn",
       "./register.js gating hook without .catch: classic.SubagentStop",
-      "./register.js calls: $.agent.list, $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via loadFlow, loadPlan), $.fs.list (via loadFlow, loadPlan), $.fs.read (via loadFlow, loadPlan), $.session.cwd, $.session.id (via loadFlow), $.session.messages, $.ui.invalidate, $.ui.open (via openPane), $.ui.resolve",
+      "./register.js gating hook without .catch: ui.focus{component=Pane, requestId=work-board, plugin=work-board}",
+      "./register.js calls: $.agent.list, $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via loadFlow, loadPlan), $.fs.list (via loadFlow, loadPlan), $.fs.read (via loadChanges, loadFlow, loadPlan), $.process.run (via loadChanges, loadDiff), $.session.cwd, $.session.id (via loadFlow), $.session.messages, $.store.get, $.store.set, $.ui.invalidate, $.ui.open (via openPane), $.ui.resolve",
       "./register.js env writes: nothing",
       "./register.js env reads: HOME"
      ],
@@ -328,6 +386,12 @@
        "pattern": "classic.SubagentStop",
        "hook": "classic.SubagentStop",
        "hasCatch": false
+      },
+      {
+       "module": "./register.js",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{component=Pane, requestId=work-board, plugin=work-board}",
+       "hasCatch": false
       }
      ]
     }
@@ -335,5 +399,5 @@
    "advice": []
   }
  },
- "sourceHash": "c14163959afaccf4"
+ "sourceHash": "b49fac538eb84a56"
 }

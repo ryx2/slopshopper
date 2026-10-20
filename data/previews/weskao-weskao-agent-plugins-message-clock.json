@@ -1,11 +1,17 @@
 {
  "slug": "weskao-weskao-agent-plugins-message-clock",
- "generatedAt": "2026-10-19T16:28:20.072Z",
+ "generatedAt": "2026-10-20T14:24:02.981Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "message-clock-update"
+    }
    },
    {
     "event": "classic.SessionStart"
@@ -24,7 +30,13 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "message-clock-update",
+    "description": "Update message-clock to the latest version",
+    "output": "message-clock was not installed from weskao-agent-plugins, so it has nothing to update from. To switch: claude plugin install message-clock@weskao-agent-plugins"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -32,6 +44,7 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
+   "$.command.register": 1,
    "$.session.id": 1,
    "$.process.run": 1,
    "$.state.get": 4
@@ -60,7 +73,8 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/message-clock-update → message-clock was not installed from weskao-agent-plugins, so it has nothing to …"
   ],
   "console": [],
   "warnings": []
@@ -71,17 +85,26 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "command.run{command=message-clock-update}",
    "classic.SessionStart",
    "session.append",
    "ui.render{component=UserMessage|AssistantMessage|CommandOutput}"
   ],
   "calls": [
    "$.clock.now",
-   "$.process.run (via restore)",
+   "$.command.register (via registerUpdate)",
+   "$.fs.read (via checkUpdate)",
+   "$.http.fetch (via checkUpdate)",
+   "$.process.run (via restore",
+   "runUpdate)",
    "$.session.id (via restore)",
    "$.state.get",
    "$.state.set",
-   "$.ui.resolve"
+   "$.store.delete (via runUpdate)",
+   "$.store.get (via checkUpdate)",
+   "$.store.set (via checkUpdate)",
+   "$.ui.resolve",
+   "$.ui.toast (via notifyUpdate)"
   ],
   "stateReads": [
    "message-clock.at"
@@ -112,15 +135,21 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, classic.SessionStart, session.append, ui.render{component=UserMessage|AssistantMessage|CommandOutput}",
-      "./register.tsx hooks on classic.SessionStart do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, command.run{command=message-clock-update}, classic.SessionStart, session.append, ui.render{component=UserMessage|AssistantMessage|CommandOutput}",
+      "./register.tsx gating hook without .catch: command.run{command=message-clock-update}",
       "./register.tsx gating hook without .catch: classic.SessionStart",
       "./register.tsx gating hook without .catch: session.append",
-      "./register.tsx calls: $.clock.now, $.process.run (via restore), $.session.id (via restore), $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx calls: $.clock.now, $.command.register (via registerUpdate), $.fs.read (via checkUpdate), $.http.fetch (via checkUpdate), $.process.run (via restore, runUpdate), $.session.id (via restore), $.state.get, $.state.set, $.store.delete (via runUpdate), $.store.get (via checkUpdate), $.store.set (via checkUpdate), $.ui.resolve, $.ui.toast (via notifyUpdate)",
       "./register.tsx state writes: message-clock.at",
       "./register.tsx state reads: message-clock.at"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=message-clock-update}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "classic.SessionStart",
@@ -139,5 +168,5 @@
    "advice": []
   }
  },
- "sourceHash": "b97834bf2ee6f720"
+ "sourceHash": "31039c52c3d9a5ec"
 }

@@ -1,6 +1,6 @@
 {
  "slug": "aromarious-claude-code-plugins-todo-pane",
- "generatedAt": "2026-10-16T14:18:44.126Z",
+ "generatedAt": "2026-10-20T14:22:36.942Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,7 +8,10 @@
     "event": "session.start"
    },
    {
-    "event": "prompt.submit"
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
    },
    {
     "event": "turn.start"
@@ -89,19 +92,13 @@
   "toasts": [],
   "logs": [],
   "denies": [],
-  "rewrites": [
-   {
-    "event": "prompt.submit",
-    "summary": "context added: [\"The TODO file .claude/todo/preview-.md (the TODO list shown in the right-hand pane) does not exist. At the very start of this turn, before…"
-   }
-  ],
+  "rewrites": [],
   "apiCalls": {
    "$.settings.read": 1,
    "$.session.id": 1,
-   "$.process.run": 3,
+   "$.state.get": 16,
    "$.store.get": 2,
-   "$.state.get": 10,
-   "$.state.set": 5,
+   "$.state.set": 7,
    "$.fs.exists": 4,
    "$.fs.read": 3,
    "$.clock.every": 1,
@@ -160,11 +157,8 @@
    }
   },
   "script": [
-   "$.process.run(sh -c f=$(ls \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/projects/*/\"$1\".jsonl 2>/dev/…) → exit 0",
-   "$.process.run(sh -c f=$(ls \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/projects/*/\"$1\".jsonl 2>/dev/…) → exit 0",
    "$.ui.open(todo-pane)",
    "session.start",
-   "$.process.run(sh -c f=$(ls \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/projects/*/\"$1\".jsonl 2>/dev/…) → exit 0",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -190,7 +184,8 @@
   "warnings": [],
   "hooks": [
    "session.start",
-   "prompt.submit",
+   "classic.SessionStart",
+   "classic.UserPromptSubmit",
    "turn.start",
    "tool.call",
    "turn.complete",
@@ -228,6 +223,7 @@
    "todo-pane.pin",
    "todo-pane.pinWrap",
    "todo-pane.text",
+   "todo-pane.title",
    "todo-pane.wrap"
   ],
   "stateWrites": [
@@ -235,6 +231,7 @@
    "todo-pane.pin",
    "todo-pane.pinWrap",
    "todo-pane.text",
+   "todo-pane.title",
    "todo-pane.wrap"
   ],
   "envReads": [],
@@ -249,7 +246,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: todo-pane.text, todo-pane.pin, todo-pane.past, todo-pane.wrap, todo-pane.pinWrap"
+     "types ./types/index.d.ts declares state: todo-pane.text, todo-pane.pin, todo-pane.past, todo-pane.wrap, todo-pane.pinWrap, todo-pane.title"
     ],
     "gatingHooks": []
    },
@@ -260,22 +257,28 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, turn.start, tool.call, turn.complete, command.run{command=todo-pane}, command.run{command=todo-pane-pinboard}, command.run{command=todo-pane-wrap}, skill.prompt, ui.render{component=Pane, requestId=todo-pane}, ui.render{component=Pane, requestId=pin-board}",
-      "./register.tsx hooks on skill.prompt do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
-      "./register.tsx gating hook without .catch: prompt.submit",
+      "./register.tsx hooks: session.start, classic.SessionStart, classic.UserPromptSubmit, turn.start, tool.call, turn.complete, command.run{command=todo-pane}, command.run{command=todo-pane-pinboard}, command.run{command=todo-pane-wrap}, skill.prompt, ui.render{component=Pane, requestId=todo-pane}, ui.render{component=Pane, requestId=pin-board}",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: command.run{command=todo-pane}",
       "./register.tsx gating hook without .catch: command.run{command=todo-pane-pinboard}",
       "./register.tsx gating hook without .catch: command.run{command=todo-pane-wrap}",
       "./register.tsx calls: $.clock.every, $.command.register, $.fs.exists, $.fs.list (via pastDays), $.fs.read, $.fs.write, $.process.run, $.session.id (via sync), $.settings.read (via sync), $.state.get, $.state.set, $.store.get, $.store.set, $.ui.close, $.ui.log, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.status, $.ui.toast",
-      "./register.tsx state writes: todo-pane.past, todo-pane.pin, todo-pane.pinWrap, todo-pane.text, todo-pane.wrap",
-      "./register.tsx state reads: todo-pane.past, todo-pane.pin, todo-pane.pinWrap, todo-pane.text, todo-pane.wrap"
+      "./register.tsx state writes: todo-pane.past, todo-pane.pin, todo-pane.pinWrap, todo-pane.text, todo-pane.title, todo-pane.wrap",
+      "./register.tsx state reads: todo-pane.past, todo-pane.pin, todo-pane.pinWrap, todo-pane.text, todo-pane.title, todo-pane.wrap"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
-       "pattern": "prompt.submit",
-       "hook": "prompt.submit",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
        "hasCatch": false
       },
       {
@@ -308,5 +311,5 @@
    "advice": []
   }
  },
- "sourceHash": "f213b4d1b8ccfaf5"
+ "sourceHash": "38e41319cd117e3c"
 }

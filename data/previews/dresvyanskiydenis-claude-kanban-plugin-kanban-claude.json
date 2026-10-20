@@ -1,6 +1,6 @@
 {
  "slug": "dresvyanskiydenis-claude-kanban-plugin-kanban-claude",
- "generatedAt": "2026-10-17T13:06:08.411Z",
+ "generatedAt": "2026-10-20T14:22:55.597Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -45,13 +45,17 @@
   "rewrites": [],
   "apiCalls": {
    "$.env.get": 1,
-   "$.store.get": 1,
    "$.command.register": 1,
+   "$.store.get": 2,
+   "$.store.delete": 1,
+   "$.ui.panes": 1,
+   "$.session.cwd": 3,
+   "$.state.get": 8,
    "$.store.set": 1,
-   "$.session.cwd": 1,
-   "$.process.run": 1,
-   "$.ui.invalidate": 1,
    "$.clock.every": 1,
+   "$.clock.now": 5,
+   "$.process.run": 2,
+   "$.state.set": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -82,16 +86,34 @@
          {
           "type": "Text",
           "props": {
-           "color": "warning"
+           "color": "claude"
           },
           "children": [
-           "▲"
+           "◆"
           ]
          },
          {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Kanban"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column"
+        },
+        "children": [
+         {
           "type": "Box",
           "props": {
-           "flexShrink": 1
+           "flexDirection": "row",
+           "gap": 1
           },
           "children": [
            {
@@ -100,20 +122,37 @@
              "color": "warning"
             },
             "children": [
-             "kanban did not run: JSON Parse error: Unexpected EOF"
+             "▲"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "color": "warning"
+              },
+              "children": [
+               "JSON Parse error: Unexpected EOF"
+              ]
+             }
             ]
            }
           ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "/kanban-board SLUG pins a board."
+          ]
          }
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "/kanban-board SLUG pins a board."
         ]
        },
        {
@@ -123,37 +162,16 @@
         },
         "children": [
          {
-          "type": "Box",
+          "type": "Button",
           "props": {
-           "flexDirection": "row",
-           "gap": 2
+           "key": "refresh",
+           "label": "refresh",
+           "hotkey": "r",
+           "plain": true,
+           "dimColor": true,
+           "onPress": "[fn]"
           },
-          "children": [
-           {
-            "type": "Button",
-            "props": {
-             "key": "refresh",
-             "label": "refresh",
-             "hotkey": "r",
-             "plain": true,
-             "dimColor": true,
-             "onPress": "[fn]"
-            },
-            "children": []
-           },
-           {
-            "type": "Button",
-            "props": {
-             "key": "open",
-             "label": "web board",
-             "hotkey": "o",
-             "plain": true,
-             "dimColor": true,
-             "onPress": "[fn]"
-            },
-            "children": []
-           }
-          ]
+          "children": []
          }
         ]
        }
@@ -176,6 +194,7 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.process.run(kanban --json list --sort priority) → exit 0",
+   "$.process.run(kanban --json digest --since 24h) → exit 0",
    "$.ui.open(kanban)",
    "/kanban-board → Kanban pane open."
   ],
@@ -195,26 +214,45 @@
    "ui.render{component=Pane, requestId=kanban}"
   ],
   "calls": [
-   "$.clock.every (via show)",
+   "$.clock.every (via poll)",
    "$.clock.now",
    "$.command.register",
    "$.env.get",
-   "$.process.run (via load",
-   "openBoard)",
-   "$.session.cwd (via load",
-   "openBoard)",
+   "$.process.run (via kanban)",
+   "$.session.cwd (via cycle",
+   "loadDetail",
+   "savedKey)",
+   "$.state.get",
+   "$.state.set",
    "$.store.delete",
    "$.store.get",
    "$.store.set",
    "$.ui.close",
-   "$.ui.invalidate (via refresh)",
-   "$.ui.open (via show)",
+   "$.ui.open (via openPane)",
+   "$.ui.panes",
    "$.ui.resolve",
-   "$.ui.toast (via openBoard)"
+   "$.ui.toast (via toast)"
   ],
-  "stateReads": [],
-  "stateWrites": [],
+  "stateReads": [
+   "kanban-claude.detail",
+   "kanban-claude.fault",
+   "kanban-claude.open",
+   "kanban-claude.pin",
+   "kanban-claude.seen",
+   "kanban-claude.snapshot",
+   "kanban-claude.view"
+  ],
+  "stateWrites": [
+   "kanban-claude.detail",
+   "kanban-claude.fault",
+   "kanban-claude.open",
+   "kanban-claude.pin",
+   "kanban-claude.seen",
+   "kanban-claude.snapshot",
+   "kanban-claude.view"
+  ],
   "envReads": [
+   "HOME",
    "KANBAN_RUN_ID"
   ],
   "raw": {
@@ -232,7 +270,10 @@
       "code": null
      }
     ],
-    "notes": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: kanban-claude.snapshot, kanban-claude.fault, kanban-claude.pin, kanban-claude.open, kanban-claude.detail, kanban-claude.seen, kanban-claude.view"
+    ],
     "gatingHooks": []
    },
    "contents": [
@@ -244,17 +285,19 @@
      "notes": [
       "./board.tsx hooks: session.start, command.run{command=kanban-board}, ui.close, ui.render{component=Pane, requestId=kanban}",
       "./board.tsx answers its own command: command.run{command=kanban-board}",
-      "./board.tsx gating hook without .catch: ui.close",
-      "./board.tsx calls: $.clock.every (via show), $.clock.now, $.command.register, $.env.get, $.process.run (via load, openBoard), $.session.cwd (via load, openBoard), $.store.delete, $.store.get, $.store.set, $.ui.close, $.ui.invalidate (via refresh), $.ui.open (via show), $.ui.resolve, $.ui.toast (via openBoard)",
+      "./board.tsx gating hook with .catch: ui.close",
+      "./board.tsx calls: $.clock.every (via poll), $.clock.now, $.command.register, $.env.get, $.process.run (via kanban), $.session.cwd (via cycle, loadDetail, savedKey), $.state.get, $.state.set, $.store.delete, $.store.get, $.store.set, $.ui.close, $.ui.open (via openPane), $.ui.panes, $.ui.resolve, $.ui.toast (via toast)",
       "./board.tsx env writes: nothing",
-      "./board.tsx env reads: KANBAN_RUN_ID"
+      "./board.tsx env reads: HOME, KANBAN_RUN_ID",
+      "./board.tsx state writes: kanban-claude.detail, kanban-claude.fault, kanban-claude.open, kanban-claude.pin, kanban-claude.seen, kanban-claude.snapshot, kanban-claude.view",
+      "./board.tsx state reads: kanban-claude.detail, kanban-claude.fault, kanban-claude.open, kanban-claude.pin, kanban-claude.seen, kanban-claude.snapshot, kanban-claude.view"
      ],
      "gatingHooks": [
       {
        "module": "./board.tsx",
        "pattern": "ui.close",
        "hook": "ui.close",
-       "hasCatch": false
+       "hasCatch": true
       }
      ]
     }
@@ -262,5 +305,5 @@
    "advice": []
   }
  },
- "sourceHash": "f1506a64cba48c4e"
+ "sourceHash": "395ee18fcf83e519"
 }

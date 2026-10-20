@@ -1,0 +1,10 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-g01k-dollar-in-tracker-file",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\nimport { installK } from './trackers/k'\nimport { Core } from './trackers/core'\n\nconst core = new Core()\n\nexport const register: Register = (on) => {\n  installK(on, core)\n}\n",
+  "hooks/trackers/k.ts": "import type { EngineInterface, On } from 'claude-code'\nimport type { Core } from './core'\n\n// A top-level function of THIS (imported) file may take `$`.\nasync function nowOf($: EngineInterface): Promise<number> {\n  return $.clock.now()\n}\n\nexport function installK(on: On, core: Core): void {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    const t = await nowOf($)\n    core.note(`bash@${t}`)\n    return { deny: `k-fired:${core.hits.length}:${t}` }\n  })\n}\n",
+  "hooks/trackers/core.ts": "export class Core {\n  hits: string[] = []\n  note(s: string): void {\n    this.hits.push(s)\n  }\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"g01k-dollar-in-tracker-file\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  }\n}"
+ }
+}

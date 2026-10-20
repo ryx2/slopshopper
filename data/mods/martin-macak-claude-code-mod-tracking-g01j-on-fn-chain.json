@@ -1,0 +1,11 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-g01j-on-fn-chain",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\nimport { installAll } from './trackers/index'\n\nexport const register: Register = (on) => {\n  installAll(on)\n}\n",
+  "hooks/trackers/index.ts": "import type { On } from 'claude-code'\nimport { installA } from './a'\nimport { installB } from './b'\n\n/** One registry function. A new tracker adds one line here. */\nexport function installAll(on: On): void {\n  installA(on)\n  installB(on)\n}\n",
+  "hooks/trackers/a.ts": "import type { On } from 'claude-code'\n\n// An arrow const is a function too.\nexport const installA = (on: On): void => {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => ({ deny: 'a-fired' }))\n}\n",
+  "hooks/trackers/b.ts": "import type { On } from 'claude-code'\n\nexport function installB(on: On): void {\n  // `$` is the hook's own parameter. Calls on it are literal.\n  on('tool.call', { tool: 'Read' }, async ($, e, next) => {\n    const id = await $.session.id()\n    return { deny: `b-fired:${id}` }\n  })\n  on('turn.complete', ($, e, next) => next(e))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"g01j-on-fn-chain\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  }\n}"
+ }
+}

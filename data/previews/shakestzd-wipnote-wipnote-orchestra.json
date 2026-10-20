@@ -1,6 +1,6 @@
 {
  "slug": "shakestzd-wipnote-wipnote-orchestra",
- "generatedAt": "2026-10-19T16:26:14.567Z",
+ "generatedAt": "2026-10-20T14:21:39.919Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -27,6 +27,24 @@
    },
    {
     "event": "turn.complete"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "response"
+    }
+   },
+   {
+    "event": "prompt.compose"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AssistantMessage"
+    }
    },
    {
     "event": "ui.render",
@@ -60,10 +78,12 @@
    "$.session.cwd": 2,
    "$.env.get": 2,
    "$.session.usage": 2,
-   "$.process.run": 4,
+   "$.process.run": 6,
    "$.session.model": 2,
-   "$.state.get": 23,
+   "$.state.get": 24,
    "$.state.set": 18,
+   "$.session.id": 2,
+   "$.session.messages": 2,
    "$.clock.now": 1,
    "$.clock.every": 1
   },
@@ -79,11 +99,15 @@
    },
    "PromptHint": {
     "ok": "engine"
+   },
+   "AssistantMessage": {
+    "ok": "engine"
    }
   },
   "script": [
    "$.process.run(git status --porcelain=v1 --branch) → exit 0",
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(wipnote who --json) → exit 0",
    "session.start",
    "tool.call Read",
    "tool.call Grep",
@@ -96,6 +120,7 @@
    "tool.call Bash cat .env",
    "$.process.run(git status --porcelain=v1 --branch) → exit 0",
    "$.process.run(git rev-parse --show-toplevel) → exit 0",
+   "$.process.run(wipnote who --json) → exit 0",
    "turn.complete",
    "/orchestra → Orchestra band: off."
   ],
@@ -116,6 +141,10 @@
    "classic.UserPromptSubmit",
    "classic.PostToolUse",
    "turn.complete",
+   "classic.SessionStart",
+   "session.append{door=response}",
+   "prompt.compose",
+   "ui.render{component=AssistantMessage}",
    "ui.render{component=AbovePrompt}",
    "ui.render{component=PromptHint}"
   ],
@@ -126,8 +155,11 @@
    "$.command.register",
    "$.env.get (via refreshPrompt)",
    "$.process.run (via refreshCards",
-   "refreshPrompt)",
+   "refreshPrompt",
+   "wipnoteJSON)",
    "$.session.cwd (via refreshPrompt)",
+   "$.session.id (via wipnoteJSON)",
+   "$.session.messages (via hydrate)",
    "$.session.model (via refreshPrompt)",
    "$.session.usage (via refreshPrompt)",
    "$.state.get",
@@ -137,24 +169,28 @@
   "stateReads": [
    "wipnote-orchestra.agents",
    "wipnote-orchestra.cards",
+   "wipnote-orchestra.claim",
    "wipnote-orchestra.items",
    "wipnote-orchestra.mainTool",
    "wipnote-orchestra.mode",
    "wipnote-orchestra.now",
    "wipnote-orchestra.permissionMode",
    "wipnote-orchestra.placement",
-   "wipnote-orchestra.prompt"
+   "wipnote-orchestra.prompt",
+   "wipnote-orchestra.refs"
   ],
   "stateWrites": [
    "wipnote-orchestra.agents",
    "wipnote-orchestra.cards",
+   "wipnote-orchestra.claim",
    "wipnote-orchestra.items",
    "wipnote-orchestra.mainTool",
    "wipnote-orchestra.mode",
    "wipnote-orchestra.now",
    "wipnote-orchestra.permissionMode",
    "wipnote-orchestra.placement",
-   "wipnote-orchestra.prompt"
+   "wipnote-orchestra.prompt",
+   "wipnote-orchestra.refs"
   ],
   "envReads": [
    "HOME"
@@ -176,7 +212,7 @@
     ],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: wipnote-orchestra.prompt, wipnote-orchestra.agents, wipnote-orchestra.items, wipnote-orchestra.cards, wipnote-orchestra.mainTool, wipnote-orchestra.now, wipnote-orchestra.mode, wipnote-orchestra.placement, wipnote-orchestra.permissionMode"
+     "types ./types/index.d.ts declares state: wipnote-orchestra.prompt, wipnote-orchestra.agents, wipnote-orchestra.items, wipnote-orchestra.cards, wipnote-orchestra.mainTool, wipnote-orchestra.now, wipnote-orchestra.mode, wipnote-orchestra.placement, wipnote-orchestra.permissionMode, wipnote-orchestra.refs, wipnote-orchestra.claim"
     ],
     "gatingHooks": []
    },
@@ -187,18 +223,19 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=orchestra}, agent.spawn, tool.call, classic.UserPromptSubmit, classic.PostToolUse, turn.complete, ui.render{component=AbovePrompt}, ui.render{component=PromptHint}",
-      "./register.tsx hooks on classic.UserPromptSubmit, classic.PostToolUse do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, command.run{command=orchestra}, agent.spawn, tool.call, classic.UserPromptSubmit, classic.PostToolUse, turn.complete, classic.SessionStart, session.append{door=response}, prompt.compose, ui.render{component=AssistantMessage}, ui.render{component=AbovePrompt}, ui.render{component=PromptHint}",
       "./register.tsx answers its own command: command.run{command=orchestra}",
       "./register.tsx gating hook with .catch: agent.spawn",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook without .catch: classic.UserPromptSubmit",
       "./register.tsx gating hook without .catch: classic.PostToolUse",
-      "./register.tsx calls: $.agent.list (via reconcileAgents), $.clock.every, $.clock.now, $.command.register, $.env.get (via refreshPrompt), $.process.run (via refreshCards, refreshPrompt), $.session.cwd (via refreshPrompt), $.session.model (via refreshPrompt), $.session.usage (via refreshPrompt), $.state.get, $.state.set, $.ui.resolve",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: session.append{door=response}",
+      "./register.tsx calls: $.agent.list (via reconcileAgents), $.clock.every, $.clock.now, $.command.register, $.env.get (via refreshPrompt), $.process.run (via refreshCards, refreshPrompt, wipnoteJSON), $.session.cwd (via refreshPrompt), $.session.id (via wipnoteJSON), $.session.messages (via hydrate), $.session.model (via refreshPrompt), $.session.usage (via refreshPrompt), $.state.get, $.state.set, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME",
-      "./register.tsx state writes: wipnote-orchestra.agents, wipnote-orchestra.cards, wipnote-orchestra.items, wipnote-orchestra.mainTool, wipnote-orchestra.mode, wipnote-orchestra.now, wipnote-orchestra.permissionMode, wipnote-orchestra.placement, wipnote-orchestra.prompt",
-      "./register.tsx state reads: wipnote-orchestra.agents, wipnote-orchestra.cards, wipnote-orchestra.items, wipnote-orchestra.mainTool, wipnote-orchestra.mode, wipnote-orchestra.now, wipnote-orchestra.permissionMode, wipnote-orchestra.placement, wipnote-orchestra.prompt"
+      "./register.tsx state writes: wipnote-orchestra.agents, wipnote-orchestra.cards, wipnote-orchestra.claim, wipnote-orchestra.items, wipnote-orchestra.mainTool, wipnote-orchestra.mode, wipnote-orchestra.now, wipnote-orchestra.permissionMode, wipnote-orchestra.placement, wipnote-orchestra.prompt, wipnote-orchestra.refs",
+      "./register.tsx state reads: wipnote-orchestra.agents, wipnote-orchestra.cards, wipnote-orchestra.claim, wipnote-orchestra.items, wipnote-orchestra.mainTool, wipnote-orchestra.mode, wipnote-orchestra.now, wipnote-orchestra.permissionMode, wipnote-orchestra.placement, wipnote-orchestra.prompt, wipnote-orchestra.refs"
      ],
      "gatingHooks": [
       {
@@ -224,6 +261,18 @@
        "pattern": "classic.PostToolUse",
        "hook": "classic.PostToolUse",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.append",
+       "hook": "session.append{door=response}",
+       "hasCatch": false
       }
      ]
     }
@@ -231,5 +280,5 @@
    "advice": []
   }
  },
- "sourceHash": "c371e1b37387f76a"
+ "sourceHash": "32244f578a149dae"
 }

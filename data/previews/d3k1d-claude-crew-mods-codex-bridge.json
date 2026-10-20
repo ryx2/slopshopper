@@ -1,0 +1,437 @@
+{
+ "slug": "d3k1d-claude-crew-mods-codex-bridge",
+ "generatedAt": "2026-10-20T14:22:48.509Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "codex"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__codex-bridge__codex"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "codex-bridge"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "codex",
+    "description": "Open the Codex pane: what Codex is doing for Claude",
+    "output": "Codex pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "codex",
+    "description": "Hand a task to OpenAI Codex, a separate coding agent on the user's own Codex subscription, and get its result back: use it like a subagent. It reads the whole project and runs commands; in write mode it edits files.\n\nCodex cannot see this conversation: write `task` as a complete, self-contained brief (goal, relevant files, constraints, what to report back).\n\nMemory: Codex keeps notes per project in .codex-bridge/ and reads them at the start of every run. For multi-step work give a short `thread` name: every call with that name continues the same Codex conversation. action \"threads\" lists a project's threads.\n\nPick `model` and `effort` per task (the model parameter lists the choices): luna at low effort for lookups and mechanical edits, sol at medium/high for ordinary coding, astra at high+ for hard design, deep debugging or a critical review; max/ultra only for the hardest problems. Defaults: the user's default, default effort.\n\nmode 'read-only' (default) reads and runs read-only commands; 'write' may edit files inside the working directory only: review its changes (git diff) before building on them.\n\nA run can take minutes. The result gives Codex's answer, the files it changed, the commands it ran, and how to continue."
+   }
+  ],
+  "panes": [
+   {
+    "id": "codex-bridge",
+    "title": "Codex"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 5,
+   "$.fs.read": 3,
+   "$.process.run": 3,
+   "$.fs.exists": 5,
+   "$.tool.register": 1,
+   "$.command.register": 1,
+   "$.state.get": 10,
+   "$.state.set": 4,
+   "$.session.cwd": 1,
+   "$.fs.list": 1,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "Pane": {
+    "codex-bridge": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#10A37F"
+          },
+          "children": [
+           "◎ CODEX v1.2.2"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "  │ 0 running · 0 recent runs"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "usage",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#30363D",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "#10A37F"
+            },
+            "children": [
+             "Codex plan"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "usage-refresh",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": [
+             "↻ refresh"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true,
+           "wrap": "wrap"
+          },
+          "children": [
+           "Codex has not recorded any usage yet: it appears after its first run."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#30363D",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true,
+           "color": "#10A37F"
+          },
+          "children": [
+           "No Codex runs yet"
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "wrap",
+           "color": "#E3B341"
+          },
+          "children": [
+           "The Codex CLI was not found. Install the Codex app, or the CLI with `npm i -g @openai/codex`, then sign in with `codex login` and restart Claude."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "wrap",
+           "dimColor": true
+          },
+          "children": [
+           "Ask Claude to hand work to Codex, for example \"have Codex review the renderer\" or \"give Codex a thread called chunk-loader and make chunk loading async\". Claude picks the model and effort, Codex works in your project, and the result comes back here and to Claude."
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {
+           "wrap": "wrap",
+           "dimColor": true
+          },
+          "children": [
+           "Codex keeps notes per project in .codex-bridge/ (NOTES.md plus a log per thread), so a named thread can be picked up again later. Runs use your Codex subscription, not Claude's."
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "key": "threads",
+         "flexDirection": "column",
+         "borderStyle": "round",
+         "borderColor": "#30363D",
+         "paddingX": 1
+        },
+        "children": [
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "row"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "bold": true,
+             "color": "#10A37F"
+            },
+            "children": [
+             "Threads"
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "truncate"
+            },
+            "children": [
+             "  resumable conversations"
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexGrow": 1
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "show-archived",
+             "plain": true,
+             "onPress": "[fn]"
+            },
+            "children": [
+             "show archived"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "color": "#79C0FF",
+             "wrap": "truncate"
+            },
+            "children": [
+             "app  "
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true,
+             "wrap": "wrap"
+            },
+            "children": [
+             "  no threads: ask Claude to give Codex a task \"on a thread called …\" to start one"
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Codex"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(uname -s) → exit 0",
+   "$.process.run(sh -lc command -v codex) → exit 0",
+   "$.process.run(git -C /work/app rev-parse --show-toplevel) → exit 0",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(codex-bridge)",
+   "/codex → Codex pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "command.run{command=codex}",
+   "tool.call{tool=?}",
+   "ui.render{component=Pane, requestId=codex-bridge}"
+  ],
+  "calls": [
+   "$.clock.after",
+   "$.command.register",
+   "$.env.get (via findDirs",
+   "openInEditor",
+   "platformOf)",
+   "$.fs.exists (via findCodex)",
+   "$.fs.list (via findCodex",
+   "recentRollouts)",
+   "$.fs.read",
+   "$.fs.stat (via findCodex",
+   "recentRollouts",
+   "snapshot)",
+   "$.fs.write",
+   "$.process.run (via findCodex",
+   "keepOutOfGit",
+   "openInEditor",
+   "platformOf",
+   "projectRoot",
+   "removeFile",
+   "snapshot",
+   "tailOf)",
+   "$.process.spawn",
+   "$.session.cwd",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.open",
+   "$.ui.resolve",
+   "$.ui.status",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "codex-bridge.runs",
+   "codex-bridge.threads",
+   "codex-bridge.ui",
+   "codex-bridge.usage",
+   "crew-map.crew"
+  ],
+  "stateWrites": [
+   "codex-bridge.runs",
+   "codex-bridge.threads",
+   "codex-bridge.ui",
+   "codex-bridge.usage"
+  ],
+  "envReads": [
+   "CODEX_HOME",
+   "HOME",
+   "LOCALAPPDATA",
+   "OS",
+   "TEMP",
+   "TMPDIR",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/d3k1d-claude-crew-mods-codex-bridge/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/d3k1d-claude-crew-mods-codex-bridge/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: codex-bridge.runs, codex-bridge.usage, codex-bridge.threads, codex-bridge.ui"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/d3k1d-claude-crew-mods-codex-bridge/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, command.run{command=codex}, tool.call{tool=?}, ui.render{component=Pane, requestId=codex-bridge}",
+      "./register.tsx answers its own command: command.run{command=codex}",
+      "./register.tsx gating hook without .catch: tool.call{tool=?}",
+      "./register.tsx calls: $.clock.after, $.command.register, $.env.get (via findDirs, openInEditor, platformOf), $.fs.exists (via findCodex), $.fs.list (via findCodex, recentRollouts), $.fs.read, $.fs.stat (via findCodex, recentRollouts, snapshot), $.fs.write, $.process.run (via findCodex, keepOutOfGit, openInEditor, platformOf, projectRoot, removeFile, snapshot, tailOf), $.process.spawn, $.session.cwd, $.state.get, $.state.set, $.tool.register, $.ui.open, $.ui.resolve, $.ui.status, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: CODEX_HOME, HOME, LOCALAPPDATA, OS, TEMP, TMPDIR, USERPROFILE",
+      "./register.tsx state writes: codex-bridge.runs, codex-bridge.threads, codex-bridge.ui, codex-bridge.usage",
+      "./register.tsx state reads: codex-bridge.runs, codex-bridge.threads, codex-bridge.ui, codex-bridge.usage, crew-map.crew",
+      "./register.tsx state of other plugins, not checked (run validate in a session with them enabled): crew-map.crew"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=?}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "66f488156c0b1452"
+}

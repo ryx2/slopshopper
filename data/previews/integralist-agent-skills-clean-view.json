@@ -1,6 +1,6 @@
 {
  "slug": "integralist-agent-skills-clean-view",
- "generatedAt": "2026-10-19T16:26:18.336Z",
+ "generatedAt": "2026-10-20T14:21:43.068Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -81,6 +81,28 @@
     "matcher": {
      "component": "AbovePrompt"
     }
+   },
+   {
+    "event": "ui.focus",
+    "matcher": {
+     "requestId": "clean-view-details"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "clean-view-details"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "clean-view-details"
+    }
    }
   ],
   "commands": [
@@ -94,7 +116,7 @@
   "tools": [
    {
     "name": "plan_steps",
-    "description": "Lay out every step of the job up front so the person sees the plan: 2 to 8 short plain-English step names in order, each under 40 characters and starting with a verb. The first step starts right away."
+    "description": "Lay out every step of the job up front so the person sees the plan: 1 to 8 short plain-English step names in order, each under 40 characters and starting with a verb. The first step starts right away. If the job grows past the plan, call it again with the full updated list and keep finished step names unchanged."
    },
    {
     "name": "report_progress",
@@ -110,15 +132,15 @@
   "rewrites": [],
   "apiCalls": {
    "$.store.get": 1,
-   "$.state.get": 54,
-   "$.state.set": 29,
+   "$.state.get": 93,
+   "$.state.set": 47,
    "$.command.register": 1,
    "$.tool.register": 2,
+   "$.clock.now": 19,
    "$.agent.list": 1,
-   "$.clock.now": 1,
    "$.store.set": 1,
    "$.ui.toast": 1,
-   "$.ui.resolve": 1
+   "$.ui.resolve": 2
   },
   "timers": [],
   "sites": {
@@ -145,6 +167,21 @@
    },
    "ToolUse": {
     "ok": "engine"
+   },
+   "Pane": {
+    "clean-view-details": {
+     "ok": true,
+     "tree": {
+      "type": "Text",
+      "props": {
+       "dimColor": true
+      },
+      "children": [
+       "No task to show."
+      ]
+     },
+     "title": "clean-view-details"
+    }
    }
   },
   "script": [
@@ -185,7 +222,11 @@
    "turn.complete",
    "ui.render{component=ToolUse|ToolResult|ToolGroup}",
    "ui.render{component=ToolProgress}",
-   "ui.render{component=AbovePrompt}"
+   "ui.render{component=AbovePrompt}",
+   "ui.focus{requestId=clean-view-details}",
+   "ui.scroll{requestId=clean-view-details}",
+   "ui.close",
+   "ui.render{component=Pane, requestId=clean-view-details}"
   ],
   "calls": [
    "$.agent.list",
@@ -199,17 +240,26 @@
    "$.store.get",
    "$.store.set (via setEnabled)",
    "$.tool.register",
+   "$.turn.abort",
+   "$.ui.close",
+   "$.ui.open (via openDetails)",
    "$.ui.resolve",
    "$.ui.toast (via setEnabled)"
   ],
   "stateReads": [
    "clean-view.checklist",
    "clean-view.cleanViewEnabled",
+   "clean-view.logScroll",
+   "clean-view.selectedTaskId",
+   "clean-view.taskLogs",
    "clean-view.tick"
   ],
   "stateWrites": [
    "clean-view.checklist",
    "clean-view.cleanViewEnabled",
+   "clean-view.logScroll",
+   "clean-view.selectedTaskId",
+   "clean-view.taskLogs",
    "clean-view.tick"
   ],
   "envReads": [],
@@ -224,7 +274,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: clean-view.cleanViewEnabled, clean-view.checklist, clean-view.tick"
+     "types ./types/index.d.ts declares state: clean-view.cleanViewEnabled, clean-view.checklist, clean-view.selectedTaskId, clean-view.taskLogs, clean-view.logScroll, clean-view.tick"
     ],
     "gatingHooks": []
    },
@@ -235,8 +285,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=simple}, prompt.compose, prompt.submit, turn.start, tool.call, tool.check, classic.UserPromptSubmit, classic.PostToolUse, tool.call{tool=?}, tool.call{tool=?}, classic.Notification, turn.complete, ui.render{component=ToolUse|ToolResult|ToolGroup}, ui.render{component=ToolProgress}, ui.render{component=AbovePrompt}",
-      "./register.tsx hooks on prompt.compose, classic.UserPromptSubmit, classic.PostToolUse, classic.Notification do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, command.run{command=simple}, prompt.compose, prompt.submit, turn.start, tool.call, tool.check, classic.UserPromptSubmit, classic.PostToolUse, tool.call{tool=?}, tool.call{tool=?}, classic.Notification, turn.complete, ui.render{component=ToolUse|ToolResult|ToolGroup}, ui.render{component=ToolProgress}, ui.render{component=AbovePrompt}, ui.focus{requestId=clean-view-details}, ui.scroll{requestId=clean-view-details}, ui.close, ui.render{component=Pane, requestId=clean-view-details}",
       "./register.tsx gating hook without .catch: command.run{command=simple}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call",
@@ -246,9 +295,12 @@
       "./register.tsx gating hook without .catch: tool.call{tool=?}",
       "./register.tsx gating hook without .catch: tool.call{tool=?}",
       "./register.tsx gating hook with .catch: classic.Notification",
-      "./register.tsx calls: $.agent.list, $.clock.after, $.clock.every (via startTicker), $.clock.now, $.command.register, $.model.complete (via nameJob), $.state.get, $.state.set, $.store.get, $.store.set (via setEnabled), $.tool.register, $.ui.resolve, $.ui.toast (via setEnabled)",
-      "./register.tsx state writes: clean-view.checklist, clean-view.cleanViewEnabled, clean-view.tick",
-      "./register.tsx state reads: clean-view.checklist, clean-view.cleanViewEnabled, clean-view.tick"
+      "./register.tsx gating hook with .catch: ui.focus{requestId=clean-view-details}",
+      "./register.tsx gating hook with .catch: ui.scroll{requestId=clean-view-details}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.agent.list, $.clock.after, $.clock.every (via startTicker), $.clock.now, $.command.register, $.model.complete (via nameJob), $.state.get, $.state.set, $.store.get, $.store.set (via setEnabled), $.tool.register, $.turn.abort, $.ui.close, $.ui.open (via openDetails), $.ui.resolve, $.ui.toast (via setEnabled)",
+      "./register.tsx state writes: clean-view.checklist, clean-view.cleanViewEnabled, clean-view.logScroll, clean-view.selectedTaskId, clean-view.taskLogs, clean-view.tick",
+      "./register.tsx state reads: clean-view.checklist, clean-view.cleanViewEnabled, clean-view.logScroll, clean-view.selectedTaskId, clean-view.taskLogs, clean-view.tick"
      ],
      "gatingHooks": [
       {
@@ -304,6 +356,24 @@
        "pattern": "classic.Notification",
        "hook": "classic.Notification",
        "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.focus",
+       "hook": "ui.focus{requestId=clean-view-details}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{requestId=clean-view-details}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
       }
      ]
     }
@@ -311,5 +381,5 @@
    "advice": []
   }
  },
- "sourceHash": "f83272a1e0dde3b7"
+ "sourceHash": "99449012dc13a4ea"
 }

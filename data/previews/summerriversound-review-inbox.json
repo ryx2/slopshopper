@@ -1,11 +1,17 @@
 {
  "slug": "summerriversound-review-inbox",
- "generatedAt": "2026-10-16T14:21:48.669Z",
+ "generatedAt": "2026-10-20T14:23:51.570Z",
  "harness": {
   "ok": true,
   "hooks": [
    {
     "event": "session.start"
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.end"
    },
    {
     "event": "command.run",
@@ -56,10 +62,11 @@
    "$.env.get": 3,
    "$.ui.panes": 2,
    "$.ui.invalidate": 1,
-   "$.state.get": 19,
+   "$.state.get": 28,
    "$.command.register": 1,
-   "$.clock.after": 1,
-   "$.clock.every": 2,
+   "$.clock.after": 2,
+   "$.clock.every": 3,
+   "$.session.id": 1,
    "$.prompt.read": 1,
    "$.state.set": 2,
    "$.ui.open": 1,
@@ -68,7 +75,15 @@
   "timers": [
    {
     "kind": "after",
-    "ms": 3885
+    "ms": 2522
+   },
+   {
+    "kind": "every",
+    "ms": 30000
+   },
+   {
+    "kind": "after",
+    "ms": 1000
    },
    {
     "kind": "every",
@@ -142,38 +157,19 @@
        {
         "type": "Box",
         "props": {
-         "flexDirection": "row",
-         "gap": 1,
-         "marginY": 1
+         "marginTop": 1
         },
         "children": [
          {
-          "type": "Button",
+          "type": "Input",
           "props": {
-           "key": "tab-review",
-           "label": "To review 0",
-           "variant": "primary",
-           "onPress": "[fn]"
-          },
-          "children": []
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "tab-mine",
-           "label": "My PRs 0",
-           "dimColor": true,
-           "onPress": "[fn]"
-          },
-          "children": []
-         },
-         {
-          "type": "Button",
-          "props": {
-           "key": "tab-issues",
-           "label": "My issues 0",
-           "dimColor": true,
-           "onPress": "[fn]"
+           "key": "search",
+           "label": "Search",
+           "placeholder": "repo, #number, title, description or note",
+           "value": "",
+           "submitLabel": "Search",
+           "onInput": "[fn]",
+           "onSubmit": "[fn]"
           },
           "children": []
          }
@@ -186,12 +182,60 @@
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "flexDirection": "row",
+           "gap": 1,
+           "marginY": 1
           },
           "children": [
-           "No PRs are waiting for your review."
+           {
+            "type": "Button",
+            "props": {
+             "key": "tab-review",
+             "label": "To review 0",
+             "variant": "primary",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "tab-mine",
+             "label": "My PRs 0",
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "tab-issues",
+             "label": "My issues 0",
+             "dimColor": true,
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "No PRs are waiting for your review."
+            ]
+           }
           ]
          }
         ]
@@ -226,6 +270,8 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "prompt.submit",
+   "session.end",
    "command.run{command=review-inbox}",
    "ui.close{id=review-inbox}",
    "ui.render{component=AbovePrompt}",
@@ -243,11 +289,14 @@
    "$.fs.stat (via readJson)",
    "$.fs.write (via writeJson)",
    "$.model.complete (via ask)",
-   "$.process.run (via gh",
+   "$.process.run (via checkIn",
+   "gh",
    "writeJson)",
    "$.prompt.fill (via fillAdded)",
    "$.prompt.read (via fillAdded",
    "openDrawer)",
+   "$.session.cwd (via checkIn)",
+   "$.session.id",
    "$.settings.read (via resolveLanguage)",
    "$.state.get",
    "$.state.set",
@@ -259,21 +308,31 @@
   ],
   "stateReads": [
    "review-inbox.added",
+   "review-inbox.collapsed",
+   "review-inbox.editing",
    "review-inbox.hidden",
    "review-inbox.issues",
    "review-inbox.items",
    "review-inbox.mine",
+   "review-inbox.notes",
+   "review-inbox.query",
    "review-inbox.requested",
+   "review-inbox.sessions",
    "review-inbox.status",
    "review-inbox.tab"
   ],
   "stateWrites": [
    "review-inbox.added",
+   "review-inbox.collapsed",
+   "review-inbox.editing",
    "review-inbox.hidden",
    "review-inbox.issues",
    "review-inbox.items",
    "review-inbox.mine",
+   "review-inbox.notes",
+   "review-inbox.query",
    "review-inbox.requested",
+   "review-inbox.sessions",
    "review-inbox.status",
    "review-inbox.tab"
   ],
@@ -296,7 +355,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: review-inbox.items, review-inbox.mine, review-inbox.issues, review-inbox.status, review-inbox.hidden, review-inbox.tab, review-inbox.added, review-inbox.requested"
+     "types ./types/index.d.ts declares state: review-inbox.items, review-inbox.mine, review-inbox.issues, review-inbox.status, review-inbox.hidden, review-inbox.tab, review-inbox.collapsed, review-inbox.notes, review-inbox.query, review-inbox.editing, review-inbox.sessions, review-inbox.added, review-inbox.requested"
     ],
     "gatingHooks": []
    },
@@ -307,16 +366,23 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, command.run{command=review-inbox}, ui.close{id=review-inbox}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=review-inbox}",
+      "./register.tsx hooks: session.start, prompt.submit, session.end, command.run{command=review-inbox}, ui.close{id=review-inbox}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=review-inbox}",
       "./register.tsx answers its own command: command.run{command=review-inbox}",
+      "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: ui.close{id=review-inbox}",
-      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.sleep (via sync), $.command.register, $.env.get (via cacheDir, resolveLanguage), $.fs.exists (via readJson), $.fs.read (via readJson), $.fs.stat (via readJson), $.fs.write (via writeJson), $.model.complete (via ask), $.process.run (via gh, writeJson), $.prompt.fill (via fillAdded), $.prompt.read (via fillAdded, openDrawer), $.settings.read (via resolveLanguage), $.state.get, $.state.set, $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.after, $.clock.every, $.clock.sleep (via sync), $.command.register, $.env.get (via cacheDir, resolveLanguage), $.fs.exists (via readJson), $.fs.read (via readJson), $.fs.stat (via readJson), $.fs.write (via writeJson), $.model.complete (via ask), $.process.run (via checkIn, gh, writeJson), $.prompt.fill (via fillAdded), $.prompt.read (via fillAdded, openDrawer), $.session.cwd (via checkIn), $.session.id, $.settings.read (via resolveLanguage), $.state.get, $.state.set, $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME, LANG, LC_ALL, LC_MESSAGES, USERPROFILE",
-      "./register.tsx state writes: review-inbox.added, review-inbox.hidden, review-inbox.issues, review-inbox.items, review-inbox.mine, review-inbox.requested, review-inbox.status, review-inbox.tab",
-      "./register.tsx state reads: review-inbox.added, review-inbox.hidden, review-inbox.issues, review-inbox.items, review-inbox.mine, review-inbox.requested, review-inbox.status, review-inbox.tab"
+      "./register.tsx state writes: review-inbox.added, review-inbox.collapsed, review-inbox.editing, review-inbox.hidden, review-inbox.issues, review-inbox.items, review-inbox.mine, review-inbox.notes, review-inbox.query, review-inbox.requested, review-inbox.sessions, review-inbox.status, review-inbox.tab",
+      "./register.tsx state reads: review-inbox.added, review-inbox.collapsed, review-inbox.editing, review-inbox.hidden, review-inbox.issues, review-inbox.items, review-inbox.mine, review-inbox.notes, review-inbox.query, review-inbox.requested, review-inbox.sessions, review-inbox.status, review-inbox.tab"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "ui.close",
@@ -329,5 +395,5 @@
    "advice": []
   }
  },
- "sourceHash": "e5adc66034ca6acb"
+ "sourceHash": "c159a5b8dec01531"
 }

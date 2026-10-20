@@ -1,6 +1,6 @@
 {
  "slug": "eengelking-podium-podium-reporter",
- "generatedAt": "2026-10-17T13:04:54.265Z",
+ "generatedAt": "2026-10-20T14:21:18.657Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -47,6 +47,24 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__podium-reporter__podium_peers"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__podium-reporter__podium_send"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__podium-reporter__podium_request_access"
+    }
+   },
+   {
     "event": "skill.prompt"
    },
    {
@@ -54,6 +72,12 @@
    },
    {
     "event": "classic.Notification"
+   },
+   {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "classic.UserPromptSubmit"
    },
    {
     "event": "classic.Stop"
@@ -68,9 +92,10 @@
   "commands": [
    {
     "name": "podium",
-    "description": "Podium fleet console: link, connection state, and naming this session",
-    "argumentHint": "[name <text>]",
-    "output": "Podium fleet console: http://127.0.0.1:4317/#/\nConnection: not tried yet\nVersions: reporter 1.1.0\nReports sent: 0, failed: 0, rejected: 0; events queued: 0\nLast error: none\nSession: preview-session\nBackground work: none\nReporter time per hook: turn.start 0.00 ms avg, 0.00 max; tool.call 0.00 ms avg, 0.00 max; tool.call.done 0.00 ms avg, 0.00 max; tool.call.result 0.11 ms avg, 1.00 max; turn.complete 1.00 ms avg, 1.00 max; session.measure 0.00 ms avg, 0.00 max; classic.Stop 0.00 ms avg, 0.00 max\nName this session: /podium name <text>"
+    "description": "Podium fleet console: link, connection state, naming this session, and answering a messaging request",
+    "argumentHint": "[name <text> | allow <id> | decline <id> | deliver <id>]",
+    "immediate": true,
+    "output": "Podium fleet console: http://127.0.0.1:4317/#/\nConnection: not tried yet\nVersions: reporter 1.2.2\nReports sent: 0, failed: 0, rejected: 0; events queued: 0\nLast error: none\nSession: preview-session\nBackground work: none\nReporter time per hook: classic.SessionStart 1.00 ms avg, 1.00 max; classic.UserPromptSubmit 0.00 ms avg, 0.00 max; turn.start 0.00 ms avg, 0.00 max; tool.call 0.00 ms avg, 0.00 max; tool.call.done 0.00 ms avg, 0.00 max; tool.call.result 0.11 ms avg, 1.00 max; turn.complete 1.00 ms avg, 1.00 max; session.measure 0.00 ms avg, 0.00 max\nName this session: /podium name <text>"
    }
   ],
   "tools": [
@@ -93,12 +118,13 @@
    "$.session.repo": 1,
    "$.session.version": 1,
    "$.session.usage": 1,
+   "$.process.run": 13,
    "$.store.get": 3,
+   "$.session.cwd": 4,
    "$.agent.list": 1,
    "$.command.register": 1,
    "$.tool.register": 1,
    "$.clock.every": 2,
-   "$.process.run": 11,
    "$.ui.status": 1,
    "$.store.set": 1
   },
@@ -114,6 +140,8 @@
   ],
   "sites": {},
   "script": [
+   "$.process.run(git -C /plugins/podium-reporter ls-files --error-unmatch .claude-plugin/plugin.j…) → exit 0",
+   "$.process.run(git -C /plugins/podium-reporter rev-parse --short=8 HEAD) → exit 0",
    "$.process.run(git rev-parse --abbrev-ref HEAD) → exit 0",
    "$.process.run(git rev-parse --git-dir) → exit 0",
    "$.process.run(git rev-parse --git-common-dir) → exit 0",
@@ -139,7 +167,7 @@
    "/podium → Podium fleet console: http://127.0.0.1:4317/#/\nConnection: not tried yet\nVersion…"
   ],
   "console": [],
-  "status": "podium v1.1.0 ○ connecting",
+  "status": "podium v1.2.2 ○ connecting",
   "warnings": []
  },
  "validate": {
@@ -160,37 +188,55 @@
    "tool.call",
    "tool.check",
    "tool.call{tool=mcp__podium-reporter__plan}",
+   "tool.call{tool=mcp__podium-reporter__podium_peers}",
+   "tool.call{tool=mcp__podium-reporter__podium_send}",
+   "tool.call{tool=mcp__podium-reporter__podium_request_access}",
    "skill.prompt",
    "classic.PermissionRequest",
    "classic.Notification",
+   "classic.SessionStart",
+   "classic.UserPromptSubmit",
    "classic.Stop",
    "command.run{command=podium}"
   ],
   "calls": [
    "$.agent.list (via readAgents)",
-   "$.clock.after (via startPermissionCheck)",
+   "$.clock.after (via start",
+   "startPermissionCheck)",
    "$.clock.every (via start)",
    "$.clock.now (via engineNow)",
    "$.clock.sleep (via confirmApproval",
    "end",
-   "pause)",
+   "pause",
+   "peerCall)",
    "$.command.register (via start)",
    "$.command.run (via runCommand)",
    "$.env.get (via machineId",
    "takeIdentity)",
-   "$.fs.read (via machineId)",
+   "$.fs.read (via machineId",
+   "readOs)",
    "$.fs.write (via machineId)",
    "$.http.fetch (via podiumCall",
    "start)",
    "$.model.complete (via explain)",
-   "$.process.run (via pollGit",
-   "readMachine)",
-   "$.prompt.submit (via submitMessage)",
+   "$.process.run (via answerDiff",
+   "findBuild",
+   "follow",
+   "pollGit",
+   "readMachine",
+   "readOs)",
+   "$.prompt.submit (via submitMessage",
+   "submitNotice",
+   "submitPeerMessage)",
+   "$.session.cwd (via follow",
+   "start)",
    "$.session.id (via flush",
    "start)",
    "$.session.model (via start)",
-   "$.session.repo (via start)",
-   "$.session.root (via start)",
+   "$.session.repo (via follow",
+   "start)",
+   "$.session.root (via follow",
+   "start)",
    "$.session.surfaces (via readSurfaces)",
    "$.session.usage (via readUsage",
    "start",
@@ -199,16 +245,7 @@
    "$.state.get (via takeIdentity)",
    "$.state.set (via takeIdentity)",
    "$.store.get (via loadActed",
-   "loadBase",
-   "loadName",
-   "machineId)",
-   "$.store.set (via machineId",
-   "markActed",
-   "podiumCommand",
-   "pollGit)",
-   "$.tool.register (via start)",
-   "$.ui.log (via record",
-   "transcript… [+119 chars]"
+   "loadBase,… [+300 chars]"
   ],
   "stateReads": [
    "podium-reporter.identity"
@@ -244,18 +281,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, session.end, turn.start, turn.step, turn.complete, session.compact, session.attach, session.detach, session.measure, agent.spawn, tool.call, tool.check, tool.call{tool=mcp__podium-reporter__plan}, skill.prompt, classic.PermissionRequest, classic.Notification, classic.Stop, command.run{command=podium}",
-      "./register.ts hooks on session.compact, skill.prompt, classic.PermissionRequest, classic.Notification, classic.Stop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts hooks: session.start, session.end, turn.start, turn.step, turn.complete, session.compact, session.attach, session.detach, session.measure, agent.spawn, tool.call, tool.check, tool.call{tool=mcp__podium-reporter__plan}, tool.call{tool=mcp__podium-reporter__podium_peers}, tool.call{tool=mcp__podium-reporter__podium_send}, tool.call{tool=mcp__podium-reporter__podium_request_access}, skill.prompt, classic.PermissionRequest, classic.Notification, classic.SessionStart, classic.UserPromptSubmit, classic.Stop, command.run{command=podium}",
       "./register.ts answers its own command: command.run{command=podium}",
       "./register.ts gating hook with .catch: session.compact",
       "./register.ts gating hook with .catch: agent.spawn",
       "./register.ts gating hook with .catch: tool.call",
       "./register.ts gating hook with .catch: tool.check",
       "./register.ts gating hook with .catch: tool.call{tool=mcp__podium-reporter__plan}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__podium-reporter__podium_peers}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__podium-reporter__podium_send}",
+      "./register.ts gating hook with .catch: tool.call{tool=mcp__podium-reporter__podium_request_access}",
       "./register.ts gating hook with .catch: classic.PermissionRequest",
       "./register.ts gating hook with .catch: classic.Notification",
+      "./register.ts gating hook with .catch: classic.SessionStart",
+      "./register.ts gating hook with .catch: classic.UserPromptSubmit",
       "./register.ts gating hook with .catch: classic.Stop",
-      "./register.ts calls: $.agent.list (via readAgents), $.clock.after (via startPermissionCheck), $.clock.every (via start), $.clock.now (via engineNow), $.clock.sleep (via confirmApproval, end, pause), $.command.register (via start), $.command.run (via runCommand), $.env.get (via machineId, takeIdentity), $.fs.read (via machineId), $.fs.write (via machineId), $.http.fetch (via podiumCall, start), $.model.complete (via explain), $.process.run (via pollGit, readMachine), $.prompt.submit (via submitMessage), $.session.id (via flush, start), $.session.model (via start), $.session.repo (via start), $.session.root (via start), $.session.surfaces (via readSurfaces), $.session.usage (via readUsage, start, switchSession), $.session.version (via start), $.state.get (via takeIdentity), $.state.set (via takeIdentity), $.store.get (via loadActed, loadBase, loadName, machineId), $.store.set (via machineId, markActed, podiumCommand, pollGit), $.tool.register (via start), $.ui.log (via record, transcript… [+119 chars]",
+      "./register.ts calls: $.agent.list (via readAgents), $.clock.after (via start, startPermissionCheck), $.clock.every (via start), $.clock.now (via engineNow), $.clock.sleep (via confirmApproval, end, pause, peerCall), $.command.register (via start), $.command.run (via runCommand), $.env.get (via machineId, takeIdentity), $.fs.read (via machineId, readOs), $.fs.write (via machineId), $.http.fetch (via podiumCall, start), $.model.complete (via explain), $.process.run (via answerDiff, findBuild, follow, pollGit, readMachine, readOs), $.prompt.submit (via submitMessage, submitNotice, submitPeerMessage), $.session.cwd (via follow, start), $.session.id (via flush, start), $.session.model (via start), $.session.repo (via follow, start), $.session.root (via follow, start), $.session.surfaces (via readSurfaces), $.session.usage (via readUsage, start, switchSession), $.session.version (via start), $.state.get (via takeIdentity), $.state.set (via takeIdentity), $.store.get (via loadActed, loadBase,… [+300 chars]",
       "./register.ts env writes: nothing",
       "./register.ts env reads: CLAUDE_CONFIG_DIR, HOME, PODIUM_TOKEN, PODIUM_USER",
       "./register.ts state writes: podium-reporter.identity",
@@ -294,6 +335,24 @@
       },
       {
        "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__podium-reporter__podium_peers}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__podium-reporter__podium_send}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__podium-reporter__podium_request_access}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
        "pattern": "classic.PermissionRequest",
        "hook": "classic.PermissionRequest",
        "hasCatch": true
@@ -302,6 +361,18 @@
        "module": "./register.ts",
        "pattern": "classic.Notification",
        "hook": "classic.Notification",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "classic.UserPromptSubmit",
+       "hook": "classic.UserPromptSubmit",
        "hasCatch": true
       },
       {
@@ -316,5 +387,5 @@
    "advice": []
   }
  },
- "sourceHash": "6924f7ed5939fa23"
+ "sourceHash": "6b5908e741444e86"
 }

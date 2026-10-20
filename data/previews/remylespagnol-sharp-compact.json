@@ -1,6 +1,6 @@
 {
  "slug": "remylespagnol-sharp-compact",
- "generatedAt": "2026-10-17T13:05:39.104Z",
+ "generatedAt": "2026-10-20T14:22:24.395Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -11,6 +11,18 @@
     "event": "command.run",
     "matcher": {
      "command": "sharp-compact"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "compact"
+    }
+   },
+   {
+    "event": "session.append",
+    "matcher": {
+     "door": "compaction"
     }
    },
    {
@@ -71,18 +83,20 @@
   "hooks": [
    "session.start",
    "command.run{command=sharp-compact}",
+   "command.run{command=compact}",
+   "session.append{door=compaction}",
    "turn.start",
    "turn.complete",
    "session.compact"
   ],
   "calls": [
    "$.clock.after",
-   "$.clock.sleep (via briefedCompact)",
+   "$.clock.sleep",
    "$.command.register",
    "$.model.fork (via briefedCompact)",
-   "$.session.append (via briefedCompact)",
-   "$.session.compact (via onIdle)",
-   "$.session.usage (via onIdle)",
+   "$.session.append (via appendBrief)",
+   "$.session.compact (via compactNow)",
+   "$.session.usage",
    "$.ui.notify (via onIdle)",
    "$.ui.toast"
   ],
@@ -108,13 +122,26 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, command.run{command=sharp-compact}, turn.start, turn.complete, session.compact",
-      "./register.ts hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts hooks: session.start, command.run{command=sharp-compact}, command.run{command=compact}, session.append{door=compaction}, turn.start, turn.complete, session.compact",
       "./register.ts answers its own command: command.run{command=sharp-compact}",
+      "./register.ts gating hook with .catch: command.run{command=compact}",
+      "./register.ts gating hook without .catch: session.append{door=compaction}",
       "./register.ts gating hook with .catch: session.compact",
-      "./register.ts calls: $.clock.after, $.clock.sleep (via briefedCompact), $.command.register, $.model.fork (via briefedCompact), $.session.append (via briefedCompact), $.session.compact (via onIdle), $.session.usage (via onIdle), $.ui.notify (via onIdle), $.ui.toast"
+      "./register.ts calls: $.clock.after, $.clock.sleep, $.command.register, $.model.fork (via briefedCompact), $.session.append (via appendBrief), $.session.compact (via compactNow), $.session.usage, $.ui.notify (via onIdle), $.ui.toast"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.ts",
+       "pattern": "command.run",
+       "hook": "command.run{command=compact}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "session.append",
+       "hook": "session.append{door=compaction}",
+       "hasCatch": false
+      },
       {
        "module": "./register.ts",
        "pattern": "session.compact",
@@ -127,5 +154,5 @@
    "advice": []
   }
  },
- "sourceHash": "ed8bd3b76fd71bd2"
+ "sourceHash": "42bebafd1b4c3792"
 }

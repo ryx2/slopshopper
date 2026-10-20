@@ -1,6 +1,6 @@
 {
  "slug": "dboeter-cc-plugins-redact",
- "generatedAt": "2026-10-18T13:55:15.552Z",
+ "generatedAt": "2026-10-20T14:22:52.144Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -78,9 +78,8 @@
   "commands": [
    {
     "name": "redact",
-    "description": "Show the redact rules in a pane, and add or remove patterns of your own.",
-    "argumentHint": "show | add <regex> | remove <n>",
-    "output": "redact rules shown"
+    "description": "Show the redact pane, test or manage patterns, turn built-in rules off or on, and forget held values.",
+    "argumentHint": "show | patterns | guide | test [text] | add <pattern> | remove <n|pattern> | off <rule> | on <rule>"
    }
   ],
   "tools": [],
@@ -98,8 +97,12 @@
    "$.command.register": 1,
    "$.clock.now": 2,
    "$.store.keys": 1,
+   "$.session.id": 21,
    "$.store.get": 12,
-   "$.session.id": 19,
+   "$.ui.status": 2,
+   "$.env.get": 2,
+   "$.fs.exists": 11,
+   "$.fs.write": 1,
    "$.store.set": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 2
@@ -121,115 +124,207 @@
      "tree": {
       "type": "Box",
       "props": {
-       "flexDirection": "column"
+       "flexDirection": "column",
+       "gap": 1
       },
       "children": [
        {
-        "type": "Text",
+        "type": "Box",
         "props": {
-         "weight": "semibold"
+         "flexDirection": "column"
         },
         "children": [
-         "Built in"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  ",
-         "PRIVATE_KEY",
-         ": ",
-         "private key blocks, cut-short ones too"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  ",
-         "API_KEY",
-         ": ",
-         "vendor tokens (sk-, gh*_, github_pat_, AKIA, ASIA, xox*-, AIza, sk_live_, glpat-, npm_, dckr_pat_, SG., hf_, ya29.) and JWTs"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  ",
-         "TOKEN",
-         ": ",
-         "the value after \"Bearer\""
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  ",
-         "PASSWORD",
-         ": ",
-         "passwords in URLs (://user:...@)"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  ",
-         "SECRET",
-         ": ",
-         "values after --password, --token, --api-key, --secret"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  ",
-         "SECRET",
-         ": ",
-         "values assigned to a name with token, secret, password, api key, private key, access key or credential in it"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  ",
-         "EMAIL",
-         ": ",
-         "email addresses (not git@)"
+         {
+          "type": "Box",
+          "props": {
+           "flexWrap": "wrap",
+           "columnGap": 2,
+           "justifyContent": "space-between"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "flexWrap": "wrap",
+             "columnGap": 2
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab-session",
+               "label": "This session (2)•",
+               "hotkey": "s",
+               "plain": true,
+               "dimColor": false,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab-patterns",
+               "label": "Patterns (7) ",
+               "hotkey": "p",
+               "plain": true,
+               "dimColor": true,
+               "onPress": "[fn]"
+              },
+              "children": []
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "tab-help",
+               "label": "Guide ",
+               "hotkey": "h",
+               "plain": true,
+               "dimColor": true,
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "dimColor": true
+              },
+              "children": [
+               "terminal draws: ",
+               "the real values"
+              ]
+             },
+             {
+              "type": "Button",
+              "props": {
+               "key": "raw",
+               "label": "switch",
+               "hotkey": "d",
+               "onPress": "[fn]"
+              },
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         ""
         ]
        },
        {
         "type": "Box",
         "props": {
-         "marginTop": 1
+         "flexDirection": "column"
         },
         "children": [
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "weight": "semibold"
+           "gap": 1
           },
           "children": [
-           "From settings"
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 1
+            },
+            "children": [
+             {
+              "type": "Text",
+              "props": {
+               "key": "sec-session",
+               "wrap": "truncate-end"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "── "
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "weight": "semibold"
+                },
+                "children": [
+                 "This session"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " ",
+                 "────────────────────────────"
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 " ",
+                 "2 masked",
+                 " "
+                ]
+               },
+               {
+                "type": "Text",
+                "props": {
+                 "dimColor": true
+                },
+                "children": [
+                 "──"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Box",
+            "props": {
+             "flexShrink": 0
+            },
+            "children": [
+             {
+              "type": "Button",
+              "props": {
+               "key": "forget-all",
+               "label": "forget all",
+               "plain": true,
+               "onPress": "[fn]"
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {
+                 "color": "red"
+                },
+                "children": [
+                 "✗ all"
+                ]
+               }
+              ]
+             }
+            ]
+           }
           ]
          },
          {
@@ -238,75 +333,157 @@
            "dimColor": true
           },
           "children": [
-           " · the patterns option in settings.json"
-          ]
-         }
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  none"
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "marginTop": 1
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "weight": "semibold"
-          },
-          "children": [
-           "Yours"
+           "  forget drops one from the vault: a call naming it is refused, and the value masks under a new number"
           ]
          },
          {
-          "type": "Text",
+          "type": "Box",
           "props": {
-           "dimColor": true
+           "key": "⟦API_KEY_1⟧",
+           "flexDirection": "column"
           },
           "children": [
-           " · kept across sessions and projects"
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "  ",
+                 "⟦API_KEY_1⟧",
+                 " ",
+                 "sk_live_51Hxxxxxxxxxxxxxxxxxxxxxxxx"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "forget-⟦API_KEY_1⟧",
+                 "label": "forget",
+                 "plain": true,
+                 "onPress": "[fn]"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "red"
+                  },
+                  "children": [
+                   "✗"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "    masked by ",
+             "built-in rule: Vendor tokens (sk-, gh*_, github_pat_, AKIA, ASIA, xox*-, AIza, sk_live_, glpat-, npm_, dckr_pat_, SG., hf_, ya29.) and JWTs"
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "⟦PASSWORD_1⟧",
+           "flexDirection": "column"
+          },
+          "children": [
+           {
+            "type": "Box",
+            "props": {
+             "gap": 1
+            },
+            "children": [
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 1
+              },
+              "children": [
+               {
+                "type": "Text",
+                "props": {},
+                "children": [
+                 "  ",
+                 "⟦PASSWORD_1⟧",
+                 " ",
+                 "hunter2"
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Box",
+              "props": {
+               "flexShrink": 0
+              },
+              "children": [
+               {
+                "type": "Button",
+                "props": {
+                 "key": "forget-⟦PASSWORD_1⟧",
+                 "label": "forget",
+                 "plain": true,
+                 "onPress": "[fn]"
+                },
+                "children": [
+                 {
+                  "type": "Text",
+                  "props": {
+                   "color": "red"
+                  },
+                  "children": [
+                   "✗"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Text",
+            "props": {
+             "dimColor": true
+            },
+            "children": [
+             "    masked by ",
+             "built-in rule: Passwords in URLs"
+            ]
+           }
           ]
          }
         ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true
-        },
-        "children": [
-         "  none yet"
-        ]
-       },
-       {
-        "type": "Box",
-        "props": {
-         "marginTop": 1
-        },
-        "children": [
-         {
-          "type": "Input",
-          "props": {
-           "key": "add",
-           "label": "add ",
-           "placeholder": "a regex; each match is masked whole, a named group names its label",
-           "submitLabel": "add",
-           "onSubmit": "[fn]"
-          },
-          "children": []
-         }
-        ]
-       },
-       ""
+       }
       ]
      },
      "title": "Redact rules"
@@ -315,6 +492,7 @@
   },
   "script": [
    "session.start",
+   "$.fs.write(/Users/dev/.claude/redact-patterns.txt)",
    "tool.call Read",
    "tool.call Grep",
    "tool.call Edit",
@@ -326,9 +504,10 @@
    "tool.call Bash cat .env",
    "turn.complete",
    "$.ui.open(redact)",
-   "/redact → redact rules shown"
+   "/redact → "
   ],
   "console": [],
+  "status": "redact: 2 masked",
   "warnings": []
  },
  "validate": {
@@ -358,24 +537,35 @@
    "$.clock.now (via keep",
    "prune)",
    "$.command.register",
-   "$.fs.read (via tamper)",
+   "$.env.get (via place)",
+   "$.fs.exists (via text)",
+   "$.fs.read (via tamper",
+   "text)",
+   "$.fs.stat (via land)",
+   "$.fs.write (via save",
+   "text)",
    "$.session.id (via hold)",
-   "$.store.delete (via prune)",
+   "$.store.delete (via prune",
+   "text)",
    "$.store.get (via load",
    "prune",
-   "sync)",
+   "text)",
    "$.store.keys (via prune)",
-   "$.store.set (via keep",
-   "save)",
+   "$.store.set (via keep)",
    "$.ui.invalidate",
    "$.ui.log",
    "$.ui.open",
    "$.ui.resolve",
-   "$.ui.toast"
+   "$.ui.status (via badge)",
+   "$.ui.toast (via told)"
   ],
   "stateReads": [],
   "stateWrites": [],
-  "envReads": [],
+  "envReads": [
+   "CLAUDE_CONFIG_DIR",
+   "HOME",
+   "USERPROFILE"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -396,13 +586,14 @@
      "warnings": [],
      "notes": [
       "redact.tsx hooks: session.start, command.run{command=redact}, prompt.submit, command.run, skill.prompt, prompt.context, prompt.compose, prompt.attachment, tool.describe, session.append, tool.call, ui.render{component=AssistantMessage}, ui.render{component=UserMessage}, ui.render{component=ToolUse}, ui.render{component=ToolResult}, prompt.suggest, ui.render{component=Pane, requestId=redact}",
-      "redact.tsx hooks on skill.prompt, prompt.context, prompt.compose, prompt.attachment do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
       "redact.tsx answers its own command: command.run{command=redact}",
       "redact.tsx gating hook with .catch: prompt.submit",
       "redact.tsx gating hook with .catch: command.run",
       "redact.tsx gating hook with .catch: session.append",
       "redact.tsx gating hook with .catch: tool.call",
-      "redact.tsx calls: $.clock.now (via keep, prune), $.command.register, $.fs.read (via tamper), $.session.id (via hold), $.store.delete (via prune), $.store.get (via load, prune, sync), $.store.keys (via prune), $.store.set (via keep, save), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.toast"
+      "redact.tsx calls: $.clock.now (via keep, prune), $.command.register, $.env.get (via place), $.fs.exists (via text), $.fs.read (via tamper, text), $.fs.stat (via land), $.fs.write (via save, text), $.session.id (via hold), $.store.delete (via prune, text), $.store.get (via load, prune, text), $.store.keys (via prune), $.store.set (via keep), $.ui.invalidate, $.ui.log, $.ui.open, $.ui.resolve, $.ui.status (via badge), $.ui.toast (via told)",
+      "redact.tsx env writes: nothing",
+      "redact.tsx env reads: CLAUDE_CONFIG_DIR, HOME, USERPROFILE"
      ],
      "gatingHooks": [
       {
@@ -435,5 +626,5 @@
    "advice": []
   }
  },
- "sourceHash": "22527d3838abf296"
+ "sourceHash": "974524b6594f4cb0"
 }

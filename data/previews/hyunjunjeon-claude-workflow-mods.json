@@ -1,6 +1,6 @@
 {
  "slug": "hyunjunjeon-claude-workflow-mods",
- "generatedAt": "2026-10-16T14:17:32.554Z",
+ "generatedAt": "2026-10-20T14:22:17.813Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -104,6 +104,12 @@
    {
     "event": "tool.call",
     "matcher": {
+     "tool": "/^(?:Edit|Write)$/"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
      "tool": "/^SubagentHandback$/"
     }
    },
@@ -150,7 +156,8 @@
    "dag-workflow: Jev model fallback started (2 question(s) in 1 request(s))",
    "Jev model fallback returned incomplete decisions; keeping existing decisions for unanswered questions",
    "dag-workflow: turn mode direct: Jev invalid-response",
-   "dag-workflow: turn surface chat: Jev invalid-response"
+   "dag-workflow: turn surface chat: Jev invalid-response",
+   "dag-workflow: semgrep is not installed; the secure-coding scan is off"
   ],
   "denies": [],
   "rewrites": [
@@ -162,14 +169,14 @@
   "apiCalls": {
    "$.state.get": 1,
    "$.env.get": 2,
-   "$.ui.log": 6,
+   "$.ui.log": 7,
    "$.session.id": 1,
    "$.tool.register": 2,
    "$.session.cwd": 1,
    "$.fs.exists": 9,
    "$.store.keys": 2,
    "$.clock.now": 9,
-   "$.process.run": 2,
+   "$.process.run": 3,
    "$.fs.stat": 1,
    "$.store.set": 1,
    "$.store.get": 3,
@@ -181,7 +188,7 @@
    "$.clock.after": 1,
    "$.model.complete": 1,
    "$.fs.write": 2,
-   "$.fs.read": 7,
+   "$.fs.read": 10,
    "$.ui.open": 1,
    "$.ui.resolve": 1
   },
@@ -441,6 +448,7 @@
    "$.fs.write(/work/app/.claude/dag/decisions/preview-session.json)",
    "tool.call Read",
    "tool.call Grep",
+   "$.process.run(semgrep --version) → exit 0",
    "tool.call Edit",
    "tool.call Write",
    "tool.call Write",
@@ -484,6 +492,7 @@
    "ui.render{component=Pane}",
    "ui.render{component=AbovePrompt}",
    "tool.call{tool=/\"^(?:Edit|Write)$\"/}",
+   "tool.call{tool=/\"^(?:Edit|Write)$\"/}",
    "tool.call{tool=/\"^SubagentHandback$\"/}",
    "ui.message",
    "ui.close"
@@ -497,6 +506,7 @@
    "$.clock.after (via afterHook",
    "evaluateJevHttp",
    "evaluateJevWithin",
+   "openHeldTurn",
    "waitForBackground)",
    "$.clock.every",
    "$.clock.now",
@@ -505,6 +515,7 @@
    "$.fs.exists (via clearStaleNotes",
    "ensureDir",
    "fileCheckResult",
+   "fixDiff",
    "inheritBoards",
    "initializeLearning",
    "listIfPresent",
@@ -515,14 +526,19 @@
    "publishLearningTransaction",
    "readLearningLibrary",
    "readTrace",
+   "recordBeforeFix",
    "refreshExternalRuns",
    "updateLockedLibrary)",
-   "$.fs.list (via folderFiles",
+   "$.fs.list (via exportTrajectory",
+   "folderFiles",
    "listIfPresent",
    "loadRuns",
    "pruneLearningData",
    "refreshExternalRuns)",
-   "$.fs.read (via fileCheckResult",
+   "$.fs.read (via endSnapshot",
+   "exportTrajectory",
+   "fileCheckResult",
+   "fixDiff",
    "folderCheckResult",
    "handoffAction",
    "inheritBoards",
@@ -537,11 +553,7 @@
    "readLearningLibrary",
    "readOrEmpty",
    "readPeek",
-   "readTrace",
-   "refreshExternalRuns",
-   "reviewerFindings",
-   "updateLockedLibrary)",
-   "$.fs.stat (via fileCheckRes… [+1327 chars]"
+   "r… [+1549 chars]"
   ],
   "stateReads": [
    "dag-workflow.planningLoaded"
@@ -575,8 +587,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, session.end, session.receive, prompt.context, session.compact, turn.step, skill.prompt, prompt.edit, prompt.submit, agent.spawn, classic.PermissionRequest, tool.check, tool.call, turn.complete, tool.call{tool=mcp__dag-workflow__dag}, tool.call{tool=mcp__dag-workflow__board}, command.run{command=dag-ping}, command.run{command=dag}, turn.start, ui.render{component=Pane}, ui.render{component=AbovePrompt}, tool.call{tool=/\"^(?:Edit|Write)$\"/}, tool.call{tool=/\"^SubagentHandback$\"/}, ui.message, ui.close",
-      "./register.ts hooks on classic.SessionStart, prompt.context, session.compact, skill.prompt, classic.PermissionRequest do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.ts hooks: session.start, classic.SessionStart{source=clear|resume|fork}, session.end, session.receive, prompt.context, session.compact, turn.step, skill.prompt, prompt.edit, prompt.submit, agent.spawn, classic.PermissionRequest, tool.check, tool.call, turn.complete, tool.call{tool=mcp__dag-workflow__dag}, tool.call{tool=mcp__dag-workflow__board}, command.run{command=dag-ping}, command.run{command=dag}, turn.start, ui.render{component=Pane}, ui.render{component=AbovePrompt}, tool.call{tool=/\"^(?:Edit|Write)$\"/}, tool.call{tool=/\"^(?:Edit|Write)$\"/}, tool.call{tool=/\"^SubagentHandback$\"/}, ui.message, ui.close",
       "./register.ts answers its own command: command.run{command=dag-ping}",
       "./register.ts answers its own command: command.run{command=dag}",
       "./register.ts gating hook without .catch: classic.SessionStart{source=clear|resume|fork}",
@@ -590,9 +601,10 @@
       "./register.ts gating hook with .catch: tool.call{tool=mcp__dag-workflow__dag}",
       "./register.ts gating hook with .catch: tool.call{tool=mcp__dag-workflow__board}",
       "./register.ts gating hook without .catch: tool.call{tool=/\"^(?:Edit|Write)$\"/}",
+      "./register.ts gating hook without .catch: tool.call{tool=/\"^(?:Edit|Write)$\"/}",
       "./register.ts gating hook without .catch: tool.call{tool=/\"^SubagentHandback$\"/}",
       "./register.ts gating hook without .catch: ui.close",
-      "./register.ts calls: $.agent.list (via drawPane, initializeLearning, recoverRuns), $.agent.spawn (via startLearning, startNode), $.clock.after (via afterHook, evaluateJevHttp, evaluateJevWithin, waitForBackground), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via clearStaleNotes, ensureDir, fileCheckResult, inheritBoards, initializeLearning, listIfPresent, loadBoards, loadMetadata, loadRuns, pruneLearningData, publishLearningTransaction, readLearningLibrary, readTrace, refreshExternalRuns, updateLockedLibrary), $.fs.list (via folderFiles, listIfPresent, loadRuns, pruneLearningData, refreshExternalRuns), $.fs.read (via fileCheckResult, folderCheckResult, handoffAction, inheritBoards, initializeLearning, lensExpansion, loadBoards, loadMetadata, loadRuns, pruneLearningData, publishLearningTransaction, readDefinitionFile, readLearningLibrary, readOrEmpty, readPeek, readTrace, refreshExternalRuns, reviewerFindings, updateLockedLibrary), $.fs.stat (via fileCheckRes… [+1327 chars]",
+      "./register.ts calls: $.agent.list (via drawPane, initializeLearning, recoverRuns), $.agent.spawn (via startLearning, startNode), $.clock.after (via afterHook, evaluateJevHttp, evaluateJevWithin, openHeldTurn, waitForBackground), $.clock.every, $.clock.now, $.command.register, $.env.get, $.fs.exists (via clearStaleNotes, ensureDir, fileCheckResult, fixDiff, inheritBoards, initializeLearning, listIfPresent, loadBoards, loadMetadata, loadRuns, pruneLearningData, publishLearningTransaction, readLearningLibrary, readTrace, recordBeforeFix, refreshExternalRuns, updateLockedLibrary), $.fs.list (via exportTrajectory, folderFiles, listIfPresent, loadRuns, pruneLearningData, refreshExternalRuns), $.fs.read (via endSnapshot, exportTrajectory, fileCheckResult, fixDiff, folderCheckResult, handoffAction, inheritBoards, initializeLearning, lensExpansion, loadBoards, loadMetadata, loadRuns, pruneLearningData, publishLearningTransaction, readDefinitionFile, readLearningLibrary, readOrEmpty, readPeek, r… [+1549 chars]",
       "./register.ts env writes: nothing",
       "./register.ts env reads: HOME, TYPESAFE_API_KEY",
       "./register.ts state writes: dag-workflow.planningLoaded",
@@ -669,6 +681,12 @@
       {
        "module": "./register.ts",
        "pattern": "tool.call",
+       "hook": "tool.call{tool=/\"^(?:Edit|Write)$\"/}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.ts",
+       "pattern": "tool.call",
        "hook": "tool.call{tool=/\"^SubagentHandback$\"/}",
        "hasCatch": false
       },
@@ -684,5 +702,5 @@
    "advice": []
   }
  },
- "sourceHash": "3be616bfaf525540"
+ "sourceHash": "96dde31b1db04668"
 }

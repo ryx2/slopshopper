@@ -1,0 +1,8 @@
+{
+ "slug": "voltaire405-claude-mods-context-meter",
+ "files": {
+  "hooks/register.ts": "import type { Register, SessionContextUsage } from 'claude-code'\n\nconst BAR_WIDTH = 10\n\nconst compact = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`)\n\nexport const formatContext = ({ tokens, window, percent }: SessionContextUsage) => {\n  if (tokens === undefined || percent === undefined) return `ctx —/${compact(window)}`\n  const filled = Math.min(BAR_WIDTH, Math.round((percent / 100) * BAR_WIDTH))\n  const bar = '█'.repeat(filled) + '░'.repeat(BAR_WIDTH - filled)\n  return `ctx ${bar} ${percent}% · ${compact(tokens)}/${compact(window)}`\n}\n\nexport const register: Register = on => {\n  on('session.start', async ($, e, next) => {\n    const result = await next(e)\n    $.ui.status(formatContext((await $.session.usage()).context))\n    return result\n  })\n\n  on('session.measure', ($, e, next) => {\n    $.ui.status(formatContext(e.context))\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"context-meter\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Always shows the context window usage in tokens\",\n  \"author\": {\n    \"name\": \"Voltaire405\"\n  }\n}"
+ }
+}

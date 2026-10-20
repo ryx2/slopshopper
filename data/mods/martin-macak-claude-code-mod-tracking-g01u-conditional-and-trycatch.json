@@ -1,0 +1,10 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-g01u-conditional-and-trycatch",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\nimport { installA } from './trackers/a'\nimport { installB } from './trackers/b'\n\nexport const register: Register = (on, options) => {\n  // One tracker failing to install must not stop the rest.\n  try {\n    installA(on)\n  } catch {\n    // logged elsewhere\n  }\n  if (options.withB === true) installB(on)\n}\n",
+  "hooks/trackers/a.ts": "import type { On } from 'claude-code'\nexport function installA(on: On): void {\n  on('tool.call', { tool: 'Bash' }, ($, e, next) => ({ deny: 'a' }))\n}\n",
+  "hooks/trackers/b.ts": "import type { On } from 'claude-code'\nexport function installB(on: On): void {\n  on('tool.call', { tool: 'Read' }, ($, e, next) => ({ deny: 'b' }))\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"g01u-conditional-and-trycatch\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  },\n  \"userConfig\": {\n    \"withB\": {\n      \"type\": \"boolean\",\n      \"title\": \"B\",\n      \"description\": \"install tracker B\",\n      \"default\": false\n    }\n  }\n}"
+ }
+}

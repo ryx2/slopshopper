@@ -1,6 +1,6 @@
 {
  "slug": "fpcmotif-nix-darwin-jev-traits",
- "generatedAt": "2026-10-16T14:19:38.039Z",
+ "generatedAt": "2026-10-20T14:23:03.265Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -35,13 +35,13 @@
     "name": "traits",
     "description": "Show jev-traits status, or check changes against the repository traits",
     "argumentHint": "[check [changed|staged|unstaged|untracked|<files…>]]",
-    "output": "jev-traits · jev-latest · fix ≥ 0.8 · double-check ≥ 0.5 · pass ≥ 0.9 · edits checked\njev-traits found no TypeSafe API key. Store it once, by hand, in the macOS Keychain (jev-lint reads the same item):\n\n  security add-generic-password -U -a \"$USER\" -s typesafe-api-key -w\n\nThe command prompts for the key, so it stays out of your shell history and this chat. Then run /traits again.\nOr export TYPESAFE_API_KEY before starting Claude Code, or set the typesafe_api_key option\n(kept in secure storage) once the plugin is installed from a marketplace.\nTraits: no .agents/traits folder at or above /work/app. Add one as .agents/traits/project/<name>.md.\nRun /traits check [changed|staged|unstaged|untracked|<files…>] to check work in progress."
+    "output": "jev-traits · jev-latest · fix ≥ 0.8 · double-check ≥ 0.5 · pass ≥ 0.9 · edits checked\njev-traits found no TypeSafe API key. Store it once, by hand, in the macOS Keychain (jev-lint reads the same item):\n\n  security add-generic-password -U -a \"$USER\" -s typesafe-api-key -w\n\nThe command prompts for the key, so it stays out of your shell history and this chat. Then run /traits again.\nLookup order: the typesafe_api_key option (kept in secure storage, once the plugin is installed from a marketplace),\nthen the Keychain item typesafe-api-key, then TYPESAFE_API_KEY as a fallback for machines without the item, such as CI.\nDo not keep the key in a .env file.\nTraits: no .agents/traits folder at or above /work/app. Add one as .agents/traits/<name>.md.\nRun /traits check [changed|staged|unstaged|untracked|<files…>] to check work in progress."
    }
   ],
   "tools": [
    {
     "name": "check_traits",
-    "description": "Checks code against this repository's traits (.agents/traits/<group>/*.md) with TypeSafe Jev. Use it before committing (target staged), after adding or revising a trait, or to audit files. Findings are fast model judgments: read the trait and the code before changing anything, and report unsure results as unsure, never as passes."
+    "description": "Checks code against this repository's traits (.agents/traits/*.md and .agents/traits/<group>/*.md) with the traits CLI and TypeSafe Jev. Use it before committing (target staged), after adding or revising a trait, or to audit files. Findings are fast model judgments: read the trait and the code before changing anything, and report unsure results as unsure, never as passes."
    }
   ],
   "panes": [],
@@ -53,8 +53,8 @@
    "$.command.register": 1,
    "$.tool.register": 1,
    "$.fs.exists": 15,
-   "$.env.get": 1,
    "$.process.run": 1,
+   "$.env.get": 1,
    "$.session.root": 1
   },
   "timers": [],
@@ -88,17 +88,14 @@
    "command.run{command=traits}"
   ],
   "calls": [
-   "$.clock.after (via review)",
    "$.command.register",
-   "$.env.get (via apiKey)",
+   "$.env.get (via apiKey",
+   "traitsBin)",
    "$.fs.exists (via findRoot)",
    "$.fs.list (via listDir)",
-   "$.fs.read (via checkEdit",
-   "gather",
-   "loadTrait)",
-   "$.http.fetch (via review)",
    "$.process.run (via apiKey",
-   "gather)",
+   "runTraits",
+   "storedTraits)",
    "$.session.root (via checkTarget",
    "summary)",
    "$.tool.register",
@@ -107,6 +104,7 @@
   "stateReads": [],
   "stateWrites": [],
   "envReads": [
+   "TRAITS_BIN",
    "TYPESAFE_API_KEY"
   ],
   "raw": {
@@ -132,9 +130,9 @@
       "./register.ts answers its own command: command.run{command=traits}",
       "./register.ts gating hook with .catch: tool.call{tool=Edit|Write|NotebookEdit}",
       "./register.ts gating hook with .catch: tool.call{tool=mcp__jev-traits__check_traits}",
-      "./register.ts calls: $.clock.after (via review), $.command.register, $.env.get (via apiKey), $.fs.exists (via findRoot), $.fs.list (via listDir), $.fs.read (via checkEdit, gather, loadTrait), $.http.fetch (via review), $.process.run (via apiKey, gather), $.session.root (via checkTarget, summary), $.tool.register, $.ui.status (via report)",
+      "./register.ts calls: $.command.register, $.env.get (via apiKey, traitsBin), $.fs.exists (via findRoot), $.fs.list (via listDir), $.process.run (via apiKey, runTraits, storedTraits), $.session.root (via checkTarget, summary), $.tool.register, $.ui.status (via report)",
       "./register.ts env writes: nothing",
-      "./register.ts env reads: TYPESAFE_API_KEY"
+      "./register.ts env reads: TRAITS_BIN, TYPESAFE_API_KEY"
      ],
      "gatingHooks": [
       {
@@ -155,5 +153,5 @@
    "advice": []
   }
  },
- "sourceHash": "fd6047a2855fd36f"
+ "sourceHash": "5fee0248f8dd0c0a"
 }

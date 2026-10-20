@@ -1,6 +1,6 @@
 {
  "slug": "gravityxx-aside",
- "generatedAt": "2026-10-19T16:26:40.792Z",
+ "generatedAt": "2026-10-20T14:22:15.534Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -9,6 +9,14 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "prompt.submit",
+    "matcher": {
+     "origin": {
+      "kind": "/^(composer|bridge)$/"
+     }
+    }
    },
    {
     "event": "prompt.change"
@@ -91,7 +99,7 @@
    {
     "name": "aside",
     "description": "Show the ideas and comments queued with \"+\"; plan and run them",
-    "argumentHint": "[plan | run [N ... | all] | stop | pop [N] | edit N | move N M | remove N [M ...] | clear | undo | scan FILE | export [FILE] | g [TEXT | here N ... | add N ... | remove N ... | edit N | pop [N] | move N M] | help | TEXT]",
+    "argumentHint": "[plan | run [N ... | all] | stop | log [N] | pop [N] | edit N | move N M | remove N [M ...] | clear | undo | find TEXT | import FILE | scan FILE | export [FILE] | g [TEXT | here N ... | add N ... | remove N ... | edit N | pop [N] | move N M | clear | undo | import FILE] | q [NAME [TEXT | here N ... | add N ... | remove N ... | edit N | pop [N] | move N M | clear | undo | import FILE | rename NEW | local | global]] | help | TEXT]",
     "immediate": true,
     "output": "The queue is empty."
    }
@@ -112,12 +120,15 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.tool.register": 1,
-   "$.session.root": 8,
-   "$.store.get": 12,
+   "$.session.root": 12,
+   "$.store.get": 14,
    "$.store.keys": 2,
-   "$.state.get": 8,
-   "$.ui.toast": 1,
+   "$.state.get": 9,
    "$.state.set": 2,
+   "$.ui.toast": 1,
+   "$.session.id": 1,
+   "$.clock.now": 2,
+   "$.ui.invalidate": 1,
    "$.ui.resolve": 1
   },
   "timers": [],
@@ -205,6 +216,7 @@
   "hooks": [
    "session.start",
    "prompt.submit",
+   "prompt.submit{origin has {kind=/\"^(composer|bridge)$\"/}}",
    "prompt.change",
    "prompt.autocomplete",
    "tool.call",
@@ -222,13 +234,28 @@
    "ui.render{component=ToolResult}"
   ],
   "calls": [
-   "$.clock.after (via emptyBoxLater",
+   "$.clock.after (via drawPane",
+   "emptyBoxLater",
    "handOverAfterAnswer",
    "queueTyped",
    "submitLater)",
    "$.clock.now (via addEntries",
+   "addIdeas",
+   "archivePlan",
+   "bindStepTurn",
    "exportListing",
-   "moveToGlobal)",
+   "finishStep",
+   "foundListed",
+   "goOnFromWaiting",
+   "importHere",
+   "importInto",
+   "loadListing",
+   "logListed",
+   "moveToQueue",
+   "planOutside",
+   "releaseStep",
+   "savePlanFromTool",
+   "stopPlan)",
    "$.command.register (via startSession)",
    "$.fs.exists (via resolveFile",
    "writeExport)",
@@ -241,36 +268,27 @@
    "readGitBranch",
    "searchMarkdown)",
    "$.prompt.fill (via editEntry",
-   "editGlobal",
+   "editIdea",
    "emptyBoxAfterQueue",
    "emptyBoxLater",
    "popEntry",
-   "popGlobal",
+   "popIdea",
    "storeFailed)",
    "$.prompt.read (via emptyBoxLater",
    "storeFailed)",
    "$.prompt.submit (via submitLater)",
-   "$.session.id (via addGlobalIdeas",
+   "$.session.id (via addIdeas",
+   "bindAddingTurn",
+   "bindAnswerTurn",
    "bindStepTurn",
+   "clearedKeys",
+   "finishStep",
    "globalEditingKey",
+   "goOnFromWaiting",
+   "handOver",
+   "noteStepAnswer",
    "onTurnEnd",
-   "pausePlanFromTool",
-   "restoreTaken",
-   "runningHere",
-   "savePlanFromTool",
-   "startStep",
-   "stopPlan)",
-   "$.session.root (via projectKeys)",
-   "$.state.get",
-   "$.state.set",
-   "$.store.delete (via forgetEditing",
-   "forgetGlobalEditing",
-   "forgetGlobalIdeas",
-   "forgetTake",
-   "saveEntries",
-   "savePlan",
-   "saveTake)",
-   "$.store.get (vi… [+650 chars]"
+   "pa… [+1166 chars]"
   ],
   "stateReads": [
    "aside.band",
@@ -303,15 +321,16 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, prompt.submit, prompt.change, prompt.autocomplete, tool.call, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=/\"__plan$\"/}, tool.call{tool=/\"__wait$\"/}, turn.start, turn.complete, command.run{command=aside}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=aside}, ui.render{component=CommandOutput}, ui.render{component=ToolUse}, ui.render{component=ToolResult}",
+      "./register.tsx hooks: session.start, prompt.submit, prompt.submit{origin has {kind=/\"^(composer|bridge)$\"/}}, prompt.change, prompt.autocomplete, tool.call, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=/\"__plan$\"/}, tool.call{tool=/\"__wait$\"/}, turn.start, turn.complete, command.run{command=aside}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=aside}, ui.render{component=CommandOutput}, ui.render{component=ToolUse}, ui.render{component=ToolResult}",
       "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: prompt.submit{origin has {kind=/\"^(composer|bridge)$\"/}}",
       "./register.tsx gating hook without .catch: tool.call",
       "./register.tsx gating hook without .catch: tool.call{tool=Write}",
       "./register.tsx gating hook without .catch: tool.call{tool=Edit}",
       "./register.tsx gating hook with .catch: tool.call{tool=/\"__plan$\"/}",
       "./register.tsx gating hook with .catch: tool.call{tool=/\"__wait$\"/}",
       "./register.tsx gating hook with .catch: command.run{command=aside}",
-      "./register.tsx calls: $.clock.after (via emptyBoxLater, handOverAfterAnswer, queueTyped, submitLater), $.clock.now (via addEntries, exportListing, moveToGlobal), $.command.register (via startSession), $.fs.exists (via resolveFile, writeExport), $.fs.list (via walkFiles), $.fs.read (via tryReadFile), $.fs.write (via writeExport), $.model.complete (via askTidy, planOutside), $.process.run (via readClipboardText, readGitBranch, searchMarkdown), $.prompt.fill (via editEntry, editGlobal, emptyBoxAfterQueue, emptyBoxLater, popEntry, popGlobal, storeFailed), $.prompt.read (via emptyBoxLater, storeFailed), $.prompt.submit (via submitLater), $.session.id (via addGlobalIdeas, bindStepTurn, globalEditingKey, onTurnEnd, pausePlanFromTool, restoreTaken, runningHere, savePlanFromTool, startStep, stopPlan), $.session.root (via projectKeys), $.state.get, $.state.set, $.store.delete (via forgetEditing, forgetGlobalEditing, forgetGlobalIdeas, forgetTake, saveEntries, savePlan, saveTake), $.store.get (vi… [+650 chars]",
+      "./register.tsx calls: $.clock.after (via drawPane, emptyBoxLater, handOverAfterAnswer, queueTyped, submitLater), $.clock.now (via addEntries, addIdeas, archivePlan, bindStepTurn, exportListing, finishStep, foundListed, goOnFromWaiting, importHere, importInto, loadListing, logListed, moveToQueue, planOutside, releaseStep, savePlanFromTool, stopPlan), $.command.register (via startSession), $.fs.exists (via resolveFile, writeExport), $.fs.list (via walkFiles), $.fs.read (via tryReadFile), $.fs.write (via writeExport), $.model.complete (via askTidy, planOutside), $.process.run (via readClipboardText, readGitBranch, searchMarkdown), $.prompt.fill (via editEntry, editIdea, emptyBoxAfterQueue, emptyBoxLater, popEntry, popIdea, storeFailed), $.prompt.read (via emptyBoxLater, storeFailed), $.prompt.submit (via submitLater), $.session.id (via addIdeas, bindAddingTurn, bindAnswerTurn, bindStepTurn, clearedKeys, finishStep, globalEditingKey, goOnFromWaiting, handOver, noteStepAnswer, onTurnEnd, pa… [+1166 chars]",
       "./register.tsx state writes: aside.band, aside.files",
       "./register.tsx state reads: aside.band, aside.files"
      ],
@@ -320,6 +339,12 @@
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit{origin has {kind=/\"^(composer|bridge)$\"/}}",
        "hasCatch": true
       },
       {
@@ -364,5 +389,5 @@
    "advice": []
   }
  },
- "sourceHash": "2986d8478a053fa5"
+ "sourceHash": "11910d77f18f04d3"
 }

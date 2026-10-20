@@ -1,6 +1,6 @@
 {
  "slug": "midudev-better-claude-narrator",
- "generatedAt": "2026-10-19T16:25:52.240Z",
+ "generatedAt": "2026-10-20T14:21:13.846Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -33,13 +33,19 @@
     "matcher": {
      "component": "SessionMode"
     }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "PromptHint"
+    }
    }
   ],
   "commands": [
    {
     "name": "narrator",
     "description": "Claude tells you out loud what it did after each turn · no argument: switch on or off",
-    "argumentHint": "[on | off | stop]",
+    "argumentHint": "[on | off | stop | voices | test [voice]]",
     "immediate": true,
     "output": "Narrator on: Claude will tell you out loud what it did after each turn."
    }
@@ -53,13 +59,17 @@
   "apiCalls": {
    "$.command.register": 1,
    "$.store.get": 1,
-   "$.state.get": 13,
+   "$.state.get": 14,
    "$.state.set": 2,
    "$.store.set": 1,
+   "$.ui.invalidate": 1,
    "$.ui.resolve": 1
   },
   "timers": [],
   "sites": {
+   "PromptHint": {
+    "ok": "engine"
+   },
    "SessionMode": {
     "ok": true,
     "tree": {
@@ -138,16 +148,20 @@
    "turn.start",
    "tool.call",
    "turn.complete",
-   "ui.render{component=SessionMode}"
+   "ui.render{component=SessionMode}",
+   "ui.render{component=PromptHint}"
   ],
   "calls": [
    "$.audio.speak (via speak)",
+   "$.clock.every (via showSpeech)",
+   "$.clock.now (via speak)",
    "$.command.register",
    "$.env.get (via platformOf",
    "speakersFor",
    "wslOf)",
    "$.model.complete (via narrate)",
-   "$.process.run (via linuxSpeechOf",
+   "$.process.run (via commandOutput",
+   "linuxSpeechOf",
    "platformOf",
    "play)",
    "$.process.spawn (via play)",
@@ -155,17 +169,23 @@
    "$.state.set",
    "$.store.get",
    "$.store.set (via setEnabled)",
+   "$.ui.invalidate",
    "$.ui.log (via narrate",
    "play",
-   "speak)",
+   "speak",
+   "testVoice)",
    "$.ui.resolve",
    "$.ui.toast (via speak)"
   ],
   "stateReads": [
-   "narrator.isEnabled"
+   "narrator.isEnabled",
+   "narrator.speech",
+   "narrator.sweepStep"
   ],
   "stateWrites": [
-   "narrator.isEnabled"
+   "narrator.isEnabled",
+   "narrator.speech",
+   "narrator.sweepStep"
   ],
   "envReads": [
    "OS",
@@ -183,7 +203,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: narrator.isEnabled"
+     "types ./types/index.d.ts declares state: narrator.isEnabled, narrator.speech, narrator.sweepStep"
     ],
     "gatingHooks": []
    },
@@ -194,15 +214,15 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, command.run{command=narrator}, prompt.submit, turn.start, tool.call, turn.complete, ui.render{component=SessionMode}",
+      "./register.tsx hooks: session.start, session.end, command.run{command=narrator}, prompt.submit, turn.start, tool.call, turn.complete, ui.render{component=SessionMode}, ui.render{component=PromptHint}",
       "./register.tsx answers its own command: command.run{command=narrator}",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: tool.call",
-      "./register.tsx calls: $.audio.speak (via speak), $.command.register, $.env.get (via platformOf, speakersFor, wslOf), $.model.complete (via narrate), $.process.run (via linuxSpeechOf, platformOf, play), $.process.spawn (via play), $.state.get, $.state.set, $.store.get, $.store.set (via setEnabled), $.ui.log (via narrate, play, speak), $.ui.resolve, $.ui.toast (via speak)",
+      "./register.tsx calls: $.audio.speak (via speak), $.clock.every (via showSpeech), $.clock.now (via speak), $.command.register, $.env.get (via platformOf, speakersFor, wslOf), $.model.complete (via narrate), $.process.run (via commandOutput, linuxSpeechOf, platformOf, play), $.process.spawn (via play), $.state.get, $.state.set, $.store.get, $.store.set (via setEnabled), $.ui.invalidate, $.ui.log (via narrate, play, speak, testVoice), $.ui.resolve, $.ui.toast (via speak)",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: OS, WSLENV, WSL_DISTRO_NAME",
-      "./register.tsx state writes: narrator.isEnabled",
-      "./register.tsx state reads: narrator.isEnabled"
+      "./register.tsx state writes: narrator.isEnabled, narrator.speech, narrator.sweepStep",
+      "./register.tsx state reads: narrator.isEnabled, narrator.speech, narrator.sweepStep"
      ],
      "gatingHooks": [
       {
@@ -223,5 +243,5 @@
    "advice": []
   }
  },
- "sourceHash": "6fa9449107b2e0dd"
+ "sourceHash": "668e4baafc32ed2a"
 }

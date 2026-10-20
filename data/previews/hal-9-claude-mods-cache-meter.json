@@ -1,6 +1,6 @@
 {
  "slug": "hal-9-claude-mods-cache-meter",
- "generatedAt": "2026-10-16T14:19:44.390Z",
+ "generatedAt": "2026-10-20T14:23:06.056Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -8,7 +8,28 @@
     "event": "session.start"
    },
    {
+    "event": "classic.SessionStart"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "keepwarm"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "cache-tax"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
     "event": "turn.step"
+   },
+   {
+    "event": "turn.complete"
    },
    {
     "event": "session.compact"
@@ -20,7 +41,22 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "keepwarm",
+    "description": "Keep the prompt cache warm: bare for 6h, a window such as 90m, always, off, or status (cache-tax)",
+    "argumentHint": "[6h | always | off | status]",
+    "immediate": true,
+    "output": "keepwarm on for 6h00m, a ping 50m after each idle stretch keeps the cache read, not re-written"
+   },
+   {
+    "name": "cache-tax",
+    "description": "Prompt cache state, cold price and this session's cold writes; guard warn|refuse (cache-tax, the Mod)",
+    "argumentHint": "[status | guard warn | guard refuse]",
+    "immediate": true,
+    "output": "claude-opus-5-5\nstate       warm, 1h00m left\ncontext     97,400 tokens\ncold cost   $0.78 to re-write it (warm turn $0.02)\nkeepwarm    on, 6h00m left · ping in 50m\nbreak-even  up to 40 pings at the read rate cost one cold write, about 33h20m of idle at one ping per 50m\nguard       refuse once (/cache-tax guard warn to only show the price)\nsession     0 cold writes paid, $0.00"
+   }
+  ],
   "tools": [],
   "panes": [],
   "toasts": [],
@@ -29,17 +65,211 @@
   "rewrites": [],
   "apiCalls": {
    "$.clock.every": 1,
-   "$.state.get": 1
+   "$.store.get": 8,
+   "$.state.set": 1,
+   "$.ui.status": 1,
+   "$.session.id": 1,
+   "$.clock.now": 11,
+   "$.session.usage": 2,
+   "$.command.register": 2,
+   "$.command.list": 1,
+   "$.ui.invalidate": 2,
+   "$.state.get": 7,
+   "$.session.model": 1,
+   "$.store.delete": 1,
+   "$.store.set": 1,
+   "$.clock.after": 1,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
     "kind": "every",
     "ms": 30000
+   },
+   {
+    "kind": "after",
+    "ms": 2999940
    }
   ],
   "sites": {
    "AbovePrompt": {
-    "ok": "engine"
+    "ok": true,
+    "tree": {
+     "type": "Box",
+     "props": {
+      "flexDirection": "column",
+      "gap": 0,
+      "paddingTop": 0
+     },
+     "children": [
+      {
+       "type": "Box",
+       "props": {
+        "key": "band",
+        "flexDirection": "column",
+        "gap": 0,
+        "paddingX": 0,
+        "hover": {
+         "backgroundColor": "#8080801a"
+        }
+       },
+       "children": [
+        {
+         "type": "Button",
+         "props": {
+          "key": "toggle",
+          "plain": true,
+          "dimColor": true,
+          "hover": {
+           "dimColor": false,
+           "bold": true
+          },
+          "label": "▾ cache-meter · keepwarm 6h00m left",
+          "onPress": "[fn]"
+         },
+         "children": []
+        },
+        {
+         "type": "Box",
+         "props": {
+          "key": "keepwarm",
+          "gap": "sm",
+          "alignItems": "center"
+         },
+         "children": [
+          {
+           "type": "Text",
+           "props": {
+            "tabular": true
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "color": "success"
+             },
+             "children": [
+              "● "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              "keepwarm "
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "color": "success",
+              "weight": "medium"
+             },
+             "children": [
+              "6h00m left"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "tabular": true
+           },
+           "children": [
+            {
+             "type": "Text",
+             "props": {
+              "weight": "semibold"
+             },
+             "children": [
+              "$0.78"
+             ]
+            },
+            {
+             "type": "Text",
+             "props": {
+              "dimColor": true
+             },
+             "children": [
+              " ",
+              "cold rewrite of 97k"
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true
+           },
+           "children": [
+            "│"
+           ]
+          },
+          {
+           "type": "Text",
+           "props": {
+            "dimColor": true
+           },
+           "children": [
+            "ping in 50m"
+           ]
+          },
+          {
+           "type": "Box",
+           "props": {
+            "key": "kw-tip",
+            "position": "relative"
+           },
+           "children": [
+            {
+             "type": "Button",
+             "props": {
+              "key": "kw",
+              "label": "Stop",
+              "variant": "secondary",
+              "onPress": "[fn]"
+             },
+             "children": []
+            },
+            {
+             "type": "Box",
+             "props": {
+              "position": "absolute",
+              "right": 0,
+              "top": 1,
+              "display": "none",
+              "hover": {
+               "display": "flex"
+              },
+              "backgroundColor": "#3a3a38",
+              "borderStyle": "round",
+              "borderColor": "#5c5c58",
+              "paddingX": 1
+             },
+             "children": [
+              {
+               "type": "Text",
+               "props": {
+                "color": "#ffffff"
+               },
+               "children": [
+                "Stop the pings; the cache then expires an hour after your last turn"
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
    }
   },
   "script": [
@@ -53,7 +283,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "/keepwarm → keepwarm on for 6h00m, a ping 50m after each idle stretch keeps the cache read, …",
+   "/cache-tax → claude-opus-5-5\nstate       warm, 1h00m left\ncontext     97,400 tokens\ncold cost…"
   ],
   "console": [],
   "warnings": []
@@ -64,26 +296,50 @@
   "warnings": [],
   "hooks": [
    "session.start",
+   "classic.SessionStart",
+   "command.run{command=keepwarm}",
+   "command.run{command=cache-tax}",
+   "prompt.submit",
    "turn.step",
+   "turn.complete",
    "session.compact",
    "ui.render{component=AbovePrompt}"
   ],
   "calls": [
-   "$.clock.every",
+   "$.clock.after (via arm",
+   "ping)",
+   "$.clock.every (via meterStart)",
    "$.clock.now",
+   "$.command.list",
+   "$.command.register",
+   "$.model.fork (via ping)",
    "$.session.compact (via compact)",
-   "$.session.usage (via windowOf)",
+   "$.session.id",
+   "$.session.model",
+   "$.session.usage",
    "$.state.get",
    "$.state.set (via bumpTick",
+   "meterStart",
+   "setCollapsed",
    "setReading)",
+   "$.store.delete (via prune",
+   "startWindow",
+   "stop)",
+   "$.store.get",
+   "$.store.set",
+   "$.ui.invalidate (via updateStatus)",
+   "$.ui.log",
    "$.ui.resolve",
+   "$.ui.status",
    "$.ui.toast (via compact)"
   ],
   "stateReads": [
+   "cache-meter.collapsed",
    "cache-meter.reading",
    "cache-meter.tick"
   ],
   "stateWrites": [
+   "cache-meter.collapsed",
    "cache-meter.reading",
    "cache-meter.tick"
   ],
@@ -99,7 +355,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: cache-meter.reading, cache-meter.tick"
+     "types ./types/index.d.ts declares state: cache-meter.reading, cache-meter.tick, cache-meter.collapsed"
     ],
     "gatingHooks": []
    },
@@ -110,14 +366,29 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, turn.step, session.compact, ui.render{component=AbovePrompt}",
-      "./register.tsx hooks on session.compact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, classic.SessionStart, command.run{command=keepwarm}, command.run{command=cache-tax}, prompt.submit, turn.step, turn.complete, session.compact, ui.render{component=AbovePrompt}",
+      "./register.tsx answers its own command: command.run{command=keepwarm}",
+      "./register.tsx answers its own command: command.run{command=cache-tax}",
+      "./register.tsx gating hook without .catch: classic.SessionStart",
+      "./register.tsx gating hook without .catch: prompt.submit",
       "./register.tsx gating hook without .catch: session.compact",
-      "./register.tsx calls: $.clock.every, $.clock.now, $.session.compact (via compact), $.session.usage (via windowOf), $.state.get, $.state.set (via bumpTick, setReading), $.ui.resolve, $.ui.toast (via compact)",
-      "./register.tsx state writes: cache-meter.reading, cache-meter.tick",
-      "./register.tsx state reads: cache-meter.reading, cache-meter.tick"
+      "./register.tsx calls: $.clock.after (via arm, ping), $.clock.every (via meterStart), $.clock.now, $.command.list, $.command.register, $.model.fork (via ping), $.session.compact (via compact), $.session.id, $.session.model, $.session.usage, $.state.get, $.state.set (via bumpTick, meterStart, setCollapsed, setReading), $.store.delete (via prune, startWindow, stop), $.store.get, $.store.set, $.ui.invalidate (via updateStatus), $.ui.log, $.ui.resolve, $.ui.status, $.ui.toast (via compact)",
+      "./register.tsx state writes: cache-meter.collapsed, cache-meter.reading, cache-meter.tick",
+      "./register.tsx state reads: cache-meter.collapsed, cache-meter.reading, cache-meter.tick"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "classic.SessionStart",
+       "hook": "classic.SessionStart",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "session.compact",
@@ -130,5 +401,5 @@
    "advice": []
   }
  },
- "sourceHash": "a1039cb0837758c4"
+ "sourceHash": "236fb9bce2781547"
 }

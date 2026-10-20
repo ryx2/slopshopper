@@ -1,0 +1,10 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-g13-16",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\nimport { installSlot } from './trackers/slot'\n\nexport const register: Register = on => {\n  installSlot(on, { id: 'github', tool: 'Bash' })\n  installSlot(on, { id: 'jira', tool: 'Read' })\n}\n",
+  "hooks/trackers/slot.ts": "import type { On } from 'claude-code'\nimport { atom, read, update } from 'claude-code'\n\nexport type Tracker = { readonly id: string; readonly tool: string }\n\n/** Each tracker file would do this with its own typed slice and its own id. */\nexport function installSlot(on: On, tracker: Tracker): void {\n  const slot = atom({ plugin: 'g13', key: 'slots', id: tracker.id } as const, null as unknown)\n  on('tool.call', { tool: tracker.tool as 'Bash' }, async ($, e, next) => {\n    await update($, slot, v => ({ n: ((v as { n?: number } | undefined)?.n ?? 0) + 1 }))\n    return { deny: `${tracker.id}=${JSON.stringify(await read($, slot))}` }\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"g13\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  },\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "// ONE family key for every tracker. A new tracker adds no key here.\nexport type G13Slice = unknown\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    g13: {\n      slots: StateFamily<G13Slice>\n    }\n  }\n}\n"
+ }
+}

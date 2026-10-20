@@ -1,6 +1,6 @@
 {
  "slug": "hamzafer-claude-code-mods-agent-radar",
- "generatedAt": "2026-10-16T14:15:30.332Z",
+ "generatedAt": "2026-10-20T14:21:11.121Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,12 @@
    },
    {
     "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "Bash"
+    }
    },
    {
     "event": "turn.complete"
@@ -39,7 +45,7 @@
   "commands": [
    {
     "name": "radar",
-    "description": "Show what each subagent is doing, in the Agent Radar pane",
+    "description": "Show what each subagent and background command is doing, in the Agent Radar pane",
     "output": "0 running, 0 finished"
    }
   ],
@@ -56,7 +62,7 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.clock.every": 1,
+   "$.clock.every": 2,
    "$.state.get": 8,
    "$.agent.list": 1,
    "$.state.set": 1,
@@ -67,6 +73,10 @@
    {
     "kind": "every",
     "ms": 1000
+   },
+   {
+    "kind": "every",
+    "ms": 5000
    }
   ],
   "sites": {
@@ -97,7 +107,7 @@
          "dimColor": true
         },
         "children": [
-         "No subagents yet this session."
+         "No subagents or background commands yet this session."
         ]
        },
        {
@@ -162,6 +172,7 @@
    "session.start",
    "agent.spawn",
    "tool.call",
+   "tool.call{tool=Bash}",
    "turn.complete",
    "command.run{command=radar}",
    "ui.render{component=AbovePrompt}",
@@ -174,6 +185,8 @@
    "$.env.get (via readBandOrder)",
    "$.fs.exists (via readBandOrder)",
    "$.fs.read (via readBandOrder)",
+   "$.process.run (via openFiles",
+   "pollOnce)",
    "$.session.messages",
    "$.state.get",
    "$.state.set",
@@ -218,11 +231,12 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, agent.spawn, tool.call, turn.complete, command.run{command=radar}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agent-radar}",
+      "./register.tsx hooks: session.start, agent.spawn, tool.call, tool.call{tool=Bash}, turn.complete, command.run{command=radar}, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=agent-radar}",
       "./register.tsx answers its own command: command.run{command=radar}",
       "./register.tsx gating hook without .catch: agent.spawn",
       "./register.tsx gating hook without .catch: tool.call",
-      "./register.tsx calls: $.agent.list (via adopt), $.clock.every, $.command.register, $.env.get (via readBandOrder), $.fs.exists (via readBandOrder), $.fs.read (via readBandOrder), $.session.messages, $.state.get, $.state.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx gating hook without .catch: tool.call{tool=Bash}",
+      "./register.tsx calls: $.agent.list (via adopt), $.clock.every, $.command.register, $.env.get (via readBandOrder), $.fs.exists (via readBandOrder), $.fs.read (via readBandOrder), $.process.run (via openFiles, pollOnce), $.session.messages, $.state.get, $.state.set, $.ui.close, $.ui.open, $.ui.resolve, $.ui.toast",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: CLAUDE_CONFIG_DIR, HOME",
       "./register.tsx state writes: agent-radar.agents, agent-radar.now, agent-radar.selected",
@@ -240,6 +254,12 @@
        "pattern": "tool.call",
        "hook": "tool.call",
        "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=Bash}",
+       "hasCatch": false
       }
      ]
     }
@@ -247,5 +267,5 @@
    "advice": []
   }
  },
- "sourceHash": "e92b72f26f3be8ea"
+ "sourceHash": "17f16057df4a7ed3"
 }

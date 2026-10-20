@@ -1,6 +1,6 @@
 {
  "slug": "nsodhi-cmu-claude-code-ripple-ripple",
- "generatedAt": "2026-10-16T14:16:07.593Z",
+ "generatedAt": "2026-10-20T14:21:34.553Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -29,6 +29,39 @@
     }
    },
    {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__ripple__map"
+    }
+   },
+   {
+    "event": "store.get",
+    "matcher": {
+     "key": "ripple:wait"
+    }
+   },
+   {
+    "event": "prompt.submit"
+   },
+   {
+    "event": "session.end"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolUse"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "ToolResult"
+    }
+   },
+   {
+    "event": "tool.call"
+   },
+   {
     "event": "turn.complete"
    },
    {
@@ -44,6 +77,9 @@
    },
    {
     "event": "graphlet.select"
+   },
+   {
+    "event": "graphlet.open"
    },
    {
     "event": "graphlet.key"
@@ -75,6 +111,10 @@
    {
     "name": "report",
     "description": "Ripple's mapper reports the impact map of a change with this tool. Nothing else calls it."
+   },
+   {
+    "name": "map",
+    "description": "Maps what the code changes in this repository reach: the symbols they change, the code that uses them, and which of those uses the change breaks or puts at risk. It answers at once from Ripple's map when that map is of the changes as they stand; otherwise it starts a background mapping, which the person is asked to allow and which takes a minute or more while the call waits. Call it when the person asks what a change affects, breaks, or reaches, or asks to fix or check what Ripple flagged, and not on your own after every edit."
    }
   ],
   "panes": [],
@@ -83,7 +123,8 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.tool.register": 1,
+   "$.tool.register": 2,
+   "$.tool.list": 1,
    "$.agent.register": 1,
    "$.command.register": 1,
    "$.state.get": 8,
@@ -96,6 +137,9 @@
   },
   "timers": [],
   "sites": {
+   "ToolUse": {
+    "ok": "engine"
+   },
    "Pane": {
     "ripple": {
      "ok": true,
@@ -143,8 +187,8 @@
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
    "turn.complete",
-   "$.process.run(git -c core.quotePath=false diff HEAD --relative --unified=0 --no-color --no-ext…) → exit 0",
-   "$.process.run(git -c core.quotePath=false ls-files --others --exclude-standard -- .) → exit 0",
+   "$.process.run(git -c core.quotePath=false -c core.fsmonitor=false diff HEAD --relative --unifi…) → exit 0",
+   "$.process.run(git -c core.quotePath=false -c core.fsmonitor=false ls-files -z --others --exclu…) → exit 0",
    "/ripple → Ripple: nothing to map. Git shows no uncommitted changes here. Change something,…"
   ],
   "console": [],
@@ -160,10 +204,18 @@
    "command.run{command=ripple}",
    "tool.check",
    "tool.call{tool=mcp__ripple__report}",
+   "tool.call{tool=mcp__ripple__map}",
+   "store.get{key=ripple:wait}",
+   "prompt.submit",
+   "session.end",
+   "ui.render{component=ToolUse}",
+   "ui.render{component=ToolResult}",
+   "tool.call",
    "turn.complete",
    "ui.press{plugin=ripple, component=Pane, requestId=ripple}",
    "ui.message",
    "graphlet.select",
+   "graphlet.open",
    "graphlet.key",
    "ui.scroll{component=Pane, requestId=ripple}",
    "ui.render{component=Pane, requestId=ripple}"
@@ -171,13 +223,19 @@
   "calls": [
    "$.agent.list",
    "$.agent.register",
-   "$.agent.spawn (via showMap)",
+   "$.agent.spawn (via start)",
+   "$.clock.now",
+   "$.clock.sleep",
    "$.command.register",
+   "$.env.get (via environment)",
+   "$.fs.read",
+   "$.fs.stat (via projectFile)",
    "$.graphlet.measure",
    "$.graphlet.scroll (via scrollMap)",
    "$.graphlet.show",
    "$.graphlet.step (via stepped)",
-   "$.process.run (via run)",
+   "$.process.run (via openSymbol",
+   "run)",
    "$.prompt.submit (via ask)",
    "$.session.repo (via readTree)",
    "$.session.root (via rootOf",
@@ -188,17 +246,18 @@
    "$.store.delete (via persist)",
    "$.store.get",
    "$.store.set (via persist)",
+   "$.tool.call (via stopMapper)",
+   "$.tool.check (via refusalOf)",
+   "$.tool.list",
    "$.tool.register",
+   "$.ui.ask (via refusalOf)",
    "$.ui.close",
    "$.ui.invalidate (via checkStale)",
    "$.ui.log",
    "$.ui.open (via openPane)",
    "$.ui.resolve",
    "$.ui.status (via refreshStatus)",
-   "$.ui.toast (via ask",
-   "openPane",
-   "press",
-   "stopMapping)"
+   "$.ui.toast"
   ],
   "stateReads": [
    "ripple.map",
@@ -210,7 +269,12 @@
    "ripple.mapping",
    "ripple.view"
   ],
-  "envReads": [],
+  "envReads": [
+   "EDITOR",
+   "TERM_PROGRAM",
+   "VISUAL",
+   "VSCODE_GIT_ASKPASS_MAIN"
+  ],
   "raw": {
    "success": true,
    "strict": false,
@@ -233,15 +297,22 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, agent.offer{agent=ripple:mapper}, command.run{command=ripple}, tool.check, tool.call{tool=mcp__ripple__report}, turn.complete, ui.press{plugin=ripple, component=Pane, requestId=ripple}, ui.message, graphlet.select, graphlet.key, ui.scroll{component=Pane, requestId=ripple}, ui.render{component=Pane, requestId=ripple}",
+      "./register.tsx hooks: session.start, agent.offer{agent=ripple:mapper}, command.run{command=ripple}, tool.check, tool.call{tool=mcp__ripple__report}, tool.call{tool=mcp__ripple__map}, store.get{key=ripple:wait}, prompt.submit, session.end, ui.render{component=ToolUse}, ui.render{component=ToolResult}, tool.call, turn.complete, ui.press{plugin=ripple, component=Pane, requestId=ripple}, ui.message, graphlet.select, graphlet.open, graphlet.key, ui.scroll{component=Pane, requestId=ripple}, ui.render{component=Pane, requestId=ripple}",
       "./register.tsx answers its own command: command.run{command=ripple}",
       "./register.tsx gating hook with .catch: agent.offer{agent=ripple:mapper}",
       "./register.tsx gating hook with .catch: tool.check",
       "./register.tsx gating hook with .catch: tool.call{tool=mcp__ripple__report}",
+      "./register.tsx gating hook with .catch: tool.call{tool=mcp__ripple__map}",
+      "./register.tsx gating hook with .catch: store.get{key=ripple:wait}",
+      "./register.tsx gating hook with .catch: prompt.submit",
+      "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: graphlet.select",
+      "./register.tsx gating hook with .catch: graphlet.open",
       "./register.tsx gating hook with .catch: graphlet.key",
       "./register.tsx gating hook with .catch: ui.scroll{component=Pane, requestId=ripple}",
-      "./register.tsx calls: $.agent.list, $.agent.register, $.agent.spawn (via showMap), $.command.register, $.graphlet.measure, $.graphlet.scroll (via scrollMap), $.graphlet.show, $.graphlet.step (via stepped), $.process.run (via run), $.prompt.submit (via ask), $.session.repo (via readTree), $.session.root (via rootOf, run, storeKey), $.state.get, $.state.set, $.store.delete (via persist), $.store.get, $.store.set (via persist), $.tool.register, $.ui.close, $.ui.invalidate (via checkStale), $.ui.log, $.ui.open (via openPane), $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast (via ask, openPane, press, stopMapping)",
+      "./register.tsx calls: $.agent.list, $.agent.register, $.agent.spawn (via start), $.clock.now, $.clock.sleep, $.command.register, $.env.get (via environment), $.fs.read, $.fs.stat (via projectFile), $.graphlet.measure, $.graphlet.scroll (via scrollMap), $.graphlet.show, $.graphlet.step (via stepped), $.process.run (via openSymbol, run), $.prompt.submit (via ask), $.session.repo (via readTree), $.session.root (via rootOf, run, storeKey), $.state.get, $.state.set, $.store.delete (via persist), $.store.get, $.store.set (via persist), $.tool.call (via stopMapper), $.tool.check (via refusalOf), $.tool.list, $.tool.register, $.ui.ask (via refusalOf), $.ui.close, $.ui.invalidate (via checkStale), $.ui.log, $.ui.open (via openPane), $.ui.resolve, $.ui.status (via refreshStatus), $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: EDITOR, TERM_PROGRAM, VISUAL, VSCODE_GIT_ASKPASS_MAIN",
       "./register.tsx state writes: ripple.map, ripple.mapping, ripple.view",
       "./register.tsx state reads: ripple.map, ripple.mapping, ripple.view",
       "./register.tsx surface modules: hooks/pane.tsx"
@@ -267,8 +338,38 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ripple__map}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "store.get",
+       "hook": "store.get{key=ripple:wait}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "prompt.submit",
+       "hook": "prompt.submit",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "graphlet.select",
        "hook": "graphlet.select",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "graphlet.open",
+       "hook": "graphlet.open",
        "hasCatch": true
       },
       {
@@ -289,5 +390,5 @@
    "advice": []
   }
  },
- "sourceHash": "b5d4709f9ca4346e"
+ "sourceHash": "323b17f3931a072"
 }

@@ -1,9 +1,15 @@
 {
  "slug": "weskao-weskao-agent-plugins-prompt-toc",
- "generatedAt": "2026-10-18T13:55:58.629Z",
+ "generatedAt": "2026-10-20T14:24:03.256Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "prompt-toc-update"
+    }
+   },
    {
     "event": "command.run",
     "matcher": {
@@ -45,6 +51,9 @@
    },
    {
     "event": "session.append"
+   },
+   {
+    "event": "turn.step"
    },
    {
     "event": "turn.complete"
@@ -95,6 +104,14 @@
     }
    },
    {
+    "event": "ui.message",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "prompt-toc",
+     "element": "search-row"
+    }
+   },
+   {
     "event": "ui.render",
     "matcher": {
      "component": "Pane",
@@ -124,6 +141,11 @@
     "description": "Export the index as a Markdown file",
     "argumentHint": "[path]",
     "output": "prompt-toc is off (/prompt-toc-open to turn it on)."
+   },
+   {
+    "name": "prompt-toc-update",
+    "description": "Update prompt-toc to the latest version",
+    "output": "prompt-toc was not installed from weskao-agent-plugins, so it has nothing to update from. To switch: claude plugin install prompt-toc@weskao-agent-plugins"
    }
   ],
   "tools": [
@@ -143,7 +165,7 @@
   "denies": [],
   "rewrites": [],
   "apiCalls": {
-   "$.command.register": 4,
+   "$.command.register": 5,
    "$.store.get": 1,
    "$.tool.register": 1,
    "$.fs.exists": 1,
@@ -202,7 +224,8 @@
    "$.process.run(python3 /plugins/prompt-toc/scripts/scan.py preview-session) → exit 0",
    "/prompt-toc-open → prompt-toc is on, pane opened.",
    "/prompt-toc-close → prompt-toc is off (/prompt-toc-open to turn it on).",
-   "/prompt-toc-export → prompt-toc is off (/prompt-toc-open to turn it on)."
+   "/prompt-toc-export → prompt-toc is off (/prompt-toc-open to turn it on).",
+   "/prompt-toc-update → prompt-toc was not installed from weskao-agent-plugins, so it has nothing to upd…"
   ],
   "console": [],
   "warnings": []
@@ -212,6 +235,7 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "command.run{command=prompt-toc-update}",
    "command.run{command=prompt-toc-open|prompt-toc-close}",
    "session.start",
    "command.run{command=prompt-toc}",
@@ -221,6 +245,7 @@
    "classic.SessionStart",
    "classic.PostCompact",
    "session.append",
+   "turn.step",
    "turn.complete",
    "ui.render{component=UserMessage|AssistantMessage}",
    "ui.render{component=AssistantMessage}",
@@ -228,6 +253,7 @@
    "ui.press{plugin=prompt-toc, component=Pane, requestId=prompt-toc}",
    "ui.focus{component=Pane, requestId=prompt-toc}",
    "ui.message{component=Pane, requestId=prompt-toc, element=settings-backdrop}",
+   "ui.message{component=Pane, requestId=prompt-toc, element=search-row}",
    "ui.render{component=Pane, requestId=prompt-toc}"
   ],
   "calls": [
@@ -238,19 +264,23 @@
    "$.config.set",
    "$.fs.exists",
    "$.fs.list (via exportToc)",
+   "$.fs.read (via checkUpdate)",
    "$.fs.stat (via exportToc)",
    "$.fs.write (via exportToc)",
-   "$.process.run (via rescan)",
+   "$.http.fetch (via checkUpdate)",
+   "$.process.run (via rescan",
+   "runUpdate)",
    "$.session.id (via exportToc",
    "follow",
    "rescan)",
    "$.state.get (via isOff)",
    "$.state.set",
+   "$.store.delete (via runUpdate)",
    "$.store.get",
    "$.store.set",
    "$.tool.register",
    "$.ui.close",
-   "$.ui.focus",
+   "$.ui.focus (via focusOn)",
    "$.ui.open (via openPane)",
    "$.ui.resolve",
    "$.ui.scroll",
@@ -308,23 +338,29 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: command.run{command=prompt-toc-open|prompt-toc-close}, session.start, command.run{command=prompt-toc}, command.run{command=prompt-toc-export}, tool.call{tool=mcp__prompt-toc__pane}, session.end, classic.SessionStart, classic.PostCompact, session.append, turn.complete, ui.render{component=UserMessage|AssistantMessage}, ui.render{component=AssistantMessage}, ui.scroll{component=Pane, requestId=prompt-toc}, ui.press{plugin=prompt-toc, component=Pane, requestId=prompt-toc}, ui.focus{component=Pane, requestId=prompt-toc}, ui.message{component=Pane, requestId=prompt-toc, element=settings-backdrop}, ui.render{component=Pane, requestId=prompt-toc}",
-      "./register.tsx hooks on classic.SessionStart, classic.PostCompact do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: command.run{command=prompt-toc-update}, command.run{command=prompt-toc-open|prompt-toc-close}, session.start, command.run{command=prompt-toc}, command.run{command=prompt-toc-export}, tool.call{tool=mcp__prompt-toc__pane}, session.end, classic.SessionStart, classic.PostCompact, session.append, turn.step, turn.complete, ui.render{component=UserMessage|AssistantMessage}, ui.render{component=AssistantMessage}, ui.scroll{component=Pane, requestId=prompt-toc}, ui.press{plugin=prompt-toc, component=Pane, requestId=prompt-toc}, ui.focus{component=Pane, requestId=prompt-toc}, ui.message{component=Pane, requestId=prompt-toc, element=settings-backdrop}, ui.message{component=Pane, requestId=prompt-toc, element=search-row}, ui.render{component=Pane, requestId=prompt-toc}",
       "./register.tsx answers its own command: command.run{command=prompt-toc-open|prompt-toc-close}",
       "./register.tsx answers its own command: command.run{command=prompt-toc}",
       "./register.tsx answers its own command: command.run{command=prompt-toc-export}",
+      "./register.tsx gating hook without .catch: command.run{command=prompt-toc-update}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__prompt-toc__pane}",
       "./register.tsx gating hook without .catch: classic.SessionStart",
       "./register.tsx gating hook without .catch: classic.PostCompact",
       "./register.tsx gating hook without .catch: session.append",
       "./register.tsx gating hook without .catch: ui.scroll{component=Pane, requestId=prompt-toc}",
       "./register.tsx gating hook without .catch: ui.focus{component=Pane, requestId=prompt-toc}",
-      "./register.tsx calls: $.agent.list (via describe), $.clock.after, $.clock.now, $.command.register, $.config.set, $.fs.exists, $.fs.list (via exportToc), $.fs.stat (via exportToc), $.fs.write (via exportToc), $.process.run (via rescan), $.session.id (via exportToc, follow, rescan), $.state.get (via isOff), $.state.set, $.store.get, $.store.set, $.tool.register, $.ui.close, $.ui.focus, $.ui.open (via openPane), $.ui.resolve, $.ui.scroll, $.ui.status, $.ui.toast",
+      "./register.tsx calls: $.agent.list (via describe), $.clock.after, $.clock.now, $.command.register, $.config.set, $.fs.exists, $.fs.list (via exportToc), $.fs.read (via checkUpdate), $.fs.stat (via exportToc), $.fs.write (via exportToc), $.http.fetch (via checkUpdate), $.process.run (via rescan, runUpdate), $.session.id (via exportToc, follow, rescan), $.state.get (via isOff), $.state.set, $.store.delete (via runUpdate), $.store.get, $.store.set, $.tool.register, $.ui.close, $.ui.focus (via focusOn), $.ui.open (via openPane), $.ui.resolve, $.ui.scroll, $.ui.status, $.ui.toast",
       "./register.tsx state writes: prompt-toc.autoOpened, prompt-toc.entries, prompt-toc.foldOld, prompt-toc.following, prompt-toc.isOff, prompt-toc.keyword, prompt-toc.promptsOnly, prompt-toc.searchOpen, prompt-toc.selected, prompt-toc.settings, prompt-toc.settingsOpen, prompt-toc.winTop",
       "./register.tsx state reads: prompt-toc.autoOpened, prompt-toc.entries, prompt-toc.foldOld, prompt-toc.following, prompt-toc.isOff, prompt-toc.keyword, prompt-toc.promptsOnly, prompt-toc.searchOpen, prompt-toc.selected, prompt-toc.settings, prompt-toc.settingsOpen, prompt-toc.winTop",
       "./register.tsx surface modules: hooks/backdrop.ts"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=prompt-toc-update}",
+       "hasCatch": false
+      },
       {
        "module": "./register.tsx",
        "pattern": "tool.call",
@@ -367,5 +403,5 @@
    "advice": []
   }
  },
- "sourceHash": "6dcdc3335779e576"
+ "sourceHash": "444923a7aa781bbb"
 }

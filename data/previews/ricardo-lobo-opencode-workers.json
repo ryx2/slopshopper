@@ -1,0 +1,284 @@
+{
+ "slug": "ricardo-lobo-opencode-workers",
+ "generatedAt": "2026-10-20T14:23:45.642Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__opencode-workers__delegate"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__opencode-workers__status"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__opencode-workers__follow_up"
+    }
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__opencode-workers__stop"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "opencode"
+    }
+   },
+   {
+    "event": "ui.close"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "AbovePrompt"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "opencode-workers"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "opencode",
+    "description": "Show the opencode workers pane",
+    "output": "opencode pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "delegate",
+    "description": "Start an opencode worker (a cheaper model run by the opencode CLI) on a self-contained task, in the background. Use it for simple exploration or for code changes that follow a plan already written down: the worker has none of this conversation, so the prompt must hold every file path, decision and acceptance check it needs. Returns at once with a worker id; the person watches progress and diffs in the opencode pane. Collect the result with the status tool (pass wait_seconds to block until it ends), then verify the work yourself (read the files, run the tests) — a worker report is a claim, not proof. Workers running in the same folder must not touch the same files. To correct or extend a finished worker, use follow_up rather than starting over. Deny rules stop a worker from committing, pushing or switching branches, deleting files, installing packages, reading or editing .env files, reaching outside its folder and running any command the user denied for their stack: leave those steps out of the brief and do them yourself. The rules match command patterns and are no sandbox, so review what a worker changed."
+   },
+   {
+    "name": "status",
+    "description": "Report on opencode workers. With id: that worker in full (files changed, recent activity, final answer). Without id: one line per worker. wait_seconds (≤600) blocks until the worker (or, without id, every running worker) ends or the time runs out."
+   },
+   {
+    "name": "follow_up",
+    "description": "Send another instruction to a finished opencode worker, in the same opencode session (it keeps its context). The worker runs again in the background; collect it with status."
+   },
+   {
+    "name": "stop",
+    "description": "Stop a running opencode worker by id."
+   }
+  ],
+  "panes": [
+   {
+    "id": "opencode-workers",
+    "title": "opencode"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.clock.now": 2,
+   "$.state.get": 5,
+   "$.state.set": 1,
+   "$.command.register": 1,
+   "$.tool.register": 4,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [],
+  "sites": {
+   "AbovePrompt": {
+    "ok": "engine"
+   },
+   "Pane": {
+    "opencode-workers": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Text",
+        "props": {
+         "size": "heading",
+         "weight": "semibold"
+        },
+        "children": [
+         "No opencode workers yet"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true
+        },
+        "children": [
+         "Ask Claude to delegate a well-scoped task to opencode."
+        ]
+       }
+      ]
+     },
+     "title": "opencode"
+    }
+   }
+  },
+  "script": [
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.ui.open(opencode-workers)",
+   "/opencode → opencode pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [
+   "No author information provided. Consider adding author details for plugin attribution"
+  ],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__opencode-workers__delegate}",
+   "tool.call{tool=mcp__opencode-workers__status}",
+   "tool.call{tool=mcp__opencode-workers__follow_up}",
+   "tool.call{tool=mcp__opencode-workers__stop}",
+   "command.run{command=opencode}",
+   "ui.close",
+   "ui.render{component=AbovePrompt}",
+   "ui.render{component=Pane, requestId=opencode-workers}"
+  ],
+  "calls": [
+   "$.clock.every (via ensureTicker)",
+   "$.clock.now",
+   "$.command.register",
+   "$.process.run (via allowedRoots",
+   "physicalPath",
+   "waitFor)",
+   "$.process.spawn (via run)",
+   "$.state.get",
+   "$.state.set",
+   "$.tool.register",
+   "$.ui.copy",
+   "$.ui.invalidate",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "opencode-workers.selected",
+   "opencode-workers.seq",
+   "opencode-workers.showDiffs",
+   "opencode-workers.workers"
+  ],
+  "stateWrites": [
+   "opencode-workers.selected",
+   "opencode-workers.seq",
+   "opencode-workers.showDiffs",
+   "opencode-workers.workers"
+  ],
+  "envReads": [],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/ricardo-lobo-opencode-workers/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ricardo-lobo-opencode-workers/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [
+     {
+      "path": "author",
+      "message": "No author information provided. Consider adding author details for plugin attribution",
+      "code": null
+     }
+    ],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: opencode-workers.workers, opencode-workers.selected, opencode-workers.seq, opencode-workers.showDiffs"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/ricardo-lobo-opencode-workers/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__opencode-workers__delegate}, tool.call{tool=mcp__opencode-workers__status}, tool.call{tool=mcp__opencode-workers__follow_up}, tool.call{tool=mcp__opencode-workers__stop}, command.run{command=opencode}, ui.close, ui.render{component=AbovePrompt}, ui.render{component=Pane, requestId=opencode-workers}",
+      "./register.tsx answers its own command: command.run{command=opencode}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__opencode-workers__delegate}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__opencode-workers__status}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__opencode-workers__follow_up}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__opencode-workers__stop}",
+      "./register.tsx gating hook without .catch: ui.close",
+      "./register.tsx calls: $.clock.every (via ensureTicker), $.clock.now, $.command.register, $.process.run (via allowedRoots, physicalPath, waitFor), $.process.spawn (via run), $.state.get, $.state.set, $.tool.register, $.ui.copy, $.ui.invalidate, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: opencode-workers.selected, opencode-workers.seq, opencode-workers.showDiffs, opencode-workers.workers",
+      "./register.tsx state reads: opencode-workers.selected, opencode-workers.seq, opencode-workers.showDiffs, opencode-workers.workers"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__opencode-workers__delegate}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__opencode-workers__status}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__opencode-workers__follow_up}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__opencode-workers__stop}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.close",
+       "hook": "ui.close",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "994258058f1f191a"
+}

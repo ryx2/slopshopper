@@ -1,0 +1,10 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-g13-2",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\nimport { aRef } from './trackers/a'\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    const cur = await $.state.get(aRef)\n    await $.state.set(aRef, (cur.value ?? 0) + 1)\n    return { deny: `a=${(await $.state.get(aRef)).value}` }\n  })\n}\n",
+  "hooks/trackers/a.ts": "export const aRef = { plugin: 'g13', key: 'a' } as const\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"g13\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  },\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "export type G13Slot = { n: number }\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    g13: {\n      a: number\n      slots: StateFamily<G13Slot>\n    }\n  }\n}\n"
+ }
+}

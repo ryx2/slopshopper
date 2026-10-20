@@ -1,0 +1,387 @@
+{
+ "slug": "madjagstudios-podium",
+ "generatedAt": "2026-10-20T14:21:25.311Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "turn.complete"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "podium"
+    }
+   },
+   {
+    "event": "ui.message"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "podium"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "podium",
+    "description": "See and control background agent jobs",
+    "argumentHint": "[run <agent> <task> | status | cancel <id>]",
+    "output": "Podium pane opened."
+   }
+  ],
+  "tools": [
+   {
+    "name": "dispatch",
+    "description": "Hand a task to another coding agent installed on this machine (for example codex, muse, claude or gemini) to run in the background. Use it when the user asks another agent or model to do something. Permission: leave it out for the default, \"edit-worktree\" (the agent edits a separate copy of the repo and the user keeps or throws away its changes); use \"read-only\" for reviews, research and questions; use \"own-config\" or \"full-access\" only when the user explicitly asks. The task must be self-contained: the other agent cannot see this conversation. Returns a job id at once; the result arrives later as a message. If the agent should commit on a branch, say so in the task and use permission \"own-config\": the separate-copy level runs agents in sandboxes that block git. Its commits are then the result and there is nothing to keep. When the user wants changes to, a review of, or more work on a job whose work is still open, continue it with followUp instead of starting a new job. Leave agent as the last step's agent unless the user names another."
+   },
+   {
+    "name": "pr",
+    "description": "Work with a pull request for Podium work, only when the user asks. action \"open\": open a PR from a job whose changes are ready (id). \"push\": push a finished follow-up to its PR (id). \"merge-when-green\": turn merging on (on: true) or off for the PR of job id; Podium merges when every check passes. \"post-review\": post a finished review job (id) to its PR as one comment."
+   },
+   {
+    "name": "status",
+    "description": "List Podium jobs in this project, newest first, or one job by id."
+   },
+   {
+    "name": "result",
+    "description": "Read a job's summary, or its whole output with full: true."
+   },
+   {
+    "name": "cancel",
+    "description": "Stop a running job."
+   },
+   {
+    "name": "keep",
+    "description": "Apply an edit job's changes to the user's files. Only when the user asks to keep them."
+   },
+   {
+    "name": "discard",
+    "description": "Throw away an edit job's changes. Only when the user asks."
+   },
+   {
+    "name": "agents",
+    "description": "List the agents Podium can use here: installed or not, signed in or not, and each default permission."
+   },
+   {
+    "name": "sprint",
+    "description": "Plan and run a sprint, only when the user asks for one: several tickets, each worked task by task by agents, with a reviewer agent checking every task, each ticket ending as a PR the user merges.\n\nDrafting: first read each ticket and its plan if it has one, and propose in the chat a writer and a reviewer for each task (the reviewer should be a different agent from the writer). Then action \"draft\" (name, tickets; optional base, default main, and mergeWhenGreen) saves it as a draft and opens its board in the Podium pane. A ticket with no plan is planned first by its writer, from its summary, so give it one. Optional commands, check, taskTest, planDir and keepPlan: pass them only when the user has agreed to them in the chat. They are proposed with the draft and shown on its board, and take effect for this repo only when the user presses Start (Discard drops them); the reply says what was proposed. If the reply says the repo has no full check, propose one to the user before Start.\n\nStarting: nothing runs yet. Tell the user to look the draft over on its board and press Start, or ask you to start it. \"start\" (id): start a draft, only when the user asks.\n\nChanges to a draft before Start (id): \"move\" (ticket, to), \"remove\" (ticket), \"options\" (mergeWhenGreen and/or atOnce), \"assign\" without task (ticket, agent and/or reviewer: for every task of that ticket, or the writer and reviewer of a ticket with no plan), \"after\" (ticket, after), \"discard\" (throw the draft away).\n\nOnce it runs: \"status\": the board. \"pause\" / \"resume\" (id). \"retry\" (id, ticket; optional agent to give the stuck step to; optional text: a note from the user for the retried step, added as \"note\" adds one). \"note\" (id, ticket, text): a decision or instruction from the user for one ticket (e.g. \"the date tests fail on main too: leave them\"); every later planner, writer and reviewer of that ticket reads it, and a step already running doesn't. Only the user's own words, when they ask: never add a note on your own. \"accept\" (id, ticket, text: why the results are fine, in the user's words): for a ticket stopped on its task's tests (the writer's own run, or the task test on this machine), only when the user says those results are fine (e.g. \"the date tests fail on main too\"); the task goes on to its review, whose reviewer is told not to fail it for them. \"evidence\" (id, ticket, text: what the reviewer should weigh, e.g. a CI run that passed on this code): for a ticket stopped after its task failed review, only when the user gives it; the task goes back to that review (not to a fix), whose reviewer weighs it before failing the task for tests it could not run. \"stop\" (id, ticket): end a ticket the user has given up on; its branch is kept, and it cannot be stopped while it is working. \"assign\" (id, ticket, task, agent and/or reviewer) for a task not yet run (task 0: the writer and reviewer of a ticket whose plan is not approved yet). \"adopt\" (id): only when the user asks, take a sprint whose own chat is gone into this chat, so its updates waiting for that chat (and all later ones) come here. \"sync\" (id, ticket): merge the base as it is now into a ticket's copy, between its tasks or after the last one (for a fix that landed on the base after the ticket started); after the last task the full check runs again. Never commit in a ticket's copy yourself: when a ticket asks about commits in its copy that Podium didn't make, ask the user, then \"keep-commits\" (they become the ticket's) or \"drop-commits\" (id, ticket).\n\nAnswering a plan: when a ticket's plan is ready you get a message. Sum it up for the user and ask whether to approve it or change it (or, for a plan with no tasks, run it as one task), and act only when the user says so (id, ticket): \"approve\" makes its tasks the ticket's, which then run; \"revise\" (text: what should change) sends it back to its writer, in the same conversation; \"one-task\" runs a plan with no tasks as one task. A plan whose message says it needs your attention runs production commands (deploys, deletes, publishing, pushes): name each one to the user, and only if they agree to them, approve (or one-task) with acknowledge: true; without it Podium refuses."
+   }
+  ],
+  "panes": [
+   {
+    "id": "podium",
+    "title": "Podium"
+   }
+  ],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.env.get": 1,
+   "$.session.id": 1,
+   "$.tool.register": 9,
+   "$.command.register": 1,
+   "$.state.get": 45,
+   "$.process.run": 9,
+   "$.config.list": 2,
+   "$.clock.every": 1,
+   "$.state.set": 10,
+   "$.store.get": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 1000
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "podium": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column",
+       "gap": 1
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "key": "header",
+         "flexDirection": "row",
+         "justifyContent": "space-between",
+         "alignItems": "center"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "bold": true
+          },
+          "children": [
+           "Podium"
+          ]
+         },
+         {
+          "type": "Box",
+          "props": {
+           "key": "header-links",
+           "flexDirection": "row",
+           "gap": 1,
+           "alignItems": "center"
+          },
+          "children": [
+           {
+            "type": "Button",
+            "props": {
+             "key": "link-agents",
+             "plain": true,
+             "label": "Agents",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "link-settings",
+             "plain": true,
+             "label": "Settings",
+             "onPress": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Button",
+            "props": {
+             "key": "new",
+             "variant": "primary",
+             "label": "+ New job",
+             "onPress": "[fn]"
+            },
+            "children": []
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "key": "notice",
+         "color": "warning",
+         "wrap": "wrap"
+        },
+        "children": [
+         "Podium's engine gave an unreadable answer (exit 0)."
+        ]
+       },
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "column",
+         "gap": 1
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "key": "empty",
+           "color": "inactive",
+           "wrap": "wrap"
+          },
+          "children": [
+           "No jobs in this chat yet. Ask Claude to hand work to another agent, or press + New job."
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "title": "Podium"
+    }
+   }
+  },
+  "script": [
+   "$.process.run(node /plugins/podium/bin/podium.js agents) → exit 0",
+   "session.start",
+   "$.process.run(node /plugins/podium/bin/podium.js status --here --session preview-session) → exit 0",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "$.process.run(node /plugins/podium/bin/podium.js status --here --session preview-session) → exit 0",
+   "turn.complete",
+   "$.ui.open(podium)",
+   "$.process.run(node /plugins/podium/bin/podium.js agents) → exit 0",
+   "$.process.run(node /plugins/podium/bin/podium.js settings) → exit 0",
+   "$.process.run(node /plugins/podium/bin/podium.js here) → exit 0",
+   "$.process.run(node /plugins/podium/bin/podium.js doctor) → exit 0",
+   "$.process.run(node /plugins/podium/bin/podium.js version) → exit 0",
+   "$.process.run(node /plugins/podium/bin/podium.js status --here --session preview-session) → exit 0",
+   "/podium → Podium pane opened."
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "turn.start",
+   "turn.complete",
+   "tool.call",
+   "command.run{command=podium}",
+   "ui.message",
+   "ui.render{component=Pane, requestId=?}"
+  ],
+  "calls": [
+   "$.clock.every",
+   "$.clock.sleep",
+   "$.command.register",
+   "$.config.list (via loadLook)",
+   "$.env.get",
+   "$.fs.read (via readLive)",
+   "$.model.complete (via summarise)",
+   "$.process.run (via engine)",
+   "$.prompt.fill (via askClaude)",
+   "$.prompt.submit (via deliver",
+   "deliverSprintNews)",
+   "$.session.append (via deliver",
+   "deliverSprintNews)",
+   "$.session.id",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via clearDone",
+   "loadLook)",
+   "$.store.set (via clearDone)",
+   "$.tool.register",
+   "$.ui.open (via openPane)",
+   "$.ui.resolve",
+   "$.ui.status (via refresh)",
+   "$.ui.toast (via deliver",
+   "deliverSprintNews)"
+  ],
+  "stateReads": [
+   "podium.agents",
+   "podium.agentsLoaded",
+   "podium.beat",
+   "podium.board",
+   "podium.checks",
+   "podium.cleared",
+   "podium.detail",
+   "podium.draft",
+   "podium.draftAdapter",
+   "podium.folds",
+   "podium.jobOpen",
+   "podium.jobs",
+   "podium.live",
+   "podium.notice",
+   "podium.olderFinished",
+   "podium.palette",
+   "podium.removing",
+   "podium.settings",
+   "podium.showAllDone",
+   "podium.sprintPage",
+   "podium.sprints",
+   "podium.view",
+   "podium.whatsNew"
+  ],
+  "stateWrites": [
+   "podium.agents",
+   "podium.agentsLoaded",
+   "podium.beat",
+   "podium.board",
+   "podium.checks",
+   "podium.cleared",
+   "podium.detail",
+   "podium.draft",
+   "podium.draftAdapter",
+   "podium.folds",
+   "podium.jobOpen",
+   "podium.jobs",
+   "podium.live",
+   "podium.notice",
+   "podium.olderFinished",
+   "podium.palette",
+   "podium.removing",
+   "podium.settings",
+   "podium.showAllDone",
+   "podium.sprintPage",
+   "podium.sprints",
+   "podium.view",
+   "podium.whatsNew"
+  ],
+  "envReads": [
+   "PODIUM_JOB_ID"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/madjagstudios-podium/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/madjagstudios-podium/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: podium.jobs, podium.view, podium.notice, podium.detail, podium.agents, podium.settings, podium.draft, podium.draftAdapter, podium.live, podium.palette, podium.folds, podium.beat, podium.jobOpen, podium.cleared, podium.showAllDone, podium.checks, podium.whatsNew, podium.removing, podium.agentsLoaded, podium.sprints, podium.olderFinished, podium.board, podium.sprintPage"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/madjagstudios-podium/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, turn.start, turn.complete, tool.call, command.run{command=podium}, ui.message, ui.render{component=Pane, requestId=?}",
+      "./register.tsx answers its own command: command.run{command=podium}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx calls: $.clock.every, $.clock.sleep, $.command.register, $.config.list (via loadLook), $.env.get, $.fs.read (via readLive), $.model.complete (via summarise), $.process.run (via engine), $.prompt.fill (via askClaude), $.prompt.submit (via deliver, deliverSprintNews), $.session.append (via deliver, deliverSprintNews), $.session.id, $.state.get, $.state.set, $.store.get (via clearDone, loadLook), $.store.set (via clearDone), $.tool.register, $.ui.open (via openPane), $.ui.resolve, $.ui.status (via refresh), $.ui.toast (via deliver, deliverSprintNews)",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: PODIUM_JOB_ID",
+      "./register.tsx state writes: podium.agents, podium.agentsLoaded, podium.beat, podium.board, podium.checks, podium.cleared, podium.detail, podium.draft, podium.draftAdapter, podium.folds, podium.jobOpen, podium.jobs, podium.live, podium.notice, podium.olderFinished, podium.palette, podium.removing, podium.settings, podium.showAllDone, podium.sprintPage, podium.sprints, podium.view, podium.whatsNew",
+      "./register.tsx state reads: podium.agents, podium.agentsLoaded, podium.beat, podium.board, podium.checks, podium.cleared, podium.detail, podium.draft, podium.draftAdapter, podium.folds, podium.jobOpen, podium.jobs, podium.live, podium.notice, podium.olderFinished, podium.palette, podium.removing, podium.settings, podium.showAllDone, podium.sprintPage, podium.sprints, podium.view, podium.whatsNew",
+      "./register.tsx surface modules: hooks/client/app.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "8334c1161d293da5"
+}

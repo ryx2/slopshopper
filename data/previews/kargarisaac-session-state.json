@@ -1,6 +1,6 @@
 {
  "slug": "kargarisaac-session-state",
- "generatedAt": "2026-10-17T13:06:26.019Z",
+ "generatedAt": "2026-10-20T14:21:53.395Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -12,6 +12,15 @@
    },
    {
     "event": "prompt.submit"
+   },
+   {
+    "event": "turn.start"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "session.compact"
    },
    {
     "event": "turn.complete"
@@ -36,15 +45,15 @@
   "commands": [
    {
     "name": "session-state",
-    "description": "Notes of what you asked and decided in this chat: open the panel, pause, retry",
-    "output": "Session notes panel opened."
+    "description": "The ledger of this chat: open the panel (steps, ledger, stats), pause, retry, rebuild",
+    "output": "Session ledger panel opened."
    }
   ],
   "tools": [],
   "panes": [
    {
     "id": "session-state",
-    "title": "Session notes"
+    "title": "Session ledger"
    }
   ],
   "toasts": [],
@@ -53,16 +62,16 @@
   "rewrites": [],
   "apiCalls": {
    "$.command.register": 1,
-   "$.session.id": 3,
-   "$.state.get": 32,
-   "$.env.get": 2,
+   "$.session.id": 4,
+   "$.state.get": 49,
+   "$.env.get": 1,
    "$.session.cwd": 1,
-   "$.clock.now": 1,
-   "$.fs.list": 1,
-   "$.fs.read": 3,
-   "$.state.set": 16,
+   "$.fs.list": 4,
+   "$.clock.now": 2,
+   "$.state.set": 31,
+   "$.fs.read": 5,
    "$.clock.every": 1,
-   "$.fs.write": 1,
+   "$.fs.write": 2,
    "$.clock.after": 1,
    "$.ui.open": 1,
    "$.ui.resolve": 1
@@ -88,132 +97,15 @@
       },
       "children": [
        {
-        "type": "Text",
-        "props": {
-         "key": "Notes"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Notes    "
-          ]
-         },
-         "0 active · 0 superseded"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "Turns"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Turns    "
-          ]
-         },
-         "0 seen · 0 passed · 0 skipped"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "Gate"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Gate     "
-          ]
-         },
-         "jev-1.13 via OpenRouter · pass at p ≥ 0.7 · avg 0 ms"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "Extractor"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Extractor"
-          ]
-         },
-         "claude-haiku-5-5 · effort high · via Claude Code · 0 runs · avg 0 ms"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "Cost"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Cost     "
-          ]
-         },
-         "Jev $0 · Haiku 0 in, 0 out ≈ $0 (plan usage, not billed)"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "key": "Status"
-        },
-        "children": [
-         {
-          "type": "Text",
-          "props": {
-           "bold": true
-          },
-          "children": [
-           "Status   "
-          ]
-         },
-         "idle"
-        ]
-       },
-       {
-        "type": "Text",
-        "props": {
-         "dimColor": true,
-         "wrap": "truncate-middle"
-        },
-        "children": [
-         "/Users/dev/.claude/session-state/app/2025-10-09_preview-.md"
-        ]
-       },
-       {
         "type": "Box",
         "props": {},
         "children": [
          {
           "type": "Button",
           "props": {
-           "key": "copy",
-           "label": "Copy path",
+           "key": "steps",
+           "label": "Steps",
+           "variant": "primary",
            "onPress": "[fn]"
           },
           "children": []
@@ -221,8 +113,19 @@
          {
           "type": "Button",
           "props": {
-           "key": "pause",
-           "label": "Pause",
+           "key": "ledger",
+           "label": "Ledger",
+           "variant": "secondary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "stats",
+           "label": "Stats",
+           "variant": "secondary",
            "onPress": "[fn]"
           },
           "children": []
@@ -230,15 +133,17 @@
         ]
        },
        {
-        "type": "Markdown",
+        "type": "Text",
         "props": {
-         "text": "_No notes yet._"
+         "dimColor": true
         },
-        "children": []
+        "children": [
+         "No steps yet: one line appears after each turn."
+        ]
        }
       ]
      },
-     "title": "Session notes"
+     "title": "Session ledger"
     }
    }
   },
@@ -253,10 +158,11 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "$.fs.write(/Users/dev/.claude/session-state/app/2025-10-09_preview-.pending.json)",
+   "$.fs.write(/Users/dev/.claude/session-state/app/2025-10-09_preview-/events.jsonl)",
+   "$.fs.write(/Users/dev/.claude/session-state/app/2025-10-09_preview-/pending.json)",
    "turn.complete",
    "$.ui.open(session-state)",
-   "/session-state → Session notes panel opened."
+   "/session-state → Session ledger panel opened."
   ],
   "console": [],
   "warnings": []
@@ -269,6 +175,9 @@
    "session.start",
    "session.end",
    "prompt.submit",
+   "turn.start",
+   "tool.call",
+   "session.compact",
    "turn.complete",
    "prompt.compose",
    "command.run{command=session-state}",
@@ -277,22 +186,18 @@
   "calls": [
    "$.clock.after (via kick)",
    "$.clock.every",
-   "$.clock.now (via dayOf",
-   "flush",
-   "hostOf)",
+   "$.clock.now",
    "$.clock.sleep (via flush)",
    "$.command.register",
    "$.env.get (via boot",
    "configOf)",
-   "$.fs.list (via boot)",
+   "$.fs.list (via listOf)",
    "$.fs.read (via readText)",
-   "$.fs.write (via handle",
-   "savePending",
-   "writeIndex)",
+   "$.fs.write",
    "$.http.fetch (via hostOf)",
    "$.model.complete (via hostOf)",
    "$.session.cwd (via boot",
-   "handle)",
+   "frontOf)",
    "$.session.id (via ensure)",
    "$.state.get",
    "$.state.set",
@@ -302,29 +207,41 @@
    "$.ui.resolve"
   ],
   "stateReads": [
+   "session-state.dir",
    "session-state.events",
+   "session-state.facts",
    "session-state.failed",
-   "session-state.file",
+   "session-state.isCompacted",
+   "session-state.isHistoryShown",
    "session-state.isPaused",
    "session-state.md",
+   "session-state.origin",
    "session-state.pendingUser",
    "session-state.previousAnswer",
    "session-state.queue",
    "session-state.sessionId",
    "session-state.status",
+   "session-state.steps",
+   "session-state.tab",
    "session-state.turns"
   ],
   "stateWrites": [
+   "session-state.dir",
    "session-state.events",
+   "session-state.facts",
    "session-state.failed",
-   "session-state.file",
+   "session-state.isCompacted",
+   "session-state.isHistoryShown",
    "session-state.isPaused",
    "session-state.md",
+   "session-state.origin",
    "session-state.pendingUser",
    "session-state.previousAnswer",
    "session-state.queue",
    "session-state.sessionId",
    "session-state.status",
+   "session-state.steps",
+   "session-state.tab",
    "session-state.turns"
   ],
   "envReads": [
@@ -342,7 +259,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: session-state.sessionId, session-state.file, session-state.md, session-state.events, session-state.queue, session-state.failed, session-state.pendingUser, session-state.previousAnswer, session-state.turns, session-state.status, session-state.isPaused"
+     "types ./types/index.d.ts declares state: session-state.sessionId, session-state.dir, session-state.origin, session-state.md, session-state.steps, session-state.events, session-state.queue, session-state.failed, session-state.pendingUser, session-state.previousAnswer, session-state.facts, session-state.turns, session-state.status, session-state.isPaused, session-state.isCompacted, session-state.tab, session-state.isHistoryShown"
     ],
     "gatingHooks": []
    },
@@ -353,21 +270,34 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, prompt.submit, turn.complete, prompt.compose, command.run{command=session-state}, ui.render{component=Pane, requestId=session-state}",
-      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, session.end, prompt.submit, turn.start, tool.call, session.compact, turn.complete, prompt.compose, command.run{command=session-state}, ui.render{component=Pane, requestId=session-state}",
       "./register.tsx answers its own command: command.run{command=session-state}",
       "./register.tsx gating hook without .catch: prompt.submit",
-      "./register.tsx calls: $.clock.after (via kick), $.clock.every, $.clock.now (via dayOf, flush, hostOf), $.clock.sleep (via flush), $.command.register, $.env.get (via boot, configOf), $.fs.list (via boot), $.fs.read (via readText), $.fs.write (via handle, savePending, writeIndex), $.http.fetch (via hostOf), $.model.complete (via hostOf), $.session.cwd (via boot, handle), $.session.id (via ensure), $.state.get, $.state.set, $.ui.close, $.ui.copy, $.ui.open, $.ui.resolve",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: session.compact",
+      "./register.tsx calls: $.clock.after (via kick), $.clock.every, $.clock.now, $.clock.sleep (via flush), $.command.register, $.env.get (via boot, configOf), $.fs.list (via listOf), $.fs.read (via readText), $.fs.write, $.http.fetch (via hostOf), $.model.complete (via hostOf), $.session.cwd (via boot, frontOf), $.session.id (via ensure), $.state.get, $.state.set, $.ui.close, $.ui.copy, $.ui.open, $.ui.resolve",
       "./register.tsx env writes: nothing",
       "./register.tsx env reads: HOME, OPENROUTER_API_KEY",
-      "./register.tsx state writes: session-state.events, session-state.failed, session-state.file, session-state.isPaused, session-state.md, session-state.pendingUser, session-state.previousAnswer, session-state.queue, session-state.sessionId, session-state.status, session-state.turns",
-      "./register.tsx state reads: session-state.events, session-state.failed, session-state.file, session-state.isPaused, session-state.md, session-state.pendingUser, session-state.previousAnswer, session-state.queue, session-state.sessionId, session-state.status, session-state.turns"
+      "./register.tsx state writes: session-state.dir, session-state.events, session-state.facts, session-state.failed, session-state.isCompacted, session-state.isHistoryShown, session-state.isPaused, session-state.md, session-state.origin, session-state.pendingUser, session-state.previousAnswer, session-state.queue, session-state.sessionId, session-state.status, session-state.steps, session-state.tab, session-state.turns",
+      "./register.tsx state reads: session-state.dir, session-state.events, session-state.facts, session-state.failed, session-state.isCompacted, session-state.isHistoryShown, session-state.isPaused, session-state.md, session-state.origin, session-state.pendingUser, session-state.previousAnswer, session-state.queue, session-state.sessionId, session-state.status, session-state.steps, session-state.tab, session-state.turns"
      ],
      "gatingHooks": [
       {
        "module": "./register.tsx",
        "pattern": "prompt.submit",
        "hook": "prompt.submit",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "session.compact",
+       "hook": "session.compact",
        "hasCatch": false
       }
      ]
@@ -376,5 +306,5 @@
    "advice": []
   }
  },
- "sourceHash": "5e5d95c68e7e0260"
+ "sourceHash": "fb4217f9c6518d41"
 }

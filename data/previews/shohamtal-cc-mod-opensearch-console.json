@@ -1,0 +1,441 @@
+{
+ "slug": "shohamtal-cc-mod-opensearch-console",
+ "generatedAt": "2026-10-20T14:22:25.436Z",
+ "harness": {
+  "ok": true,
+  "hooks": [
+   {
+    "event": "session.start"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__opensearch-console__console"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "opensearch"
+    }
+   },
+   {
+    "event": "ui.scroll",
+    "matcher": {
+     "requestId": "opensearch"
+    }
+   },
+   {
+    "event": "ui.message"
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "opensearch"
+    }
+   }
+  ],
+  "commands": [
+   {
+    "name": "opensearch",
+    "description": "Toggle the OpenSearch console pane (Dev Tools style)",
+    "argumentHint": "[--filepath <session>.json] [--configfilepath <servers>.json]",
+    "output": "Config file not found: /Users/dev/.claude/mods/opensearch/servers.json"
+   }
+  ],
+  "tools": [
+   {
+    "name": "console",
+    "description": "OpenSearch / Elasticsearch console (a Kibana Dev Tools-style pane the user sees; works with both). Each console is one JSON session file, so sessions and agents never overwrite each other: open your own with this tool (filepath) or the user types /opensearch --filepath <name>.json [--configfilepath <servers>.json]. The current session's files are kept across reloads.\n\nSession file (default ~/.claude/mods/opensearch/sessions/default.json): {\"server\": \"<name from config>\", \"cursorRow\": <0-based line of the request the user's Run sends>, \"query\": \"<editor text>\", \"lastRun\": {server, method, path, status, ms, at, error?}}.\n- query uses Dev Tools syntax: a \"METHOD path\" line (GET _cat/indices?v, POST my-index/_search), then an optional JSON body; several requests separated by blank lines.\n- To inject a query, write the session file (keep the other keys); the pane updates within a second. Set cursorRow to the request's METHOD line so Run sends it. Read the file to see the user's edits.\nResponse file: the session file with .response.json in place of .json, the last response body (pretty JSON). Read it after the user runs.\nConfig file (default ~/.claude/mods/opensearch/servers.json): {\"servers\": [{\"id\",\"name\",\"host\",\"port\",\"https\",\"insecure\",\"username\",\"password\" | \"passwordEnv\" | \"passwordCommand\",\"tag\",\"headers\"?,\"indices\"?}]}. The session file's \"server\" is a server id. Never print passwords.\nWrites: only reads are sent (GET/HEAD and POST to _search/_count/_msearch/_mget/_explain/_validate/_field_caps/_analyze/_termvectors/templates/scroll/PIT). A write opens a prompt for the user (run once / unlock for this session); unlocks are never read from disk, so editing servers.json cannot unlock anything. A server with credentials asks the user once before its first request. With this tool, configfilepath must be inside ~/.claude/mods/opensearch/.\nThe user runs requests (▶ in the editor gutter or ctrl+r); do not run them yourself unless asked."
+   }
+  ],
+  "panes": [],
+  "toasts": [],
+  "logs": [],
+  "denies": [],
+  "rewrites": [],
+  "apiCalls": {
+   "$.command.register": 1,
+   "$.tool.register": 1,
+   "$.state.get": 19,
+   "$.env.get": 6,
+   "$.fs.exists": 4,
+   "$.fs.write": 2,
+   "$.clock.every": 1,
+   "$.ui.panes": 1,
+   "$.ui.resolve": 1
+  },
+  "timers": [
+   {
+    "kind": "every",
+    "ms": 600
+   }
+  ],
+  "sites": {
+   "Pane": {
+    "opensearch": {
+     "ok": true,
+     "tree": {
+      "type": "Box",
+      "props": {
+       "flexDirection": "column"
+      },
+      "children": [
+       {
+        "type": "Box",
+        "props": {
+         "flexDirection": "row",
+         "gap": 1,
+         "height": 1
+        },
+        "children": [
+         {
+          "type": "Button",
+          "props": {
+           "key": "server-menu",
+           "label": "▾ Choose server",
+           "variant": "primary",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "lock",
+           "label": "🔒 writes locked",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "undo",
+           "label": "↶",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "redo",
+           "label": "↷",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "│"
+          ]
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "format",
+           "label": "Format",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "indices",
+           "label": "… Indices",
+           "onPress": "[fn]"
+          },
+          "children": []
+         },
+         {
+          "type": "Button",
+          "props": {
+           "key": "help",
+           "label": "Help",
+           "onPress": "[fn]"
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         {
+          "type": "Text",
+          "props": {
+           "dimColor": true
+          },
+          "children": [
+           "no request",
+           " → "
+          ]
+         },
+         {
+          "type": "Text",
+          "props": {},
+          "children": [
+           "(no server)"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Client",
+        "props": {
+         "key": "editor",
+         "module": "./editor.tsx",
+         "width": "100%",
+         "height": 7,
+         "props": {
+          "text": "",
+          "rev": 0,
+          "height": 7,
+          "row": 0,
+          "indices": []
+         }
+        },
+        "children": []
+       },
+       {
+        "type": "Text",
+        "props": {
+         "dimColor": true,
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "────────────────────────────────────────────────────────"
+        ]
+       },
+       {
+        "type": "Text",
+        "props": {
+         "wrap": "truncate-end"
+        },
+        "children": [
+         "no response yet"
+        ]
+       },
+       {
+        "type": "Input",
+        "props": {
+         "key": "search",
+         "label": "Find ",
+         "placeholder": "search the response (/ or ctrl+f from it) · Enter = next",
+         "value": "",
+         "onInput": "[fn]",
+         "onSubmit": "[fn]"
+        },
+        "children": []
+       },
+       {
+        "type": "Client",
+        "props": {
+         "key": "viewer",
+         "module": "./viewer.tsx",
+         "width": "100%",
+         "height": 13,
+         "props": {
+          "lines": [
+           [
+            [
+             "  ",
+             "f"
+            ],
+            [
+             "Click ▶ in the editor gutter (or ctrl+r) to send the request under the cursor.",
+             "m"
+            ]
+           ]
+          ],
+          "cursor": -1,
+          "height": 12,
+          "status": ""
+         }
+        },
+        "children": []
+       }
+      ]
+     },
+     "title": "opensearch"
+    }
+   }
+  },
+  "script": [
+   "$.fs.write(/Users/dev/.claude/mods/opensearch/servers.json)",
+   "session.start",
+   "tool.call Read",
+   "tool.call Grep",
+   "tool.call Edit",
+   "tool.call Write",
+   "tool.call Write",
+   "tool.call Bash bun test",
+   "tool.call Bash git status --porcelain",
+   "tool.call Bash rm -rf build && git push --force origin main",
+   "tool.call Bash cat .env",
+   "turn.complete",
+   "$.fs.write(/Users/dev/.claude/mods/opensearch/servers.json)",
+   "/opensearch → Config file not found: /Users/dev/.claude/mods/opensearch/servers.json"
+  ],
+  "console": [],
+  "warnings": []
+ },
+ "validate": {
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "hooks": [
+   "session.start",
+   "tool.call{tool=mcp__opensearch-console__console}",
+   "command.run{command=opensearch}",
+   "ui.scroll{requestId=opensearch}",
+   "ui.message",
+   "ui.render{component=Pane, requestId=opensearch}"
+  ],
+  "calls": [
+   "$.clock.after (via scheduleSave)",
+   "$.clock.every",
+   "$.command.register",
+   "$.env.get (via homeDir",
+   "onWindows",
+   "system32)",
+   "$.fs.exists (via attach",
+   "curlBin",
+   "ensureBase)",
+   "$.fs.read (via attach",
+   "readJson",
+   "sync)",
+   "$.fs.stat",
+   "$.fs.write (via attach",
+   "ensureBase",
+   "write)",
+   "$.process.run",
+   "$.state.get",
+   "$.state.set",
+   "$.store.get (via isProduction",
+   "isTrusted",
+   "rememberProduction",
+   "trust)",
+   "$.store.set (via rememberProduction",
+   "trust)",
+   "$.tool.register",
+   "$.ui.close",
+   "$.ui.copy",
+   "$.ui.focus (via viewerKey)",
+   "$.ui.open",
+   "$.ui.panes",
+   "$.ui.resolve",
+   "$.ui.toast"
+  ],
+  "stateReads": [
+   "opensearch-console.confirm",
+   "opensearch-console.cursorRow",
+   "opensearch-console.editorCmd",
+   "opensearch-console.editorScroll",
+   "opensearch-console.indices",
+   "opensearch-console.indicesLoading",
+   "opensearch-console.menuOpen",
+   "opensearch-console.paste",
+   "opensearch-console.paths",
+   "opensearch-console.prodSeen",
+   "opensearch-console.query",
+   "opensearch-console.result",
+   "opensearch-console.rev",
+   "opensearch-console.running",
+   "opensearch-console.server",
+   "opensearch-console.servers",
+   "opensearch-console.showHelp",
+   "opensearch-console.unlocked",
+   "opensearch-console.view"
+  ],
+  "stateWrites": [
+   "opensearch-console.confirm",
+   "opensearch-console.cursorRow",
+   "opensearch-console.editorCmd",
+   "opensearch-console.editorScroll",
+   "opensearch-console.indices",
+   "opensearch-console.indicesLoading",
+   "opensearch-console.menuOpen",
+   "opensearch-console.paste",
+   "opensearch-console.paths",
+   "opensearch-console.prodSeen",
+   "opensearch-console.query",
+   "opensearch-console.result",
+   "opensearch-console.rev",
+   "opensearch-console.running",
+   "opensearch-console.server",
+   "opensearch-console.servers",
+   "opensearch-console.showHelp",
+   "opensearch-console.unlocked",
+   "opensearch-console.view"
+  ],
+  "envReads": [
+   "HOME",
+   "OS",
+   "SystemRoot",
+   "USERPROFILE"
+  ],
+  "raw": {
+   "success": true,
+   "strict": false,
+   "target": "/home/runner/work/slopshopper/slopshopper/.cache/src/shohamtal-cc-mod-opensearch-console/.claude-plugin/plugin.json",
+   "manifest": {
+    "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/shohamtal-cc-mod-opensearch-console/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [],
+    "warnings": [],
+    "notes": [
+     "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
+     "types ./types/index.d.ts declares state: opensearch-console.query, opensearch-console.rev, opensearch-console.cursorRow, opensearch-console.result, opensearch-console.view, opensearch-console.running, opensearch-console.server, opensearch-console.servers, opensearch-console.showHelp, opensearch-console.paste, opensearch-console.indices, opensearch-console.indicesLoading, opensearch-console.paths, opensearch-console.editorScroll, opensearch-console.menuOpen, opensearch-console.confirm, opensearch-console.unlocked, opensearch-console.prodSeen, opensearch-console.editorCmd"
+    ],
+    "gatingHooks": []
+   },
+   "contents": [
+    {
+     "file": "/home/runner/work/slopshopper/slopshopper/.cache/src/shohamtal-cc-mod-opensearch-console/hooks/hooks.json",
+     "type": "hooks",
+     "errors": [],
+     "warnings": [],
+     "notes": [
+      "./register.tsx hooks: session.start, tool.call{tool=mcp__opensearch-console__console}, command.run{command=opensearch}, ui.scroll{requestId=opensearch}, ui.message, ui.render{component=Pane, requestId=opensearch}",
+      "./register.tsx answers its own command: command.run{command=opensearch}",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__opensearch-console__console}",
+      "./register.tsx gating hook without .catch: ui.scroll{requestId=opensearch}",
+      "./register.tsx calls: $.clock.after (via scheduleSave), $.clock.every, $.command.register, $.env.get (via homeDir, onWindows, system32), $.fs.exists (via attach, curlBin, ensureBase), $.fs.read (via attach, readJson, sync), $.fs.stat, $.fs.write (via attach, ensureBase, write), $.process.run, $.state.get, $.state.set, $.store.get (via isProduction, isTrusted, rememberProduction, trust), $.store.set (via rememberProduction, trust), $.tool.register, $.ui.close, $.ui.copy, $.ui.focus (via viewerKey), $.ui.open, $.ui.panes, $.ui.resolve, $.ui.toast",
+      "./register.tsx env writes: nothing",
+      "./register.tsx env reads: HOME, OS, SystemRoot, USERPROFILE",
+      "./register.tsx state writes: opensearch-console.confirm, opensearch-console.cursorRow, opensearch-console.editorCmd, opensearch-console.editorScroll, opensearch-console.indices, opensearch-console.indicesLoading, opensearch-console.menuOpen, opensearch-console.paste, opensearch-console.paths, opensearch-console.prodSeen, opensearch-console.query, opensearch-console.result, opensearch-console.rev, opensearch-console.running, opensearch-console.server, opensearch-console.servers, opensearch-console.showHelp, opensearch-console.unlocked, opensearch-console.view",
+      "./register.tsx state reads: opensearch-console.confirm, opensearch-console.cursorRow, opensearch-console.editorCmd, opensearch-console.editorScroll, opensearch-console.indices, opensearch-console.indicesLoading, opensearch-console.menuOpen, opensearch-console.paste, opensearch-console.paths, opensearch-console.prodSeen, opensearch-console.query, opensearch-console.result, opensearch-console.rev, opensearch-console.running, opensearch-console.server, opensearch-console.servers, opensearch-console.showHelp, opensearch-console.unlocked, opensearch-console.view",
+      "./register.tsx surface modules: hooks/editor.tsx, hooks/viewer.tsx"
+     ],
+     "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__opensearch-console__console}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "ui.scroll",
+       "hook": "ui.scroll{requestId=opensearch}",
+       "hasCatch": false
+      }
+     ]
+    }
+   ],
+   "advice": []
+  }
+ },
+ "sourceHash": "5548121535351cc8"
+}

@@ -1,0 +1,10 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-g13-8",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\nimport { bumpA, readA } from './trackers/a'\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    await bumpA($)\n    return { deny: `a=${await readA($)}` }\n  })\n}\n",
+  "hooks/trackers/a.ts": "import type { EngineInterface } from 'claude-code'\nimport { atom, read, update } from 'claude-code'\n\nconst aRef = atom({ plugin: 'g13', key: 'a' } as const, 0)\n\nexport const bumpA = ($: EngineInterface): Promise<number> => update($, aRef, n => n + 1)\nexport const readA = ($: EngineInterface): Promise<number> => read($, aRef)\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"g13\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  },\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "export type G13Slot = { n: number }\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    g13: {\n      a: number\n      slots: StateFamily<G13Slot>\n    }\n  }\n}\n"
+ }
+}

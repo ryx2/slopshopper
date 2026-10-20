@@ -1,9 +1,22 @@
 {
  "slug": "zgreencat-pet-claudy",
- "generatedAt": "2026-10-17T13:05:45.125Z",
+ "generatedAt": "2026-10-20T14:22:28.886Z",
  "harness": {
   "ok": true,
   "hooks": [
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "clawd-play"
+    }
+   },
+   {
+    "event": "ui.render",
+    "matcher": {
+     "component": "Pane",
+     "requestId": "clawd-play"
+    }
+   },
    {
     "event": "session.start"
    },
@@ -29,17 +42,30 @@
     }
    }
   ],
-  "commands": [],
+  "commands": [
+   {
+    "name": "clawd-play",
+    "description": "Juega Clawd Invaders en un panel mientras Claude trabaja"
+   }
+  ],
   "tools": [],
-  "panes": [],
+  "panes": [
+   {
+    "id": "clawd-play",
+    "title": "Clawd Invaders"
+   }
+  ],
   "toasts": [],
   "logs": [],
   "denies": [],
   "rewrites": [],
   "apiCalls": {
    "$.clock.every": 1,
-   "$.state.get": 1,
-   "$.ui.resolve": 1
+   "$.command.register": 1,
+   "$.state.get": 4,
+   "$.state.set": 2,
+   "$.ui.open": 1,
+   "$.ui.resolve": 2
   },
   "timers": [
    {
@@ -290,8 +316,43 @@
          ]
         }
        ]
+      },
+      {
+       "type": "engine",
+       "ref": 1,
+       "props": {
+        "hasSurvey": false,
+        "isWorking": false,
+        "maxRows": 4,
+        "bodyColumns": 100,
+        "scroll": {
+         "offset": 0,
+         "bodyRows": 8
+        },
+        "view": {}
+       }
       }
      ]
+    }
+   },
+   "Pane": {
+    "clawd-play": {
+     "ok": true,
+     "tree": {
+      "type": "Client",
+      "props": {
+       "key": "game",
+       "module": "./game-client.tsx",
+       "props": {
+        "isFocused": false,
+        "claude": "done"
+       },
+       "width": "100%",
+       "height": 30
+      },
+      "children": []
+     },
+     "title": "Clawd Invaders"
     }
    }
   },
@@ -306,7 +367,9 @@
    "tool.call Bash git status --porcelain",
    "tool.call Bash rm -rf build && git push --force origin main",
    "tool.call Bash cat .env",
-   "turn.complete"
+   "turn.complete",
+   "$.ui.open(clawd-play)",
+   "/clawd-play → "
   ],
   "console": [],
   "warnings": []
@@ -316,6 +379,8 @@
   "errors": [],
   "warnings": [],
   "hooks": [
+   "command.run{command=clawd-play}",
+   "ui.render{component=Pane, requestId=clawd-play}",
    "session.start",
    "agent.spawn",
    "tool.call",
@@ -327,15 +392,19 @@
   "calls": [
    "$.agent.list",
    "$.clock.every",
+   "$.command.register (via registerGameCommand)",
    "$.state.get",
    "$.state.set",
+   "$.ui.open",
    "$.ui.resolve",
    "$.ui.toast"
   ],
   "stateReads": [
+   "clawd-buddy.claude",
    "clawd-buddy.tick"
   ],
   "stateWrites": [
+   "clawd-buddy.claude",
    "clawd-buddy.tick"
   ],
   "envReads": [],
@@ -350,7 +419,7 @@
     "warnings": [],
     "notes": [
      "types ./types/index.d.ts declares on $: nothing (no EngineInterface member)",
-     "types ./types/index.d.ts declares state: clawd-buddy.tick"
+     "types ./types/index.d.ts declares state: clawd-buddy.tick, clawd-buddy.claude"
     ],
     "gatingHooks": []
    },
@@ -361,17 +430,24 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, agent.spawn, tool.call, turn.complete, prompt.submit, classic.SubagentStop, ui.render{component=AbovePrompt}",
-      "./register.tsx hooks on classic.SubagentStop do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: command.run{command=clawd-play}, ui.render{component=Pane, requestId=clawd-play}, session.start, agent.spawn, tool.call, turn.complete, prompt.submit, classic.SubagentStop, ui.render{component=AbovePrompt}",
+      "./register.tsx gating hook with .catch: command.run{command=clawd-play}",
       "./register.tsx gating hook with .catch: agent.spawn",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook with .catch: classic.SubagentStop",
-      "./register.tsx calls: $.agent.list, $.clock.every, $.state.get, $.state.set, $.ui.resolve, $.ui.toast",
-      "./register.tsx state writes: clawd-buddy.tick",
-      "./register.tsx state reads: clawd-buddy.tick"
+      "./register.tsx calls: $.agent.list, $.clock.every, $.command.register (via registerGameCommand), $.state.get, $.state.set, $.ui.open, $.ui.resolve, $.ui.toast",
+      "./register.tsx state writes: clawd-buddy.claude, clawd-buddy.tick",
+      "./register.tsx state reads: clawd-buddy.claude, clawd-buddy.tick",
+      "./register.tsx surface modules: hooks/game-client.tsx"
      ],
      "gatingHooks": [
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
+       "hook": "command.run{command=clawd-play}",
+       "hasCatch": true
+      },
       {
        "module": "./register.tsx",
        "pattern": "agent.spawn",
@@ -402,5 +478,5 @@
    "advice": []
   }
  },
- "sourceHash": "377f1ea7d71e4452"
+ "sourceHash": "8555c41c6581ad16"
 }

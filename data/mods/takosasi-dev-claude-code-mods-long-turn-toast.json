@@ -1,0 +1,8 @@
+{
+ "slug": "takosasi-dev-claude-code-mods-long-turn-toast",
+ "files": {
+  "hooks/register.ts": "import type { Register } from 'claude-code'\n\nexport const register: Register = (on, options) => {\n  const thresholdMs = Number(options.thresholdSeconds ?? 120) * 1000\n\n  on('turn.complete', ($, e, next) => {\n    // 中断したターンとサブエージェントのターンは知らせない\n    if (!e.isAborted && e.agentId === undefined && e.durationMs > thresholdMs) {\n      const total = Math.round(e.durationMs / 1000)\n      const min = Math.floor(total / 60)\n      const sec = total % 60\n      $.ui.toast(`応答が終わりました(${min > 0 ? `${min}分` : ''}${sec}秒)`)\n    }\n\n    return next(e)\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"long-turn-toast\",\n  \"version\": \"0.1.0\",\n  \"description\": \"時間のかかった応答が終わったらトーストで知らせる（音は鳴らさない）\",\n  \"author\": {\n    \"name\": \"takosasi-dev\"\n  },\n  \"userConfig\": {\n    \"thresholdSeconds\": {\n      \"type\": \"number\",\n      \"title\": \"通知する所要時間（秒）\",\n      \"description\": \"1 回の応答がこの秒数を超えて終わったら知らせる\",\n      \"default\": 120,\n      \"min\": 1\n    }\n  }\n}"
+ }
+}

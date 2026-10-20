@@ -1,6 +1,6 @@
 {
  "slug": "mdanyalmalik-inloop",
- "generatedAt": "2026-10-18T13:54:49.818Z",
+ "generatedAt": "2026-10-20T14:22:04.684Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -126,6 +126,12 @@
     "event": "command.run",
     "matcher": {
      "command": "inloop-voice"
+    }
+   },
+   {
+    "event": "command.run",
+    "matcher": {
+     "command": "inloop-speed"
     }
    },
    {
@@ -282,6 +288,13 @@
     "argumentHint": "[setup | voice | auto]",
     "immediate": true,
     "output": "Speaking with: the system voice (automatic)\n\nKokoro is not set up: /inloop-voice setup installs it (free, local, ~200 MB once)."
+   },
+   {
+    "name": "inloop-speed",
+    "description": "How fast explanations are spoken, from the next part: faster, slower, or 0.75 to 2",
+    "argumentHint": "[faster | slower | 1.25]",
+    "immediate": true,
+    "output": "inloop speaks at 1×. Use /inloop-speed faster, slower, or a speed from 0.75× to 2×."
    }
   ],
   "tools": [],
@@ -306,11 +319,11 @@
    "$.session.root": 1,
    "$.fs.list": 1,
    "$.store.get": 4,
-   "$.state.get": 67,
+   "$.state.get": 68,
    "$.state.set": 20,
    "$.clock.after": 13,
    "$.ui.status": 6,
-   "$.command.register": 19,
+   "$.command.register": 20,
    "$.agent.register": 1,
    "$.ui.open": 6,
    "$.fs.read": 2,
@@ -694,7 +707,7 @@
             "type": "Select",
             "props": {
              "key": "set:score",
-             "label": "explain edits from significance ",
+             "label": "full explanations from significance ",
              "value": "3",
              "options": [
               {
@@ -723,7 +736,7 @@
               },
               {
                "value": "8",
-               "label": "8 (only big steps)"
+               "label": "8 (only big steps; the rest short)"
               }
              ],
              "onSelect": "[fn]"
@@ -873,6 +886,26 @@
            {
             "type": "Select",
             "props": {
+             "key": "set:turnsummary",
+             "label": "end of each turn ",
+             "value": "on",
+             "options": [
+              {
+               "value": "on",
+               "label": "summarise what the request did not say (auto mode)"
+              },
+              {
+               "value": "off",
+               "label": "no summary"
+              }
+             ],
+             "onSelect": "[fn]"
+            },
+            "children": []
+           },
+           {
+            "type": "Select",
+            "props": {
              "key": "set:brief",
              "label": "coding agent's replies ",
              "value": "normal",
@@ -948,7 +981,7 @@
             "type": "Markdown",
             "props": {
              "dimColor": true,
-             "text": "For the most natural voice (free, offline), inloop downloads Kokoro by itself (~200 MB, once) when [uv](https://docs.astral.sh/uv/) is installed; `/inloop-voice setup` starts it now. Or download a Mac voice marked **Premium**: System Settings → Accessibility → Spoken Content → System voice → Manage Voices…"
+             "text": "For the most natural voice (free, offline), inloop downloads Kokoro by itself (~200 MB, once) when [uv](https://docs.astral.sh/uv/) is installed; `/inloop-voice setup` or **install natural voice** starts it now, and without uv first fetches inloop's own copy into `~/.cache/inloop/bin` (~20 MB, checksum checked). Or download a Mac voice marked **Premium**: System Settings → Accessibility → Spoken Content → System voice → Manage Voices…"
             },
             "children": []
            },
@@ -1026,7 +1059,8 @@
    "/inloop-reload → (inloop is handling this in its own pane; it is not a request for the coding age…",
    "$.process.run(say -v ?) → exit 0",
    "$.process.run(uv run --offline --quiet --script /plugins/inloop/voice/inloop_tts.py status) → exit 0",
-   "/inloop-voice → Speaking with: the system voice (automatic)\n\nKokoro is not set up: /inloop-voice…"
+   "/inloop-voice → Speaking with: the system voice (automatic)\n\nKokoro is not set up: /inloop-voice…",
+   "/inloop-speed → inloop speaks at 1×. Use /inloop-speed faster, slower, or a speed from 0.75× to …"
   ],
   "console": [],
   "status": "auto",
@@ -1061,6 +1095,7 @@
    "command.run{command=inloop-history}",
    "command.run{command=inloop-settings}",
    "command.run{command=inloop-voice}",
+   "command.run{command=inloop-speed}",
    "command.run{command=inloop-style}",
    "command.run{command=inloop-speak}",
    "command.run{command=inloop-reload}",
@@ -1139,7 +1174,9 @@
    "inloop.viewer"
   ],
   "envReads": [
-   "HOME"
+   "HOME",
+   "PROCESSOR_ARCHITECTURE",
+   "USERPROFILE"
   ],
   "raw": {
    "success": true,
@@ -1163,8 +1200,7 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, tool.call, prompt.compose, prompt.submit, ui.render{component=AbovePrompt}, ui.close, turn.complete, ui.render{component=Pane, requestId=inloop}, command.run{command=inloop}, command.run{command=inloop-explain}, command.run{command=inloop-flow}, command.run{command=inloop-commit}, command.run{command=inloop-compare}, command.run{command=inloop-recent}, command.run{command=inloop-focus}, command.run{command=inloop-mode}, command.run{command=inloop-away}, command.run{command=inloop-play}, command.run{command=inloop-depth}, command.run{command=inloop-at}, command.run{command=inloop-history}, command.run{command=inloop-settings}, command.run{command=inloop-voice}, command.run{command=inloop-style}, command.run{command=inloop-speak}, command.run{command=inloop-reload}, command.run{command=inloop-brief}",
-      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, session.end, tool.call, prompt.compose, prompt.submit, ui.render{component=AbovePrompt}, ui.close, turn.complete, ui.render{component=Pane, requestId=inloop}, command.run{command=inloop}, command.run{command=inloop-explain}, command.run{command=inloop-flow}, command.run{command=inloop-commit}, command.run{command=inloop-compare}, command.run{command=inloop-recent}, command.run{command=inloop-focus}, command.run{command=inloop-mode}, command.run{command=inloop-away}, command.run{command=inloop-play}, command.run{command=inloop-depth}, command.run{command=inloop-at}, command.run{command=inloop-history}, command.run{command=inloop-settings}, command.run{command=inloop-voice}, command.run{command=inloop-speed}, command.run{command=inloop-style}, command.run{command=inloop-speak}, command.run{command=inloop-reload}, command.run{command=inloop-brief}",
       "./register.tsx gating hook with .catch: tool.call",
       "./register.tsx gating hook with .catch: prompt.submit",
       "./register.tsx gating hook without .catch: ui.close",
@@ -1183,13 +1219,14 @@
       "./register.tsx gating hook with .catch: command.run{command=inloop-history}",
       "./register.tsx gating hook with .catch: command.run{command=inloop-settings}",
       "./register.tsx gating hook with .catch: command.run{command=inloop-voice}",
+      "./register.tsx gating hook with .catch: command.run{command=inloop-speed}",
       "./register.tsx gating hook with .catch: command.run{command=inloop-style}",
       "./register.tsx gating hook with .catch: command.run{command=inloop-speak}",
       "./register.tsx gating hook with .catch: command.run{command=inloop-reload}",
       "./register.tsx gating hook with .catch: command.run{command=inloop-brief}",
       "./register.tsx calls: $.agent.register, $.agent.spawn, $.audio.speak, $.clock.after, $.clock.every, $.command.register, $.env.get, $.fs.list, $.fs.read, $.model.classify, $.model.complete, $.process.run, $.process.spawn, $.session.root, $.state.get, $.state.set, $.store.get, $.store.set, $.ui.invalidate, $.ui.log, $.ui.open, $.ui.panes, $.ui.resolve, $.ui.selection, $.ui.status, $.ui.toast",
       "./register.tsx env writes: nothing",
-      "./register.tsx env reads: HOME",
+      "./register.tsx env reads: HOME, PROCESSOR_ARCHITECTURE, USERPROFILE",
       "./register.tsx state writes: inloop.answers, inloop.askOpen, inloop.cards, inloop.changes, inloop.convo, inloop.ctx, inloop.expanded, inloop.flow, inloop.flowNote, inloop.flowSelected, inloop.frame, inloop.git, inloop.history, inloop.narration, inloop.nav, inloop.settings, inloop.status, inloop.tab, inloop.usage, inloop.viewer",
       "./register.tsx state reads: inloop.answers, inloop.askOpen, inloop.cards, inloop.changes, inloop.convo, inloop.ctx, inloop.expanded, inloop.flow, inloop.flowNote, inloop.flowSelected, inloop.frame, inloop.git, inloop.history, inloop.narration, inloop.nav, inloop.settings, inloop.status, inloop.tab, inloop.usage, inloop.viewer"
      ],
@@ -1305,6 +1342,12 @@
       {
        "module": "./register.tsx",
        "pattern": "command.run",
+       "hook": "command.run{command=inloop-speed}",
+       "hasCatch": true
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "command.run",
        "hook": "command.run{command=inloop-style}",
        "hasCatch": true
       },
@@ -1332,5 +1375,5 @@
    "advice": []
   }
  },
- "sourceHash": "6412c5d12ec1d61a"
+ "sourceHash": "e8b6e855adbc1a4c"
 }

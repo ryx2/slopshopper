@@ -1,0 +1,10 @@
+{
+ "slug": "martin-macak-claude-code-mod-tracking-g14",
+ "files": {
+  "hooks/register.ts": "import type { EngineInterface, Register } from 'claude-code'\nimport { github, jira, type SlotPort } from '../trackers/a'\n\nconst TRACKERS = [github, jira] as const\n\nfunction portsOf($: EngineInterface): SlotPort {\n  return {\n    get: async id => (await $.state.get({ plugin: 'g14', key: 'slots', id } as const)).value,\n    set: async (id, v) => { await $.state.set({ plugin: 'g14', key: 'slots', id } as const, v) },\n  }\n}\n\nexport const register: Register = on => {\n  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {\n    const p = portsOf($)\n    const out: string[] = []\n    for (const t of TRACKERS) out.push(await t.onBash(p))\n    return { deny: out.join(' ') }\n  })\n}\n",
+  "trackers/a.ts": "// A tracker with no `$`: it gets a SlotPort only.\nexport type SlotPort = {\n  get: (id: string) => Promise<{ n: number } | undefined>\n  set: (id: string, v: { n: number }) => Promise<void>\n}\nexport type Tracker = { readonly id: string; onBash: (p: SlotPort) => Promise<string> }\n\nexport const github: Tracker = {\n  id: 'github',\n  async onBash(p) {\n    const cur = await p.get('github')\n    await p.set('github', { n: (cur?.n ?? 0) + 1 })\n    return `github=${(await p.get('github'))?.n}`\n  },\n}\nexport const jira: Tracker = {\n  id: 'jira',\n  async onBash(p) {\n    const cur = await p.get('jira')\n    await p.set('jira', { n: (cur?.n ?? 0) + 10 })\n    return `jira=${(await p.get('jira'))?.n}`\n  },\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.ts\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"g14\",\n  \"version\": \"0.0.1\",\n  \"description\": \"throwaway spike\",\n  \"author\": {\n    \"name\": \"spike\"\n  },\n  \"types\": \"./types/index.d.ts\"\n}",
+  "types/index.d.ts": "export type G14Slot = { n: number }\n\ndeclare module 'claude-code' {\n  interface PluginState {\n    g14: {\n      slots: StateFamily<G14Slot>\n    }\n  }\n}\n"
+ }
+}

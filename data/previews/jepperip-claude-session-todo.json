@@ -1,6 +1,6 @@
 {
  "slug": "jepperip-claude-session-todo",
- "generatedAt": "2026-10-16T14:20:02.642Z",
+ "generatedAt": "2026-10-20T14:23:09.330Z",
  "harness": {
   "ok": true,
   "hooks": [
@@ -32,6 +32,18 @@
     }
    },
    {
+    "event": "turn.start"
+   },
+   {
+    "event": "tool.call"
+   },
+   {
+    "event": "tool.call",
+    "matcher": {
+     "tool": "mcp__ccd_turn__update_plan"
+    }
+   },
+   {
     "event": "command.run",
     "matcher": {
      "command": "todo"
@@ -56,7 +68,7 @@
   "tools": [
    {
     "name": "todo",
-    "description": "The todo lists the user watches in the Todo side pane. They are their view of the plan and of your progress, so keep them current without being asked, also when you do every step yourself.\nLists are named (default \"main\"); items are addressed by id, unique across lists.\n- write: replace one list with its steps (list, title, items, optional about). Do this before the first edit, command or search of any task that takes more than one tool call or spans more than one turn; only a single edit or a question answered from memory needs no list. The first list written becomes the active one, drawn first; focus switches it.\n- board (with write): a short name for the whole board, letters, digits, _ and -, such as the ticket or the feature (DAN-1234, release-notes). Give it with the first write of a plan: the pane shares the board under that name with one click. Lists are many, so the board's name is its own.\n- about (optional, one line of at most 80 characters; a longer one is cut with an ellipsis): one short sentence under the title saying what the list is for or what done looks like, so the user still knows a day later. Not a summary of the items. Set it with write and leave it; describe changes it later.\n- add / update / remove: one item. Mark the step you begin in_progress (prefer one at a time, several when work really runs in parallel), done the moment it finishes, blocked with a note when it waits on the user.\n- owner: who does the item, \"agent\" (you; the default) or \"user\". Mark a step \"user\" when only the person can take it: approve, decide, click, run something you may not. The pane marks your own items so theirs stand out.\n- read: every list as the pane shows it, with ids. Call it after a context compaction.\n- clear: empty one list (list) or all. drop: remove a list. focus: make a list the active one. describe: set or clear a list's about (list, about).\nUse a second list, e.g. \"followup\", for things to do after the main work (open the PR, report a finding to Jira), so the main list stays focused.\nKeep item text short and imperative, one line each. Before reporting a task finished, leave its list true: every item done, items that fell away removed.\n- join (board, optional label): follow a board shared by another session instead of this session's own; leave: back to this session's own board. The person usually does this with /todo share and /todo join; call join only when they ask for it.\nOn a shared board (the result says so) other sessions write too: add your items with add or write a list of your own, report progress with update, and never write a list you did not create, since write replaces its items."
+    "description": "The todo lists the user watches in the Todo side pane. They are their view of the plan and of your progress, so keep them current without being asked, also when you do every step yourself.\nWhere the host has a task list of its own (mcp__ccd_turn__update_plan), every call to it is mirrored into the main list here, so that list needs no second write; call this tool for what the host's list cannot say: a second list, an item the person owns, a blocked step with its note, an about line.\nLists are named (default \"main\"); items are addressed by id, unique across lists.\n- write: replace one list with its steps (list, title, items, optional about). Do this before the first edit, command or search of any task that takes more than one tool call or spans more than one turn; only a single edit or a question answered from memory needs no list. The first list written becomes the active one, drawn first; focus switches it.\n- board (with write): a short name for the whole board, letters, digits, _ and -, such as the ticket or the feature (DAN-1234, release-notes). Give it with the first write of a plan: the pane shares the board under that name with one click. Lists are many, so the board's name is its own.\n- about (optional, one line of at most 80 characters; a longer one is cut with an ellipsis): one short sentence under the title saying what the list is for or what done looks like, so the user still knows a day later. Not a summary of the items. Set it with write and leave it; describe changes it later.\n- add / update / remove: one item. Mark the step you begin in_progress (prefer one at a time, several when work really runs in parallel), done the moment it finishes, blocked with a note when it waits on the user.\n- owner: who does the item, \"agent\" (you; the default) or \"user\". Mark a step \"user\" when only the person can take it: approve, decide, click, run something you may not. The pane marks your own items so theirs stand out.\n- read: every list as the pane shows it, with ids. Call it after a context compaction.\n- clear: empty one list (list) or all. drop: remove a list. focus: make a list the active one. describe: set or clear a list's about (list, about).\nUse a second list, e.g. \"followup\", for things to do after the main work (open the PR, report a finding to Jira), so the main list stays focused.\nKeep item text short and imperative, one line each. Before reporting a task finished, leave its list true: every item done, items that fell away removed.\n- join (board, optional label): follow a board shared by another session instead of this session's own; leave: back to this session's own board. The person usually does this with /todo share and /todo join; call join only when they ask for it.\nOn a shared board (the result says so) other sessions write too: add your items with add or write a list of your own, report progress with update, and never write a list you did not create, since write replaces its items."
    }
   ],
   "panes": [
@@ -77,7 +89,8 @@
    "$.clock.now": 3,
    "$.store.keys": 3,
    "$.clock.every": 1,
-   "$.state.get": 11,
+   "$.state.get": 12,
+   "$.session.append": 1,
    "$.ui.panes": 3,
    "$.ui.open": 1,
    "$.state.set": 1,
@@ -243,6 +256,9 @@
    "ui.render{component=AbovePrompt}",
    "prompt.compose",
    "tool.call{tool=mcp__session-todo__todo}",
+   "turn.start",
+   "tool.call",
+   "tool.call{tool=mcp__ccd_turn__update_plan}",
    "command.run{command=todo}",
    "ui.render{component=Pane, requestId=session-todo}"
   ],
@@ -254,7 +270,7 @@
    "$.command.register",
    "$.config.list (via setOption)",
    "$.config.set (via setOption)",
-   "$.session.append (via tell)",
+   "$.session.append",
    "$.session.id",
    "$.state.get",
    "$.state.set",
@@ -314,12 +330,13 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "./register.tsx hooks: session.start, session.end, ui.close{id=session-todo}, ui.render{component=AbovePrompt}, prompt.compose, tool.call{tool=mcp__session-todo__todo}, command.run{command=todo}, ui.render{component=Pane, requestId=session-todo}",
-      "./register.tsx hooks on prompt.compose do not run in a plugin a person installs where an organization manages Claude Code: there, these events pass over the plugins you install, and only a plugin the organization lists in managed settings runs them",
+      "./register.tsx hooks: session.start, session.end, ui.close{id=session-todo}, ui.render{component=AbovePrompt}, prompt.compose, tool.call{tool=mcp__session-todo__todo}, turn.start, tool.call, tool.call{tool=mcp__ccd_turn__update_plan}, command.run{command=todo}, ui.render{component=Pane, requestId=session-todo}",
       "./register.tsx gating hook without .catch: ui.close{id=session-todo}",
       "./register.tsx gating hook without .catch: tool.call{tool=mcp__session-todo__todo}",
+      "./register.tsx gating hook without .catch: tool.call",
+      "./register.tsx gating hook without .catch: tool.call{tool=mcp__ccd_turn__update_plan}",
       "./register.tsx gating hook without .catch: command.run{command=todo}",
-      "./register.tsx calls: $.clock.after (via commit), $.clock.every (via follow, watchFocus), $.clock.now, $.command.register, $.config.list (via setOption), $.config.set (via setOption), $.session.append (via tell), $.session.id, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys, $.store.set (via commit, follow, prune, shareBoard), $.tool.register, $.ui.copy (via drawBoard), $.ui.invalidate (via redraw, setOption), $.ui.open (via openPane), $.ui.panes (via isPaneFocused, isPaneShown), $.ui.resolve, $.ui.toast",
+      "./register.tsx calls: $.clock.after (via commit), $.clock.every (via follow, watchFocus), $.clock.now, $.command.register, $.config.list (via setOption), $.config.set (via setOption), $.session.append, $.session.id, $.state.get, $.state.set, $.store.delete, $.store.get, $.store.keys, $.store.set (via commit, follow, prune, shareBoard), $.tool.register, $.ui.copy (via drawBoard), $.ui.invalidate (via redraw, setOption), $.ui.open (via openPane), $.ui.panes (via isPaneFocused, isPaneShown), $.ui.resolve, $.ui.toast",
       "./register.tsx state writes: session-todo.bandOpen, session-todo.board, session-todo.justDone, session-todo.paneAutoOpened, session-todo.settingsOpen, session-todo.shared",
       "./register.tsx state reads: session-todo.bandOpen, session-todo.board, session-todo.justDone, session-todo.paneAutoOpened, session-todo.settingsOpen, session-todo.shared"
      ],
@@ -338,6 +355,18 @@
       },
       {
        "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
+       "pattern": "tool.call",
+       "hook": "tool.call{tool=mcp__ccd_turn__update_plan}",
+       "hasCatch": false
+      },
+      {
+       "module": "./register.tsx",
        "pattern": "command.run",
        "hook": "command.run{command=todo}",
        "hasCatch": false
@@ -348,5 +377,5 @@
    "advice": []
   }
  },
- "sourceHash": "f642d7c795a0bb18"
+ "sourceHash": "fc09959d8324774f"
 }

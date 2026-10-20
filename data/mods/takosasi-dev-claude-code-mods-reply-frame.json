@@ -1,0 +1,8 @@
+{
+ "slug": "takosasi-dev-claude-code-mods-reply-frame",
+ "files": {
+  "hooks/register.tsx": "import type { Register } from 'claude-code'\n\n// 枠の色。書き換えて保存すればその場で読み直される\nconst FRAME_COLOR = '#d97757'\nconst USER_FRAME_COLOR = '#6b9bd2'\n\n// 1 回の描画で Markdown が描ける上限（全体で 10 万字）。超える返答は標準の描画に任せる\nconst MARKDOWN_LIMIT = 100000\n\n// 本人の入力: ターミナル、Remote Control、VS Code/デスクトップ(SDK 経由)\nconst OWN_PROMPT = new Set(['composer', 'bridge', 'sdk'])\n\nexport const register: Register = on => {\n  on('ui.render', { component: 'AssistantMessage' }, ($, e, next) => {\n    // 要約の行は標準の描画（印付き）に任せる\n    if (e.props.isSummary || e.props.text.length > MARKDOWN_LIMIT) {\n      return next(e)\n    }\n\n    const { Box, Markdown } = $.ui.resolve(e)\n\n    return (\n      <Box borderStyle=\"round\" borderColor={FRAME_COLOR} paddingX={1}>\n        <Markdown text={e.props.text} />\n      </Box>\n    )\n  })\n\n  // 標準の描画をそのまま枠で包む\n  on('ui.render', { component: 'UserMessage' }, async ($, e, next) => {\n    if (!OWN_PROMPT.has(e.props.origin.kind)) {\n      return next(e)\n    }\n\n    const { Box } = $.ui.resolve(e)\n\n    return (\n      <Box borderStyle=\"round\" borderColor={USER_FRAME_COLOR} paddingX={1}>\n        {await next(e)}\n      </Box>\n    )\n  })\n}\n",
+  "hooks/hooks.json": "{ \"modules\": [\"./register.tsx\"] }\n",
+  ".claude-plugin/plugin.json": "{\n  \"name\": \"reply-frame\",\n  \"version\": \"0.2.1\",\n  \"description\": \"Claude の返答をオレンジ、自分のプロンプトを青の角の丸い枠で囲む（ターミナル/VS Code/デスクトップ/モバイル共通）\",\n  \"author\": {\n    \"name\": \"takosasi-dev\",\n    \"url\": \"https://github.com/takosasi-dev\"\n  },\n  \"homepage\": \"https://github.com/takosasi-dev/reply-frame\",\n  \"license\": \"MIT\"\n}"
+ }
+}
